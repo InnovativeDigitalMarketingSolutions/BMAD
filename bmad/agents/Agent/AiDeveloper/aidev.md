@@ -1,3 +1,7 @@
+# AiDeveloper Agent
+
+> **Let op:** Deze agent werkt actief samen met andere agents via een centrale message bus en gedeelde context in Supabase. Zie de sectie 'Samenwerking & Contextdeling' hieronder voor details.
+
 # AI Developer Output & Best Practices
 
 ## Voorbeeld Prompt Template
@@ -139,3 +143,21 @@ shap.summary_plot(shap_values, X_test)
 - Documenteer alle modelkeuzes, prompt iteraties en experimenten
 - Monitor AI endpoints op latency, errors én drift
 - Werk samen met Data, Dev, Security voor end-to-end kwaliteit
+
+## Samenwerking & Contextdeling
+
+Deze agent werkt samen met andere agents via een centrale message bus en gedeelde context in Supabase.
+
+- **Events publiceren:** De agent kan events publiceren via de message_bus, bijvoorbeeld als een AI pipeline gereed is.
+- **Context delen:** Status en relevante data worden gedeeld via Supabase, zodat andere agents deze kunnen inzien.
+
+**Voorbeeld:**
+```python
+self.collaborate_example()
+```
+Dit publiceert een event en slaat context op. Andere agents kunnen deze context ophalen of op het event reageren.
+
+---
+
+## Changelog & Opschoning
+- [2024-07-22] Duplicaten aideveloper.md, aideveloper.py, aideveloper.yaml verwijderd. Documentatie, code en configuratie nu centraal in aidev.md, aidev.py, aidev.yaml.

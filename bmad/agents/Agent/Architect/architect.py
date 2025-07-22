@@ -1,6 +1,10 @@
 import logging
 from pathlib import Path
 
+from bmad.agents.core.message_bus import publish, subscribe
+from bmad.agents.core.supabase_context import save_context, get_context
+from bmad.agents.core.llm_client import ask_openai
+
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
 RESOURCE_BASE = Path(__file__).parent.parent / "resources"
@@ -103,6 +107,20 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
         else:
             print("[OK] Alle resource-bestanden zijn aanwezig.")
 
+    def collaborate_example(self):
+        """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
+        publish("architecture_reviewed", {"status": "success", "agent": "Architect"})
+        save_context("Architect", {"review_status": "completed"})
+        print("Event gepubliceerd en context opgeslagen.")
+        context = get_context("Architect")
+        print(f"Opgehaalde context: {context}")
+
+    def ask_llm_api_design(self, use_case):
+        """Vraag de LLM om een API-design voorstel op basis van een use case."""
+        prompt = f"Ontwerp een REST API endpoint voor de volgende use case: {use_case}. Geef een korte beschrijving en een voorbeeld van de JSON input/output."
+        result = ask_openai(prompt)
+        print(f"[LLM API-design]: {result}")
+
     def run(self, command):
         if command == "help" or command is None:
             self.show_help()
@@ -122,3 +140,22 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
                 f"Onbekend commando of ontbrekend resource-bestand: {command}"
             )
             self.show_help()
+
+
+def on_api_design_requested(event):
+    use_case = event.get("use_case", "Onbekende use case")
+    context = event.get("context", "")
+    prompt = f"Ontwerp een REST API endpoint voor de volgende use case: {use_case}. Context: {context}. Geef een korte beschrijving en een voorbeeld van de JSON input/output."
+    result = ask_openai(prompt)
+    logging.info(f"[Architect][LLM API-design automatisch]: {result}")
+
+subscribe("api_design_requested", on_api_design_requested)
+
+def on_pipeline_advice_requested(event):
+    pipeline_config = event.get("pipeline_config", "")
+    prompt = f"Geef een architectuuradvies voor deze CI/CD pipeline config:\n{pipeline_config}. Geef het antwoord als JSON met een korte samenvatting en 2 adviezen."
+    structured_output = '{"samenvatting": "...", "adviezen": ["advies 1", "advies 2"]}'
+    result = ask_openai(prompt, structured_output=structured_output)
+    logging.info(f"[Architect][LLM Pipeline Advies]: {result}")
+
+subscribe("pipeline_advice_requested", on_pipeline_advice_requested)
