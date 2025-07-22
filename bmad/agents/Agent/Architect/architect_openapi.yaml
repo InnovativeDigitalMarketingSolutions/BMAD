@@ -1,0 +1,41 @@
+openapi: 3.0.0
+info:
+  title: Architect Agent API
+  version: 1.0.0
+  description: API endpoints voor architectuuradvies, review en artefacten
+paths:
+  /design-api:
+    post:
+      summary: Ontwerp API endpoints en specs
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                use_case:
+                  type: string
+      responses:
+        '200':
+          description: API ontwerp gegenereerd
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  api_spec:
+                    type: string
+  /review:
+    get:
+      summary: Genereer architectuur review checklist
+      responses:
+        '200':
+          description: Checklist
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  checklist:
+                    type: string 

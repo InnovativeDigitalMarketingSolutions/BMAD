@@ -20,7 +20,7 @@ jobs:
         run: |
           python -m venv .venv
           source .venv/bin/activate
-          pip install black flake8 pyyaml
+          pip install black flake8 pyyaml requests
       - name: Lint with flake8
         run: |
           source .venv/bin/activate
@@ -33,4 +33,15 @@ jobs:
       - name: Validate agent resources
         run: |
           source .venv/bin/activate
-          python validate_agent_resources.py 
+          python validate_agent_resources.py
+      - name: Health check
+        run: |
+          source .venv/bin/activate
+          python health_check.py > health_check_report.txt
+      - name: Slack notificatie (optioneel)
+        if: always()
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        run: |
+          source .venv/bin/activate
+          python slack_notify.py "BMAD Health check afgerond. Zie health_check_report.txt voor details." 
