@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# VSCode/PyCharm/IDE
+.vscode/
+.idea/
+
+# Tijdelijke/bijproducten
+*.log
+*.out
+*.bak
+*.tmp
+*.swp
+*.txt
+
+# Analyse/merge/rapport folders
+merge_conflicts/ 
