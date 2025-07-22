@@ -1,0 +1,13 @@
+# AI Architecture Documentation
+
+## Pipeline
+- ...
+
+## Vector Search
+- ...
+
+## Endpoints
+- ...
+
+## Monitoring
+- ...

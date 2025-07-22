@@ -1,0 +1,13 @@
+[
+  {
+    "component": "Button",
+    "version": "1.0.0",
+    "props": [
+      {"name": "label", "type": "string", "required": true, "description": "Tekst op de knop"},
+      {"name": "onClick", "type": "function", "required": true, "description": "Click handler"}
+    ],
+    "state": ["hovered", "active"],
+    "events": ["onClick"],
+    "accessibility": "Toetsenbordtoegankelijk, aria-label verplicht"
+  }
+]

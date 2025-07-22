@@ -1,0 +1,10 @@
+# Monitoring Config Snippet
+
+sentry:
+  dsn: "<your-sentry-dsn>"
+prometheus:
+  enabled: true
+  endpoint: /metrics
+logging:
+  level: INFO
+  format: "%(asctime)s %(levelname)s %(message)s"

@@ -1,0 +1,50 @@
+dependencies:
+  templates:
+    - resources/templates/general/pr-template.md
+    - resources/templates/general/api-snippet.py
+    - resources/templates/general/openapi-snippet.yaml
+    - resources/templates/general/frontend-snippet.tsx
+    - resources/templates/general/storybook-mdx-template.mdx
+    - resources/templates/general/test-snippet.py
+    - resources/templates/general/dev-log-template.md
+    - resources/templates/general/changelog-template.md
+    - resources/templates/general/ci-cd-template.yaml
+    - resources/templates/general/integration-snippet.md
+    - resources/templates/general/security-checklist.md
+    - resources/templates/general/performance-report-template.md
+    - resources/templates/general/release-notes-template.md
+    - resources/templates/general/feature-toggle-config.yaml
+    - resources/templates/general/monitoring-config-snippet.yaml
+    - resources/templates/general/devops-handover-checklist.md
+    # Fullstack developer specifieke templates
+    - resources/templates/fullstackdeveloper/pr-template.md
+    - resources/templates/fullstackdeveloper/api-snippet.py
+    - resources/templates/fullstackdeveloper/openapi-snippet.yaml
+    - resources/templates/fullstackdeveloper/frontend-snippet.tsx
+    - resources/templates/fullstackdeveloper/storybook-mdx-template.mdx
+    - resources/templates/fullstackdeveloper/test-snippet.py
+    - resources/templates/fullstackdeveloper/dev-log-template.md
+    - resources/templates/fullstackdeveloper/changelog-template.md
+    - resources/templates/fullstackdeveloper/ci-cd-template.yaml
+    - resources/templates/fullstackdeveloper/integration-snippet.md
+    - resources/templates/fullstackdeveloper/security-checklist.md
+    - resources/templates/fullstackdeveloper/performance-report-template.md
+    - resources/templates/fullstackdeveloper/release-notes-template.md
+    - resources/templates/fullstackdeveloper/feature-toggle-config.yaml
+    - resources/templates/fullstackdeveloper/monitoring-config-snippet.yaml
+    - resources/templates/fullstackdeveloper/devops-handover-checklist.md
+  data:
+    - resources/data/general/stack-overview.md
+    - resources/data/general/code-style-guide.md
+    - resources/data/general/testing-best-practices.md
+    - resources/data/general/ci-cd-examples.md
+    - resources/data/general/refactoring-patterns.md
+    - resources/data/general/security-guidelines.md
+    - resources/data/general/dev-log-examples.md
+    - resources/data/general/blockers-examples.md
+    # Fullstack developer specifieke data
+    - resources/data/fullstackdeveloper/performance-examples.md
+    - resources/data/fullstackdeveloper/release-notes-examples.md
+    - resources/data/fullstackdeveloper/feature-toggle-examples.md
+    - resources/data/fullstackdeveloper/monitoring-examples.md
+    - resources/data/fullstackdeveloper/devops-handover-examples.md

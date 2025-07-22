@@ -1,0 +1,12 @@
+[
+  {
+    "scan": "dependency-check",
+    "date": "2024-05-01",
+    "findings": [
+      {"type": "vulnerability", "severity": "high", "description": "Kwetsbaarheid in package xyz"}
+    ],
+    "compliance": ["AVG", "ISO 27001"],
+    "status": "open",
+    "verantwoordelijke": "Security Team"
+  }
+]

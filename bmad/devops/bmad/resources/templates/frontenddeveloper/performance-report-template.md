@@ -1,0 +1,19 @@
+# Performance Rapport
+
+## Testomgeving
+- Browser: ...
+- Device: ...
+- Netwerk: ...
+
+## Component/Pagina
+- ...
+
+## Metingen
+- Time to Interactive: ... ms
+- First Contentful Paint: ... ms
+- Largest Contentful Paint: ... ms
+- Total Blocking Time: ... ms
+- Cumulative Layout Shift: ...
+
+## Verbeterpunten
+- ...

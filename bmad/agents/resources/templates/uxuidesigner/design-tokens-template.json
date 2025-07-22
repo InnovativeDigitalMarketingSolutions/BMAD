@@ -1,0 +1,19 @@
+{
+  "color": {
+    "primary": "#0057B8",
+    "secondary": "#FFD200",
+    "background": "#FFFFFF",
+    "text": "#222222"
+  },
+  "spacing": {
+    "xs": "4px",
+    "sm": "8px",
+    "md": "16px",
+    "lg": "32px"
+  },
+  "typography": {
+    "fontFamily": "'Inter', sans-serif",
+    "fontSizeBase": "16px",
+    "fontWeightBold": 700
+  }
+}

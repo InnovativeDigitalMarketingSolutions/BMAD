@@ -1,0 +1,11 @@
+[
+  {
+    "naam": "<voorbeeld>",
+    "rol": "gebruiker",
+    "datum": "2024-05-01",
+    "onderwerp": "UI",
+    "feedback": "Knop werkt niet",
+    "suggestie": "Knop duidelijker maken",
+    "urgentie": "hoog"
+  }
+]

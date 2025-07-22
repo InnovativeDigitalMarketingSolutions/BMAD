@@ -1,0 +1,5 @@
+# Feature Toggle Config
+
+feature_toggles:
+  NEW_DASHBOARD_ENABLED: true
+  USE_AI_ASSISTANT: false

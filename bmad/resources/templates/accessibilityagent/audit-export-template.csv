@@ -1,0 +1,4 @@
+# Dit bestand bevat de resultaten van de accessibility audit. Kolommen: onderdeel, bevinding, aanbeveling, prioriteit
+onderdeel,bevinding,aanbeveling,prioriteit
+Afbeeldingen,Geen alt-tekst,Voeg alt-tekst toe,Hoog
+Contrast,Te laag contrast,Pas kleuren aan,Middel

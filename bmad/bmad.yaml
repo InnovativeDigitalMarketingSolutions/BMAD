@@ -1,0 +1,55 @@
+# BMAD Configuration for Copilot Project
+# This file defines the tasks that can be run with BMAD
+
+agents:
+  - name: test
+    description: "Run all tests for the copilot project"
+    command: "cd copilot_backend && python -m pytest tests/ -v"
+
+  - name: test-backend
+    description: "Run only backend tests"
+    command: "cd copilot_backend && python -m pytest tests/ -v"
+
+  - name: test-frontend
+    description: "Run frontend tests (if available)"
+    command: "cd copilot_frontend && npm test"
+
+  - name: deploy
+    description: "Deploy the application using Docker Compose"
+    command: "docker-compose up --build -d"
+
+  - name: deploy-backend
+    description: "Deploy only the backend"
+    command: "cd copilot_backend && docker-compose up --build -d"
+
+  - name: dev
+    description: "Start development environment"
+    command: "turbo run dev"
+
+  - name: dev-backend
+    description: "Start only backend development server"
+    command: "cd copilot_backend && uvicorn app.main:app --reload --host 0.0.0.0 --port 8000"
+
+  - name: dev-frontend
+    description: "Start only frontend development server"
+    command: "cd copilot_frontend && npm run dev"
+
+  - name: lint
+    description: "Run linting and code formatting"
+    command: "cd copilot_backend && black . && ruff check ."
+
+  - name: format
+    description: "Format code with black and ruff"
+    command: "cd copilot_backend && black . && ruff format ."
+
+  - name: clean
+    description: "Clean up temporary files and caches"
+    command: "find . -type d -name '__pycache__' -exec rm -rf {} + && find . -type d -name '.pytest_cache' -exec rm -rf {} +"
+
+  - name: install-deps
+    description: "Install all dependencies"
+    command: "poetry install && cd copilot_frontend && npm install"
+
+  - name: build
+    description: "Build the entire project"
+    command: "cd copilot_backend && poetry build && cd ../copilot_frontend && npm run build"

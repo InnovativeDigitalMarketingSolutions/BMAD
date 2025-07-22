@@ -1,0 +1,12 @@
+{
+  "component": "[Naam]",
+  "props": [
+    {
+      "name": "",
+      "type": "",
+      "default": "",
+      "description": ""
+    }
+  ],
+  "example": "[Code snippet of Figma link]"
+}
