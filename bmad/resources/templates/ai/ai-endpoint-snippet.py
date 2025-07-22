@@ -1,3 +1,5 @@
+# AI Endpoint Snippet (FastAPI)
+
 from fastapi import FastAPI
 app = FastAPI()
 

@@ -1,13 +1,6 @@
-# AI Architecture Documentation
+# AI Architectuur Documentatie
 
-## Pipeline
-- ...
-
-## Vector Search
-- ...
-
-## Endpoints
-- ...
-
-## Monitoring
-- ...
+- LLM pipeline: Langchain + OpenAI
+- Vector search: pgvector in Supabase
+- Endpoints: FastAPI
+- Monitoring: Prometheus, custom logs

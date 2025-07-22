@@ -1,0 +1,738 @@
+--- bmad/agents/Agent/ProductOwner/product_owner.py	2025-07-21 15:43:18+00:00
++++ bmad/agents/Agent/ProductOwner/product_owner.py	2025-07-22 17:21:19.165050+00:00
+@@ -2,16 +2,20 @@
+ """
+ Product Owner Agent voor BMAD
+ """
+ import argparse
+ 
++
+ def main():
+     parser = argparse.ArgumentParser(description="Product Owner Agent")
+-    parser.add_argument("command", nargs="?", default="help", help="Commando voor de agent")
++    parser.add_argument(
++        "command", nargs="?", default="help", help="Commando voor de agent"
++    )
+     args = parser.parse_args()
+     if args.command == "help":
+         print("Beschikbare commando's: help, create-story, show-vision, ...")
+     else:
+         print(f"Commando '{args.command}' wordt uitgevoerd (stub)")
+ 
++
+ if __name__ == "__main__":
+-    main()
+\ No newline at end of file
++    main()
+--- bmad/agents/Agent/Architect/architect.py	2025-07-21 10:42:42+00:00
++++ bmad/agents/Agent/Architect/architect.py	2025-07-22 17:21:19.183636+00:00
+@@ -1,9 +1,9 @@
+ import logging
+ from pathlib import Path
+ 
+-logging.basicConfig(level=logging.INFO, format='[%(levelname)s] %(message)s')
++logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
+ 
+ RESOURCE_BASE = Path(__file__).parent.parent / "resources"
+ TEMPLATE_PATHS = {
+     "design-api": RESOURCE_BASE / "templates/api/design-api.md",
+     "microservices": RESOURCE_BASE / "templates/architecture/microservices.md",
+@@ -25,16 +25,18 @@
+     "best-practices": RESOURCE_BASE / "templates/general/best-practices.md",
+     "export": RESOURCE_BASE / "data/architect/architecture-examples.md",
+     "changelog": RESOURCE_BASE / "data/general/changelog.md",
+ }
+ 
++
+ class ArchitectAgent:
+     def __init__(self):
+         pass
+ 
+     def show_help(self):
+-        print("""
++        print(
++            """
+ Beschikbare commando's:
+ - design-api: Ontwerp API endpoints en specs
+ - microservices: Stel microservices structuur voor
+ - event-flow: Ontwerp event-driven flows
+ - memory-design: Adviseer over memory/context architectuur
+@@ -57,11 +59,12 @@
+ - test: Test resource completeness
+ - list-resources: Toon alle beschikbare resource-bestanden
+ - help: Toon deze help
+ 
+ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI/MLOps, Test en Security agents. Output is direct bruikbaar voor devs, testers en business.
+-        """)
++        """
++        )
+ 
+     # ... bestaande fallback-methodes ...
+     def best_practices(self):
+         path = TEMPLATE_PATHS.get("best-practices")
+         if path and path.exists():
+@@ -113,7 +116,9 @@
+         func = getattr(self, command.replace("-", "_"), None)
+         if callable(func):
+             logging.info(f"Fallback Python-methode aangeroepen: {command}")
+             func()
+         else:
+-            logging.error(f"Onbekend commando of ontbrekend resource-bestand: {command}")
+-            self.show_help()
+\ No newline at end of file
++            logging.error(
++                f"Onbekend commando of ontbrekend resource-bestand: {command}"
++            )
++            self.show_help()
+--- bmad/agents/Agent/AiDeveloper/aidev.py	2025-07-21 10:46:36+00:00
++++ bmad/agents/Agent/AiDeveloper/aidev.py	2025-07-22 17:21:19.184980+00:00
+@@ -6,106 +6,149 @@
+ 
+ import argparse
+ import sys
+ import textwrap
+ 
++
+ class AiDeveloperAgent:
+     def __init__(self):
+         pass
+ 
+     def build_pipeline(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         from langchain.chains import LLMChain
+         from langchain.llms import OpenAI
+ 
+         llm = OpenAI(model_name="gpt-4")
+         chain = LLMChain(llm=llm, prompt="{input}")
+         result = chain.run(input="Leg uit wat vector search is.")
+-        """))
++        """
++            )
++        )
+ 
+     def prompt_template(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         **Prompt:**
+         Je bent een behulpzame AI-assistent. Beantwoord de vraag zo duidelijk mogelijk.
+ 
+         **Input:**
+         Wat is het verschil tussen supervised en unsupervised learning?
+ 
+         **Output:**
+         Supervised learning gebruikt gelabelde data, unsupervised learning niet.
+-        """))
++        """
++            )
++        )
+ 
+     def vector_search(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         import psycopg2
+         conn = psycopg2.connect(...)
+         cur = conn.cursor()
+         cur.execute("SELECT * FROM documents ORDER BY embedding <-> %s LIMIT 5", (query_embedding,))
+-        """))
++        """
++            )
++        )
+ 
+     def ai_endpoint(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         @app.post("/ai/answer")
+         def ai_answer(query: str):
+             return {"answer": llm_chain.run(input=query)}
+-        """))
++        """
++            )
++        )
+ 
+     def evaluate(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         ### Evaluatie: Sentiment Classifier v2
+         - Accuracy: 91%
+         - Precision: 0.89
+         - Recall: 0.93
+         - F1-score: 0.91
+         - Drift: geen significante drift waargenomen
+-        """))
++        """
++            )
++        )
+ 
+     def experiment_log(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         ### Experiment Log
+         - Model: gpt-4
+         - Prompt: "Leg uit wat vector search is."
+         - Resultaat: "Vector search zoekt op basis van semantische gelijkenis."
+         - Opmerkingen: Werkt goed voor korte vragen, minder voor lange contexten.
+-        """))
++        """
++            )
++        )
+ 
+     def monitoring(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         # Monitoring & Drift Detectie
+         - Log inference requests en responses
+         - Monitor latency en foutpercentages
+         - Detecteer concept drift met periodieke evaluatie
+-        """))
++        """
++            )
++        )
+ 
+     def doc(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         # AI Architectuur Documentatie
+         - LLM pipeline: Langchain + OpenAI
+         - Vector search: pgvector in Supabase
+         - Endpoints: FastAPI
+         - Monitoring: Prometheus, custom logs
+-        """))
++        """
++            )
++        )
+ 
+     def review(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         # AI Code/Pipeline Review
+         - [x] Prompt engineering getest
+         - [x] Modelkeuze onderbouwd
+         - [ ] Evaluatie met edge cases
+         - [ ] Monitoring ingericht
+-        """))
++        """
++            )
++        )
+ 
+     def blockers(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         # Blockers
+         - Onvoldoende trainingsdata voor sentiment analyse
+         - API key limieten bij OpenAI
+-        """))
++        """
++            )
++        )
+ 
+     # --- Uitbreidingen hieronder ---
+     def build_etl_pipeline(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         from prefect import flow, task
+ 
+         @task
+         def extract():
+             # Data extractie
+@@ -124,86 +167,121 @@
+         @flow
+         def etl_flow():
+             data = extract()
+             clean = transform(data)
+             load(clean)
+-        """))
++        """
++            )
++        )
+ 
+     def deploy_model(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         # Model deployment (FastAPI + MLflow/BentoML)
+         @app.post("/predict")
+         def predict(input: InputData):
+             prediction = model.predict(input)
+             return {"prediction": prediction}
+-        """))
++        """
++            )
++        )
+ 
+     def version_model(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         # Model versioning (MLflow)
+         import mlflow
+         mlflow.set_experiment("sentiment-analysis")
+         with mlflow.start_run():
+             mlflow.log_param("model_type", "bert")
+             mlflow.log_metric("accuracy", 0.91)
+             mlflow.sklearn.log_model(model, "model")
+-        """))
++        """
++            )
++        )
+ 
+     def auto_evaluate(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         # Automatische evaluatie
+         def evaluate(model, X_test, y_test):
+             preds = model.predict(X_test)
+             acc = accuracy_score(y_test, preds)
+             print(f"Accuracy: {acc:.2f}")
+-        """))
++        """
++            )
++        )
+ 
+     def bias_check(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         # Bias/Fairness check
+         - [x] Dataset gecontroleerd op class imbalance
+         - [ ] Fairness metrics (demographic parity, equal opportunity) berekend
+         - [ ] Bias mitigatie toegepast indien nodig
+-        """))
++        """
++            )
++        )
+ 
+     def explain(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         # Explainability (SHAP)
+         import shap
+         explainer = shap.Explainer(model)
+         shap_values = explainer(X_test)
+         shap.summary_plot(shap_values, X_test)
+-        """))
++        """
++            )
++        )
+ 
+     def model_card(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         **Model:** Sentiment Classifier v2  
+         **Doel:** Sentimentanalyse op support tickets  
+         **Data:** 10k gelabelde tickets (2023)  
+         **Performance:** Accuracy 91%, F1-score 0.91  
+         **Beperkingen:** Bias richting positieve tickets, matig op sarcasme  
+         **Retraining:** Elke maand bij nieuwe data
+-        """))
++        """
++            )
++        )
+ 
+     def prompt_eval(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         | Prompt | Output | Score (1-5) |
+         |--------|--------|-------------|
+         | Wat is AI? | Kunstmatige intelligentie is... | 5 |
+         | Leg uit: vector search | Vector search zoekt... | 4 |
+-        """))
++        """
++            )
++        )
+ 
+     def retrain(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         # Retraining Trigger
+         - Data drift gedetecteerd: retraining gestart
+         - Nieuwe data toegevoegd aan trainingset
+         - Model opnieuw gevalideerd en gedeployed
+-        """))
++        """
++            )
++        )
+ 
+     def show_help(self):
+-        print("""
++        print(
++            """
+ Beschikbare commando's:
+ - build-pipeline
+ - prompt-template
+ - vector-search
+ - ai-endpoint
+@@ -221,11 +299,12 @@
+ - explain
+ - model-card
+ - prompt-eval
+ - retrain
+ - help
+-        """)
++        """
++        )
+ 
+     def run(self, command):
+         commands = {
+             "build-pipeline": self.build_pipeline,
+             "prompt-template": self.prompt_template,
+@@ -244,11 +323,11 @@
+             "bias-check": self.bias_check,
+             "explain": self.explain,
+             "model-card": self.model_card,
+             "prompt-eval": self.prompt_eval,
+             "retrain": self.retrain,
+-            "help": self.show_help
++            "help": self.show_help,
+         }
+         func = commands.get(command)
+         if func:
+             func()
+         else:
+@@ -261,7 +340,8 @@
+     parser.add_argument("command", help="Commando om uit te voeren")
+     args = parser.parse_args()
+     agent = AiDeveloperAgent()
+     agent.run(args.command)
+ 
++
+ if __name__ == "__main__":
+     main()
+--- bmad/agents/Agent/FullstackDeveloper/fullstackdeveloper.py	2025-07-21 10:45:20+00:00
++++ bmad/agents/Agent/FullstackDeveloper/fullstackdeveloper.py	2025-07-22 17:21:19.194455+00:00
+@@ -6,36 +6,47 @@
+ 
+ import argparse
+ import sys
+ import textwrap
+ 
++
+ class FullstackDeveloperAgent:
+     def __init__(self):
+         pass
+ 
+     def implement_story(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         ## Pull Request: User Authentication
+         - [x] Endpoint `/auth/login` geïmplementeerd (FastAPI)
+         - [x] JWT integratie met Supabase
+         - [x] Frontend login form (Next.js)
+         - [x] Unit tests (pytest, coverage 95%)
+         - [ ] E2E test pending
+         **Blockers:**
+         - Nog geen e-mail service voor registratiebevestiging
+-        """))
++        """
++            )
++        )
+ 
+     def build_api(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         @router.post("/auth/login")
+         def login(user: UserLogin):
+             token = auth_service.authenticate(user.email, user.password)
+             return {"access_token": token}
+-        """))
++        """
++            )
++        )
+ 
+     def build_frontend(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         // components/LoginForm.tsx
+         import React, { FormEvent } from 'react';
+         export function LoginForm(): JSX.Element {
+           const handleSubmit = (e: FormEvent) => {
+             e.preventDefault();
+@@ -47,29 +58,41 @@
+               <input type="password" name="password" placeholder="Password" required />
+               <button type="submit">Login</button>
+             </form>
+           );
+         }
+-        """))
++        """
++            )
++        )
+ 
+     def integrate_service(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         # Integratie met Supabase, Redis, pgvector, Langchain
+         from supabase import create_client
+         supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+-        """))
++        """
++            )
++        )
+ 
+     def write_tests(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         def test_login_success(client):
+             response = client.post("/auth/login", json={"email": "test@test.com", "password": "secret"})
+             assert response.status_code == 200
+             assert "access_token" in response.json()
+-        """))
++        """
++            )
++        )
+ 
+     def ci_cd(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         # CI/CD Pipeline (GitHub Actions)
+         name: CI
+         on: [push]
+         jobs:
+           build:
+@@ -82,95 +105,140 @@
+                   python-version: '3.11'
+               - name: Install dependencies
+                 run: pip install -r requirements.txt
+               - name: Run tests
+                 run: pytest
+-        """))
++        """
++            )
++        )
+ 
+     def dev_log(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         ### Dev Log 2024-07-20
+         - User login endpoint gebouwd
+         - JWT integratie getest
+         - Frontend login form aangemaakt
+         - Unit tests toegevoegd
+         - Blocker: wacht op e-mail service
+-        """))
++        """
++            )
++        )
+ 
+     def review(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         # Code Review
+         - [x] Code voldoet aan style guide
+         - [x] Alle tests geslaagd
+         - [ ] Edge cases afgedekt
+         - [ ] Security checks uitgevoerd
+-        """))
++        """
++            )
++        )
+ 
+     def refactor(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         # Refactoring Advies
+         - Herstructureer login logica naar aparte service
+         - Gebruik environment variables voor secrets
+         - Voeg type hints toe aan alle functies
+-        """))
++        """
++            )
++        )
+ 
+     def security_check(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         # Security Checklist
+         - [x] Input validatie aanwezig
+         - [x] JWT tokens met expiry
+         - [ ] Rate limiting op login endpoint
+         - [ ] Dependency scan uitgevoerd
+-        """))
++        """
++            )
++        )
+ 
+     def blockers(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         # Blockers
+         - E-mail service ontbreekt voor registratie
+         - Testdata niet beschikbaar voor E2E tests
+-        """))
++        """
++            )
++        )
+ 
+     # --- Uitbreidingen hieronder ---
+     def api_contract(self):
+-        print("Zie OpenAPI contract voorbeeld in: resources/templates/openapi-snippet.yaml")
++        print(
++            "Zie OpenAPI contract voorbeeld in: resources/templates/openapi-snippet.yaml"
++        )
+ 
+     def component_doc(self):
+-        print("Zie Storybook/MDX voorbeeld in: resources/templates/storybook-mdx-template.mdx")
++        print(
++            "Zie Storybook/MDX voorbeeld in: resources/templates/storybook-mdx-template.mdx"
++        )
+ 
+     def performance_profile(self):
+-        print("Zie performance report template in: resources/templates/performance-report-template.md")
++        print(
++            "Zie performance report template in: resources/templates/performance-report-template.md"
++        )
+ 
+     def a11y_check(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         ## Accessibility Check
+         - [x] Alle inputs hebben labels
+         - [x] Contrast ratio voldoet aan WCAG AA
+         - [ ] Keyboard navigation volledig ondersteund
+-        """))
++        """
++            )
++        )
+ 
+     def feature_toggle(self):
+-        print("Zie feature toggle config in: resources/templates/feature-toggle-config.yaml")
++        print(
++            "Zie feature toggle config in: resources/templates/feature-toggle-config.yaml"
++        )
+ 
+     def monitoring_setup(self):
+-        print("Zie monitoring config snippet in: resources/templates/monitoring-config-snippet.yaml")
++        print(
++            "Zie monitoring config snippet in: resources/templates/monitoring-config-snippet.yaml"
++        )
+ 
+     def release_notes(self):
+-        print("Zie release notes template in: resources/templates/release-notes-template.md")
++        print(
++            "Zie release notes template in: resources/templates/release-notes-template.md"
++        )
+ 
+     def devops_handover(self):
+-        print("Zie DevOps handover checklist in: resources/templates/devops-handover-checklist.md")
++        print(
++            "Zie DevOps handover checklist in: resources/templates/devops-handover-checklist.md"
++        )
+ 
+     def tech_debt(self):
+-        print(textwrap.dedent("""
++        print(
++            textwrap.dedent(
++                """
+         # Technische schuld
+         - [ ] Oude API endpoints refactoren
+         - [ ] Dependency upgrades nodig
+         - [ ] Test coverage verhogen voor legacy code
+-        """))
++        """
++            )
++        )
+ 
+     def show_help(self):
+-        print("""
++        print(
++            """
+ Beschikbare commando's:
+ - implement-story
+ - build-api
+ - build-frontend
+ - integrate-service
+@@ -189,11 +257,12 @@
+ - monitoring-setup
+ - release-notes
+ - devops-handover
+ - tech-debt
+ - help
+-        """)
++        """
++        )
+ 
+     def run(self, command):
+         commands = {
+             "implement-story": self.implement_story,
+             "build-api": self.build_api,
+@@ -213,11 +282,11 @@
+             "feature-toggle": self.feature_toggle,
+             "monitoring-setup": self.monitoring_setup,
+             "release-notes": self.release_notes,
+             "devops-handover": self.devops_handover,
+             "tech-debt": self.tech_debt,
+-            "help": self.show_help
++            "help": self.show_help,
+         }
+         func = commands.get(command)
+         if func:
+             func()
+         else:
+@@ -230,7 +299,8 @@
+     parser.add_argument("command", help="Commando om uit te voeren")
+     args = parser.parse_args()
+     agent = FullstackDeveloperAgent()
+     agent.run(args.command)
+ 
++
+ if __name__ == "__main__":
+     main()

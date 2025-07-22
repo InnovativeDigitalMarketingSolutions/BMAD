@@ -1,0 +1,5 @@
+./bmad/node_modules/@types/node/timers/promises.d.ts
+./bmad/node_modules/@types/node/stream/promises.d.ts
+./bmad/node_modules/@types/node/readline/promises.d.ts
+./bmad/node_modules/@types/node/dns/promises.d.ts
+./bmad/node_modules/@types/node/fs/promises.d.ts

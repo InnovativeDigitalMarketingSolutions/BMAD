@@ -1,0 +1,5 @@
+./bmad/agents/Agent/ReleaseManager/releasemanager.yaml
+./bmad/agents/Agent/BackendDeveloper/backenddeveloper.yaml
+./bmad/agents/Agent/AiDeveloper/aideveloper.yaml
+./bmad/agents/Agent/StrategiePartner/strategiepartner.yaml
+./bmad/agents/Agent/DevOpsInfra/devopsinfra.yaml

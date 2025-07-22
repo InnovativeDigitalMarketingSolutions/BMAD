@@ -1,3 +1,5 @@
+# Vector Search Snippet (pgvector)
+
 import psycopg2
 conn = psycopg2.connect(...)
 cur = conn.cursor()

@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  lint-and-validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          python -m venv .venv
+          source .venv/bin/activate
+          pip install black flake8 pyyaml
+      - name: Lint with flake8
+        run: |
+          source .venv/bin/activate
+          find bmad/agents/Agent -type f -name '*.py' > python_files.txt
+          .venv/bin/flake8 $(cat python_files.txt)
+      - name: Check formatting with black
+        run: |
+          source .venv/bin/activate
+          .venv/bin/black --check bmad/agents/Agent
+      - name: Validate agent resources
+        run: |
+          source .venv/bin/activate
+          python validate_agent_resources.py 

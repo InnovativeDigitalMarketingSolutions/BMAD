@@ -1,6 +1,0 @@
-[
-  {"id": "PBI1", "title": "User Authentication", "status": "Done", "priority": "Hoog", "sprint": "Sprint 1"},
-  {"id": "PBI2", "title": "Dashboard", "status": "In Progress", "priority": "Hoog", "sprint": "Sprint 1"},
-  {"id": "PBI3", "title": "ClickUp Integratie", "status": "Planned", "priority": "Medium", "sprint": "Sprint 2"},
-  {"id": "PBI4", "title": "AI-adviesmodule", "status": "Backlog", "priority": "Laag", "sprint": null}
-]

@@ -1,0 +1,14 @@
+[
+  {
+    "id": 1,
+    "title": "Login functionaliteit",
+    "status": "todo",
+    "priority": "high"
+  },
+  {
+    "id": 2,
+    "title": "Dashboard UI",
+    "status": "in progress",
+    "priority": "medium"
+  }
+]

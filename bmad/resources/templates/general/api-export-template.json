@@ -1,0 +1,13 @@
+{
+  "api_name": "...",
+  "version": "...",
+  "endpoints": [
+    {
+      "path": "/...",
+      "method": "GET",
+      "description": "..."
+    }
+  ],
+  "authentication": "...",
+  "description": "..."
+}

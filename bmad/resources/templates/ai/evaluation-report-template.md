@@ -1,5 +1,7 @@
 # AI Evaluatie Rapport
 
+### Evaluatie: {model_name}
+
 ## Model
 - ...
 
@@ -7,10 +9,11 @@
 - ...
 
 ## Metrics
-- Accuracy: ...
-- Precision: ...
-- Recall: ...
-- F1-score: ...
+- Accuracy: {accuracy}
+- Precision: {precision}
+- Recall: {recall}
+- F1-score: {f1}
+- Drift: {drift}
 
 ## Bevindingen
 - ...

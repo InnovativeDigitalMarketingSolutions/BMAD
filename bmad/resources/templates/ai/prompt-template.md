@@ -1,10 +1,13 @@
-# AI Prompt Template
+# Prompt Template
 
-## Context
-- Describe the context of the prompt (e.g. support, sales, etc.)
+**Context:**
+Describe the context of the prompt (e.g. support, sales, etc.)
 
-## Instruction
-- Provide a clear instruction to the model
+**Prompt:**
+You are a helpful AI assistant. Answer the question as clearly as possible.
 
-## Input
-- ...
+**Input:**
+What is the difference between supervised and unsupervised learning?
+
+**Output:**
+Supervised learning uses labeled data, unsupervised learning does not.

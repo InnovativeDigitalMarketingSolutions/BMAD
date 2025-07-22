@@ -1,0 +1,17 @@
+bmad/resources/data/general/status-report.md
+bmad/resources/data/general/stakeholders.md
+bmad/resources/data/general/copilot-product-vision.md
+bmad/resources/data/general/roadmap.md
+bmad/resources/data/general/dor.md
+bmad/resources/data/general/backlog.json
+bmad/resources/data/general/backlog.md
+bmad/resources/data/general/api-changelog.md
+bmad/resources/data/general/dod.md
+bmad/resources/templates/general/security-template.md
+bmad/resources/templates/general/api-export-template.md
+bmad/resources/templates/general/api-template.md
+bmad/resources/templates/general/best-practices.md
+bmad/resources/templates/general/performance-template.md
+bmad/resources/templates/general/api-export-template.json
+bmad/resources/templates/general/integration-template.md
+bmad/resources/templates/general/database-template.md
