@@ -1,6 +1,7 @@
 from bmad.agents.core.llm_client import ask_openai
-from bmad.agents.core.message_bus import subscribe
+from bmad.agents.core.message_bus import subscribe, publish
 import logging
+import time
 
 def pipeline_advice(pipeline_config):
     prompt = f"Analyseer deze CI/CD pipeline config en doe 2 optimalisatievoorstellen:\n{pipeline_config}"
@@ -32,6 +33,22 @@ def on_feedback_sentiment_analyzed(event):
         result = ask_openai(prompt, structured_output=structured_output)
         logging.info(f"[DevOpsInfra][LLM DevOps Voorstel]: {result}")
 
+def handle_build_triggered(event):
+    logging.info("[DevOpsInfra] Build gestart...")
+    # Simuleer build (in productie: start build pipeline)
+    time.sleep(2)
+    publish("tests_requested", {"desc": "Tests uitvoeren"})
+    logging.info("[DevOpsInfra] Build afgerond, tests_requested gepubliceerd.")
+
+def handle_deployment_executed(event):
+    logging.info("[DevOpsInfra] Deployment gestart...")
+    # Simuleer deployment (in productie: start deployment pipeline)
+    time.sleep(2)
+    publish("deployment_completed", {"desc": "Deployment afgerond"})
+    logging.info("[DevOpsInfra] Deployment afgerond, deployment_completed gepubliceerd.")
+
 subscribe("pipeline_advice_requested", on_pipeline_advice_requested)
 subscribe("incident_response_requested", on_incident_response_requested)
 subscribe("feedback_sentiment_analyzed", on_feedback_sentiment_analyzed)
+subscribe("build_triggered", handle_build_triggered)
+subscribe("deployment_executed", handle_deployment_executed)

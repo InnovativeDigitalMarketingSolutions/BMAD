@@ -5,6 +5,7 @@ from datetime import datetime
 from bmad.agents.core.slack_notify import send_slack_message
 from bmad.agents.core.llm_client import ask_openai
 import hashlib
+import time
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
@@ -48,5 +49,19 @@ def on_summarize_feedback(event):
     feedback_list = event.get("feedback_list", [])
     summarize_feedback(feedback_list)
 
+def handle_retro_planned(event):
+    logging.info("[FeedbackAgent] Retro gepland, feedback wordt verzameld...")
+    time.sleep(1)
+    publish("feedback_collected", {"desc": "Feedback verzameld"})
+    logging.info("[FeedbackAgent] Feedback verzameld, feedback_collected gepubliceerd.")
+
+def handle_feedback_collected(event):
+    logging.info("[FeedbackAgent] Feedback wordt geanalyseerd...")
+    time.sleep(1)
+    publish("trends_analyzed", {"desc": "Trends geanalyseerd"})
+    logging.info("[FeedbackAgent] Trends geanalyseerd, trends_analyzed gepubliceerd.")
+
 subscribe("feedback_received", on_feedback_received)
 subscribe("summarize_feedback", on_summarize_feedback)
+subscribe("retro_planned", handle_retro_planned)
+subscribe("feedback_collected", handle_feedback_collected)
