@@ -8,6 +8,9 @@ import argparse
 import sys
 import textwrap
 
+from bmad.agents.core.message_bus import publish, subscribe
+from bmad.agents.core.supabase_context import save_context, get_context
+
 
 class FullstackDeveloperAgent:
     def __init__(self):
@@ -234,6 +237,14 @@ class FullstackDeveloperAgent:
             )
         )
 
+    def collaborate_example(self):
+        """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
+        publish("feature_deployed", {"status": "success", "agent": "FullstackDeveloper"})
+        save_context("FullstackDeveloper", {"feature_status": "deployed"})
+        print("Event gepubliceerd en context opgeslagen.")
+        context = get_context("FullstackDeveloper")
+        print(f"Opgehaalde context: {context}")
+
     def show_help(self):
         print(
             """
@@ -258,6 +269,7 @@ Beschikbare commando's:
 - release-notes
 - devops-handover
 - tech-debt
+- collaborate-example
 - help
         """
         )
@@ -284,6 +296,7 @@ Beschikbare commando's:
             "release-notes": self.release_notes,
             "devops-handover": self.devops_handover,
             "tech-debt": self.tech_debt,
+            "collaborate-example": self.collaborate_example,
             "help": self.show_help,
         }
         func = commands.get(command)
