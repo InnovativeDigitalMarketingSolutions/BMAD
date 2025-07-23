@@ -8,6 +8,10 @@ import argparse
 import sys
 import textwrap
 
+from bmad.agents.core.message_bus import publish, subscribe
+from bmad.agents.core.supabase_context import save_context, get_context
+from bmad.agents.core.llm_client import ask_openai
+
 
 class AiDeveloperAgent:
     def __init__(self):
@@ -277,6 +281,14 @@ class AiDeveloperAgent:
             )
         )
 
+    def collaborate_example(self):
+        """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
+        publish("ai_pipeline_ready", {"status": "success", "agent": "AiDeveloper"})
+        save_context("AiDeveloper", {"pipeline_status": "ready"})
+        print("Event gepubliceerd en context opgeslagen.")
+        context = get_context("AiDeveloper")
+        print(f"Opgehaalde context: {context}")
+
     def show_help(self):
         print(
             """
@@ -300,6 +312,7 @@ Beschikbare commando's:
 - model-card
 - prompt-eval
 - retrain
+- collaborate-example
 - help
         """
         )
@@ -325,6 +338,7 @@ Beschikbare commando's:
             "model-card": self.model_card,
             "prompt-eval": self.prompt_eval,
             "retrain": self.retrain,
+            "collaborate-example": self.collaborate_example,
             "help": self.show_help,
         }
         func = commands.get(command)
@@ -333,6 +347,11 @@ Beschikbare commando's:
         else:
             print(f"❌ Onbekend commando: {command}")
             self.show_help()
+
+    def ask_llm(self, prompt):
+        """Stuur een prompt naar de LLM (OpenAI) en print het antwoord."""
+        result = ask_openai(prompt)
+        print(f"[LLM Antwoord]: {result}")
 
 
 def main():
