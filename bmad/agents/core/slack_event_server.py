@@ -19,10 +19,13 @@ logging.basicConfig(level=getattr(logging, LOG_LEVEL), format="[%(levelname)s] %
 from bmad.agents.core.slack_notify import send_slack_message
 
 # (Optioneel) Slack bot token en signing secret uit env vars
-SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN", "xoxb-5182119274304-9241460693604-pqMKBUrrtWwzVaK7QcZos7fx")
+SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
 SLACK_WEBHOOK_URL = os.getenv("SLACK_WEBHOOK_URL", "https://hooks.slack.com/services/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")
 
 SLACK_SIGNING_SECRET = os.getenv("SLACK_SIGNING_SECRET", "")
+
+if not SLACK_BOT_TOKEN:
+    raise RuntimeError("SLACK_BOT_TOKEN niet gezet!")
 
 def verify_slack_signature(request):
     if not SLACK_SIGNING_SECRET:
@@ -50,30 +53,31 @@ def verify_slack_signature(request):
         return False
     return True
 
-@app.route('/health', methods=['GET'])
-def health_check():
-    return jsonify({"status": "ok"}), 200
+# Voeg een set toe om recent verwerkte event_ts bij te houden
+RECENT_EVENT_TS = set()
 
+# Haal deduplicatie op event_id uit slack_events()
 @app.route('/slack/events', methods=['POST'])
 def slack_events():
-    print("DEBUG: Headers:", dict(request.headers))
-    print("DEBUG: Body:", request.get_data(as_text=True))
-    print("DEBUG: SLACK_SIGNING_SECRET uit .env:", repr(SLACK_SIGNING_SECRET))
-    if not verify_slack_signature(request):
-        abort(401)
     data = request.json
-    # Slack URL verification
+    # Slack URL verification vóór signature check
     if data.get('type') == 'url_verification' or 'challenge' in data:
         return jsonify({'challenge': data.get('challenge')})
+    if not verify_slack_signature(request):
+        abort(401)
     logging.info(f"[Slack Event] Ontvangen: {data}")
+    event = data.get("event", {})
+    event_type = event.get("type")
+    if not event_type:
+        logging.warning("Geen event type gevonden in payload.")
+        return '', 200
     # Event dispatcher
-    if event_type == "message":
+    if event_type == "message" or event_type == "app_mention":
         handle_message_event(event)
     elif event_type == "reaction_added":
         handle_reaction_event(event)
     else:
         logging.info(f"Onbekend event type: {event_type}")
-    # Doorsturen naar andere agenten (stub)
     forward_event_to_agents(event)
     return '', 200
 
@@ -114,10 +118,25 @@ def slack_interactivity():
     return make_response("Onbekende actie", 200)
 
 def handle_message_event(event):
+    # Negeer berichten van bots (inclusief jezelf)
+    if event.get("subtype") == "bot_message" or event.get("bot_id"):
+        return
+    # Deduplicatie op event_ts
+    event_ts = event.get("ts")
+    if event_ts:
+        if event_ts in RECENT_EVENT_TS:
+            logging.info(f"[Deduplicatie] Event met ts {event_ts} al verwerkt, sla over.")
+            return
+        RECENT_EVENT_TS.add(event_ts)
+        if len(RECENT_EVENT_TS) > 1000:
+            RECENT_EVENT_TS.pop()
     user = event.get("user")
-    text = event.get("text")
+    text = event.get("text") or ""
     channel = event.get("channel")
+    # Verwijderde check op mention van eigen bot (anders negeert hij alle app_mention events)
     logging.info(f"[Slack] Bericht van {user} in {channel}: {text}")
+    # Testreactie naar Slack
+    send_slack_message(f"👋 Hallo <@{user}>! Je bericht '{text}' is ontvangen.", channel, use_api=True)
     # Command parsing: herken /agent <agentnaam> <commando> of @agentnaam <commando>
     if text:
         import re
@@ -136,7 +155,7 @@ def handle_message_event(event):
                 "user": user,
                 "channel": channel
             })
-            send_slack_message(channel, f"Commando ontvangen voor agent '{agent_name}': {command}", use_api=True)
+            send_slack_message(f"Commando ontvangen voor agent '{agent_name}': {command}", channel, use_api=True)
             return
         elif mention_match:
             # Optioneel: lookup Slack user ID naar agentnaam
@@ -149,11 +168,11 @@ def handle_message_event(event):
                 "user": user,
                 "channel": channel
             })
-            send_slack_message(channel, f"Commando ontvangen voor agent ID '{mentioned_id}': {command}", use_api=True)
+            send_slack_message(f"Commando ontvangen voor agent ID '{mentioned_id}': {command}", channel, use_api=True)
             return
         # Voorbeeld: automatisch reageren op een triggerwoord
         if "hallo agent" in text.lower():
-            send_slack_message(channel, "👋 Hallo! Ik ben een BMAD agent.", use_api=True)
+            send_slack_message("👋 Hallo! Ik ben een BMAD agent.", channel, use_api=True)
 
 
 def handle_reaction_event(event):
