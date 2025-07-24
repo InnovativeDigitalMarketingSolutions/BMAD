@@ -26,7 +26,7 @@ def send_slack_message(text, channel=None, feedback_id=None, use_api=False, bloc
         url = "https://slack.com/api/chat.postMessage"
         headers = {
             "Authorization": f"Bearer {SLACK_BOT_TOKEN}",
-            "Content-Type": "application/json"
+            "Content-Type": "application/json; charset=utf-8"
         }
         payload = {"text": text}
         if channel:
@@ -35,6 +35,11 @@ def send_slack_message(text, channel=None, feedback_id=None, use_api=False, bloc
             payload["blocks"] = blocks
         elif feedback_id:
             payload["blocks"] = _feedback_blocks(text, feedback_id)
+        # Debug prints
+        print("DEBUG SLACK_BOT_TOKEN:", os.getenv("SLACK_BOT_TOKEN"))
+        print("DEBUG channel:", channel)
+        print("DEBUG type(channel):", type(channel))
+        print("DEBUG repr(channel):", repr(channel))
         response = requests.post(url, headers=headers, json=payload)
         print("[Slack API] Response:", response.status_code, response.text)
         if not response.ok or not response.json().get("ok"):
