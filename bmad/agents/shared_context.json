@@ -1,57 +1,12 @@
 {
   "events": [
     {
-      "timestamp": "2025-07-22T21:17:45.274043",
+      "timestamp": "2025-07-23T18:50:16.145208",
       "event": "ai_pipeline_ready",
       "data": {
         "status": "success",
         "agent": "AiDeveloper",
         "version": 1
-      }
-    },
-    {
-      "timestamp": "2025-07-22T21:37:40.488094",
-      "event": "feedback_collected",
-      "data": {
-        "timestamp": "2025-07-22T21:37:40.487738",
-        "feedback": "Test feedback via Slack integration.",
-        "agent": "FeedbackAgent"
-      }
-    },
-    {
-      "timestamp": "2025-07-22T21:38:40.263470",
-      "event": "feedback_collected",
-      "data": {
-        "timestamp": "2025-07-22T21:38:40.263026",
-        "feedback": "Test feedback via Slack integration.",
-        "agent": "FeedbackAgent"
-      }
-    },
-    {
-      "timestamp": "2025-07-22T21:39:31.883616",
-      "event": "feedback_collected",
-      "data": {
-        "timestamp": "2025-07-22T21:39:31.883154",
-        "feedback": "Test feedback via Slack integration.",
-        "agent": "FeedbackAgent"
-      }
-    },
-    {
-      "timestamp": "2025-07-22T21:40:12.444136",
-      "event": "feedback_collected",
-      "data": {
-        "timestamp": "2025-07-22T21:40:12.443676",
-        "feedback": "Test feedback via Slack integration.",
-        "agent": "FeedbackAgent"
-      }
-    },
-    {
-      "timestamp": "2025-07-22T21:44:40.502265",
-      "event": "feedback_collected",
-      "data": {
-        "timestamp": "2025-07-22T21:44:40.501841",
-        "feedback": "Test feedback via Slack integration.",
-        "agent": "FeedbackAgent"
       }
     }
   ]
