@@ -3,9 +3,13 @@
 Product Owner Agent voor BMAD
 """
 import argparse
+import logging
+import time
 from bmad.agents.core.message_bus import publish, subscribe
 from bmad.agents.core.supabase_context import save_context, get_context
 from bmad.agents.core.llm_client import ask_openai
+from dotenv import load_dotenv
+load_dotenv()
 
 
 def main():
@@ -56,7 +60,16 @@ def on_feedback_sentiment_analyzed(event):
         print(f"[ProductOwner][LLM Verbeteruserstory]: {result}")
 
 
+def handle_feature_planned(event):
+    logging.info("[ProductOwner] Feature gepland, taken worden toegewezen...")
+    # Simuleer taaktoewijzing
+    time.sleep(1)
+    publish("tasks_assigned", {"desc": "Taken toegewezen"})
+    logging.info("[ProductOwner] Taken toegewezen, tasks_assigned gepubliceerd.")
+
+
 if __name__ == "__main__":
     main()
     subscribe("user_story_requested", on_user_story_requested)
     subscribe("feedback_sentiment_analyzed", on_feedback_sentiment_analyzed)
+    subscribe("feature_planned", handle_feature_planned)

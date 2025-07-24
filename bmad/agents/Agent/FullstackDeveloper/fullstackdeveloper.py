@@ -7,6 +7,10 @@ Implementeert features van frontend tot backend. Output in code snippets, pull r
 import argparse
 import sys
 import textwrap
+import logging
+import time
+from dotenv import load_dotenv
+load_dotenv()
 
 from bmad.agents.core.message_bus import publish, subscribe
 from bmad.agents.core.supabase_context import save_context, get_context
@@ -245,6 +249,22 @@ class FullstackDeveloperAgent:
         context = get_context("FullstackDeveloper")
         print(f"Opgehaalde context: {context}")
 
+    def handle_tasks_assigned(self, event):
+        logging.info("[FullstackDeveloper] Taken ontvangen, ontwikkeling wordt gestart...")
+        time.sleep(1)
+        publish("development_started", {"desc": "Ontwikkeling gestart"})
+        logging.info("[FullstackDeveloper] Ontwikkeling gestart, development_started gepubliceerd.")
+
+    def handle_development_started(self, event):
+        logging.info("[FullstackDeveloper] Ontwikkeling in uitvoering...")
+        time.sleep(2)
+        publish("testing_started", {"desc": "Testen gestart"})
+        logging.info("[FullstackDeveloper] Testen gestart, testing_started gepubliceerd.")
+
+    def setup_event_handlers(self):
+        subscribe("tasks_assigned", self.handle_tasks_assigned)
+        subscribe("development_started", self.handle_development_started)
+
     def show_help(self):
         print(
             """
@@ -309,10 +329,14 @@ Beschikbare commando's:
 
 def main():
     parser = argparse.ArgumentParser(description="Fullstack Developer Agent")
-    parser.add_argument("command", help="Commando om uit te voeren")
+    parser.add_argument("command", nargs="?", help="Commando om uit te voeren")
     args = parser.parse_args()
     agent = FullstackDeveloperAgent()
-    agent.run(args.command)
+    agent.setup_event_handlers()
+    if args.command:
+        agent.run(args.command)
+    else:
+        agent.show_help()
 
 
 if __name__ == "__main__":
