@@ -8,6 +8,391 @@
         "agent": "AiDeveloper",
         "version": 1
       }
+    },
+    {
+      "timestamp": "2025-07-25T10:41:30.835908",
+      "event": "hitl_decision",
+      "data": {
+        "alert_id": "test-hitl-interactive-001",
+        "approved": true,
+        "user": "U054FQ72C30",
+        "channel": "C097FTDU1A5"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T10:45:21.484016",
+      "event": "hitl_decision",
+      "data": {
+        "alert_id": "test-hitl-interactive-001",
+        "approved": true,
+        "user": "U054FQ72C30",
+        "channel": "C097FTDU1A5"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T10:46:34.283552",
+      "event": "hitl_decision",
+      "data": {
+        "alert_id": "test-hitl-interactive-001",
+        "approved": true,
+        "user": "U054FQ72C30",
+        "channel": "C097FTDU1A5"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T11:35:11.925146",
+      "event": "new_task",
+      "data": {
+        "event_type": "new_task",
+        "task_desc": "Nieuwe feature ontwikkelen"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T11:35:12.197179",
+      "event": "user_story_requested",
+      "data": {
+        "event_type": "user_story_requested",
+        "requirement": "Feature requirement"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T11:35:12.452284",
+      "event": "test_generation_requested",
+      "data": {
+        "event_type": "test_generation_requested",
+        "function_description": "Feature test"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T11:44:49.450903",
+      "event": "new_task",
+      "data": {
+        "event_type": "new_task",
+        "task_desc": "Nieuwe feature ontwikkelen"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T11:44:49.714854",
+      "event": "user_story_requested",
+      "data": {
+        "event_type": "user_story_requested",
+        "requirement": "Feature requirement"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T11:44:49.984653",
+      "event": "test_generation_requested",
+      "data": {
+        "event_type": "test_generation_requested",
+        "function_description": "Feature test"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T11:47:52.551210",
+      "event": "new_task",
+      "data": {
+        "event_type": "new_task",
+        "task_desc": "Nieuwe feature ontwikkelen"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T11:47:52.808941",
+      "event": "user_story_requested",
+      "data": {
+        "event_type": "user_story_requested",
+        "requirement": "Feature requirement"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T11:47:53.091330",
+      "event": "test_generation_requested",
+      "data": {
+        "event_type": "test_generation_requested",
+        "function_description": "Feature test"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T11:49:02.264507",
+      "event": "build_triggered",
+      "data": {
+        "event_type": "build_triggered",
+        "desc": "Build gestart"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T11:49:04.275638",
+      "event": "tests_requested",
+      "data": {
+        "desc": "Tests uitvoeren"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T11:49:04.546638",
+      "event": "tests_requested",
+      "data": {
+        "event_type": "tests_requested",
+        "desc": "Tests uitvoeren"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T11:49:04.829217",
+      "event": "tests_completed",
+      "data": {
+        "event_type": "tests_completed",
+        "desc": "Tests voltooid"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T11:49:10.386636",
+      "event": "hitl_decision",
+      "data": {
+        "alert_id": "automated_deployment_hitl_required_1753436945",
+        "approved": true,
+        "user": "U054FQ72C30",
+        "channel": "C097FTDU1A5"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T11:49:10.934239",
+      "event": "deployment_executed",
+      "data": {
+        "event_type": "deployment_executed",
+        "desc": "Deployment uitgevoerd"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T11:49:11.220215",
+      "event": "deployment_completed",
+      "data": {
+        "event_type": "deployment_completed",
+        "desc": "Deployment afgerond"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:08:07.535429",
+      "event": "build_triggered",
+      "data": {
+        "event_type": "build_triggered",
+        "desc": "Build gestart"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:08:09.543245",
+      "event": "tests_requested",
+      "data": {
+        "desc": "Tests uitvoeren"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:08:09.816917",
+      "event": "tests_requested",
+      "data": {
+        "event_type": "tests_requested",
+        "desc": "Tests uitvoeren"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:08:10.083510",
+      "event": "tests_completed",
+      "data": {
+        "event_type": "tests_completed",
+        "desc": "Tests voltooid"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:09:08.462983",
+      "event": "hitl_decision",
+      "data": {
+        "alert_id": "automated_deployment_hitl_required_1753445290",
+        "approved": true,
+        "user": "U054FQ72C30",
+        "channel": "C097FTDU1A5"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:09:18.255262",
+      "event": "build_triggered",
+      "data": {
+        "event_type": "build_triggered",
+        "desc": "Build gestart"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:09:20.261717",
+      "event": "tests_requested",
+      "data": {
+        "desc": "Tests uitvoeren"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:09:20.537752",
+      "event": "tests_requested",
+      "data": {
+        "event_type": "tests_requested",
+        "desc": "Tests uitvoeren"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:09:20.805985",
+      "event": "tests_completed",
+      "data": {
+        "event_type": "tests_completed",
+        "desc": "Tests voltooid"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:09:24.347546",
+      "event": "hitl_decision",
+      "data": {
+        "alert_id": "automated_deployment_hitl_required_1753445361",
+        "approved": true,
+        "user": "U054FQ72C30",
+        "channel": "C097FTDU1A5"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:09:26.977562",
+      "event": "deployment_executed",
+      "data": {
+        "event_type": "deployment_executed",
+        "desc": "Deployment uitgevoerd"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:09:27.244510",
+      "event": "deployment_completed",
+      "data": {
+        "event_type": "deployment_completed",
+        "desc": "Deployment afgerond"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:17:09.470195",
+      "event": "security_scan_started",
+      "data": {
+        "event_type": "security_scan_started",
+        "desc": "Security scan gestart"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:17:09.723712",
+      "event": "security_findings_reported",
+      "data": {
+        "event_type": "security_findings_reported",
+        "desc": "Security bevindingen gerapporteerd"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:17:16.239862",
+      "event": "hitl_decision",
+      "data": {
+        "alert_id": "security_review_hitl_required_1753445829",
+        "approved": false,
+        "user": "U054FQ72C30",
+        "channel": "C097FTDU1A5"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:29:13.608818",
+      "event": "security_scan_started",
+      "data": {
+        "event_type": "security_scan_started",
+        "desc": "Security scan gestart"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:29:13.929582",
+      "event": "security_findings_reported",
+      "data": {
+        "event_type": "security_findings_reported",
+        "desc": "Security bevindingen gerapporteerd"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:29:18.964683",
+      "event": "hitl_decision",
+      "data": {
+        "alert_id": "security_review_hitl_required_1753446554",
+        "approved": true,
+        "user": "U054FQ72C30",
+        "channel": "C097FTDU1A5"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:29:20.023468",
+      "event": "security_review_completed",
+      "data": {
+        "event_type": "security_review_completed",
+        "desc": "Security review afgerond"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:34:20.186011",
+      "event": "security_scan_started",
+      "data": {
+        "event_type": "security_scan_started",
+        "desc": "Security scan gestart"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:34:20.447802",
+      "event": "security_findings_reported",
+      "data": {
+        "event_type": "security_findings_reported",
+        "desc": "Security bevindingen gerapporteerd"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:34:47.528676",
+      "event": "security_scan_started",
+      "data": {
+        "event_type": "security_scan_started",
+        "desc": "Security scan gestart"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:34:47.803956",
+      "event": "security_findings_reported",
+      "data": {
+        "event_type": "security_findings_reported",
+        "desc": "Security bevindingen gerapporteerd"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:35:08.355461",
+      "event": "hitl_decision",
+      "data": {
+        "alert_id": "security_review_hitl_required_1753446888",
+        "approved": false,
+        "user": "U054FQ72C30",
+        "channel": "C097FTDU1A5"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:43:11.056187",
+      "event": "security_scan_started",
+      "data": {
+        "event_type": "security_scan_started",
+        "desc": "Security scan gestart"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:43:11.323443",
+      "event": "security_findings_reported",
+      "data": {
+        "event_type": "security_findings_reported",
+        "desc": "Security bevindingen gerapporteerd"
+      }
+    },
+    {
+      "timestamp": "2025-07-25T14:43:15.166439",
+      "event": "hitl_decision",
+      "data": {
+        "alert_id": "security_review_hitl_required_1753447391",
+        "approved": false,
+        "user": "U054FQ72C30",
+        "channel": "C097FTDU1A5"
+      }
     }
   ]
 }

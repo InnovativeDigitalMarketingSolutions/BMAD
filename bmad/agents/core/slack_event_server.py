@@ -133,10 +133,10 @@ def handle_message_event(event):
     user = event.get("user")
     text = event.get("text") or ""
     channel = event.get("channel")
-    # Verwijderde check op mention van eigen bot (anders negeert hij alle app_mention events)
+    mention = f"<@{user}>" if user else "gebruiker"
     logging.info(f"[Slack] Bericht van {user} in {channel}: {text}")
     # Testreactie naar Slack
-    send_slack_message(f"👋 Hallo <@{user}>! Je bericht '{text}' is ontvangen.", channel, use_api=True)
+    send_slack_message(f"👋 Hallo {mention}! Je bericht '{text}' is ontvangen.", channel, use_api=True)
     # Command parsing: herken /agent <agentnaam> <commando> of @agentnaam <commando>
     if text:
         import re

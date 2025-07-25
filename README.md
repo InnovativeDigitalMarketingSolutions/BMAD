@@ -106,6 +106,51 @@ git clone https://github.com/bmadcode/bmad-method.git
 npm run install:bmad # build and install all to a destination folder
 ```
 
+## Environment Variables (.env)
+
+Voor een werkende BMAD-omgeving heb je een `.env` bestand nodig in de projectroot.  
+Hieronder vind je een voorbeeld en uitleg van de belangrijkste variabelen:
+
+```env
+# --- Slack integratie ---
+SLACK_BOT_TOKEN=        # Slack Bot User OAuth Token (xoxb-...)
+SLACK_SIGNING_SECRET=   # Slack Signing Secret
+SLACK_WEBHOOK_URL=      # (optioneel) Slack Webhook URL
+SLACK_DEFAULT_CHANNEL=  # Channel ID voor standaardnotificaties (bijv. C097FTDU1A5)
+SLACK_ALERT_CHANNEL=    # Channel ID voor alerts (bijv. C097G8YLBMY)
+SLACK_PO_CHANNEL=       # Channel ID voor Product Owner escalaties (bijv. C097G9RFBBL)
+
+# --- OpenAI / LLM integratie ---
+OPENAI_API_KEY=         # OpenAI API key (sk-...)
+OPENAI_MODEL=gpt-4o     # (optioneel) Modelnaam
+
+# --- Supabase integratie ---
+SUPABASE_URL=           # Supabase project URL
+SUPABASE_KEY=           # Supabase service role key
+
+# --- Overige configuratie ---
+LOG_LEVEL=INFO
+
+# --- (optioneel) Voor Swagger UI tests ---
+SLACK_EVENT_URL=http://localhost:5001/slack/events
+
+# --- (optioneel) Voor CI/CD of test skips ---
+CI=false
+```
+
+### Uitleg per variabele
+
+- **SLACK_BOT_TOKEN**: Nodig voor alle Slack API-calls (chat.postMessage, events, etc.)
+- **SLACK_SIGNING_SECRET**: Nodig voor het valideren van inkomende Slack events.
+- **SLACK_DEFAULT_CHANNEL / SLACK_ALERT_CHANNEL / SLACK_PO_CHANNEL**: Channel ID’s waar de bot berichten mag sturen. Haal deze op via Slack of met een testscript.
+- **OPENAI_API_KEY**: Voor LLM-integratie (TestEngineer, ProductOwner, etc.)
+- **SUPABASE_URL / SUPABASE_KEY**: Voor contextopslag en resource management.
+- **LOG_LEVEL**: Loggingniveau (INFO, DEBUG, WARNING, etc.)
+- **SLACK_EVENT_URL**: Handig voor lokale Swagger UI tests.
+- **CI**: Wordt automatisch gezet in CI/CD pipelines.
+
+> **Let op:** Deel je echte secrets nooit publiekelijk! Gebruik `.env.example` als template.
+
 ## 🌟 Beyond Software Development - Expansion Packs
 
 BMad's natural language framework works in ANY domain. Expansion packs provide specialized AI agents for creative writing, business strategy, health & wellness, education, and more. Also expansion packs can expand the core BMad-Method with specific functionality that is not generic for all cases. [See the Expansion Packs Guide](docs/expansion-packs.md) and learn to create your own!
@@ -137,3 +182,110 @@ MIT License - see [LICENSE](LICENSE) for details.
 [![Contributors](https://contrib.rocks/image?repo=bmadcode/bmad-method)](https://github.com/bmadcode/bmad-method/graphs/contributors)
 
 <sub>Built with ❤️ for the AI-assisted development community</sub>
+
+## Architectuur & Workflow
+
+BMAD is een event-driven multi-agent framework. Agents communiceren via een message bus en worden gecoördineerd door een centrale orchestrator. Workflows bestaan uit een serie events, met optionele human-in-the-loop (HITL) stappen en Slack-integratie.
+
+- **Agents:** Gespecialiseerde rollen (ProductOwner, Developer, TestEngineer, etc.)
+- **Orchestrator:** Stuurt workflows aan, coördineert events, escalaties en feedback loops
+- **Message bus:** Pub/Sub mechanisme voor events tussen agents
+- **Slack:** Voor notificaties, commando’s en HITL
+- **Supabase:** Contextopslag en resource management
+- **LLM:** Voor intelligente taken (testgeneratie, story parsing, etc.)
+
+## Mappenstructuur
+
+- `bmad/agents/` — Alle agent-implementaties en core modules
+- `bmad/resources/` — Templates, data, changelogs, context
+- `bmad/api.py` — REST API (Flask) met orchestrator- en agent-endpoints
+- `swagger-ui/` — Swagger UI frontend en OpenAPI-spec
+- `tests/` — Alle tests, gestructureerd per domein (slack, orchestrator, agents, utils)
+- `.github/workflows/` — CI/CD workflows (linting, testen, health checks)
+
+## Setup & Development
+
+1. Clone de repo en ga naar de projectmap
+2. Maak een Python venv aan en installeer requirements:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt
+   ```
+3. Vul je `.env` in (zie voorbeeld hierboven)
+4. Start de API:
+   ```bash
+   python bmad/api.py
+   ```
+5. Open de Swagger UI: [http://localhost:5001/swagger](http://localhost:5001/swagger)
+
+## Testen
+
+- **Alle tests draaien:**
+  ```bash
+  pytest tests/
+  ```
+- **Automatische tests:** Draaien altijd in CI/CD
+- **Handmatige/integratietests:** Gemarkeerd met `@pytest.mark.skipif(os.getenv("CI"), ...)`, lokaal te draaien
+- **Nieuwe tests toevoegen:** Plaats in de juiste subfolder, gebruik pytest-stijl
+
+## CI/CD
+
+- **Workflow:** `.github/workflows/ci.yml`
+- **Checks:** Linting (flake8), formatting (black), pytest, health check, optionele Slack-notificatie
+- **Alleen checks, geen auto-merge/deploy**
+- **Branches worden niet automatisch overschreven**
+
+## Deployment
+
+- **Development:**
+  - Start de API met Flask (`python bmad/api.py`)
+- **Productie:**
+  - Gebruik een WSGI-server zoals gunicorn:
+    ```bash
+    gunicorn -w 4 -b 0.0.0.0:5001 bmad.api:app
+    ```
+  - Zet environment variables via `.env` of je deployment platform
+  - (Optioneel) Gebruik Docker of een cloud platform
+
+## API-documentatie
+
+- **Swagger UI:** [http://localhost:5001/swagger](http://localhost:5001/swagger)
+- **OpenAPI-spec:** [http://localhost:5001/openapi.yaml](http://localhost:5001/openapi.yaml)
+- **Endpoints:** Zie Swagger UI voor alle routes en documentatie
+- **Test direct via de UI**
+
+## Slack-integratie
+
+- Maak een Slack app aan via [api.slack.com/apps](https://api.slack.com/apps)
+- Voeg de juiste scopes toe: `chat:write`, `channels:read`, `groups:read`, `im:write`, etc.
+- Zet de `SLACK_BOT_TOKEN` en `SLACK_SIGNING_SECRET` in je `.env`
+- Voeg de bot toe aan de gewenste kanalen met `/invite @BMAD assistant`
+- Zet de Interactivity URL op `http://<jouw-ngrok-of-server-url>/slack/interactivity`
+- Test met de Slack testscripts in `tests/slack/`
+
+## LLM/Supabase integratie
+
+- **OpenAI:**
+  - Maak een account aan op [platform.openai.com](https://platform.openai.com/)
+  - Zet je API key in `.env` als `OPENAI_API_KEY`
+- **Supabase:**
+  - Maak een project aan op [supabase.com](https://supabase.com/)
+  - Zet je project-URL en service role key in `.env`
+
+## Troubleshooting & FAQ
+
+- **Slack: channel_not_found:**
+  - Controleer of de bot is toegevoegd aan het kanaal en de channel-ID klopt
+- **OPENAI_API_KEY niet gevonden:**
+  - Controleer je `.env` en activeer je venv opnieuw
+- **Supabase errors:**
+  - Controleer of je Supabase keys en URL correct zijn
+- **Tests blijven hangen:**
+  - Sommige tests vereisen handmatige actie of een actieve agent (zie README)
+- **CI/CD faalt op handmatige tests:**
+  - Handmatige tests zijn gemarkeerd en worden automatisch overgeslagen in CI
+- **Swagger UI laadt niet:**
+  - Controleer of je API draait en `/openapi.yaml` bereikbaar is
+
+Voor meer hulp: zie de Discord community of open een issue!
