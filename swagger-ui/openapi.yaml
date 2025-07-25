@@ -1,0 +1,185 @@
+openapi: 3.0.0
+info:
+  title: BMAD API
+  version: 1.0.0
+  description: API-documentatie voor BMAD Slack event server, orchestrator en agent endpoints.
+servers:
+  - url: http://localhost:5000
+paths:
+  /slack/events:
+    post:
+      summary: Ontvang Slack events
+      description: Endpoint voor Slack event subscriptions (event_callback, url_verification, etc.)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Event ontvangen
+  /slack/interactivity:
+    post:
+      summary: Ontvang Slack interactiviteit (knoppen, menus)
+      description: Endpoint voor Slack interactive components (HITL, feedback, etc.)
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                payload:
+                  type: string
+      responses:
+        '200':
+          description: Interactie ontvangen
+  /health:
+    get:
+      summary: Health check
+      description: Controleer of de server actief is
+      responses:
+        '200':
+          description: Server is actief
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+  /orchestrator/start-workflow:
+    post:
+      summary: Start een workflow
+      description: Start een workflow met opgegeven naam en (optioneel) parameters.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                workflow:
+                  type: string
+                  description: Naam van de workflow
+                parameters:
+                  type: object
+                  description: Optionele workflow parameters
+      responses:
+        '200':
+          description: Workflow gestart
+  /orchestrator/status:
+    get:
+      summary: Overzicht van alle workflow-statussen
+      responses:
+        '200':
+          description: Statussen opgehaald
+  /orchestrator/workflow/{name}/status:
+    get:
+      summary: Status van een specifieke workflow
+      parameters:
+        - in: path
+          name: name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Workflow status opgehaald
+  /orchestrator/metrics:
+    get:
+      summary: Orchestrator metrics
+      responses:
+        '200':
+          description: Metrics opgehaald
+  /agent/{agent_name}/command:
+    post:
+      summary: Stuur een commando naar een agent
+      parameters:
+        - in: path
+          name: agent_name
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                command:
+                  type: string
+      responses:
+        '200':
+          description: Commando ontvangen
+  /agent/{agent_name}/status:
+    get:
+      summary: Status van een agent
+      parameters:
+        - in: path
+          name: agent_name
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Agent status opgehaald
+  /context/{agent}/{type}:
+    get:
+      summary: Haal context op voor een agent en type
+      parameters:
+        - in: path
+          name: agent
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: type
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Context opgehaald
+    post:
+      summary: Sla context op voor een agent en type
+      parameters:
+        - in: path
+          name: agent
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: type
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Context opgeslagen
+  /test/ping:
+    get:
+      summary: Simpele ping endpoint
+      responses:
+        '200':
+          description: Pong
+  /test/echo:
+    post:
+      summary: Echo endpoint voor debuggen
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Echo response 
