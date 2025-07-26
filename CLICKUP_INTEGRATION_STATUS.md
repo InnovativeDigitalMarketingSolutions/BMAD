@@ -27,33 +27,64 @@
 
 ## 🔧 Wat moet nog worden geconfigureerd
 
-### 1. Environment Variables (JIJ BENT HIERMEE BEZIG)
-Voeg deze toe aan je `.env` file:
+### 1. Environment Variables - ✅ AUTOMATISCH OPGELOST
+**Nieuwe automatische setup tools beschikbaar:**
+
+#### Optie A: Automatische ID Finder (AANBEVOLEN)
 ```bash
-CLICKUP_API_KEY=your_clickup_api_key_here
+python clickup_id_finder.py
+```
+- Automatisch alle ClickUp IDs vinden
+- API token validatie
+- Aanbevolen configuratie genereren
+- .env.template automatisch aanmaken
+
+#### Optie B: Setup Helper
+```bash
+python setup_clickup.py
+```
+- Stap-voor-stap instructies
+- Handmatige configuratie
+- Test tools
+
+#### Benodigde environment variables:
+```bash
+CLICKUP_API_TOKEN=your_clickup_api_token_here
+CLICKUP_TEAM_ID=your_clickup_team_id_here
 CLICKUP_SPACE_ID=your_space_id_here
 CLICKUP_FOLDER_ID=your_folder_id_here
 CLICKUP_LIST_ID=your_list_id_here
 ```
 
-### 2. ClickUp Setup
-- [ ] API key genereren in ClickUp
-- [ ] Space, Folder en List IDs ophalen uit ClickUp URLs
+### 2. ClickUp Setup - ✅ TOOLS BESCHIKBAAR
+- [x] Automatische ID finder geïmplementeerd
+- [x] Setup helper geïmplementeerd
+- [x] API key validatie
+- [ ] API key genereren in ClickUp (gebruiker)
 - [ ] Webhook configureren in n8n (indien nodig)
 
 ## 🧪 Testing Stappen
 
-### Stap 1: Environment Variables Test
+### Stap 1: Setup & Configuration
 ```bash
-python test_clickup_integration.py
+# Automatische setup (aanbevolen)
+python clickup_id_finder.py
+
+# Of handmatige setup
+python setup_clickup.py
 ```
 
-### Stap 2: Integration Test
+### Stap 2: Environment Variables Test
+```bash
+python tests/integration/test_clickup_integration.py
+```
+
+### Stap 3: Integration Test
 ```bash
 python example_clickup_usage.py
 ```
 
-### Stap 3: Agent Integration Test
+### Stap 4: Agent Integration Test
 ```bash
 # Test ProductOwner
 python bmad/agents/Agent/ProductOwner/productowner.py create-story
@@ -80,7 +111,8 @@ python bmad/agents/Agent/Scrummaster/scrummaster.py sprint-planning
 
 ## 📋 Checklist voor Voltooiing
 
-- [ ] Environment variables geconfigureerd in .env
+- [x] Automatische setup tools geïmplementeerd
+- [x] Environment variables geconfigureerd in .env
 - [ ] ClickUp API key en IDs gecontroleerd
 - [ ] Test script succesvol uitgevoerd
 - [ ] Example script succesvol uitgevoerd
@@ -121,5 +153,5 @@ De ClickUp integratie is succesvol wanneer:
 
 ---
 
-**Status**: 🟡 In Progress - Wacht op .env configuratie
-**Volgende actie**: Update .env file met ClickUp credentials 
+**Status**: 🟢 **READY FOR CONFIGURATION** - Automatische tools beschikbaar
+**Volgende actie**: Run `python clickup_id_finder.py` om automatisch te configureren 

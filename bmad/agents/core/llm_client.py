@@ -5,6 +5,7 @@ import json
 import logging
 import time
 from typing import Dict, Any, Optional, Tuple
+from .redis_cache import cache_llm_response, cache
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-nano")
@@ -176,6 +177,7 @@ def calculate_confidence(output: str, context: Dict[str, Any]) -> float:
     
     return min(confidence, 1.0)
 
+@cache_llm_response
 def ask_openai_with_confidence(
     prompt: str, 
     context: Dict[str, Any],
