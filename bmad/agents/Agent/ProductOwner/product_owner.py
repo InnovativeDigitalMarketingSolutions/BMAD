@@ -183,6 +183,7 @@ def create_user_story(requirement):
     Geef een duidelijke user story met acceptatiecriteria.
     """
     
+
     # Context voor de LLM
     context = {
         "task": "create_user_story",

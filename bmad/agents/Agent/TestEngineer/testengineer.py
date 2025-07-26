@@ -55,7 +55,7 @@ def show_help():
 def run_tests():
     print("Commando 'run-tests' wordt uitgevoerd (stub)")
     print("Testresultaten: alle tests geslaagd.")
-    
+
 
 def main():
     import argparse
