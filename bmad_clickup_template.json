@@ -1,0 +1,143 @@
+{
+  "template_name": "BMAD Agile Scrum Template",
+  "version": "1.0.0",
+  "description": "Customized Agile Scrum template for BMAD projects",
+  "clickup_config": {
+    "space_config": {
+      "name": "BMAD Project",
+      "description": "Business Multi-Agent DevOps System"
+    },
+    "folders": [
+      {
+        "name": "Backlog",
+        "lists": [
+          {
+            "name": "Epics",
+            "task_name_format": "EPICS-{number:03d}",
+            "default_status": "Ready"
+          },
+          {
+            "name": "User Stories",
+            "task_name_format": "USER STORIES-{number:03d}",
+            "default_status": "Ready"
+          },
+          {
+            "name": "Technical Tasks",
+            "task_name_format": "TECHNICAL TASKS-{number:03d}",
+            "default_status": "Ready"
+          },
+          {
+            "name": "Bugs",
+            "task_name_format": "BUGS-{number:03d}",
+            "default_status": "Ready"
+          }
+        ]
+      },
+      {
+        "name": "Sprints",
+        "lists": [
+          {
+            "name": "Sprint 1",
+            "task_name_format": "SPRINT 1-{number:03d}",
+            "default_status": "Ready"
+          },
+          {
+            "name": "Sprint 2",
+            "task_name_format": "SPRINT 2-{number:03d}",
+            "default_status": "Ready"
+          },
+          {
+            "name": "Sprint 3",
+            "task_name_format": "SPRINT 3-{number:03d}",
+            "default_status": "Ready"
+          },
+          {
+            "name": "Sprint 4",
+            "task_name_format": "SPRINT 4-{number:03d}",
+            "default_status": "Ready"
+          }
+        ]
+      },
+      {
+        "name": "Done",
+        "lists": [
+          {
+            "name": "Completed",
+            "task_name_format": "COMPLETED-{number:03d}",
+            "default_status": "Ready"
+          },
+          {
+            "name": "Archived",
+            "task_name_format": "ARCHIVED-{number:03d}",
+            "default_status": "Ready"
+          }
+        ]
+      }
+    ],
+    "custom_fields": {
+      "priority": [
+        "Critical",
+        "High",
+        "Medium",
+        "Low"
+      ],
+      "status": [
+        "Backlog",
+        "Ready",
+        "In Progress",
+        "Review",
+        "Done"
+      ],
+      "story_points": [
+        "1",
+        "2",
+        "3",
+        "5",
+        "8",
+        "13",
+        "21"
+      ],
+      "sprint": [
+        "Sprint 1",
+        "Sprint 2",
+        "Sprint 3",
+        "Sprint 4",
+        "Sprint 5",
+        "Sprint 6",
+        "Sprint 7",
+        "Sprint 8",
+        "Sprint 9",
+        "Sprint 10",
+        "Sprint 11",
+        "Sprint 12"
+      ]
+    }
+  },
+  "agent_contributions": [
+    {
+      "agent": "ProductOwner",
+      "role": "Definieert project structuur en backlog items",
+      "output": "User stories, epics, acceptance criteria"
+    },
+    {
+      "agent": "Architect",
+      "role": "Definieert technische structuur en dependencies",
+      "output": "System architecture, API specs, data models"
+    },
+    {
+      "agent": "ScrumMaster",
+      "role": "Definieert sprint structuur en agile processen",
+      "output": "Sprint planning, ceremonies, team capacity"
+    },
+    {
+      "agent": "DocumentationAgent",
+      "role": "Documenteert templates en processen",
+      "output": "Template documentation, best practices, guides"
+    }
+  ],
+  "export_formats": [
+    "json",
+    "yaml",
+    "clickup_api"
+  ]
+}

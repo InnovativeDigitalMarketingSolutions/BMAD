@@ -1,0 +1,79 @@
+{
+  "space_config": {
+    "name": "BMAD Project",
+    "description": "Business Multi-Agent DevOps System"
+  },
+  "folders": [
+    {
+      "name": "Backlog",
+      "lists": [
+        "Epics",
+        "User Stories",
+        "Technical Tasks",
+        "Bugs"
+      ]
+    },
+    {
+      "name": "Sprints",
+      "lists": [
+        "Sprint 1",
+        "Sprint 2",
+        "Sprint 3",
+        "Sprint 4",
+        "Sprint 5",
+        "Sprint 6",
+        "Sprint 7",
+        "Sprint 8",
+        "Sprint 9",
+        "Sprint 10",
+        "Sprint 11",
+        "Sprint 12"
+      ]
+    },
+    {
+      "name": "Done",
+      "lists": [
+        "Completed",
+        "Archived"
+      ]
+    }
+  ],
+  "custom_fields": {
+    "priority": [
+      "Critical",
+      "High",
+      "Medium",
+      "Low"
+    ],
+    "status": [
+      "Backlog",
+      "Ready",
+      "In Progress",
+      "Review",
+      "Done"
+    ],
+    "story_points": [
+      "1",
+      "2",
+      "3",
+      "5",
+      "8",
+      "13",
+      "21"
+    ],
+    "sprint": [
+      "Sprint 1",
+      "Sprint 2",
+      "Sprint 3",
+      "Sprint 4",
+      "Sprint 5",
+      "Sprint 6",
+      "Sprint 7",
+      "Sprint 8",
+      "Sprint 9",
+      "Sprint 10",
+      "Sprint 11",
+      "Sprint 12"
+    ]
+  }
+}

@@ -10,6 +10,7 @@ ENV/
 *.egg-info/
 dist/
 build/
+.env
 
 # VSCode/PyCharm/IDE
 .vscode/
@@ -24,4 +25,9 @@ build/
 *.txt
 
 # Analyse/merge/rapport folders
-merge_conflicts/ 
+merge_conflicts/
+
+# Environment variables
+.env
+.env.local
+.env.*.local 
