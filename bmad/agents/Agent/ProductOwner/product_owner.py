@@ -8,6 +8,7 @@ import time
 from bmad.agents.core.message_bus import publish, subscribe
 from bmad.agents.core.supabase_context import save_context, get_context
 from bmad.agents.core.llm_client import ask_openai
+from bmad.projects.project_manager import project_manager
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -46,68 +47,129 @@ Voorbeelden:
 """)
 
 def create_bmad_frontend_story():
-    """Maak user stories voor de BMAD frontend."""
-    requirement = """
-    BMAD Frontend Dashboard Requirements:
+    """Maak user stories voor het huidige project."""
+    # Haal project context op
+    project_context = project_manager.get_project_context()
     
-    1. Agent Status Monitoring
-       - Real-time status van alle agents
-       - Agent logs en error handling
-       - Agent performance metrics
+    if not project_context:
+        print("❌ Geen project geladen! Laad eerst een project met:")
+        print("   python -m bmad.projects.cli load <project_name>")
+        return
     
-    2. Workflow Management
-       - Workflows starten/bekijken
-       - Workflow status tracking
-       - Human-in-the-loop (HITL) alerts
+    project_name = project_context["project_name"]
+    project_type = project_context["config"]["project_type"]
+    requirements = project_context["requirements"]
     
-    3. API Testing Interface
-       - Swagger UI integratie
-       - API endpoint testing
-       - Response logging
+    print(f"🎯 ProductOwner - User Stories voor '{project_name}' ({project_type})")
+    print("=" * 60)
     
-    4. Slack Integration Status
-       - Bot status monitoring
-       - Channel membership
-       - Message history
+    # Toon huidige requirements
+    if requirements:
+        print("📋 Huidige Requirements:")
+        for category, reqs in requirements.items():
+            if reqs:
+                print(f"  {category}:")
+                for req in reqs:
+                    print(f"    - {req['description']}")
+        print()
     
-    5. Metrics Dashboard
-       - Workflow metrics
-       - Agent performance
-       - System health
+    # Vraag gebruiker om input
+    print("🤔 Wat wil je dat ik doe?")
+    print("1. Genereer user stories voor alle requirements")
+    print("2. Genereer user stories voor specifieke categorie")
+    print("3. Genereer user stories voor nieuwe feature")
+    print("4. Review en verbeter bestaande user stories")
     
-    6. Configuration Management
-       - Environment variables
-       - Agent settings
-       - System configuration
-    """
+    choice = input("\nKies een optie (1-4) of beschrijf je eigen opdracht: ").strip()
     
-    prompt = f"""
-    Schrijf gedetailleerde user stories in Gherkin-formaat voor de volgende BMAD frontend requirements:
+    if choice == "1":
+        # Genereer user stories voor alle requirements
+        all_requirements = []
+        for category, reqs in requirements.items():
+            for req in reqs:
+                all_requirements.append(f"{category}: {req['description']}")
+        
+        requirements_text = "\n".join(all_requirements) if all_requirements else "Geen requirements gedefinieerd"
+        
+        prompt = f"""
+        Schrijf gedetailleerde user stories in Gherkin-formaat voor het project '{project_name}' ({project_type}).
+        
+        Requirements:
+        {requirements_text}
+        
+        Geef voor elke requirement een user story met acceptatiecriteria.
+        Focus op functionaliteit die de gebruiker nodig heeft.
+        """
     
-    {requirement}
+    elif choice == "2":
+        category = input("Welke categorie? (functional/non_functional/technical): ").strip()
+        reqs = requirements.get(category, [])
+        if reqs:
+            requirements_text = "\n".join([req['description'] for req in reqs])
+            prompt = f"""
+            Schrijf user stories voor de {category} requirements van project '{project_name}':
+            
+            {requirements_text}
+            
+            Geef voor elke requirement een user story met acceptatiecriteria.
+            """
+        else:
+            print(f"❌ Geen requirements gevonden in categorie '{category}'")
+            return
     
-    Geef voor elk onderdeel (1-6) een user story met acceptatiecriteria.
-    Focus op functionaliteit die het team nodig heeft om BMAD effectief te gebruiken.
-    """
+    elif choice == "3":
+        feature = input("Beschrijf de nieuwe feature: ").strip()
+        prompt = f"""
+        Schrijf user stories voor de nieuwe feature van project '{project_name}':
+        
+        Feature: {feature}
+        
+        Geef 3-5 user stories met acceptatiecriteria voor deze feature.
+        """
     
+    elif choice == "4":
+        # Review bestaande user stories
+        existing_stories = project_context.get("user_stories", [])
+        if existing_stories:
+            stories_text = "\n".join([f"{s['id']}. {s['story']}" for s in existing_stories])
+            prompt = f"""
+            Review en verbeter de bestaande user stories voor project '{project_name}':
+            
+            {stories_text}
+            
+            Geef verbeterde versies van deze user stories met betere acceptatiecriteria.
+            """
+        else:
+            print("❌ Geen bestaande user stories gevonden")
+            return
+    
+    else:
+        # Custom opdracht
+        prompt = f"""
+        Opdracht: {choice}
+        
+        Project: {project_name} ({project_type})
+        Requirements: {requirements}
+        
+        Schrijf user stories op basis van deze opdracht.
+        """
+    
+    print("\n🔄 ProductOwner aan het werk...")
     result = ask_openai(prompt)
-    print("🎯 BMAD Frontend User Stories:")
+    
+    print("\n🎯 User Stories:")
     print("=" * 50)
     print(result)
     print("=" * 50)
     
-    # Sla de user stories op in context
-    save_context("ProductOwner", "frontend_stories", {
-        "timestamp": time.time(),
-        "stories": result,
-        "status": "created"
-    })
+    # Sla de user stories op in project context
+    project_manager.add_user_story(result, "high")
     
     # Publiceer event voor andere agents
-    publish("frontend_stories_created", {
+    publish("user_stories_created", {
         "agent": "ProductOwner",
-        "status": "success",
-        "stories_count": 6
+        "project": project_name,
+        "status": "success"
     })
 
 def create_user_story(requirement):

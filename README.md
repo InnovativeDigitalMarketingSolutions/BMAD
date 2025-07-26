@@ -47,6 +47,15 @@ This two-phase approach eliminates both **planning inconsistency** and **context
 - **[Understand the architecture](docs/core-architecture.md)** → Technical deep dive
 - **[Join the community](https://discord.gg/gk8jAdXWmj)** → Get help and share ideas
 
+### 📚 BMAD Documentation
+
+- **[BMAD Methodologie](bmad/agents/resources/data/general/bmad-method.md)** → Team purpose, roles, workflow, autonomy & safeguards
+- **[Agent Overview](bmad/agents/agents-overview.md)** → Complete agent roles, CLI commands, events & delegation
+- **[Project Management](bmad/agents/resources/data/general/project-management.md)** → Central project system & context management
+- **[Confidence Scoring](bmad/agents/resources/data/general/confidence-scoring.md)** → Review flows, safeguards & continuous improvement
+- **[Agent Metrics](bmad/agents/resources/data/general/agent-metrics.md)** → Performance tracking & feedback loops
+- **[Example Interactions](bmad/agents/resources/data/general/example-interactions.md)** → Practical workflows & use cases
+
 ## Important: Keep Your BMad Installation Updated
 
 **Stay up-to-date effortlessly!** If you already have BMad-Method installed in your project, simply run:
@@ -69,26 +78,64 @@ This makes it easy to benefit from the latest improvements, bug fixes, and new a
 
 ## Quick Start
 
-### One Command for Everything (IDE Installation)
+### BMAD Agent Team Setup
 
-**Just run one of these commands:**
+**Prerequisites**: Python 3.8+, Node.js v20+ (for frontend development)
 
+#### 1. Environment Setup
 ```bash
-npx bmad-method install
-# OR if you already have BMad installed:
-git pull
-npm run install:bmad
+# Clone repository
+git clone <repository-url>
+cd BMAD
+
+# Create virtual environment
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Set up environment variables
+cp .env.example .env
+# Edit .env with your credentials
 ```
 
-This single command handles:
+#### 2. Project Management
+```bash
+# Create a new project
+python -m bmad.projects.cli create my-saas-app web_app
 
-- **New installations** - Sets up BMad in your project
-- **Upgrades** - Updates existing installations automatically
-- **Expansion packs** - Installs any expansion packs you've added to package.json
+# Load the project
+python -m bmad.projects.cli load my-saas-app
 
-> **That's it!** Whether you're installing for the first time, upgrading, or adding expansion packs - these commands do everything.
+# Add requirements
+python -m bmad.projects.cli add-requirement "User authentication" functional
+python -m bmad.projects.cli add-requirement "Real-time notifications" functional
+```
 
-**Prerequisites**: [Node.js](https://nodejs.org) v20+ required
+#### 3. Start BMAD Agents
+```bash
+# Start ProductOwner to create user stories
+python -m bmad.agents.Agent.ProductOwner.product_owner create-story
+
+# Start Architect to design system
+python -m bmad.agents.Agent.Architect.architect design-frontend
+
+# Start FullstackDeveloper to build features
+python -m bmad.agents.Agent.FullstackDeveloper.fullstackdeveloper build-frontend
+```
+
+#### 4. Slack Integration (Optional)
+```bash
+# Start Slack event server
+python -m bmad.agents.core.slack_event_server
+
+# In another terminal, start ngrok
+ngrok http 5001
+
+# Configure Slack app with ngrok URL
+# Test with: @BMAD assistant help
+```
 
 ### Fastest Start: Web UI Full Stack Team at your disposal (2 minutes)
 
