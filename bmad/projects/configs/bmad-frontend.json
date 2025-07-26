@@ -1,0 +1,39 @@
+{
+  "project_name": "bmad-frontend",
+  "project_type": "web_app",
+  "created_at": 1753516211.1541681,
+  "updated_at": 1753516211.1541681,
+  "status": "active",
+  "description": "Web applicatie met frontend en backend",
+  "tech_stack": {
+    "frontend": [
+      "React",
+      "TypeScript",
+      "Vite"
+    ],
+    "backend": [
+      "Python",
+      "FastAPI",
+      "PostgreSQL"
+    ],
+    "deployment": [
+      "Docker",
+      "AWS/GCP"
+    ]
+  },
+  "architecture": {
+    "type": "microservices",
+    "frontend": "SPA",
+    "backend": "REST API",
+    "database": "PostgreSQL"
+  },
+  "requirements": {
+    "functional": [],
+    "non_functional": [],
+    "technical": []
+  },
+  "user_stories": [],
+  "api_endpoints": [],
+  "database_schema": {},
+  "deployment_config": {}
+}
