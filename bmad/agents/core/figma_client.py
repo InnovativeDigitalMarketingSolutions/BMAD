@@ -4,7 +4,7 @@ import logging
 from typing import Dict, List, Optional, Any
 import requests
 from requests.adapters import HTTPAdapter, Retry
-from functools import lru_cache
+
 from dotenv import load_dotenv
 
 # Load .env if present (voor lokale ontwikkeling)
@@ -20,38 +20,41 @@ FIGMA_DEMO_MODE = os.getenv("FIGMA_DEMO_MODE", "false").lower() == "true"
 if not FIGMA_API_TOKEN and not FIGMA_DEMO_MODE:
     logger.error("FIGMA_API_TOKEN is not set in environment variables.")
 
+
 class RateLimitException(Exception):
     pass
 
+
 class FigmaClient:
-    def __init__(self, api_token: Optional[str] = None, max_retries: int = 3, backoff_factor: float = 0.5, demo_mode: bool = None):
+    def __init__(
+        self, api_token: Optional[str] = None, max_retries: int = 3, backoff_factor: float = 0.5, demo_mode: bool = None
+    ):
         self.demo_mode = demo_mode if demo_mode is not None else FIGMA_DEMO_MODE
         self.api_token = api_token or FIGMA_API_TOKEN
-        
+
         if not self.api_token and not self.demo_mode:
             raise ValueError("Figma API token is required unless demo mode is enabled.")
-        
+
         if not self.demo_mode:
             self.session = requests.Session()
             retries = Retry(
                 total=max_retries,
                 backoff_factor=backoff_factor,
                 status_forcelist=[429, 500, 502, 503, 504],
-                allowed_methods=["GET", "POST"]
+                allowed_methods=["GET", "POST"],
             )
             self.session.mount("https://", HTTPAdapter(max_retries=retries))
-            self.session.headers.update({
-                "Authorization": f"Bearer {self.api_token}",
-                "Content-Type": "application/json"
-            })
-        
+            self.session.headers.update(
+                {"Authorization": f"Bearer {self.api_token}", "Content-Type": "application/json"}
+            )
+
         self.cache: Dict[str, Any] = {}
 
     def _request(self, method: str, endpoint: str, params: Optional[dict] = None) -> dict:
         if self.demo_mode:
             logger.info(f"DEMO MODE: Mocking request to {endpoint}")
             return self._get_mock_response(endpoint, params)
-        
+
         url = f"{FIGMA_API_URL}{endpoint}"
         cache_key = f"{method}:{url}:{str(params)}"
         # Simple in-memory cache
@@ -75,7 +78,7 @@ class FigmaClient:
                 logger.error(f"HTTP error: {e}")
                 if attempt == 4:
                     raise
-                time.sleep(2 ** attempt)
+                time.sleep(2**attempt)
         raise RateLimitException("Exceeded retry attempts for Figma API request.")
 
     def _get_mock_response(self, endpoint: str, params: Optional[dict] = None) -> dict:
@@ -85,7 +88,7 @@ class FigmaClient:
                 "id": "demo_user_123",
                 "email": "demo@example.com",
                 "name": "Demo User",
-                "profile_img_url": "https://via.placeholder.com/150"
+                "profile_img_url": "https://via.placeholder.com/150",
             }
         elif "/files/" in endpoint:
             file_id = endpoint.split("/files/")[1]
@@ -105,23 +108,23 @@ class FigmaClient:
                                     "name": "Button Component",
                                     "type": "COMPONENT",
                                     "fills": [{"type": "SOLID", "color": {"r": 0.2, "g": 0.4, "b": 0.8}}],
-                                    "absoluteBoundingBox": {"x": 0, "y": 0, "width": 120, "height": 40}
+                                    "absoluteBoundingBox": {"x": 0, "y": 0, "width": 120, "height": 40},
                                 },
                                 {
                                     "id": "2:2",
                                     "name": "Text Element",
                                     "type": "TEXT",
                                     "characters": "Hello World",
-                                    "style": {"fontSize": 16, "fontFamily": "Inter"}
-                                }
-                            ]
+                                    "style": {"fontSize": 16, "fontFamily": "Inter"},
+                                },
+                            ],
                         }
-                    ]
+                    ],
                 },
                 "name": f"Demo Design File {file_id}",
                 "version": "1.0.0",
                 "lastModified": "2025-01-27T10:00:00.000Z",
-                "thumbnailUrl": "https://via.placeholder.com/300x200"
+                "thumbnailUrl": "https://via.placeholder.com/300x200",
             }
         elif "/components" in endpoint:
             return {
@@ -130,13 +133,13 @@ class FigmaClient:
                         "1:1": {
                             "key": "demo_component_1",
                             "name": "Button Component",
-                            "description": "A demo button component"
+                            "description": "A demo button component",
                         },
                         "1:2": {
-                            "key": "demo_component_2", 
+                            "key": "demo_component_2",
                             "name": "Card Component",
-                            "description": "A demo card component"
-                        }
+                            "description": "A demo card component",
+                        },
                     }
                 }
             }
@@ -147,7 +150,7 @@ class FigmaClient:
                         "id": "comment_1",
                         "message": "This is a demo comment",
                         "user": {"name": "Demo User", "id": "user_1"},
-                        "created_at": "2025-01-27T10:00:00.000Z"
+                        "created_at": "2025-01-27T10:00:00.000Z",
                     }
                 ]
             }
@@ -174,9 +177,10 @@ class FigmaClient:
     def clear_cache(self):
         self.cache.clear()
 
+
 # Voorbeeld gebruik:
 # client = FigmaClient()
 # file_data = client.get_file("<file_id>")
 # components = client.get_components("<file_id>")
 # comments = client.get_comments("<file_id>")
-# images = client.get_images("<file_id>", ["1:2", "3:4"]) 
+# images = client.get_images("<file_id>", ["1:2", "3:4"])
