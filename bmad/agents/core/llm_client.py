@@ -207,6 +207,98 @@ def ask_openai_with_confidence(
     model = model or OPENAI_MODEL
     cache_key = _cache_key(prompt, model, temperature, max_tokens, include_logprobs)
     cache_path = os.path.join(CACHE_DIR, f"{cache_key}.json")
+    
+    # Check cache
+    if os.path.exists(cache_path):
+        with open(cache_path, "r", encoding="utf-8") as f:
+            cached = json.load(f)
+        logging.info(f"[LLM][CACHE HIT] {prompt[:60]}...")
+        
+        # Recalculate confidence for cached response
+        confidence = calculate_confidence(cached["answer"], context)
+        return {
+            "answer": cached["answer"],
+            "confidence": confidence,
+            "cached": True,
+            "model": model,
+            "timestamp": time.time()
+        }
+    
+    # Prepare request
+    url = "https://api.openai.com/v1/chat/completions"
+    headers = {"Authorization": f"Bearer {OPENAI_API_KEY}"}
+    data = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": temperature,
+        "max_tokens": max_tokens,
+    }
+    
+    # Add logprobs if requested
+    if include_logprobs and model in ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo"]:
+        data["logprobs"] = True
+        data["top_logprobs"] = 1
+    
+    logging.info(f"[LLM][REQUEST] {prompt[:60]}... [model={model}]")
+    
+    response = requests.post(url, headers=headers, json=data)
+    response.raise_for_status()
+    response_data = response.json()
+    
+    # Extract answer
+    answer = response_data["choices"][0]["message"]["content"]
+    
+    # Calculate confidence
+    llm_confidence = 0.5  # Default
+    if include_logprobs and "logprobs" in response_data:
+        llm_confidence = calculate_confidence_from_logprobs(response_data)
+    
+    # Update context with LLM confidence
+    context["llm_confidence"] = llm_confidence
+    
+    # Calculate overall confidence
+    confidence = calculate_confidence(answer, context)
+    
+    # Cache response
+    with open(cache_path, "w", encoding="utf-8") as f:
+        json.dump({
+            "prompt": prompt, 
+            "answer": answer,
+            "llm_confidence": llm_confidence
+        }, f)
+    
+    logging.info(f"[LLM][RESPONSE] {answer[:60]}... [confidence={confidence:.2f}]")
+    
+    # Parse JSON if structured output requested
+    if structured_output:
+        try:
+            parsed_answer = json.loads(answer)
+            return {
+                "answer": parsed_answer,
+                "confidence": confidence,
+                "cached": False,
+                "model": model,
+                "timestamp": time.time(),
+                "llm_confidence": llm_confidence
+            }
+        except Exception:
+            return {
+                "answer": answer,
+                "confidence": confidence,
+                "cached": False,
+                "model": model,
+                "timestamp": time.time(),
+                "llm_confidence": llm_confidence
+            }
+    
+    return {
+        "answer": answer,
+        "confidence": confidence,
+        "cached": False,
+        "model": model,
+        "timestamp": time.time(),
+        "llm_confidence": llm_confidence
+    }
 
 def ask_openai(prompt, model=None, temperature=0.7, max_tokens=512, structured_output=None):
     """
