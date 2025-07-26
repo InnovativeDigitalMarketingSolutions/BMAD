@@ -1,0 +1,102 @@
+{
+  "default": {
+    "name": "Default Project",
+    "description": "Default BMAD project voor algemeen gebruik",
+    "clickup": {
+      "space_id": "default_space_id",
+      "folder_id": "123456789",
+      "list_id": "987654321"
+    },
+    "agents": {
+      "product_owner": "default_po",
+      "scrum_master": "default_sm",
+      "architect": "default_arch"
+    },
+    "settings": {
+      "auto_sync": true,
+      "webhook_enabled": true,
+      "notifications": true
+    },
+    "created_at": "2024-01-01T00:00:00"
+  },
+  "copilot": {
+    "name": "CoPilot AI Business Suite",
+    "description": "Geavanceerde AI-powered business suite met multi-agent systeem",
+    "clickup": {
+      "space_id": "copilot_space_id",
+      "folder_id": "111111111",
+      "list_id": "222222222"
+    },
+    "agents": {
+      "product_owner": "copilot_po",
+      "scrum_master": "copilot_sm",
+      "architect": "copilot_arch"
+    },
+    "settings": {
+      "auto_sync": true,
+      "webhook_enabled": true,
+      "notifications": true
+    },
+    "created_at": "2024-01-15T10:30:00"
+  },
+  "client_a": {
+    "name": "Client A E-commerce Platform",
+    "description": "E-commerce platform voor Client A met AI-powered recommendations",
+    "clickup": {
+      "space_id": "client_a_space_id",
+      "folder_id": "333333333",
+      "list_id": "444444444"
+    },
+    "agents": {
+      "product_owner": "client_a_po",
+      "scrum_master": "client_a_sm",
+      "architect": "client_a_arch"
+    },
+    "settings": {
+      "auto_sync": true,
+      "webhook_enabled": false,
+      "notifications": true
+    },
+    "created_at": "2024-02-01T14:20:00"
+  },
+  "client_b": {
+    "name": "Client B Mobile App",
+    "description": "React Native mobile app voor Client B met offline functionaliteit",
+    "clickup": {
+      "space_id": "client_b_space_id",
+      "folder_id": "555555555",
+      "list_id": "666666666"
+    },
+    "agents": {
+      "product_owner": "client_b_po",
+      "scrum_master": "client_b_sm",
+      "architect": "client_b_arch"
+    },
+    "settings": {
+      "auto_sync": true,
+      "webhook_enabled": true,
+      "notifications": false
+    },
+    "created_at": "2024-02-15T09:45:00"
+  },
+  "bmad-frontend": {
+    "name": "BMAD Frontend",
+    "description": "Moderne frontend voor BMAD DevOps team met ClickUp integratie",
+    "clickup": {
+      "space_id": "90155930087",
+      "folder_id": "",
+      "list_id": ""
+    },
+    "agents": {
+      "product_owner": "bmad_frontend_po",
+      "scrum_master": "bmad_frontend_sm",
+      "architect": "bmad_frontend_arch"
+    },
+    "settings": {
+      "auto_sync": true,
+      "webhook_enabled": true,
+      "notifications": true
+    },
+    "created_at": "2024-07-26T14:55:00"
+  }
+} 

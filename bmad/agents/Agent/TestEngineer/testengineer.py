@@ -9,12 +9,15 @@ class TestEngineerAgent:
     def __init__(self):
         pass
 
+
     def collaborate_example(self):
         # correcte inspringing!
         pass
 
+
 def notify_test_result(result):
     send_slack_message(f"[TestEngineer] Testresultaat: {result}")
+
 
 def ask_llm_generate_tests(function_description):
     """Vraag de LLM om unittests te genereren voor een gegeven functieomschrijving, als JSON."""
@@ -22,6 +25,7 @@ def ask_llm_generate_tests(function_description):
     structured_output = '{"tests": ["test_example_1", "test_example_2"]}'
     result = ask_openai(prompt, structured_output=structured_output)
     print(f"[LLM Tests]: {result}")
+
 
 def on_test_generation_requested(event):
     function_description = event.get("function_description", "Onbekende functie")
@@ -33,6 +37,7 @@ def on_test_generation_requested(event):
 from bmad.agents.core.message_bus import subscribe
 subscribe("test_generation_requested", on_test_generation_requested)
 
+
 def handle_tests_requested(event):
     logging.info("[TestEngineer] Tests gestart...")
     # Simuleer tests (in productie: voer echte tests uit)
@@ -42,12 +47,15 @@ def handle_tests_requested(event):
 
 subscribe("tests_requested", handle_tests_requested)
 
+
 def show_help():
     print("Beschikbare commando's: help, run-tests, collaborate-example")
+
 
 def run_tests():
     print("Commando 'run-tests' wordt uitgevoerd (stub)")
     print("Testresultaten: alle tests geslaagd.")
+    
 
 def main():
     import argparse

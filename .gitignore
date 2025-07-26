@@ -24,4 +24,9 @@ build/
 *.txt
 
 # Analyse/merge/rapport folders
-merge_conflicts/ 
+merge_conflicts/
+
+# Environment variables
+.env
+.env.local
+.env.*.local 

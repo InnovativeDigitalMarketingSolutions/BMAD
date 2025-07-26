@@ -7,7 +7,8 @@ import logging
 import time
 from bmad.agents.core.message_bus import publish, subscribe
 from bmad.agents.core.supabase_context import save_context, get_context
-from bmad.agents.core.llm_client import ask_openai
+from bmad.agents.core.llm_client import ask_openai_with_confidence as ask_openai
+from bmad.agents.core.confidence_scoring import confidence_scoring, create_review_request, format_confidence_message
 from bmad.projects.project_manager import project_manager
 from dotenv import load_dotenv
 load_dotenv()
@@ -182,7 +183,14 @@ def create_user_story(requirement):
     Geef een duidelijke user story met acceptatiecriteria.
     """
     
-    result = ask_openai(prompt)
+    # Context voor de LLM
+    context = {
+        "task": "create_user_story",
+        "agent": "ProductOwner",
+        "requirement": requirement
+    }
+    
+    result = ask_openai(prompt, context=context)
     print(f"🎯 User Story voor: {requirement}")
     print("=" * 50)
     print(result)
@@ -227,11 +235,50 @@ def collaborate_example():
 
 
 def ask_llm_user_story(requirement):
-    """Vraag de LLM om een user story te genereren op basis van een requirement, als JSON."""
-    prompt = f"Schrijf een user story in Gherkin-formaat voor de volgende requirement: {requirement}. Geef alleen de user story en acceptatiecriteria, geen uitleg."
-    structured_output = '{"user_story": "Als ... wil ik ... zodat ...", "acceptatiecriteria": ["...", "..."]}'
-    result = ask_openai(prompt, structured_output=structured_output)
-    print(f"[LLM User Story]: {result}")
+    """Vraag de LLM om een user story te genereren met confidence scoring."""
+    prompt = f"""
+    Schrijf een user story in Gherkin-formaat voor de volgende requirement:
+    
+    Requirement: {requirement}
+    
+    Geef een user story met:
+    - Feature beschrijving
+    - Scenario's met Given/When/Then
+    - Acceptatiecriteria
+    - Prioriteit (High/Medium/Low)
+    """
+    
+    # Context voor confidence scoring
+    context = {
+        "task": "create_user_story",
+        "agent": "ProductOwner",
+        "requirement": requirement
+    }
+    
+    # Gebruik confidence scoring
+    result = ask_openai_with_confidence(prompt, context)
+    
+    # Enhance output met confidence scoring
+    enhanced_output = confidence_scoring.enhance_agent_output(
+        output=result["answer"],
+        agent_name="ProductOwner",
+        task_type="create_user_story",
+        context=context
+    )
+    
+    # Log confidence info
+    print(f"🎯 Confidence Score: {enhanced_output['confidence']:.2f} ({enhanced_output['review_level']})")
+    
+    # Als review vereist is, maak review request
+    if enhanced_output["review_required"]:
+        review_request = create_review_request(enhanced_output)
+        print("🔍 Review vereist - User story wordt ter goedkeuring voorgelegd")
+        print(format_confidence_message(enhanced_output))
+        
+        # TODO: Stuur review request naar Slack of andere kanalen
+        # publish("review_requested", review_request)
+    
+    return enhanced_output["output"]
 
 
 def on_user_story_requested(event):
