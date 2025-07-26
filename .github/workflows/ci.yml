@@ -20,7 +20,7 @@ jobs:
         run: |
           python -m venv .venv
           source .venv/bin/activate
-          pip install black flake8 pyyaml requests
+          pip install black flake8 pyyaml requests pytest
       - name: Lint with flake8
         run: |
           source .venv/bin/activate
@@ -30,6 +30,10 @@ jobs:
         run: |
           source .venv/bin/activate
           .venv/bin/black --check bmad/agents/Agent
+      - name: Run pytest tests
+        run: |
+          source .venv/bin/activate
+          .venv/bin/pytest tests/
       - name: Validate agent resources
         run: |
           source .venv/bin/activate

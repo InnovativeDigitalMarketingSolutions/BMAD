@@ -2,8 +2,10 @@ import os
 import requests
 
 SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
-channel = "C097FTDU1A5"  # Vervang door jouw channel ID
-text = "Testbericht van bot (losse API-call)"
+channel = os.getenv("SLACK_TEST_CHANNEL", "C097FTDU1A5")
+bot_user_id = os.getenv("SLACK_BOT_USER_ID")  # Zet deze in je .env
+
+text = f"<@{bot_user_id}> help"
 
 response = requests.post(
     "https://slack.com/api/chat.postMessage",
