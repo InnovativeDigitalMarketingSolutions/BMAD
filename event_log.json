@@ -142,5 +142,17 @@
     "workflow": "feature",
     "status": "afgerond",
     "timestamp": "2025-07-26T08:45:05.163695"
+  },
+  {
+    "event_type": "workflow_status",
+    "workflow": "automated_deployment",
+    "status": "lopend",
+    "timestamp": "2025-07-26T22:39:31.449154"
+  },
+  {
+    "event_type": "workflow_status",
+    "workflow": "automated_deployment",
+    "status": "lopend",
+    "timestamp": "2025-07-26T22:39:38.629023"
   }
 ]
