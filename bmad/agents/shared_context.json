@@ -393,6 +393,39 @@
         "user": "U054FQ72C30",
         "channel": "C097FTDU1A5"
       }
+    },
+    {
+      "timestamp": "2025-07-26T08:45:04.315992",
+      "event": "new_task",
+      "data": {
+        "event_type": "new_task",
+        "task_desc": "Nieuwe feature ontwikkelen"
+      }
+    },
+    {
+      "timestamp": "2025-07-26T08:45:04.613498",
+      "event": "user_story_requested",
+      "data": {
+        "event_type": "user_story_requested",
+        "requirement": "Feature requirement"
+      }
+    },
+    {
+      "timestamp": "2025-07-26T08:45:04.884176",
+      "event": "test_generation_requested",
+      "data": {
+        "event_type": "test_generation_requested",
+        "function_description": "Feature test"
+      }
+    },
+    {
+      "timestamp": "2025-07-26T08:58:14.407629",
+      "event": "frontend_stories_created",
+      "data": {
+        "agent": "ProductOwner",
+        "status": "success",
+        "stories_count": 6
+      }
     }
   ]
 }

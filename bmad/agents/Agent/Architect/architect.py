@@ -1,4 +1,5 @@
 import logging
+import time
 from pathlib import Path
 
 from bmad.agents.core.message_bus import publish, subscribe
@@ -39,25 +40,42 @@ class ArchitectAgent:
     def show_help(self):
         print(
             """
-Beschikbare commando's:
+🏗️ Architect Agent - Beschikbare commando's:
+
+Frontend Design:
+- design-frontend: Ontwerp BMAD frontend architectuur
+- design-system: Maak component diagram en API koppeling
+- tech-stack: Evalueer frontend tech stack
+
+API & Backend:
 - design-api: Ontwerp API endpoints en specs
 - microservices: Stel microservices structuur voor
 - event-flow: Ontwerp event-driven flows
 - memory-design: Adviseer over memory/context architectuur
+
+Infrastructure:
+- infra-as-code: Adviseer over infra-as-code en CI/CD
+- release-strategy: Adviseer over release/rollback strategieën
+
+Quality & Security:
 - nfrs: Adviseer over non-functional requirements
+- security-review: Voer security review uit
+- test-strategy: Stel teststrategie voor
+
+Documentation:
 - adr: Maak of update Architecture Decision Record
+- best-practices: Toon architectuur best practices
+- checklist: Genereer architectuur review checklist
+
+Development & Analysis:
 - risk-analysis: Voer risicoanalyse uit
 - review: Review bestaande architectuur of code
 - refactor: Stel refactorings voor
-- infra-as-code: Adviseer over infra-as-code en CI/CD
-- release-strategy: Adviseer over release/rollback strategieën
 - poc: Begeleid proof-of-concept trajecten
-- security-review: Voer security review uit
 - tech-stack-eval: Evalueer alternatieven in de stack
-- checklist: Genereer architectuur review checklist
 - api-contract: Genereer OpenAPI/Swagger snippet
-- test-strategy: Stel teststrategie voor
-- best-practices: Toon architectuur best practices
+
+Utilities:
 - export: Exporteer architectuur artefacten
 - changelog: Toon changelog van architectuurwijzigingen
 - test: Test resource completeness
@@ -121,6 +139,194 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
         result = ask_openai(prompt)
         print(f"[LLM API-design]: {result}")
 
+    def design_frontend(self):
+        """Ontwerp de BMAD frontend architectuur."""
+        print("🏗️ Architect Agent - Frontend Design")
+        print("=" * 50)
+        
+        # Haal de user stories op van de ProductOwner
+        context = get_context("ProductOwner", "frontend_stories")
+        
+        # Handle context data properly
+        if isinstance(context, list) and len(context) > 0:
+            stories = context[0].get('stories', 'Geen user stories gevonden')
+        elif isinstance(context, dict):
+            stories = context.get('stories', 'Geen user stories gevonden')
+        else:
+            stories = 'Geen user stories gevonden'
+        
+        print("📋 Beschikbare user stories:")
+        print(stories[:500] + "..." if len(stories) > 500 else stories)
+        print()
+        
+        # Vraag gebruiker om input
+        print("🤔 Wat wil je dat ik ontwerp?")
+        print("1. Complete frontend architectuur")
+        print("2. Component structuur en hiërarchie")
+        print("3. State management strategie")
+        print("4. API integratie patronen")
+        print("5. Custom opdracht")
+        
+        choice = input("\nKies een optie (1-5) of beschrijf je eigen opdracht: ").strip()
+        
+        if choice == "1":
+            prompt = f"""
+            Ontwerp een complete frontend architectuur voor de BMAD dashboard op basis van deze user stories:
+            
+            {stories}
+            
+            Geef een gedetailleerd architectuurontwerp met:
+            1. Component structuur en hiërarchie
+            2. State management strategie
+            3. API integratie patronen
+            4. Routing en navigatie
+            5. Real-time updates (WebSocket/SSE)
+            6. Error handling en loading states
+            7. Responsive design approach
+            8. Performance optimalisaties
+            
+            Focus op een moderne, schaalbare architectuur die de user stories ondersteunt.
+            """
+        elif choice == "2":
+            prompt = f"Ontwerp een gedetailleerde component structuur en hiërarchie voor de BMAD frontend op basis van: {stories}"
+        elif choice == "3":
+            prompt = f"Ontwerp een state management strategie voor de BMAD frontend op basis van: {stories}"
+        elif choice == "4":
+            prompt = f"Ontwerp API integratie patronen voor de BMAD frontend op basis van: {stories}"
+        elif choice == "5":
+            custom_prompt = input("Beschrijf je opdracht: ")
+            prompt = f"Opdracht: {custom_prompt}\n\nContext: {stories}"
+        else:
+            # Gebruiker heeft direct een opdracht ingevoerd
+            prompt = f"Opdracht: {choice}\n\nContext: {stories}"
+        
+        print("\n🔄 Architect aan het werk...")
+        result = ask_openai(prompt)
+        
+        print("\n🏗️ BMAD Frontend Architectuur:")
+        print("=" * 60)
+        print(result)
+        print("=" * 60)
+        
+        # Sla het ontwerp op
+        save_context("Architect", "frontend_architecture", {
+            "timestamp": time.time(),
+            "architecture": result,
+            "status": "designed",
+            "prompt": prompt
+        })
+        
+        # Publiceer event
+        publish("frontend_architecture_created", {
+            "agent": "Architect",
+            "status": "success"
+        })
+
+    def design_system(self):
+        """Maak een component diagram en API koppeling."""
+        prompt = """
+        Maak een gedetailleerd component diagram voor de BMAD frontend met:
+        
+        1. Component hiërarchie:
+           - Layout components (Header, Sidebar, Main, Footer)
+           - Page components (Dashboard, AgentStatus, WorkflowManager, APITester)
+           - Feature components (AgentCard, WorkflowCard, MetricChart, StatusIndicator)
+           - Shared components (Button, Modal, Table, Chart, LoadingSpinner)
+        
+        2. API integratie:
+           - REST API calls naar BMAD backend
+           - WebSocket/SSE voor real-time updates
+           - Error handling en retry logic
+           - Caching strategie
+        
+        3. State management:
+           - Global state (user, agents, workflows)
+           - Local state (forms, UI state)
+           - Server state (API data, real-time data)
+        
+        4. Data flow:
+           - User interactions
+           - API calls
+           - Real-time updates
+           - Error propagation
+        
+        Geef een visueel diagram in ASCII art en gedetailleerde beschrijvingen.
+        """
+        
+        result = ask_openai(prompt)
+        print("🏗️ BMAD Component Diagram & API Koppeling:")
+        print("=" * 60)
+        print(result)
+        print("=" * 60)
+
+    def tech_stack(self):
+        """Evalueer de frontend tech stack."""
+        prompt = """
+        Evalueer en beveel een moderne frontend tech stack aan voor de BMAD dashboard:
+        
+        Requirements:
+        - Real-time updates (agent status, workflow progress)
+        - Rich UI met charts en dashboards
+        - API testing interface
+        - Responsive design
+        - Type safety
+        - Good developer experience
+        - Performance en scalability
+        
+        Beoordeel de volgende opties:
+        1. React + TypeScript + Vite + TanStack Query + Tailwind CSS
+        2. Vue 3 + TypeScript + Vite + Pinia + Tailwind CSS
+        3. SvelteKit + TypeScript + Tailwind CSS
+        4. Next.js + TypeScript + Tailwind CSS
+        
+        Geef een gedetailleerde vergelijking en aanbeveling met motivatie.
+        """
+        
+        result = ask_openai(prompt)
+        print("🏗️ Frontend Tech Stack Evaluatie:")
+        print("=" * 60)
+        print(result)
+        print("=" * 60)
+
+    def start_conversation(self):
+        """Start een interactieve conversatie met de Architect agent."""
+        print("🏗️ Architect Agent - Interactieve Modus")
+        print("=" * 50)
+        print("Hallo! Ik ben de Architect agent. Ik kan je helpen met:")
+        print("- Frontend architectuur ontwerpen")
+        print("- API design en integratie")
+        print("- Tech stack evaluatie")
+        print("- System design en componenten")
+        print("- Performance en security advies")
+        print()
+        print("Type 'help' voor commando's, 'quit' om te stoppen.")
+        print()
+        
+        while True:
+            try:
+                user_input = input("🏗️ Architect > ").strip()
+                
+                if user_input.lower() in ['quit', 'exit', 'q']:
+                    print("Tot ziens! 👋")
+                    break
+                elif user_input.lower() == 'help':
+                    self.show_help()
+                elif user_input.lower() == 'clear':
+                    import os
+                    os.system('clear' if os.name == 'posix' else 'cls')
+                elif user_input:
+                    # Probeer het als commando uit te voeren
+                    self.run(user_input)
+                else:
+                    continue
+                    
+            except KeyboardInterrupt:
+                print("\nTot ziens! 👋")
+                break
+            except Exception as e:
+                print(f"❌ Fout: {e}")
+                print("Probeer 'help' voor beschikbare commando's.")
+
     def run(self, command):
         if command == "help" or command is None:
             self.show_help()
@@ -159,3 +365,22 @@ def on_pipeline_advice_requested(event):
     logging.info(f"[Architect][LLM Pipeline Advies]: {result}")
 
 subscribe("pipeline_advice_requested", on_pipeline_advice_requested)
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser(description="Architect Agent")
+    parser.add_argument(
+        "command", nargs="?", default="help", help="Commando voor de agent"
+    )
+    parser.add_argument("--interactive", "-i", action="store_true", help="Start interactieve modus")
+    args = parser.parse_args()
+    
+    agent = ArchitectAgent()
+    
+    if args.interactive:
+        agent.start_conversation()
+    else:
+        agent.run(args.command)
+
+if __name__ == "__main__":
+    main()
