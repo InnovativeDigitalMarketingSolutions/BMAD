@@ -17,11 +17,142 @@ def main():
     parser.add_argument(
         "command", nargs="?", default="help", help="Commando voor de agent"
     )
+    parser.add_argument("--input", "-i", help="Input voor het commando")
     args = parser.parse_args()
+    
     if args.command == "help":
-        print("Beschikbare commando's: help, create-story, show-vision, ...")
+        show_help()
+    elif args.command == "create-story":
+        if args.input:
+            create_user_story(args.input)
+        else:
+            create_bmad_frontend_story()
+    elif args.command == "show-vision":
+        show_bmad_vision()
     else:
         print(f"Commando '{args.command}' wordt uitgevoerd (stub)")
+
+def show_help():
+    print("""
+🎯 ProductOwner Agent - Beschikbare commando's:
+
+  create-story [--input "requirement"]  - Maak een user story
+  show-vision                           - Toon BMAD visie
+  help                                  - Toon deze help
+
+Voorbeelden:
+  python -m bmad.agents.Agent.ProductOwner.product_owner create-story
+  python -m bmad.agents.Agent.ProductOwner.product_owner create-story --input "Dashboard voor agent monitoring"
+""")
+
+def create_bmad_frontend_story():
+    """Maak user stories voor de BMAD frontend."""
+    requirement = """
+    BMAD Frontend Dashboard Requirements:
+    
+    1. Agent Status Monitoring
+       - Real-time status van alle agents
+       - Agent logs en error handling
+       - Agent performance metrics
+    
+    2. Workflow Management
+       - Workflows starten/bekijken
+       - Workflow status tracking
+       - Human-in-the-loop (HITL) alerts
+    
+    3. API Testing Interface
+       - Swagger UI integratie
+       - API endpoint testing
+       - Response logging
+    
+    4. Slack Integration Status
+       - Bot status monitoring
+       - Channel membership
+       - Message history
+    
+    5. Metrics Dashboard
+       - Workflow metrics
+       - Agent performance
+       - System health
+    
+    6. Configuration Management
+       - Environment variables
+       - Agent settings
+       - System configuration
+    """
+    
+    prompt = f"""
+    Schrijf gedetailleerde user stories in Gherkin-formaat voor de volgende BMAD frontend requirements:
+    
+    {requirement}
+    
+    Geef voor elk onderdeel (1-6) een user story met acceptatiecriteria.
+    Focus op functionaliteit die het team nodig heeft om BMAD effectief te gebruiken.
+    """
+    
+    result = ask_openai(prompt)
+    print("🎯 BMAD Frontend User Stories:")
+    print("=" * 50)
+    print(result)
+    print("=" * 50)
+    
+    # Sla de user stories op in context
+    save_context("ProductOwner", "frontend_stories", {
+        "timestamp": time.time(),
+        "stories": result,
+        "status": "created"
+    })
+    
+    # Publiceer event voor andere agents
+    publish("frontend_stories_created", {
+        "agent": "ProductOwner",
+        "status": "success",
+        "stories_count": 6
+    })
+
+def create_user_story(requirement):
+    """Maak een user story op basis van een specifieke requirement."""
+    prompt = f"""
+    Schrijf een user story in Gherkin-formaat voor de volgende requirement:
+    
+    {requirement}
+    
+    Geef een duidelijke user story met acceptatiecriteria.
+    """
+    
+    result = ask_openai(prompt)
+    print(f"🎯 User Story voor: {requirement}")
+    print("=" * 50)
+    print(result)
+    print("=" * 50)
+
+def show_bmad_vision():
+    """Toon de BMAD visie en strategie."""
+    vision = """
+    🚀 BMAD (Business Multi-Agent DevOps) Visie
+    
+    BMAD is een innovatief systeem dat AI-agents inzet voor DevOps en software development.
+    
+    Kernprincipes:
+    - Multi-agent samenwerking
+    - Human-in-the-loop workflows
+    - Event-driven architectuur
+    - Continuous feedback loops
+    
+    Doelstellingen:
+    - Automatisering van repetitieve taken
+    - Verbeterde code kwaliteit
+    - Snellere development cycles
+    - Betere team samenwerking
+    
+    Frontend Doel:
+    - Centraal dashboard voor agent monitoring
+    - Intuïtieve workflow management
+    - Real-time insights en metrics
+    - Eenvoudige API testing en debugging
+    """
+    
+    print(vision)
 
 
 def collaborate_example():

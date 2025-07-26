@@ -1,7 +1,12 @@
 from flask import Flask, request, jsonify, send_from_directory, redirect
+import sys
+import os
+
+# Add the project root to Python path
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from bmad.agents.Agent.Orchestrator.orchestrator import OrchestratorAgent, METRICS
 from bmad.agents.core.supabase_context import save_context, get_context
-import os
 
 app = Flask(__name__)
 
