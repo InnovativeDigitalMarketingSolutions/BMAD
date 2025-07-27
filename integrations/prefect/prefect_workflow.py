@@ -17,8 +17,8 @@ from prefect import flow, task, get_run_logger
 from prefect.artifacts import create_markdown_artifact
 from prefect.context import get_run_context
 from prefect.server.schemas.schedules import CronSchedule
-from bmad.agents.core.message_bus import publish, subscribe
-from bmad.agents.core.confidence_scoring import confidence_scoring
+from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.ai.confidence_scoring import confidence_scoring
 
 logger = logging.getLogger(__name__)
 

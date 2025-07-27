@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from enum import Enum
 import aiohttp
 import yaml
-from bmad.agents.core.opentelemetry_tracing import get_tracer, trace_agent
+from integrations.opentelemetry.opentelemetry_tracing import get_tracer, trace_agent
 
 logger = logging.getLogger(__name__)
 

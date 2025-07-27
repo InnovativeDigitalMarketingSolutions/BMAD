@@ -16,8 +16,8 @@ from enum import Enum
 from datetime import datetime
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
-from bmad.agents.core.message_bus import publish, subscribe
-from bmad.agents.core.confidence_scoring import confidence_scoring
+from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.ai.confidence_scoring import confidence_scoring
 
 logger = logging.getLogger(__name__)
 

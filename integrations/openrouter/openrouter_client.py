@@ -15,7 +15,7 @@ from enum import Enum
 import aiohttp
 import openai
 from openai import AsyncOpenAI
-from bmad.agents.core.confidence_scoring import confidence_scoring
+from bmad.agents.core.ai.confidence_scoring import confidence_scoring
 
 logger = logging.getLogger(__name__)
 

@@ -18,7 +18,7 @@ from pathlib import Path
 import yaml
 
 # Import BMAD modules
-from .opa_policy_engine import OPAPolicyEngine, PolicyRequest, PolicyResponse
+from integrations.opa.opa_policy_engine import OPAPolicyEngine, PolicyRequest, PolicyResponse
 
 logger = logging.getLogger(__name__)
 

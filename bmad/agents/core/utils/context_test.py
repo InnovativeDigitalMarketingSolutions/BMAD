@@ -1,6 +1,6 @@
 import logging
-from bmad.agents.core.message_bus import publish, get_events, clear_events
-from bmad.agents.core.supabase_context import save_context, get_context
+from bmad.agents.core.communication.message_bus import publish, get_events, clear_events
+from bmad.agents.core.data.supabase_context import save_context, get_context
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
