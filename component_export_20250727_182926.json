@@ -1,0 +1,9 @@
+{
+  "name": "Card",
+  "type": "React/Next.js",
+  "status": "created",
+  "accessibility_score": 95,
+  "performance_score": 88,
+  "timestamp": "2025-07-27T18:29:26.111936",
+  "agent": "FrontendDeveloperAgent"
+}

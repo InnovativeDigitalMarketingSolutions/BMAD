@@ -1,0 +1,21 @@
+{
+  "api_export": {
+    "generated_at": "{{timestamp}}",
+    "endpoints": [
+      {
+        "method": "GET",
+        "path": "/api/v1/users",
+        "description": "Get all users",
+        "status": "active"
+      }
+    ],
+    "performance": {
+      "average_response_time": "150ms",
+      "throughput": "1000 req/s"
+    },
+    "security": {
+      "authentication": "enabled",
+      "rate_limiting": "enabled"
+    }
+  }
+} 

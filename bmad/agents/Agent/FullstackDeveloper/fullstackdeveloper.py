@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Fullstack Developer Agent voor CoPilot AI Business Suite
-Implementeert features van frontend tot backend. Output in code snippets, pull requests, changelogs, testresultaten en dev logs.
+Implementeert features van frontend tot backend met Shadcn/ui integratie.
+Output in code snippets, pull requests, changelogs, testresultaten en dev logs.
 """
 
 import argparse
@@ -9,19 +10,340 @@ import sys
 import textwrap
 import logging
 import time
+import json
+import csv
+from datetime import datetime
+from pathlib import Path
+from typing import Dict, List, Optional, Any
+import asyncio
 from dotenv import load_dotenv
 load_dotenv()
 import sys, os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 
 from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.agent.test_sprites import get_sprite_library
+from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor, MetricType
+from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from bmad.agents.core.data.supabase_context import save_context, get_context
+from bmad.agents.core.ai.llm_client import ask_openai
+from bmad.agents.core.ai.confidence_scoring import confidence_scoring
+from integrations.slack.slack_notify import send_slack_message
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
+logger = logging.getLogger(__name__)
 
 class FullstackDeveloperAgent:
     def __init__(self):
-        pass
+        # Initialize core services
+        self.monitor = get_performance_monitor()
+        self.policy_engine = get_advanced_policy_engine()
+        self.sprite_library = get_sprite_library()
+        
+        # Resource paths
+        self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
+        self.template_paths = {
+            "best-practices": self.resource_base / "templates/fullstackdeveloper/best-practices.md",
+            "shadcn-component": self.resource_base / "templates/fullstackdeveloper/shadcn-component-template.tsx",
+            "api-template": self.resource_base / "templates/fullstackdeveloper/api-template.py",
+            "frontend-template": self.resource_base / "templates/fullstackdeveloper/frontend-template.tsx",
+            "test-template": self.resource_base / "templates/fullstackdeveloper/test-template.py",
+            "ci-cd-template": self.resource_base / "templates/fullstackdeveloper/ci-cd-template.yaml",
+            "performance-report": self.resource_base / "templates/fullstackdeveloper/performance-report-template.md"
+        }
+        self.data_paths = {
+            "changelog": self.resource_base / "data/fullstackdeveloper/changelog.md",
+            "history": self.resource_base / "data/fullstackdeveloper/history.md",
+            "feedback": self.resource_base / "data/fullstackdeveloper/feedback.md"
+        }
+        
+        # Initialize histories
+        self.development_history = []
+        self.performance_history = []
+        self._load_development_history()
+        self._load_performance_history()
 
+    def _load_development_history(self):
+        try:
+            if self.data_paths["history"].exists():
+                with open(self.data_paths["history"], 'r') as f:
+                    content = f.read()
+                    lines = content.split('\n')
+                    for line in lines:
+                        if line.strip().startswith('- '):
+                            self.development_history.append(line.strip()[2:])
+        except Exception as e:
+            logger.warning(f"Could not load development history: {e}")
+
+    def _save_development_history(self):
+        try:
+            self.data_paths["history"].parent.mkdir(parents=True, exist_ok=True)
+            with open(self.data_paths["history"], 'w') as f:
+                f.write("# Development History\n\n")
+                for dev in self.development_history[-50:]:
+                    f.write(f"- {dev}\n")
+        except Exception as e:
+            logger.error(f"Could not save development history: {e}")
+
+    def _load_performance_history(self):
+        try:
+            if self.data_paths["feedback"].exists():
+                with open(self.data_paths["feedback"], 'r') as f:
+                    content = f.read()
+                    lines = content.split('\n')
+                    for line in lines:
+                        if line.strip().startswith('- '):
+                            self.performance_history.append(line.strip()[2:])
+        except Exception as e:
+            logger.warning(f"Could not load performance history: {e}")
+
+    def _save_performance_history(self):
+        try:
+            self.data_paths["feedback"].parent.mkdir(parents=True, exist_ok=True)
+            with open(self.data_paths["feedback"], 'w') as f:
+                f.write("# Performance History\n\n")
+                for perf in self.performance_history[-50:]:
+                    f.write(f"- {perf}\n")
+        except Exception as e:
+            logger.error(f"Could not save performance history: {e}")
+
+    def show_help(self):
+        help_text = """
+FullstackDeveloper Agent Commands:
+  help                    - Show this help message
+  implement-story         - Implement user story
+  build-api               - Build API endpoint
+  build-frontend          - Build frontend with Shadcn/ui
+  build-shadcn-component  - Generate Shadcn component
+  integrate-service       - Integrate external service
+  write-tests             - Write tests
+  ci-cd                   - Show CI/CD pipeline
+  dev-log                 - Show development log
+  review                  - Code review
+  refactor                - Refactoring advice
+  security-check          - Security checklist
+  blockers                - Show blockers
+  show-development-history - Show development history
+  show-performance        - Show performance metrics
+  show-best-practices     - Show best practices
+  show-changelog          - Show changelog
+  export-report [format]  - Export report (md, json)
+  test                    - Test resource completeness
+  collaborate             - Demonstrate collaboration
+  api-contract            - Show API contract
+  component-doc           - Show component documentation
+  performance-profile     - Show performance profile
+  a11y-check              - Show accessibility check
+  feature-toggle          - Show feature toggle config
+  monitoring-setup        - Show monitoring setup
+  release-notes           - Show release notes
+  devops-handover         - Show DevOps handover
+  tech-debt               - Show technical debt
+        """
+        print(help_text)
+
+    def show_resource(self, resource_type: str):
+        try:
+            if resource_type == "best-practices":
+                path = self.template_paths["best-practices"]
+            elif resource_type == "changelog":
+                path = self.data_paths["changelog"]
+            elif resource_type == "shadcn-component":
+                path = self.template_paths["shadcn-component"]
+            else:
+                print(f"Unknown resource type: {resource_type}")
+                return
+            if path.exists():
+                with open(path, 'r') as f:
+                    print(f.read())
+            else:
+                print(f"Resource file not found: {path}")
+        except Exception as e:
+            logger.error(f"Error reading resource {resource_type}: {e}")
+
+    def show_development_history(self):
+        if not self.development_history:
+            print("No development history available.")
+            return
+        print("Development History:")
+        print("=" * 50)
+        for i, dev in enumerate(self.development_history[-10:], 1):
+            print(f"{i}. {dev}")
+
+    def show_performance(self):
+        if not self.performance_history:
+            print("No performance history available.")
+            return
+        print("Performance History:")
+        print("=" * 50)
+        for i, perf in enumerate(self.performance_history[-10:], 1):
+            print(f"{i}. {perf}")
+
+    def export_report(self, format_type: str = "md", report_data: Optional[Dict] = None):
+        if not report_data:
+            report_data = {
+                "story": "User Authentication",
+                "status": "implemented",
+                "frontend_components": 3,
+                "backend_endpoints": 2,
+                "tests_written": 5,
+                "shadcn_components": 2,
+                "timestamp": datetime.now().isoformat(),
+                "agent": "FullstackDeveloperAgent"
+            }
+        
+        try:
+            if format_type == "md":
+                self._export_markdown(report_data)
+            elif format_type == "json":
+                self._export_json(report_data)
+            else:
+                print(f"Unsupported format: {format_type}")
+        except Exception as e:
+            logger.error(f"Error exporting report: {e}")
+
+    def _export_markdown(self, report_data: Dict):
+        output_file = f"fullstack_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+        
+        content = f"""# Fullstack Developer Report
+
+## Summary
+- **Story**: {report_data.get('story', 'N/A')}
+- **Status**: {report_data.get('status', 'N/A')}
+- **Timestamp**: {report_data.get('timestamp', 'N/A')}
+- **Agent**: {report_data.get('agent', 'N/A')}
+
+## Components
+- Frontend Components: {report_data.get('frontend_components', 0)}
+- Backend Endpoints: {report_data.get('backend_endpoints', 0)}
+- Tests Written: {report_data.get('tests_written', 0)}
+- Shadcn Components: {report_data.get('shadcn_components', 0)}
+
+## Performance
+- Accessibility Score: {report_data.get('accessibility_score', 0)}%
+- Performance Score: {report_data.get('performance_score', 0)}%
+"""
+        
+        with open(output_file, 'w') as f:
+            f.write(content)
+        print(f"Report export saved to: {output_file}")
+
+    def _export_json(self, report_data: Dict):
+        output_file = f"fullstack_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        
+        with open(output_file, 'w') as f:
+            json.dump(report_data, f, indent=2)
+        
+        print(f"Report export saved to: {output_file}")
+
+    def test_resource_completeness(self):
+        print("Testing resource completeness...")
+        missing_resources = []
+        
+        for name, path in self.template_paths.items():
+            if not path.exists():
+                missing_resources.append(f"Template: {name} ({path})")
+        
+        for name, path in self.data_paths.items():
+            if not path.exists():
+                missing_resources.append(f"Data: {name} ({path})")
+        
+        if missing_resources:
+            print("Missing resources:")
+            for resource in missing_resources:
+                print(f"  - {resource}")
+        else:
+            print("All resources are available!")
+
+    def build_shadcn_component(self, component_name: str = "Button") -> Dict[str, Any]:
+        logger.info(f"Building Shadcn component: {component_name}")
+        
+        # Simuleer Shadcn component bouw
+        time.sleep(1)
+        result = {
+            "component": component_name,
+            "type": "Shadcn/ui",
+            "variants": ["default", "secondary", "outline", "destructive", "ghost", "link"],
+            "sizes": ["sm", "default", "lg", "icon"],
+            "status": "created",
+            "accessibility_score": 98,
+            "timestamp": datetime.now().isoformat(),
+            "agent": "FullstackDeveloperAgent"
+        }
+        
+        # Log performance metric
+        self.monitor._record_metric("FullstackDeveloper", MetricType.SUCCESS_RATE, result["accessibility_score"], "%")
+        
+        logger.info(f"Shadcn component build result: {result}")
+        return result
+
+    def collaborate_example(self):
+        """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
+        logger.info("Starting collaboration example...")
+        
+        # Publish development request
+        publish("fullstack_development_requested", {
+            "agent": "FullstackDeveloperAgent",
+            "story": "User Authentication",
+            "timestamp": datetime.now().isoformat()
+        })
+        
+        # Implement story
+        self.implement_story()
+        
+        # Build frontend with Shadcn
+        self.build_frontend()
+        
+        # Build Shadcn component
+        component_result = self.build_shadcn_component("Button")
+        
+        # Publish completion
+        publish("fullstack_development_completed", {
+            "status": "success", 
+            "agent": "FullstackDeveloperAgent",
+            "shadcn_components": 1
+        })
+        
+        # Save context
+        save_context("FullstackDeveloper", {"feature_status": "deployed"})
+        
+        # Notify via Slack
+        try:
+            send_slack_message(f"Fullstack development completed with {component_result['variants']} Shadcn component variants")
+        except Exception as e:
+            logger.warning(f"Could not send Slack notification: {e}")
+        
+        print("Event gepubliceerd en context opgeslagen.")
+        context = get_context("FullstackDeveloper")
+        print(f"Opgehaalde context: {context}")
+
+    def handle_fullstack_development_requested(self, event):
+        logger.info(f"Fullstack development requested: {event}")
+        story = event.get("story", "User Authentication")
+        self.implement_story()
+
+    async def handle_fullstack_development_completed(self, event):
+        logger.info(f"Fullstack development completed: {event}")
+        
+        # Evaluate policy
+        try:
+            allowed = await self.policy_engine.evaluate_policy("fullstack_development", event)
+            logger.info(f"Policy evaluation result: {allowed}")
+        except Exception as e:
+            logger.error(f"Policy evaluation failed: {e}")
+
+    def run(self):
+        def sync_handler(event):
+            asyncio.run(self.handle_fullstack_development_completed(event))
+        
+        subscribe("fullstack_development_completed", sync_handler)
+        subscribe("fullstack_development_requested", self.handle_fullstack_development_requested)
+        
+        logger.info("FullstackDeveloperAgent ready and listening for events...")
+        self.collaborate_example()
+
+    # --- ORIGINELE FUNCTIONALITEIT BEHOUDEN ---
     def implement_story(self):
         print(
             textwrap.dedent(
@@ -37,6 +359,14 @@ class FullstackDeveloperAgent:
         """
             )
         )
+        
+        # Log performance metric
+        self.monitor._record_metric("FullstackDeveloper", MetricType.SUCCESS_RATE, 95, "%")
+        
+        # Add to history
+        dev_entry = f"{datetime.now().isoformat()}: User Authentication story implemented"
+        self.development_history.append(dev_entry)
+        self._save_development_history()
 
     def build_api(self):
         print(
@@ -49,6 +379,9 @@ class FullstackDeveloperAgent:
         """
             )
         )
+        
+        # Log performance metric
+        self.monitor._record_metric("FullstackDeveloper", MetricType.SUCCESS_RATE, 90, "%")
 
     def build_frontend(self):
         """Bouw de BMAD frontend dashboard."""
@@ -593,6 +926,14 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
         print("📁 Componenten: Dashboard, AgentStatus, WorkflowManager, APITester, MetricsChart")
         print("🎨 CSS styling en package.json inbegrepen")
         print("🔗 Klaar voor integratie met BMAD API")
+        
+        # Log performance metric
+        self.monitor._record_metric("FullstackDeveloper", MetricType.SUCCESS_RATE, 95, "%")
+        
+        # Add to history
+        dev_entry = f"{datetime.now().isoformat()}: Frontend Dashboard generated with 5 components"
+        self.development_history.append(dev_entry)
+        self._save_development_history()
 
     def integrate_service(self):
         print(
@@ -764,14 +1105,6 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
             )
         )
 
-    def collaborate_example(self):
-        """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
-        publish("feature_deployed", {"status": "success", "agent": "FullstackDeveloper"})
-        save_context("FullstackDeveloper", {"feature_status": "deployed"})
-        print("Event gepubliceerd en context opgeslagen.")
-        context = get_context("FullstackDeveloper")
-        print(f"Opgehaalde context: {context}")
-
     def handle_tasks_assigned(self, event):
         logging.info("[FullstackDeveloper] Taken ontvangen, ontwikkeling wordt gestart...")
         time.sleep(1)
@@ -788,79 +1121,82 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
         subscribe("tasks_assigned", self.handle_tasks_assigned)
         subscribe("development_started", self.handle_development_started)
 
-    def show_help(self):
-        print(
-            """
-Beschikbare commando's:
-- implement-story
-- build-api
-- build-frontend
-- integrate-service
-- write-tests
-- ci-cd
-- dev-log
-- review
-- refactor
-- security-check
-- blockers
-- api-contract
-- component-doc
-- performance-profile
-- a11y-check
-- feature-toggle
-- monitoring-setup
-- release-notes
-- devops-handover
-- tech-debt
-- collaborate-example
-- help
-        """
-        )
-
-    def run(self, command):
-        commands = {
-            "implement-story": self.implement_story,
-            "build-api": self.build_api,
-            "build-frontend": self.build_frontend,
-            "integrate-service": self.integrate_service,
-            "write-tests": self.write_tests,
-            "ci-cd": self.ci_cd,
-            "dev-log": self.dev_log,
-            "review": self.review,
-            "refactor": self.refactor,
-            "security-check": self.security_check,
-            "blockers": self.blockers,
-            "api-contract": self.api_contract,
-            "component-doc": self.component_doc,
-            "performance-profile": self.performance_profile,
-            "a11y-check": self.a11y_check,
-            "feature-toggle": self.feature_toggle,
-            "monitoring-setup": self.monitoring_setup,
-            "release-notes": self.release_notes,
-            "devops-handover": self.devops_handover,
-            "tech-debt": self.tech_debt,
-            "collaborate-example": self.collaborate_example,
-            "help": self.show_help,
-        }
-        func = commands.get(command)
-        if func:
-            func()
-        else:
-            print(f"❌ Onbekend commando: {command}")
-            self.show_help()
-
-
 def main():
-    parser = argparse.ArgumentParser(description="Fullstack Developer Agent")
-    parser.add_argument("command", nargs="?", help="Commando om uit te voeren")
+    parser = argparse.ArgumentParser(description="FullstackDeveloper Agent CLI")
+    parser.add_argument("command", nargs="?", default="help", 
+                       choices=["help", "implement-story", "build-api", "build-frontend", "build-shadcn-component",
+                               "write-tests", "show-development-history", "show-performance", "show-best-practices", 
+                               "show-changelog", "export-report", "test", "collaborate", "run", "integrate-service",
+                               "ci-cd", "dev-log", "review", "refactor", "security-check", "blockers", "api-contract",
+                               "component-doc", "performance-profile", "a11y-check", "feature-toggle", "monitoring-setup",
+                               "release-notes", "devops-handover", "tech-debt"])
+    parser.add_argument("--name", default="User Authentication", help="Story/Component name")
+    parser.add_argument("--format", choices=["md", "json"], default="md", help="Export format")
+    
     args = parser.parse_args()
+    
     agent = FullstackDeveloperAgent()
-    agent.setup_event_handlers()
-    if args.command:
-        agent.run(args.command)
-    else:
+    
+    if args.command == "help":
         agent.show_help()
-
+    elif args.command == "implement-story":
+        agent.implement_story()
+    elif args.command == "build-api":
+        agent.build_api()
+    elif args.command == "build-frontend":
+        agent.build_frontend()
+    elif args.command == "build-shadcn-component":
+        agent.build_shadcn_component(args.name)
+    elif args.command == "write-tests":
+        agent.write_tests()
+    elif args.command == "show-development-history":
+        agent.show_development_history()
+    elif args.command == "show-performance":
+        agent.show_performance()
+    elif args.command == "show-best-practices":
+        agent.show_resource("best-practices")
+    elif args.command == "show-changelog":
+        agent.show_resource("changelog")
+    elif args.command == "export-report":
+        agent.export_report(args.format)
+    elif args.command == "test":
+        agent.test_resource_completeness()
+    elif args.command == "collaborate":
+        agent.collaborate_example()
+    elif args.command == "run":
+        agent.run()
+    elif args.command == "integrate-service":
+        agent.integrate_service()
+    elif args.command == "ci-cd":
+        agent.ci_cd()
+    elif args.command == "dev-log":
+        agent.dev_log()
+    elif args.command == "review":
+        agent.review()
+    elif args.command == "refactor":
+        agent.refactor()
+    elif args.command == "security-check":
+        agent.security_check()
+    elif args.command == "blockers":
+        agent.blockers()
+    elif args.command == "api-contract":
+        agent.api_contract()
+    elif args.command == "component-doc":
+        agent.component_doc()
+    elif args.command == "performance-profile":
+        agent.performance_profile()
+    elif args.command == "a11y-check":
+        agent.a11y_check()
+    elif args.command == "feature-toggle":
+        agent.feature_toggle()
+    elif args.command == "monitoring-setup":
+        agent.monitoring_setup()
+    elif args.command == "release-notes":
+        agent.release_notes()
+    elif args.command == "devops-handover":
+        agent.devops_handover()
+    elif args.command == "tech-debt":
+        agent.tech_debt()
 
 if __name__ == "__main__":
     main()
