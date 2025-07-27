@@ -272,6 +272,30 @@ class IntegratedWorkflowCLI:
         except Exception as e:
             print(f"   ❌ OPA: {e}")
         
+        # Test Advanced Policy Engine
+        print("\n🔐 Testing Advanced Policy Engine...")
+        try:
+            # Test advanced access control policy
+            advanced_result = await self.orchestrator.advanced_policy_engine.evaluate_policy(
+                "advanced_access_control", 
+                request
+            )
+            print(f"   ✅ Advanced Access Control: {advanced_result.allowed}")
+            print(f"   📋 Rule: {advanced_result.rule_id}")
+            print(f"   📝 Reason: {advanced_result.reason}")
+            print(f"   📈 Severity: {advanced_result.severity.value}")
+            
+            # Test resource management policy
+            resource_result = await self.orchestrator.advanced_policy_engine.evaluate_policy(
+                "advanced_resource_management", 
+                request
+            )
+            print(f"   ✅ Resource Management: {resource_result.allowed}")
+            print(f"   📋 Rule: {resource_result.rule_id}")
+            
+        except Exception as e:
+            print(f"   ❌ Advanced Policy Engine: {e}")
+        
         # Test LangGraph
         print("\n🔄 Testing LangGraph...")
         try:
