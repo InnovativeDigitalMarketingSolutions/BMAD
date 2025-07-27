@@ -432,6 +432,28 @@ class BMADTracer:
         else:
             return self.tracer.start_span(name, attributes=attributes)
     
+    @contextmanager
+    def start_span(self, name: str, level: TraceLevel = TraceLevel.DETAILED, parent=None, attributes: Optional[Dict[str, Any]] = None):
+        """Start a span as a context manager."""
+        if not self.tracer:
+            yield None
+            return
+        
+        # Add level-specific attributes
+        span_attributes = attributes or {}
+        span_attributes["trace.level"] = level.value
+        
+        if parent:
+            context = trace.set_span_in_context(parent)
+            span = self.tracer.start_span(name, attributes=span_attributes, context=context)
+        else:
+            span = self.tracer.start_span(name, attributes=span_attributes)
+        
+        try:
+            yield span
+        finally:
+            span.end()
+    
     def get_trace_id(self) -> Optional[str]:
         """Get the current trace ID."""
         current_span = trace.get_current_span()

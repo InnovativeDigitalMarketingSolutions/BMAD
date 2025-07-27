@@ -398,6 +398,10 @@ class LangGraphWorkflowOrchestrator:
             del self.active_workflows[workflow_id]
             logger.info(f"Workflow {workflow_id} geannuleerd")
     
+    def list_workflows(self) -> List[str]:
+        """List all registered workflow names."""
+        return list(self.workflow_definitions.keys())
+    
     def _register_default_executors(self):
         """Register default task executors."""
         self.register_task_executor("ProductOwner", self._execute_product_owner_task)
