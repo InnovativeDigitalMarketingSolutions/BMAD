@@ -30,6 +30,7 @@ from .langgraph_workflow import LangGraphWorkflowOrchestrator
 from .openrouter_client import OpenRouterClient, LLMConfig, RoutingStrategy
 from .opentelemetry_tracing import BMADTracer, TracingConfig, TraceLevel
 from .opa_policy_engine import OPAPolicyEngine, PolicyRule, PolicyRequest
+from .advanced_policy_engine import AdvancedPolicyEngine, get_advanced_policy_engine
 from .prefect_workflow import PrefectWorkflowOrchestrator, PrefectWorkflowConfig
 from .test_sprites import TestSpriteLibrary, get_sprite_library
 from .agent_performance_monitor import PerformanceMonitor, get_performance_monitor
@@ -125,6 +126,10 @@ class IntegratedWorkflowOrchestrator:
             opa_url = os.getenv("OPA_URL", "http://localhost:8181")
             self.policy_engine = OPAPolicyEngine(opa_url=opa_url)
             logger.info("OPA policy engine geïnitialiseerd")
+            
+            # Initialize Advanced Policy Engine
+            self.advanced_policy_engine = get_advanced_policy_engine()
+            logger.info("Advanced Policy Engine geïnitialiseerd")
             
             # Initialize LangGraph workflow orchestrator
             self.langgraph_orchestrator = LangGraphWorkflowOrchestrator()
@@ -511,6 +516,7 @@ class IntegratedWorkflowOrchestrator:
         context: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Enforce policies for workflow execution."""
+        # Basic OPA policy evaluation
         policy_request = PolicyRequest(
             subject=f"workflow-{workflow_def.name}",
             action="execute",
@@ -524,7 +530,29 @@ class IntegratedWorkflowOrchestrator:
             }
         )
         
-        return await self.policy_engine.evaluate_policy(policy_request)
+        basic_result = await self.policy_engine.evaluate_policy(policy_request)
+        
+        # Advanced policy evaluation
+        advanced_results = []
+        for policy_id in ["advanced_access_control", "advanced_resource_management"]:
+            try:
+                advanced_result = await self.advanced_policy_engine.evaluate_policy(policy_id, policy_request)
+                advanced_results.append({
+                    "policy_id": policy_id,
+                    "allowed": advanced_result.allowed,
+                    "reason": advanced_result.reason,
+                    "severity": advanced_result.severity.value,
+                    "conditions_met": advanced_result.conditions_met,
+                    "conditions_failed": advanced_result.conditions_failed
+                })
+            except Exception as e:
+                logger.warning(f"Advanced policy evaluation failed for {policy_id}: {e}")
+        
+        return {
+            "basic_policy": basic_result,
+            "advanced_policies": advanced_results,
+            "overall_allowed": basic_result.allowed and all(r["allowed"] for r in advanced_results)
+        }
     
     async def _enforce_task_policies(
         self, 
@@ -532,6 +560,7 @@ class IntegratedWorkflowOrchestrator:
         context: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Enforce policies for task execution."""
+        # Basic OPA policy evaluation
         policy_request = PolicyRequest(
             subject=f"agent-{task.agent}",
             action=task.command,
@@ -545,7 +574,41 @@ class IntegratedWorkflowOrchestrator:
             }
         )
         
-        return await self.policy_engine.evaluate_policy(policy_request)
+        basic_result = await self.policy_engine.evaluate_policy(policy_request)
+        
+        # Advanced policy evaluation based on agent type
+        advanced_results = []
+        agent_config = self.agent_configs.get(task.agent)
+        
+        if agent_config and agent_config.policy_rules:
+            for policy_rule in agent_config.policy_rules:
+                try:
+                    if policy_rule == "access_control":
+                        advanced_result = await self.advanced_policy_engine.evaluate_policy("advanced_access_control", policy_request)
+                    elif policy_rule == "resource_limits":
+                        advanced_result = await self.advanced_policy_engine.evaluate_policy("advanced_resource_management", policy_request)
+                    elif policy_rule == "security_policies":
+                        advanced_result = await self.advanced_policy_engine.evaluate_policy("composite_security_policy", policy_request)
+                    else:
+                        continue
+                    
+                    advanced_results.append({
+                        "policy_id": advanced_result.policy_id,
+                        "rule_id": advanced_result.rule_id,
+                        "allowed": advanced_result.allowed,
+                        "reason": advanced_result.reason,
+                        "severity": advanced_result.severity.value,
+                        "conditions_met": advanced_result.conditions_met,
+                        "conditions_failed": advanced_result.conditions_failed
+                    })
+                except Exception as e:
+                    logger.warning(f"Advanced policy evaluation failed for {policy_rule}: {e}")
+        
+        return {
+            "basic_policy": basic_result,
+            "advanced_policies": advanced_results,
+            "overall_allowed": basic_result.allowed and all(r["allowed"] for r in advanced_results)
+        }
     
     async def _execute_task_with_llm(
         self, 
