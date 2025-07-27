@@ -32,13 +32,44 @@ Transform your AI into a complete game development studio:
 
 ### Mobile Development Pack
 
-Specialized agents for mobile app creation:
+**NEW: Integrated Mobile Development Capabilities**
 
-- **iOS Specialist**: Swift/SwiftUI patterns, Apple guidelines
-- **Android Expert**: Kotlin best practices, Material Design
-- **Mobile UX Designer**: Touch interfaces, gesture patterns
-- **App Store Optimizer**: ASO strategies, listing optimization
-- **Performance Tuner**: Battery optimization, network efficiency
+The BMad framework now includes comprehensive mobile development capabilities through the **MobileDeveloper** agent and enhanced **UXUIDesigner** with mobile UX features:
+
+#### Core Mobile Development Agent
+- **MobileDeveloper**: Cross-platform mobile development specialist
+  - **React Native Development**: Cross-platform mobile apps with React Native
+  - **Flutter Development**: Cross-platform mobile apps with Flutter
+  - **iOS Native Development**: Swift/SwiftUI development for iOS
+  - **Android Native Development**: Kotlin/Jetpack Compose for Android
+  - **PWA Development**: Progressive Web App development
+  - **Hybrid Development**: Cordova/PhoneGap hybrid apps
+  - **App Store Deployment**: iOS App Store and Google Play Store deployment
+  - **Performance Optimization**: Mobile-specific performance tuning
+  - **Cross-Platform Testing**: Automated testing across platforms
+  - **Mobile Analytics**: Performance monitoring and analytics
+
+#### Enhanced UX/UI Design with Mobile Focus
+- **UXUIDesigner with Mobile UX**: Enhanced with mobile-specific capabilities
+  - **Mobile UX Design**: Touch interfaces, gesture patterns, mobile-first design
+  - **Mobile Component Design**: Mobile-specific UI components
+  - **Mobile User Flow Design**: Mobile user journey optimization
+  - **Responsive Design**: Adaptive design for different screen sizes
+  - **Mobile Accessibility**: Mobile-specific accessibility guidelines
+
+#### Mobile Development Workflows
+- **Mobile App Development**: Complete mobile app development workflow
+- **Mobile Feature Delivery**: Mobile feature development and deployment
+- **Mobile Performance Optimization**: Mobile-specific performance workflows
+
+#### Mobile Development Templates
+- **React Native Templates**: Cross-platform mobile app templates
+- **Flutter Templates**: Flutter app development templates
+- **iOS Templates**: Native iOS development templates
+- **Android Templates**: Native Android development templates
+- **Mobile Testing Templates**: Mobile-specific testing templates
+- **Performance Templates**: Mobile performance optimization templates
+- **Deployment Templates**: App store deployment templates
 
 ### DevOps/Infrastructure Pack
 
@@ -59,6 +90,142 @@ AI-powered data analysis team:
 - **ML Engineer**: Model deployment, A/B testing
 - **Visualization Expert**: Dashboard design, insight communication
 - **Ethics Advisor**: Bias detection, fairness assessment
+
+### AI/ML Development Pack
+
+**Enhanced AI Development Capabilities**
+
+The BMad framework includes comprehensive AI/ML development through the **AiDeveloper** agent:
+
+#### Core AI Development Agent
+- **AiDeveloper**: AI/ML development specialist
+  - **Model Development**: Machine learning model development and training
+  - **AI Integration**: AI system integration and deployment
+  - **Prefect Workflows**: Workflow orchestration for AI/ML pipelines
+  - **Experiment Management**: AI experiment tracking and management
+  - **Model Optimization**: Performance optimization and tuning
+  - **AI Ethics**: Bias detection and fairness assessment
+  - **Explainability**: Model interpretability and explainability
+  - **AI Testing**: Comprehensive AI system testing
+
+#### AI Development Templates
+- **AI Model Templates**: Machine learning model templates
+- **AI Pipeline Templates**: AI/ML pipeline templates
+- **Experiment Templates**: AI experiment templates
+- **Bias Check Templates**: AI bias detection templates
+- **Explainability Templates**: Model explainability templates
+
+### Security Development Pack
+
+**Enhanced Security Development Capabilities**
+
+The BMad framework includes comprehensive security development through the **SecurityDeveloper** agent:
+
+#### Core Security Development Agent
+- **SecurityDeveloper**: Security development specialist
+  - **Security Implementation**: Security feature implementation
+  - **Vulnerability Assessment**: Security vulnerability assessment
+  - **Compliance Management**: Security compliance (OWASP, GDPR, SOX)
+  - **Security Testing**: Security testing and penetration testing
+  - **Incident Response**: Security incident response and management
+  - **Security Architecture**: Security architecture design
+  - **Threat Modeling**: Security threat modeling and analysis
+
+#### Security Development Templates
+- **Security Checklist Templates**: Security compliance checklists
+- **Vulnerability Assessment Templates**: Security assessment templates
+- **Incident Report Templates**: Security incident reporting templates
+- **Compliance Report Templates**: Security compliance reporting templates
+
+### Frontend Development Pack
+
+**Enhanced Frontend Development with Shadcn/ui Integration**
+
+The BMad framework includes comprehensive frontend development through enhanced **FrontendDeveloper** and **FullstackDeveloper** agents:
+
+#### Core Frontend Development Agents
+- **FrontendDeveloper**: Frontend development specialist with Shadcn/ui
+  - **React Development**: React application development
+  - **Next.js Development**: Next.js application development
+  - **Shadcn/ui Integration**: Modern UI component library integration
+  - **TypeScript Development**: TypeScript application development
+  - **Tailwind CSS**: Utility-first CSS framework
+  - **Component Development**: Reusable UI component development
+  - **Performance Optimization**: Frontend performance optimization
+  - **Accessibility**: WCAG compliance and accessibility
+
+- **FullstackDeveloper**: Full-stack development specialist with Shadcn/ui
+  - **Full-Stack Development**: Complete application development
+  - **Frontend Integration**: Frontend and backend integration
+  - **API Development**: RESTful API development
+  - **Database Integration**: Database design and integration
+  - **Deployment**: Full-stack application deployment
+
+#### Frontend Development Templates
+- **Shadcn/ui Templates**: Modern UI component templates
+- **Next.js Templates**: Next.js application templates
+- **React Templates**: React component templates
+- **Accessibility Templates**: WCAG compliance templates
+- **Performance Templates**: Frontend performance templates
+
+### Backend Development Pack
+
+**Enhanced Backend Development Capabilities**
+
+The BMad framework includes comprehensive backend development through the **BackendDeveloper** agent:
+
+#### Core Backend Development Agent
+- **BackendDeveloper**: Backend development specialist
+  - **API Development**: RESTful API development
+  - **Database Design**: Database architecture and design
+  - **Server Development**: Server-side application development
+  - **Microservices**: Microservices architecture development
+  - **Performance Optimization**: Backend performance optimization
+  - **Security Implementation**: Backend security implementation
+  - **Testing**: Backend testing and quality assurance
+
+### Data Engineering Pack
+
+**Enhanced Data Engineering Capabilities**
+
+The BMad framework includes comprehensive data engineering through the **DataEngineer** agent:
+
+#### Core Data Engineering Agent
+- **DataEngineer**: Data engineering specialist
+  - **Data Pipeline Development**: ETL pipeline development
+  - **Data Quality Management**: Data quality assessment and improvement
+  - **Data Monitoring**: Data pipeline monitoring and alerting
+  - **Data Security**: Data security and privacy implementation
+  - **Data Governance**: Data governance and compliance
+  - **Performance Optimization**: Data pipeline performance optimization
+
+#### Data Engineering Templates
+- **Pipeline Templates**: ETL pipeline templates
+- **Data Quality Templates**: Data quality assessment templates
+- **Monitoring Templates**: Data monitoring templates
+- **Performance Templates**: Data performance optimization templates
+
+### Documentation Pack
+
+**Enhanced Documentation Capabilities**
+
+The BMad framework includes comprehensive documentation through the **DocumentationAgent**:
+
+#### Core Documentation Agent
+- **DocumentationAgent**: Documentation specialist
+  - **API Documentation**: Comprehensive API documentation
+  - **User Guides**: User guide and tutorial creation
+  - **Technical Documentation**: Technical specification documentation
+  - **Figma Documentation**: UI/UX documentation from Figma
+  - **Changelog Management**: Changelog summarization and management
+  - **Documentation Quality**: Documentation quality assessment
+
+#### Documentation Templates
+- **API Documentation Templates**: API documentation templates
+- **User Guide Templates**: User guide templates
+- **Technical Documentation Templates**: Technical documentation templates
+- **Figma Documentation Templates**: Figma documentation templates
+- **Changelog Templates**: Changelog management templates
 
 ## Non-Technical Expansion Packs
 
@@ -98,183 +265,157 @@ Complete learning design system:
 
 - **Curriculum Architect**: Learning objectives, scope & sequence
 - **Instructional Designer**: Engagement strategies, multimedia learning
-- **Assessment Specialist**: Rubrics, formative/summative evaluation
-- **Differentiation Expert**: Adaptive learning, special needs
-- **EdTech Integrator**: Tool selection, digital pedagogy
+- **Assessment Specialist**: Formative and summative evaluation
+- **Learning Technologist**: EdTech integration, LMS optimization
+- **Student Success Coach**: Personalized learning paths, intervention strategies
 
-### Mental Health Support Pack
+### Legal & Compliance Pack
 
-Therapeutic support system:
+Legal and regulatory expertise:
 
-- **CBT Guide**: Cognitive restructuring, thought challenging
-- **Mindfulness Teacher**: Meditation scripts, awareness exercises
-- **Journal Therapist**: Reflective prompts, emotional processing
-- **Crisis Support**: Coping strategies, safety planning
-- **Habit Tracker**: Mood monitoring, trigger identification
+- **Contract Specialist**: Legal document review, risk assessment
+- **Compliance Officer**: Regulatory requirements, audit preparation
+- **IP Attorney**: Patent analysis, trademark protection
+- **Data Privacy Expert**: GDPR, CCPA, privacy by design
+- **Corporate Counsel**: Business law, corporate governance
 
-### Legal Assistant Pack
+### Financial Services Pack
 
-Legal document and research support:
+Financial industry expertise:
 
-- **Contract Analyst**: Term review, risk assessment
-- **Legal Researcher**: Case law, precedent analysis
-- **Document Drafter**: Template customization, clause libraries
-- **Compliance Checker**: Regulatory alignment, audit prep
-- **IP Advisor**: Patent strategies, trademark guidance
+- **Investment Analyst**: Portfolio analysis, risk assessment
+- **Financial Planner**: Retirement planning, tax optimization
+- **Risk Manager**: Enterprise risk management, compliance
+- **Trading Specialist**: Market analysis, algorithmic trading
+- **Regulatory Expert**: Financial regulations, compliance reporting
 
-### Real Estate Pack
+## Advanced Orchestration Packs
 
-Property investment and management:
+### Workflow Orchestration Pack
 
-- **Market Analyst**: Comparable analysis, trend prediction
-- **Investment Calculator**: ROI modeling, cash flow analysis
-- **Property Manager**: Tenant screening, maintenance scheduling
-- **Flip Strategist**: Renovation ROI, project planning
-- **Agent Assistant**: Listing optimization, showing prep
+**Enhanced Orchestration Capabilities**
 
-### Personal Development Pack
+The BMad framework includes advanced orchestration through the **Orchestrator** agent:
 
-Complete personal growth system:
+#### Core Orchestration Agent
+- **Orchestrator**: Advanced workflow orchestration specialist
+  - **Workflow Management**: Intelligent workflow management and coordination
+  - **Event Routing**: Advanced event routing and filtering
+  - **Human-in-the-Loop (HITL)**: HITL process management and approval workflows
+  - **Intelligent Task Assignment**: AI-powered task assignment and load balancing
+  - **Performance Monitoring**: Real-time performance monitoring and optimization
+  - **Escalation Management**: Automated escalation and incident response
+  - **Metrics Analysis**: Comprehensive metrics analysis and reporting
 
-- **Life Coach**: Guides personal growth and transformation
-- **Goal Strategist**: Helps achieve objectives with SMART goals
-- **Habit Builder**: Creates lasting habits with accountability
-- **Mindset Mentor**: Develops positive thinking patterns
+#### Orchestration Workflows
+- **Automated Deployment**: Automated deployment workflows with HITL approval
+- **Feature Delivery**: Feature development and delivery workflows
+- **Security Review**: Security-focused development workflows
+- **Retrospective Feedback**: Process improvement and feedback workflows
+- **Mobile Development**: Mobile app development workflows
+- **Mobile Feature Delivery**: Mobile feature development workflows
+- **Mobile Performance Optimization**: Mobile performance optimization workflows
 
-Key tasks include:
+### Quality Assurance Pack
 
-- `goal-setting`: Defines SMART goals with action plans
-- `habit-tracking`: Monitors habit formation progress
-- `reflection-exercise`: Facilitates deep self-reflection
+**Enhanced Quality Assurance Capabilities**
 
-## Unique & Innovative Packs
+The BMad framework includes comprehensive quality assurance through the **TestEngineer** agent:
 
-### Role-Playing Game Master Pack
+#### Core Quality Assurance Agent
+- **TestEngineer**: Quality assurance specialist
+  - **Test Strategy**: Comprehensive testing strategy development
+  - **Test Automation**: Automated testing implementation
+  - **Quality Assurance**: Quality assurance processes and procedures
+  - **Performance Testing**: Performance testing and optimization
+  - **Security Testing**: Security testing and vulnerability assessment
+  - **Mobile Testing**: Mobile-specific testing strategies
 
-AI-powered tabletop RPG assistance:
+### Process Improvement Pack
 
-- **World Master**: Dynamic world generation, NPC creation
-- **Combat Referee**: Initiative tracking, rule clarification
-- **Story Weaver**: Plot hooks, side quests, consequences
-- **Character Builder**: Backstory generation, stat optimization
-- **Loot Master**: Treasure generation, magic item creation
+**Enhanced Process Improvement Capabilities**
 
-### Life Event Planning Pack
+The BMad framework includes comprehensive process improvement through the **Retrospective** and **FeedbackAgent** agents:
 
-Major life event coordination:
+#### Core Process Improvement Agents
+- **Retrospective**: Process improvement specialist
+  - **Feedback Analysis**: Comprehensive feedback analysis
+  - **Action Planning**: Process improvement action planning
+  - **Improvement Tracking**: Process improvement tracking and measurement
+  - **Team Collaboration**: Team collaboration and communication
 
-- **Wedding Planner**: Vendor coordination, timeline creation
-- **Event Designer**: Theme development, decoration plans
-- **Budget Manager**: Cost tracking, vendor negotiation
-- **Guest Coordinator**: RSVP tracking, seating arrangements
-- **Timeline Keeper**: Day-of scheduling, contingency planning
+- **FeedbackAgent**: Feedback management specialist
+  - **Feedback Collection**: Automated feedback collection and analysis
+  - **Sentiment Analysis**: Sentiment analysis and trend identification
+  - **Insights Generation**: Actionable insights generation
+  - **Trend Tracking**: Feedback trend tracking and reporting
 
-### Hobby Mastery Pack
+## Creating Custom Expansion Packs
 
-Deep dive into specific hobbies:
+### Pack Structure
 
-- **Garden Designer**: Plant selection, seasonal planning
-- **Brew Master**: Recipe formulation, process optimization
-- **Maker Assistant**: 3D printing, woodworking, crafts
-- **Collection Curator**: Organization, valuation, trading
-- **Photography Coach**: Composition, lighting, post-processing
+Each expansion pack follows a consistent structure:
 
-### Scientific Research Pack
+```
+expansion-pack-name/
+├── agents/
+│   ├── agent-name/
+│   │   ├── agent.py
+│   │   ├── agent.md
+│   │   └── agent.yaml
+├── templates/
+│   └── pack-specific-templates/
+├── data/
+│   └── pack-specific-data/
+├── workflows/
+│   └── pack-specific-workflows/
+└── README.md
+```
 
-Research acceleration tools:
+### Development Guidelines
 
-- **Literature Reviewer**: Paper summarization, gap analysis
-- **Hypothesis Generator**: Research question formulation
-- **Methodology Designer**: Experiment planning, control design
-- **Statistical Advisor**: Test selection, power analysis
-- **Grant Writer**: Proposal structure, impact statements
+1. **Agent Development**: Follow the established agent optimization standard
+2. **Template Creation**: Use the template format specification
+3. **Resource Management**: Implement proper resource management
+4. **Testing**: Include comprehensive testing and validation
+5. **Documentation**: Provide detailed documentation and examples
 
-## Creating Your Own Expansion Pack
+### Integration Process
 
-### Step 1: Define Your Domain
+1. **Agent Registration**: Register new agents with the orchestrator
+2. **Workflow Integration**: Integrate with existing workflows
+3. **Template Integration**: Integrate templates with the core system
+4. **Testing**: Comprehensive testing and validation
+5. **Documentation**: Update documentation and examples
 
-What expertise are you capturing? What problems will it solve?
+## Future Expansion Packs
 
-### Step 2: Design Your Agents
+### Emerging Technology Packs
 
-Each agent should have:
+- **Blockchain Development**: Smart contracts, DeFi applications
+- **IoT Development**: Internet of Things device development
+- **AR/VR Development**: Augmented and virtual reality applications
+- **Quantum Computing**: Quantum algorithm development
+- **Edge Computing**: Edge computing and distributed systems
 
-- Clear expertise area
-- Specific personality traits
-- Defined capabilities
-- Knowledge boundaries
+### Industry-Specific Packs
 
-### Step 3: Create Tasks
+- **Healthcare**: Medical software, compliance, patient care
+- **Manufacturing**: Industrial automation, quality control
+- **Retail**: E-commerce, inventory management, customer experience
+- **Transportation**: Logistics, fleet management, route optimization
+- **Energy**: Smart grid, renewable energy, energy management
 
-Tasks should be:
+### Specialized Development Packs
 
-- Step-by-step procedures
-- Reusable across scenarios
-- Clear and actionable
-- Domain-specific
+- **Embedded Systems**: Microcontroller programming, hardware integration
+- **Game Engine Development**: Custom game engine development
+- **Database Engine Development**: Custom database system development
+- **Operating System Development**: OS kernel and system development
+- **Compiler Development**: Programming language and compiler development
 
-### Step 4: Build Templates
+## Conclusion
 
-Templates need:
+BMad expansion packs transform the framework from a software development tool into a universal AI agent system. With the recent enhancements including the MobileDeveloper agent, enhanced UXUIDesigner with mobile capabilities, and comprehensive orchestration features, BMad now provides unparalleled support for modern development scenarios.
 
-- Structured output format
-- Embedded LLM instructions
-- Placeholders for customization
-- Professional formatting
-
-### Step 5: Test & Iterate
-
-- Use with real scenarios
-- Gather user feedback
-- Refine agent responses
-- Improve task clarity
-
-### Step 6: Package & Share
-
-- Create clear documentation
-- Include usage examples
-- Add to expansion-packs directory
-- Share with community
-
-## The Future of Expansion Packs
-
-### Marketplace Potential
-
-Imagine a future where:
-
-- Professional expansion packs are sold
-- Certified packs for regulated industries
-- Community ratings and reviews
-- Automatic updates and improvements
-
-### AI Agent Ecosystems
-
-Expansion packs could enable:
-
-- Cross-pack agent collaboration
-- Industry-standard agent protocols
-- Interoperable AI workflows
-- Universal agent languages
-
-### Democratizing Expertise
-
-Every expansion pack:
-
-- Makes expert knowledge accessible
-- Reduces barriers to entry
-- Enables solo entrepreneurs
-- Empowers small teams
-
-## Getting Started
-
-1. **Browse existing packs**: Check `expansion-packs/` directory
-2. **Install what you need**: Use the installer's expansion pack option
-3. **Create your own**: Use the expansion-creator pack
-4. **Share with others**: Submit PRs with new packs
-5. **Build the future**: Help shape AI-assisted work
-
-## Remember
-
-The BMad Method is more than a development framework - it's a platform for structuring human expertise into AI-accessible formats. Every expansion pack you create makes specialized knowledge more accessible to everyone.
-
-**What expertise will you share with the world?**
+The modular architecture ensures that you can install only the capabilities you need, while the advanced orchestration system ensures seamless integration and collaboration between all agents. Whether you're developing mobile apps, AI systems, or enterprise applications, BMad expansion packs provide the specialized expertise and workflows you need for success.
