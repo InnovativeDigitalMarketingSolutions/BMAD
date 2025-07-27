@@ -69,14 +69,14 @@ def test_clickup_integration():
         print("\n🔗 Testing API connectivity...")
         try:
             import requests
-            # Try to get space info to test API connection
-            url = f"{clickup.base_url}/space/{clickup.space_id}"
+            # Test API connection with user endpoint
+            url = f"{clickup.base_url}/user"
             response = requests.get(url, headers=clickup.headers)
             
             if response.status_code == 200:
                 print("✅ API connection successful")
-                space_data = response.json()
-                print(f"   Space name: {space_data.get('name', 'Unknown')}")
+                user_data = response.json()
+                print(f"   User: {user_data.get('user', {}).get('username', 'Unknown')}")
             else:
                 print(f"❌ API connection failed: {response.status_code}")
                 return False
