@@ -61,8 +61,8 @@
   "parent_policy": null,
   "inheritance_rules": {},
   "status": "active",
-  "created_at": "2025-07-27T20:13:13.154897",
-  "updated_at": "2025-07-27T20:13:13.154898",
+  "created_at": "2025-07-27T20:20:39.250346",
+  "updated_at": "2025-07-27T20:20:39.250350",
   "expires_at": null,
   "metadata": {
     "category": "security",
