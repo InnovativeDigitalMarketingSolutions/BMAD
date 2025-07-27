@@ -9,6 +9,7 @@ The systems core module facilitates a full development lifecycle tailored to the
 1. **Ideation & Planning**: Brainstorming, market research, and creating project briefs.
 2. **Architecture & Design**: Defining system architecture and UI/UX specifications.
 3. **Development Execution**: A cyclical workflow where a Scrum Master (SM) agent drafts stories with extremely specific context and a Developer (Dev) agent implements them one at a time. This process works for both new (Greenfield) and existing (Brownfield) projects.
+4. **Advanced Orchestration**: Intelligent workflow management with Human-in-the-Loop (HITL) capabilities, performance monitoring, and cross-platform development support.
 
 ## 2. System Architecture Diagram
 
@@ -28,12 +29,22 @@ graph TD
             A --> H["data (KB)"]
         end
 
+        subgraph Advanced Services
+            I["Performance Monitor"]
+            J["Policy Engine"]
+            K["Message Bus"]
+            L["Test Sprites"]
+            M["Supabase Context"]
+            N["LLM Client"]
+            O["Confidence Scoring"]
+        end
+
         subgraph Tooling
-            I["tools/builders/web-builder.js"]
+            P["tools/builders/web-builder.js"]
         end
 
         subgraph Outputs
-            J["dist"]
+            Q["dist"]
         end
 
         B -- defines dependencies for --> E
@@ -42,21 +53,36 @@ graph TD
         B -- defines dependencies for --> H
 
         C -- bundles --> B
-        I -- reads from --> A
-        I -- creates --> J
+        P -- reads from --> A
+        P -- creates --> Q
+
+        I --> B
+        J --> B
+        K --> B
+        L --> B
+        M --> B
+        N --> B
+        O --> B
     end
 
     subgraph Target Environments
-        K["IDE (Cursor, VS Code, etc.)"]
-        L["Web UI (Gemini, ChatGPT)"]
+        R["IDE (Cursor, VS Code, etc.)"]
+        S["Web UI (Gemini, ChatGPT)"]
+        T["Mobile Development"]
+        U["Cross-Platform Apps"]
     end
 
-    B --> K
-    J --> L
+    B --> R
+    Q --> S
+    B --> T
+    B --> U
 
     style A fill:#1a73e8,color:#fff
-    style I fill:#f9ab00,color:#fff
-    style J fill:#34a853,color:#fff
+    style P fill:#f9ab00,color:#fff
+    style Q fill:#34a853,color:#fff
+    style I fill:#ea4335,color:#fff
+    style J fill:#ea4335,color:#fff
+    style K fill:#ea4335,color:#fff
 ```
 
 ## 3. Core Components
@@ -65,31 +91,151 @@ The `bmad-core` directory contains all the definitions and resources that give t
 
 ### 3.1. Agents (`bmad-core/agents/`)
 
-- **Purpose**: These are the foundational building blocks of the system. Each markdown file (e.g., `bmad-master.md`, `pm.md`, `dev.md`) defines the persona, capabilities, and dependencies of a single AI agent.
-- **Structure**: An agent file contains a YAML header that specifies its role, persona, dependencies, and startup instructions. These dependencies are lists of tasks, templates, checklists, and data files that the agent is allowed to use.
-- **Startup Instructions**: Agents can include startup sequences that load project-specific documentation from the `docs/` folder, such as coding standards, API specifications, or project structure documents. This provides immediate project context upon activation.
-- **Document Integration**: Agents can reference and load documents from the project's `docs/` folder as part of tasks, workflows, or startup sequences. Users can also drag documents directly into chat interfaces to provide additional context.
-- **Example**: The `bmad-master` agent lists its dependencies, which tells the build tool which files to include in a web bundle and informs the agent of its own capabilities.
+- **Purpose**: These are the foundational building blocks of the system. Each agent is implemented as a class-based Python module with comprehensive CLI interface, resource management, and inter-agent collaboration capabilities.
+- **Structure**: Each agent contains:
+  - **Class-based Architecture**: Modern Python class structure with initialization, resource management, and history tracking
+  - **Comprehensive CLI**: Full command-line interface with help system and argument parsing
+  - **Resource Management**: Structured template and data file management with automatic creation and validation
+  - **Performance Monitoring**: Integration with advanced performance monitoring and metrics collection
+  - **Event Handling**: Message bus integration for inter-agent communication
+  - **Export Capabilities**: Multi-format report export (Markdown, CSV, JSON)
+  - **History Tracking**: Persistent history management for all agent activities
+  - **Collaboration Features**: Inter-agent collaboration examples and workflows
 
-### 3.2. Agent Teams (`bmad-core/agent-teams/`)
+#### 3.1.1. Optimized Agent Roster
 
-- **Purpose**: Team files (e.g., `team-all.yaml`) define collections of agents and workflows that are bundled together for a specific purpose, like "full-stack development" or "backend-only". This creates a larger, pre-packaged context for web UI environments.
-- **Structure**: A team file lists the agents to include. It can use wildcards, such as `"*"` to include all agents. This allows for the creation of comprehensive bundles like `team-all`.
+**Core Development Agents:**
+- **ProductOwner**: Project management, requirement gathering, backlog management
+- **Architect**: System architecture, technical design, API specifications
+- **FrontendDeveloper**: Frontend development with Shadcn/ui integration, React/Next.js expertise
+- **BackendDeveloper**: Backend development, API implementation, database design
+- **FullstackDeveloper**: Full-stack development with Shadcn/ui integration
+- **TestEngineer**: Testing strategies, test automation, quality assurance
+- **DevOpsInfra**: CI/CD pipelines, infrastructure management, deployment automation
 
-### 3.3. Workflows (`bmad-core/workflows/`)
+**Specialized Agents:**
+- **AiDeveloper**: AI/ML development, model training, AI integration
+- **UXUIDesigner**: User experience design, UI components, design systems with mobile UX capabilities
+- **SecurityDeveloper**: Security implementation, vulnerability assessment, compliance
+- **AccessibilityAgent**: Accessibility compliance, WCAG guidelines, inclusive design with Shadcn integration
+- **DataEngineer**: Data pipelines, ETL processes, data quality management
+- **ReleaseManager**: Release planning, deployment coordination, version management
+- **Retrospective**: Process improvement, feedback analysis, team optimization
+- **FeedbackAgent**: User feedback collection, sentiment analysis, insights generation
+- **RnD**: Research and development, innovation, prototype development
+- **DocumentationAgent**: Technical documentation, API docs, user guides, Figma documentation
 
-- **Purpose**: Workflows are YAML files (e.g., `greenfield-fullstack.yaml`) that define a prescribed sequence of steps and agent interactions for a specific project type. They act as a strategic guide for the user and the `bmad-orchestrator` agent.
-- **Structure**: A workflow defines sequences for both complex and simple projects, lists the agents involved at each step, the artifacts they create, and the conditions for moving from one step to the next. It often includes a Mermaid diagram for visualization.
+**Advanced Orchestration:**
+- **Orchestrator**: Workflow management, event routing, HITL processes, intelligent task assignment
+- **MobileDeveloper**: Cross-platform mobile development, React Native, Flutter, native iOS/Android
 
-### 3.4. Reusable Resources (`templates`, `tasks`, `checklists`, `data`)
+**Management Agents:**
+- **Scrummaster**: Agile process management, sprint planning, team coordination
+- **StrategiePartner**: Strategic planning, business analysis, market research
+
+### 3.2. Advanced Services Integration
+
+#### 3.2.1. Performance Monitoring
+- **Agent Performance Monitor**: Real-time performance tracking with metrics collection
+- **Metric Types**: SUCCESS_RATE, RESPONSE_TIME, ERROR_RATE, THROUGHPUT
+- **Performance Profiles**: Agent-specific performance baselines and optimization targets
+- **Historical Analysis**: Performance trend analysis and optimization recommendations
+
+#### 3.2.2. Policy Engine
+- **Advanced Policy Engine**: Rule-based decision making and access control
+- **Policy Types**: Resource management, security policies, access control
+- **Dynamic Policy Updates**: Runtime policy modification and validation
+- **Compliance Enforcement**: Automated compliance checking and reporting
+
+#### 3.2.3. Message Bus
+- **Event-Driven Architecture**: Asynchronous event publishing and subscription
+- **Event Routing**: Intelligent event routing and filtering
+- **Inter-Agent Communication**: Seamless agent-to-agent communication
+- **Event History**: Persistent event logging and replay capabilities
+
+#### 3.2.4. Test Sprites
+- **Component Testing**: Automated component testing and validation
+- **Sprite Library**: Reusable test components and utilities
+- **Test Automation**: Automated test generation and execution
+- **Quality Assurance**: Continuous quality monitoring and reporting
+
+#### 3.2.5. Context Management
+- **Supabase Integration**: Persistent context storage and retrieval
+- **Context Types**: Agent status, workflow state, project context
+- **Context Sharing**: Cross-agent context sharing and synchronization
+- **Context Persistence**: Long-term context storage and recovery
+
+### 3.3. Agent Teams (`bmad-core/agent-teams/`)
+
+- **Purpose**: Team files define collections of agents and workflows that are bundled together for specific purposes, enabling comprehensive development scenarios.
+- **Structure**: Team files can include:
+  - **Full-Stack Development**: Complete development team with frontend, backend, and DevOps
+  - **Mobile Development**: Specialized mobile development team with cross-platform capabilities
+  - **AI/ML Development**: AI-focused team with data science and ML engineering
+  - **Security-First Development**: Security-focused team with compliance and testing
+  - **Documentation-Focused**: Documentation and technical writing team
+
+### 3.4. Workflows (`bmad-core/workflows/`)
+
+- **Purpose**: Workflows define prescribed sequences of steps and agent interactions for specific project types, including advanced orchestration with HITL capabilities.
+- **Structure**: Modern workflows include:
+  - **Traditional Development**: Standard software development workflows
+  - **Mobile Development**: Cross-platform mobile app development workflows
+  - **AI/ML Projects**: Machine learning and AI development workflows
+  - **Security Audits**: Security-focused development and audit workflows
+  - **Documentation Projects**: Comprehensive documentation workflows
+
+#### 3.4.1. Advanced Workflow Features
+
+**Human-in-the-Loop (HITL) Integration:**
+- **Approval Gates**: Automated approval workflows with human oversight
+- **Decision Points**: Critical decision points requiring human input
+- **Escalation Handling**: Automatic escalation to appropriate stakeholders
+- **Audit Trails**: Complete audit trails for all HITL decisions
+
+**Mobile Development Workflows:**
+- **Cross-Platform Development**: React Native and Flutter development workflows
+- **Native Development**: iOS and Android native development workflows
+- **App Store Deployment**: App store submission and deployment workflows
+- **Performance Optimization**: Mobile-specific performance optimization workflows
+
+**Intelligent Task Assignment:**
+- **Agent Selection**: Intelligent agent selection based on task requirements
+- **Load Balancing**: Workload distribution across available agents
+- **Skill Matching**: Task-to-agent skill matching and optimization
+- **Performance-Based Assignment**: Assignment based on historical performance
+
+### 3.5. Reusable Resources (`templates`, `tasks`, `checklists`, `data`)
 
 - **Purpose**: These folders house the modular components that are dynamically loaded by agents based on their dependencies.
-  - **`templates/`**: Contains markdown templates for common documents like PRDs, architecture specifications, and user stories.
-  - **`tasks/`**: Defines the instructions for carrying out specific, repeatable actions like "shard-doc" or "create-next-story".
-  - **`checklists/`**: Provides quality assurance checklists for agents like the Product Owner (`po`) or Architect.
-  - **`data/`**: Contains the core knowledge base (`bmad-kb.md`), technical preferences (`technical-preferences.md`), and other key data files.
+  - **`templates/`**: Contains markdown templates for common documents like PRDs, architecture specifications, user stories, and mobile app specifications
+  - **`tasks/`**: Defines the instructions for carrying out specific, repeatable actions like "shard-doc" or "create-next-story"
+  - **`checklists/`**: Provides quality assurance checklists for agents like the Product Owner (`po`) or Architect
+  - **`data/`**: Contains the core knowledge base (`bmad-kb.md`), technical preferences (`technical-preferences.md`), and other key data files
 
-#### 3.4.1. Template Processing System
+#### 3.5.1. Enhanced Template System
+
+**Mobile Development Templates:**
+- **React Native Templates**: Cross-platform mobile app templates
+- **Flutter Templates**: Flutter app development templates
+- **iOS Templates**: Native iOS development templates
+- **Android Templates**: Native Android development templates
+- **Mobile Testing Templates**: Mobile-specific testing templates
+- **Performance Templates**: Mobile performance optimization templates
+
+**Frontend Development Templates:**
+- **Shadcn/ui Templates**: Modern UI component templates
+- **Next.js Templates**: Next.js application templates
+- **React Templates**: React component and application templates
+- **Accessibility Templates**: WCAG compliance templates
+
+**Advanced Documentation Templates:**
+- **API Documentation**: Comprehensive API documentation templates
+- **User Guides**: User guide and tutorial templates
+- **Technical Documentation**: Technical specification templates
+- **Figma Documentation**: UI/UX documentation templates
+
+#### 3.5.2. Template Processing System
 
 A key architectural principle of BMad is that templates are self-contained and interactive - they embed both the desired document output and the LLM instructions needed to work with users. This means that in many cases, no separate task is needed for document creation, as the template itself contains all the processing logic.
 
@@ -99,26 +245,9 @@ The BMad framework employs a sophisticated template processing system orchestrat
 
 - **`create-doc.md`** (`bmad-core/tasks/`): Acts as the orchestration engine that manages the entire document generation workflow. This task coordinates template selection, manages user interaction modes (incremental vs. rapid generation), enforces template-format processing rules, and handles validation. It serves as the primary interface between users and the template system.
 
-- **`advanced-elicitation.md`** (`bmad-core/tasks/`): Provides an interactive refinement layer that can be embedded within templates through `[[LLM: instructions]]` blocks. This component offers 10 structured brainstorming actions, section-by-section review capabilities, and iterative improvement workflows to enhance content quality.
+- **`technical-preferences.md`** (`bmad-core/data/`): Contains the user's preferred technologies, frameworks, and development practices. This file serves as a personalized knowledge base that agents reference during document generation and project planning.
 
-The system maintains a clean separation of concerns: template markup is processed internally by AI agents but never exposed to users, while providing sophisticated AI processing capabilities through embedded intelligence within the templates themselves.
-
-#### 3.4.2. Technical Preferences System
-
-BMad includes a personalization layer through the `technical-preferences.md` file in `bmad-core/data/`. This file serves as a persistent technical profile that influences agent behavior across all projects.
-
-**Purpose and Benefits:**
-
-- **Consistency**: Ensures all agents reference the same technical preferences
-- **Efficiency**: Eliminates the need to repeatedly specify preferred technologies
-- **Personalization**: Agents provide recommendations aligned with user preferences
-- **Learning**: Captures lessons learned and preferences that evolve over time
-
-**Content Structure:**
-The file typically includes preferred technology stacks, design patterns, external services, coding standards, and anti-patterns to avoid. Agents automatically reference this file during planning and development to provide contextually appropriate suggestions.
-
-**Integration Points:**
-
+**Key Features:**
 - Templates can reference technical preferences during document generation
 - Agents suggest preferred technologies when appropriate for project requirements
 - When preferences don't fit project needs, agents explain alternatives
@@ -129,7 +258,7 @@ Users are encouraged to continuously update this file with discoveries from proj
 
 ## 4. The Build & Delivery Process
 
-The framework is designed for two primary environments: local IDEs and web-based AI chat interfaces. The `web-builder.js` script is the key to supporting the latter.
+The framework is designed for multiple environments: local IDEs, web-based AI chat interfaces, and mobile development platforms. The `web-builder.js` script is the key to supporting web-based environments.
 
 ### 4.1. Web Builder (`tools/builders/web-builder.js`)
 
@@ -142,8 +271,9 @@ The framework is designed for two primary environments: local IDEs and web-based
 
 ### 4.2. Environment-Specific Usage
 
-- **For IDEs**: Users interact with the agents directly via their markdown files in `bmad-core/agents/`. The IDE integration (for Cursor, Claude Code, etc.) knows how to call these agents.
+- **For IDEs**: Users interact with the agents directly via their Python modules in `bmad-core/agents/`. The IDE integration (for Cursor, Claude Code, etc.) knows how to call these agents.
 - **For Web UIs**: Users upload a pre-built bundle from `dist`. This single file provides the AI with the context of the entire team and all their required tools and knowledge.
+- **For Mobile Development**: Specialized mobile development workflows and templates support cross-platform and native mobile app development.
 
 ## 5. BMad Workflows
 
@@ -217,3 +347,106 @@ graph TD
 ```
 
 This cycle continues, with the Scrum Master, Developer, and optionally QA agents working together. The QA agent provides senior developer review capabilities through the `review-story` task, offering code refactoring, quality improvements, and knowledge transfer. This ensures high code quality while maintaining development velocity.
+
+### 5.3. Advanced Orchestration Workflows
+
+#### 5.3.1. Mobile Development Workflow
+
+```mermaid
+graph TD
+    A["Mobile App Planning"] --> B["UX Designer: Mobile UX Design"]
+    B --> C["Mobile Developer: Cross-Platform Development"]
+    C --> D["Performance Optimization"]
+    D --> E["Cross-Platform Testing"]
+    E --> F{"HITL: App Store Approval"}
+    F -->|Approved| G["App Store Deployment"]
+    F -->|Rejected| H["Revision Required"]
+    H --> C
+    G --> I["Mobile App Released"]
+
+    style G fill:#34a853,color:#fff
+    style F fill:#f9ab00,color:#fff
+```
+
+#### 5.3.2. AI/ML Development Workflow
+
+```mermaid
+graph TD
+    A["AI Project Planning"] --> B["Data Engineer: Data Pipeline Setup"]
+    B --> C["AI Developer: Model Development"]
+    C --> D["Model Training & Validation"]
+    D --> E["Performance Testing"]
+    E --> F{"HITL: Model Approval"}
+    F -->|Approved| G["Model Deployment"]
+    F -->|Rejected| H["Model Refinement"]
+    H --> C
+    G --> I["AI System Live"]
+
+    style G fill:#34a853,color:#fff
+    style F fill:#f9ab00,color:#fff
+```
+
+#### 5.3.3. Security-First Development Workflow
+
+```mermaid
+graph TD
+    A["Security Requirements"] --> B["Security Developer: Security Architecture"]
+    B --> C["Development with Security Focus"]
+    C --> D["Security Testing"]
+    D --> E["Vulnerability Assessment"]
+    E --> F{"HITL: Security Review"}
+    F -->|Approved| G["Secure Deployment"]
+    F -->|Rejected| H["Security Fixes"]
+    H --> C
+    G --> I["Secure System Live"]
+
+    style G fill:#34a853,color:#fff
+    style F fill:#f9ab00,color:#fff
+```
+
+## 6. Advanced Features
+
+### 6.1. Human-in-the-Loop (HITL) Integration
+
+The BMad system includes sophisticated HITL capabilities that ensure human oversight at critical decision points:
+
+- **Approval Gates**: Automated workflows pause for human approval at critical junctures
+- **Decision Points**: Strategic decisions require human input and validation
+- **Escalation Handling**: Automatic escalation to appropriate stakeholders when needed
+- **Audit Trails**: Complete audit trails for all HITL decisions and approvals
+
+### 6.2. Performance Monitoring & Optimization
+
+Comprehensive performance monitoring ensures optimal agent performance:
+
+- **Real-time Metrics**: Live performance metrics for all agents
+- **Historical Analysis**: Performance trend analysis and optimization recommendations
+- **Resource Optimization**: Intelligent resource allocation and load balancing
+- **Quality Assurance**: Continuous quality monitoring and improvement
+
+### 6.3. Cross-Platform Development Support
+
+Advanced support for modern development scenarios:
+
+- **Mobile Development**: Cross-platform mobile app development with React Native and Flutter
+- **Web Development**: Modern web development with Next.js and Shadcn/ui
+- **AI/ML Integration**: Comprehensive AI and machine learning development support
+- **DevOps Automation**: Complete CI/CD pipeline automation and infrastructure management
+
+### 6.4. Inter-Agent Collaboration
+
+Sophisticated agent collaboration capabilities:
+
+- **Event-Driven Communication**: Asynchronous event-based communication between agents
+- **Context Sharing**: Seamless context sharing and synchronization across agents
+- **Workflow Orchestration**: Intelligent workflow orchestration and task assignment
+- **Resource Coordination**: Coordinated resource management and allocation
+
+## 7. Future Enhancements
+
+The BMad framework is designed for continuous evolution and enhancement:
+
+- **Advanced AI Integration**: Enhanced AI capabilities and model integration
+- **Extended Platform Support**: Additional platform and technology support
+- **Community Expansion**: Community-driven agent and template development
+- **Enterprise Features**: Advanced enterprise features and integrations
