@@ -125,7 +125,25 @@ python -m bmad.agents.Agent.Architect.architect design-frontend
 python -m bmad.agents.Agent.FullstackDeveloper.fullstackdeveloper build-frontend
 ```
 
-#### 4. Slack Integration (Optional)
+#### 4. Advanced Integrations (Optional)
+```bash
+# Performance monitoring
+python3 performance_monitor_cli.py start-monitoring --interval 5
+python3 performance_monitor_cli.py system-summary
+
+# Test sprites
+python3 test_sprites_cli.py list-sprites
+python3 test_sprites_cli.py test-sprite AgentStatus_sprite --type all
+
+# Integrated workflow orchestration
+python3 integrated_workflow_cli.py test-integrations
+python3 integrated_workflow_cli.py list-workflows
+
+# Repository integrations
+python3 repository_integration_cli.py test-all
+```
+
+#### 5. Slack Integration (Optional)
 ```bash
 # Start Slack event server
 python -m bmad.agents.core.slack_event_server
@@ -152,6 +170,35 @@ ngrok http 5001
 git clone https://github.com/bmadcode/bmad-method.git
 npm run install:bmad # build and install all to a destination folder
 ```
+
+## 🚀 New Integrations & Features
+
+BMAD now includes advanced integrations for enhanced agent orchestration, performance monitoring, and intelligent workflows:
+
+### **📊 Performance Monitor Integration**
+- **Real-time monitoring** of agent performance and system resources
+- **Intelligent alerting** with configurable thresholds
+- **Performance analytics** with trend analysis and recommendations
+- **Auto-scaling support** for optimal resource utilization
+
+### **🧪 Test Sprites Integration**
+- **Visual test helpers** for UI component testing
+- **Accessibility testing** with automated checks
+- **Performance testing** with visual regression detection
+- **Component sprite library** for comprehensive testing
+
+### **🔗 Repository Integrations**
+- **LangGraph**: Async stateful workflow orchestration
+- **OpenRouter**: Multi-LLM provider routing and load balancing
+- **OpenTelemetry**: Distributed tracing and observability
+- **OPA**: Granular policy enforcement and access control
+- **Prefect**: CI/CD pipeline orchestration
+
+### **🛠️ CLI Tools**
+- `performance_monitor_cli.py` - Performance monitoring and analytics
+- `test_sprites_cli.py` - Test sprite management and execution
+- `integrated_workflow_cli.py` - Complete workflow orchestration
+- `repository_integration_cli.py` - Repository integration testing
 
 ## Environment Variables (.env)
 
@@ -183,6 +230,21 @@ SLACK_EVENT_URL=http://localhost:5001/slack/events
 
 # --- (optioneel) Voor CI/CD of test skips ---
 CI=false
+
+# --- Performance Monitor ---
+OTEL_SERVICE_NAME=bmad-agents
+OTEL_ENVIRONMENT=development
+
+# --- OpenRouter (Multi-LLM) ---
+OPENROUTER_API_KEY=your_openrouter_api_key_here
+OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
+
+# --- OPA (Policy Engine) ---
+OPA_URL=http://localhost:8181
+
+# --- OpenTelemetry (Observability) ---
+OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4318
+OTEL_EXPORTER_JAEGER_ENDPOINT=http://localhost:14268/api/traces
 ```
 
 ### Uitleg per variabele
@@ -209,6 +271,15 @@ BMad's natural language framework works in ANY domain. Expansion packs provide s
 - 📖 **[User Guide](bmad-core/user-guide.md)** - Complete walkthrough from project inception to completion
 - 🏗️ **[Core Architecture](docs/core-architecture.md)** - Technical deep dive and system design
 - 🚀 **[Expansion Packs Guide](docs/expansion-packs.md)** - Extend BMad to any domain beyond software development
+
+### Integration Documentation
+
+- 📊 **[Performance Monitor Integration](PERFORMANCE_MONITOR_INTEGRATION_README.md)** - Real-time agent performance monitoring
+- 🧪 **[Test Sprites Integration](TEST_SPRITES_INTEGRATION_README.md)** - Visual testing and component validation
+- 🔗 **[Repository Integrations](REPOSITORY_INTEGRATIONS_README.md)** - LangGraph, OpenRouter, OpenTelemetry, OPA, Prefect
+- 🔄 **[Agent Workflow Integration](AGENT_WORKFLOW_INTEGRATION_README.md)** - Advanced workflow orchestration
+- 🌍 **[Environment Setup](ENVIRONMENT_SETUP.md)** - Complete environment configuration guide
+- 📈 **[Implementation Status](IMPLEMENTATION_STATUS.md)** - Current implementation overview
 
 ## Support
 

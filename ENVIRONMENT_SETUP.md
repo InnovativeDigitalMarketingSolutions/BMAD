@@ -137,6 +137,18 @@ METRICS_EXPORT_INTERVAL=60
 # Performance Monitoring
 ENABLE_PERFORMANCE_MONITORING=true
 
+# Performance Monitor Configuration
+PERFORMANCE_MONITOR_INTERVAL=5.0
+PERFORMANCE_MONITOR_HISTORY_SIZE=1000
+PERFORMANCE_MONITOR_BASELINE_SMOOTHING=0.1
+PERFORMANCE_MONITOR_ALERT_COOLDOWN=300
+PERFORMANCE_MONITOR_MAX_ALERTS=1000
+
+# Test Sprites Configuration
+TEST_SPRITES_DIR=test_sprites
+TEST_SPRITES_ENABLED=true
+TEST_SPRITES_AUTO_CREATE=true
+
 # 🔐 Security Settings
 # ====================
 
@@ -166,6 +178,12 @@ ENABLE_PREFECT=true
 
 # Enable LangGraph Integration
 ENABLE_LANGGRAPH=true
+
+# Enable Performance Monitor Integration
+ENABLE_PERFORMANCE_MONITOR=true
+
+# Enable Test Sprites Integration
+ENABLE_TEST_SPRITES=true
 
 # 🌐 External Services
 # ====================

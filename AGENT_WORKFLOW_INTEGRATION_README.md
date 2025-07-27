@@ -2,7 +2,7 @@
 
 ## 🚀 **OVERVIEW**
 
-De BMAD Agent Workflow Integration combineert alle nieuwe repository integraties (LangGraph, OpenRouter, OpenTelemetry, OPA, Prefect) met de bestaande BMAD agent workflows voor een complete enterprise-ready multi-agent orchestration systeem.
+De BMAD Agent Workflow Integration combineert alle nieuwe repository integraties (LangGraph, OpenRouter, OpenTelemetry, OPA, Prefect, Performance Monitor, Test Sprites) met de bestaande BMAD agent workflows voor een complete enterprise-ready multi-agent orchestration systeem.
 
 ## 🎯 **WAT IS GEÏMPLEMENTEERD**
 
@@ -15,6 +15,8 @@ De BMAD Agent Workflow Integration combineert alle nieuwe repository integraties
   - Cost tracking en optimization
   - Distributed tracing
   - Workflow orchestration
+  - Performance monitoring en analytics
+  - Test sprites integration
 
 ### ✅ **Agent Workflow Configurations**
 - **Bestand**: `integrated_workflow_cli.py`
@@ -24,6 +26,8 @@ De BMAD Agent Workflow Integration combineert alle nieuwe repository integraties
   - Agent configuration management
   - Integration testing
   - Performance monitoring
+  - Test sprites management
+  - Performance analytics en alerts
 
 ### ✅ **Pre-configured Workflows**
 1. **Product Development Workflow**
