@@ -186,6 +186,18 @@ class IntegratedWorkflowCLI:
         print("🧪 Testing Repository Integrations")
         print("=" * 50)
         
+        # Test Performance Monitor
+        print("📊 Testing Performance Monitor...")
+        try:
+            system_summary = self.orchestrator.get_system_performance_summary()
+            print(f"   ✅ Performance Monitor: System monitoring active")
+            print(f"   💻 CPU Usage: {system_summary.get('cpu_usage', 'N/A')}")
+            print(f"   🧠 Memory Usage: {system_summary.get('memory_usage', 'N/A')}")
+        except Exception as e:
+            print(f"   ❌ Performance Monitor: {e}")
+        
+        print()
+        
         # Test Test Sprites
         print("🧪 Testing Test Sprites...")
         try:
@@ -369,6 +381,157 @@ class IntegratedWorkflowCLI:
         except Exception as e:
             print(f"❌ Failed to export report: {e}")
     
+    # Performance Monitoring Methods
+    
+    async def start_performance_monitoring(self, interval: float = 5.0):
+        """Start performance monitoring."""
+        print(f"🚀 Starting performance monitoring with {interval}s interval...")
+        
+        try:
+            self.orchestrator.start_performance_monitoring(interval)
+            print("✅ Performance monitoring started successfully")
+            print("📊 Monitoring active agents and system resources")
+            print("🔔 Alerts will be displayed when thresholds are exceeded")
+            
+        except Exception as e:
+            print(f"❌ Failed to start monitoring: {e}")
+    
+    async def stop_performance_monitoring(self):
+        """Stop performance monitoring."""
+        print("🛑 Stopping performance monitoring...")
+        
+        try:
+            self.orchestrator.stop_performance_monitoring()
+            print("✅ Performance monitoring stopped")
+            
+        except Exception as e:
+            print(f"❌ Failed to stop monitoring: {e}")
+    
+    async def show_system_performance(self):
+        """Show system performance summary."""
+        print("🖥️  System Performance Summary")
+        print("=" * 50)
+        
+        try:
+            summary = self.orchestrator.get_system_performance_summary()
+            
+            if summary["cpu_usage"] is not None:
+                print(f"💻 CPU Usage: {summary['cpu_usage']:.1f}%")
+            
+            if summary["memory_usage"] is not None:
+                print(f"🧠 Memory Usage: {summary['memory_usage']:.1f}%")
+            
+            if summary["disk_io"] is not None:
+                print(f"💾 Disk I/O: {summary['disk_io']:,} bytes")
+            
+            if summary["network_io"] is not None:
+                print(f"🌐 Network I/O: {summary['network_io']:,} bytes")
+            
+            print(f"🤖 Active Agents: {summary['active_agents']}")
+            print(f"⚠️  Total Alerts: {summary['total_alerts']}")
+            
+        except Exception as e:
+            print(f"❌ Failed to get system performance: {e}")
+    
+    async def show_agent_performance(self, agent_name: str):
+        """Show performance summary for a specific agent."""
+        print(f"🤖 Agent Performance Summary: {agent_name}")
+        print("=" * 50)
+        
+        try:
+            summary = self.orchestrator.get_agent_performance_summary(agent_name)
+            
+            if not summary:
+                print(f"❌ Agent '{agent_name}' not found or not monitored")
+                return
+            
+            print(f"📋 Agent: {summary['agent_name']}")
+            print(f"🔍 Monitoring: {'✅ Enabled' if summary['monitoring_enabled'] else '❌ Disabled'}")
+            print(f"⚡ Auto-scaling: {'✅ Enabled' if summary['auto_scaling_enabled'] else '❌ Disabled'}")
+            
+            # Current metrics
+            if summary["current_metrics"]:
+                print("\n📊 Current Metrics:")
+                for metric_name, metric_data in summary["current_metrics"].items():
+                    value = metric_data["value"]
+                    unit = metric_data["unit"]
+                    print(f"   {metric_name}: {value:.2f} {unit}")
+            
+            # Baseline metrics
+            if summary["baseline_metrics"]:
+                print("\n📈 Baseline Metrics:")
+                for metric_type, baseline_value in summary["baseline_metrics"].items():
+                    print(f"   {metric_type.value}: {baseline_value:.2f}")
+            
+            # Recent alerts
+            if summary["alerts"]:
+                print("\n⚠️  Recent Alerts:")
+                for alert in summary["alerts"][-5:]:  # Show last 5 alerts
+                    status = "✅ Resolved" if alert["resolved"] else "❌ Active"
+                    timestamp = datetime.fromtimestamp(alert["timestamp"]).strftime("%H:%M:%S")
+                    print(f"   [{timestamp}] {alert['level'].upper()}: {alert['message']} ({status})")
+            else:
+                print("\n✅ No recent alerts")
+            
+            # Recommendations
+            if summary["recommendations"]:
+                print("\n💡 Recommendations:")
+                for recommendation in summary["recommendations"]:
+                    print(f"   • {recommendation}")
+            else:
+                print("\n✅ No recommendations at this time")
+                
+        except Exception as e:
+            print(f"❌ Failed to get agent performance: {e}")
+    
+    async def show_performance_alerts(self, agent_name: Optional[str] = None, level: Optional[str] = None):
+        """Show performance alerts."""
+        print("⚠️  Performance Alerts")
+        print("=" * 50)
+        
+        try:
+            alerts = self.orchestrator.get_performance_alerts(agent_name, level)
+            
+            if not alerts:
+                print("✅ No alerts found")
+                return
+            
+            # Show recent alerts (last 20)
+            recent_alerts = alerts[:20]
+            
+            for alert in recent_alerts:
+                status = "✅ Resolved" if alert["resolved"] else "❌ Active"
+                timestamp = datetime.fromtimestamp(alert["timestamp"]).strftime("%Y-%m-%d %H:%M:%S")
+                
+                print(f"[{timestamp}] {alert['level'].upper()}")
+                print(f"   Agent: {alert['agent_name']}")
+                print(f"   Metric: {alert['metric_type']}")
+                print(f"   Message: {alert['message']}")
+                print(f"   Value: {alert['current_value']:.2f} (threshold: {alert['threshold']:.2f})")
+                print(f"   Status: {status}")
+                print()
+                
+        except Exception as e:
+            print(f"❌ Failed to show alerts: {e}")
+    
+    def export_performance_data(self, format: str = "json", output_file: Optional[str] = None):
+        """Export performance data."""
+        print(f"📊 Exporting performance data in {format} format")
+        print("=" * 50)
+        
+        try:
+            data = self.orchestrator.export_performance_data(format)
+            
+            if output_file:
+                with open(output_file, 'w') as f:
+                    f.write(data)
+                print(f"✅ Data exported to: {output_file}")
+            else:
+                print(data)
+                
+        except Exception as e:
+            print(f"❌ Failed to export performance data: {e}")
+    
     async def update_agent_config(
         self, 
         agent_name: str, 
@@ -494,6 +657,25 @@ Examples:
     export_sprite_parser.add_argument('--format', choices=['json'], default='json', help='Report format')
     export_sprite_parser.add_argument('--output', help='Output file path')
     
+    # Performance monitoring commands
+    start_monitoring_parser = subparsers.add_parser('start-monitoring', help='Start performance monitoring')
+    start_monitoring_parser.add_argument('--interval', type=float, default=5.0, help='Monitoring interval in seconds')
+    
+    subparsers.add_parser('stop-monitoring', help='Stop performance monitoring')
+    
+    subparsers.add_parser('system-performance', help='Show system performance summary')
+    
+    agent_performance_parser = subparsers.add_parser('agent-performance', help='Show agent performance summary')
+    agent_performance_parser.add_argument('agent_name', help='Name of the agent')
+    
+    alerts_parser = subparsers.add_parser('performance-alerts', help='Show performance alerts')
+    alerts_parser.add_argument('--agent', help='Filter by agent name')
+    alerts_parser.add_argument('--level', choices=['info', 'warning', 'critical', 'emergency'], help='Filter by alert level')
+    
+    export_performance_parser = subparsers.add_parser('export-performance', help='Export performance data')
+    export_performance_parser.add_argument('--format', choices=['json'], default='json', help='Export format')
+    export_performance_parser.add_argument('--output', help='Output file path')
+    
     args = parser.parse_args()
     
     if not args.command:
@@ -568,6 +750,27 @@ Examples:
         
         elif args.command == 'export-sprite-report':
             cli.export_sprite_report(
+                format=args.format,
+                output_file=args.output
+            )
+        
+        elif args.command == 'start-monitoring':
+            await cli.start_performance_monitoring(args.interval)
+        
+        elif args.command == 'stop-monitoring':
+            await cli.stop_performance_monitoring()
+        
+        elif args.command == 'system-performance':
+            await cli.show_system_performance()
+        
+        elif args.command == 'agent-performance':
+            await cli.show_agent_performance(args.agent_name)
+        
+        elif args.command == 'performance-alerts':
+            await cli.show_performance_alerts(args.agent, args.level)
+        
+        elif args.command == 'export-performance':
+            cli.export_performance_data(
                 format=args.format,
                 output_file=args.output
             )

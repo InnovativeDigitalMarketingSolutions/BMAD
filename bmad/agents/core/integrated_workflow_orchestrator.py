@@ -32,6 +32,7 @@ from .opentelemetry_tracing import BMADTracer, TracingConfig, TraceLevel
 from .opa_policy_engine import OPAPolicyEngine, PolicyRule, PolicyRequest
 from .prefect_workflow import PrefectWorkflowOrchestrator, PrefectWorkflowConfig
 from .test_sprites import TestSpriteLibrary, get_sprite_library
+from .agent_performance_monitor import PerformanceMonitor, get_performance_monitor
 
 logger = logging.getLogger(__name__)
 
@@ -85,6 +86,9 @@ class IntegratedWorkflowOrchestrator:
         
         # Initialize test sprites library
         self.sprite_library = get_sprite_library()
+        
+        # Initialize performance monitor
+        self.performance_monitor = get_performance_monitor()
         
         # Register default agent configurations
         self._register_default_agent_configs()
@@ -435,6 +439,10 @@ class IntegratedWorkflowOrchestrator:
         integration_level: IntegrationLevel,
         parent_span
     ) -> Dict[str, Any]:
+        
+        # Start performance tracking
+        task_id = f"{workflow_id}_{task.id}"
+        self.performance_monitor.start_task_tracking(task.agent, task_id)
         """Execute a single task with all integrations enabled."""
         
         agent_config = self.agent_configs.get(task.agent, AgentWorkflowConfig(agent_name=task.agent))
@@ -485,9 +493,15 @@ class IntegratedWorkflowOrchestrator:
                 task_result["status"] = "failed"
                 task_result["error"] = str(e)
                 span.record_exception(e)
+                # End performance tracking with failure
+                self.performance_monitor.end_task_tracking(task.agent, task_id, success=False)
             
             task_result["end_time"] = time.time()
             task_result["duration"] = task_result["end_time"] - task_result["start_time"]
+            
+            # End performance tracking with success if not already ended
+            if task_result["status"] != "failed":
+                self.performance_monitor.end_task_tracking(task.agent, task_id, success=True)
             
             return task_result
     
@@ -711,6 +725,61 @@ class IntegratedWorkflowOrchestrator:
     def export_sprite_test_report(self, format: str = "json") -> str:
         """Export sprite test results as a report."""
         return self.sprite_library.export_test_report(format)
+    
+    # Performance Monitoring Methods
+    
+    def start_performance_monitoring(self, interval: float = 5.0):
+        """Start performance monitoring."""
+        self.performance_monitor.start_monitoring(interval)
+        logger.info(f"Performance monitoring started with {interval}s interval")
+    
+    def stop_performance_monitoring(self):
+        """Stop performance monitoring."""
+        self.performance_monitor.stop_monitoring()
+        logger.info("Performance monitoring stopped")
+    
+    def get_agent_performance_summary(self, agent_name: str) -> Dict[str, Any]:
+        """Get performance summary for an agent."""
+        return self.performance_monitor.get_agent_performance_summary(agent_name)
+    
+    def get_system_performance_summary(self) -> Dict[str, Any]:
+        """Get system-wide performance summary."""
+        return self.performance_monitor.get_system_performance_summary()
+    
+    def get_performance_alerts(self, agent_name: Optional[str] = None, 
+                             level: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Get performance alerts."""
+        alerts = self.performance_monitor.alerts
+        
+        if agent_name:
+            alerts = [a for a in alerts if a.agent_name == agent_name]
+        
+        if level:
+            from .agent_performance_monitor import AlertLevel
+            try:
+                alert_level = AlertLevel(level.lower())
+                alerts = [a for a in alerts if a.level == alert_level]
+            except ValueError:
+                logger.warning(f"Invalid alert level: {level}")
+        
+        return [
+            {
+                "alert_id": alert.alert_id,
+                "level": alert.level.value,
+                "message": alert.message,
+                "agent_name": alert.agent_name,
+                "metric_type": alert.metric_type.value,
+                "current_value": alert.current_value,
+                "threshold": alert.threshold,
+                "timestamp": alert.timestamp,
+                "resolved": alert.resolved
+            }
+            for alert in alerts
+        ]
+    
+    def export_performance_data(self, format: str = "json") -> str:
+        """Export performance data."""
+        return self.performance_monitor.export_performance_data(format)
 
 # Global orchestrator instance
 _orchestrator = None
