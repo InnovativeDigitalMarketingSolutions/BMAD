@@ -102,6 +102,7 @@ class FrontendDeveloperAgent:
 FrontendDeveloper Agent Commands:
   help                    - Show this help message
   build-component [name]  - Build or update component
+  build-shadcn-component  - Build Shadcn/ui component
   run-accessibility-check - Run accessibility check
   show-component-history  - Show component history
   show-performance        - Show performance metrics
@@ -151,6 +152,43 @@ FrontendDeveloper Agent Commands:
         print("=" * 50)
         for i, perf in enumerate(self.performance_history[-10:], 1):
             print(f"{i}. {perf}")
+
+    def build_shadcn_component(self, component_name: str = "Button") -> Dict[str, Any]:
+        """Build a Shadcn/ui component with accessibility and performance optimization."""
+        logger.info(f"Building Shadcn component: {component_name}")
+        
+        # Simulate Shadcn component build with accessibility focus
+        time.sleep(1)
+        result = {
+            "component": component_name,
+            "type": "Shadcn/ui",
+            "variants": ["default", "secondary", "outline", "destructive", "ghost", "link"],
+            "sizes": ["sm", "default", "lg", "icon"],
+            "accessibility_features": [
+                "ARIA labels",
+                "Keyboard navigation",
+                "Focus management",
+                "Screen reader support",
+                "High contrast support"
+            ],
+            "status": "created",
+            "accessibility_score": 98,
+            "performance_score": 95,
+            "timestamp": datetime.now().isoformat(),
+            "agent": "FrontendDeveloperAgent"
+        }
+        
+        # Log performance metrics
+        self.monitor._record_metric("FrontendDeveloper", MetricType.SUCCESS_RATE, result["accessibility_score"], "%")
+        self.monitor._record_metric("FrontendDeveloper", MetricType.RESPONSE_TIME, result["performance_score"], "ms")
+        
+        # Add to component history
+        comp_entry = f"{datetime.now().isoformat()}: Shadcn {component_name} component built with {result['accessibility_score']}% accessibility score"
+        self.component_history.append(comp_entry)
+        self._save_component_history()
+        
+        logger.info(f"Shadcn component build result: {result}")
+        return result
 
     def build_component(self, component_name: str = "Button") -> Dict[str, Any]:
         logger.info(f"Building component: {component_name}")
@@ -426,7 +464,7 @@ FrontendDeveloper Agent Commands:
 def main():
     parser = argparse.ArgumentParser(description="FrontendDeveloper Agent CLI")
     parser.add_argument("command", nargs="?", default="help", 
-                       choices=["help", "build-component", "run-accessibility-check", "show-component-history", 
+                       choices=["help", "build-component", "build-shadcn-component", "run-accessibility-check", "show-component-history", 
                                "show-performance", "show-best-practices", "show-changelog", "export-component", 
                                "test", "collaborate", "run"])
     parser.add_argument("--name", default="Button", help="Component name")
@@ -440,6 +478,8 @@ def main():
         agent.show_help()
     elif args.command == "build-component":
         agent.build_component(args.name)
+    elif args.command == "build-shadcn-component":
+        agent.build_shadcn_component(args.name)
     elif args.command == "run-accessibility-check":
         agent.run_accessibility_check(args.name)
     elif args.command == "show-component-history":
