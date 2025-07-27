@@ -2,9 +2,9 @@ import os
 import time
 import logging
 from typing import Dict, List
-from bmad.agents.core.figma_client import FigmaClient
-from bmad.agents.core.slack_notify import send_slack_message
-from bmad.agents.core.message_bus import subscribe
+from integrations.figma.figma_client import FigmaClient
+from integrations.slack.slack_notify import send_slack_message
+from bmad.agents.core.communication.message_bus import subscribe
 from dotenv import load_dotenv
 
 load_dotenv()

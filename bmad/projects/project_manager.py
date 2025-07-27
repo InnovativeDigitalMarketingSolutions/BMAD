@@ -12,7 +12,7 @@ from typing import Dict, List, Optional, Any
 from dotenv import load_dotenv
 load_dotenv()
 
-from bmad.agents.core.supabase_context import save_context, get_context
+from bmad.agents.core.data.supabase_context import save_context, get_context
 from bmad.agents.core.message_bus import publish
 
 class ProjectManager:

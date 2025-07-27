@@ -1,11 +1,12 @@
-from bmad.agents.core.message_bus import publish, subscribe
-from bmad.agents.core.supabase_context import save_context, get_context
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import logging
 from datetime import datetime
-from bmad.agents.core.slack_notify import send_slack_message
-from bmad.agents.core.llm_client import ask_openai
+from integrations.slack.slack_notify import send_slack_message
+from bmad.agents.core.ai.llm_client import ask_openai
 import hashlib
 import time
+from bmad.agents.core.communication.message_bus import publish, subscribe
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 

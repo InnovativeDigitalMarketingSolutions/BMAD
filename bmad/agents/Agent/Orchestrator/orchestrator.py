@@ -1,14 +1,15 @@
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import logging
 import argparse
-from bmad.agents.core.message_bus import publish, subscribe, get_events
-from bmad.agents.core.supabase_context import save_context, get_context
-from bmad.agents.core.llm_client import ask_openai
+from bmad.agents.core.communication.message_bus import publish, subscribe, get_events
+from bmad.agents.core.data.supabase_context import save_context, get_context
+from bmad.agents.core.ai.llm_client import ask_openai
 from datetime import datetime
-import sys
 import json
-from bmad.agents.core.slack_notify import send_slack_message
+from integrations.slack.slack_notify import send_slack_message
 import time
-from bmad.agents.core.slack_notify import send_human_in_loop_alert
+from integrations.slack.slack_notify import send_human_in_loop_alert
 from dotenv import load_dotenv
 load_dotenv()
 import threading
@@ -340,7 +341,7 @@ class OrchestratorAgent:
 
 # --- Productieklare agent-handler voorbeeld ---
 # Plaats dit in de relevante agent (bijv. DevOpsInfra, TestEngineer, etc.)
-from bmad.agents.core.message_bus import subscribe, publish
+from bmad.agents.core.communication.message_bus import subscribe, publish
 
 def handle_build_triggered(event):
     logging.info("[DevOpsInfra] Build gestart...")

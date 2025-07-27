@@ -1,15 +1,19 @@
-from bmad.agents.core.message_bus import publish, subscribe
-from bmad.agents.core.supabase_context import save_context, get_context
-from bmad.agents.core.llm_client import ask_openai
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
+from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.data.supabase_context import save_context, get_context
+from bmad.agents.core.ai.llm_client import ask_openai
+from bmad.agents.core.ai.confidence_scoring import confidence_scoring
+from integrations.slack.slack_notify import send_slack_message
 import logging
 
-    def collaborate_example(self):
-        """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
-        publish("pipeline_validated", {"status": "success", "agent": "DataEngineer"})
-        save_context("DataEngineer", {"pipeline_status": "validated"})
-        print("Event gepubliceerd en context opgeslagen.")
-        context = get_context("DataEngineer")
-        print(f"Opgehaalde context: {context}")
+def collaborate_example():
+    """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
+    publish("pipeline_validated", {"status": "success", "agent": "DataEngineer"})
+    save_context("DataEngineer", {"pipeline_status": "validated"})
+    print("Event gepubliceerd en context opgeslagen.")
+    context = get_context("DataEngineer")
+    print(f"Opgehaalde context: {context}")
 
 def data_quality_check(data_summary):
     prompt = f"Analyseer de volgende data-samenvatting en geef suggesties voor kwaliteitscontroles:\n{data_summary}"
