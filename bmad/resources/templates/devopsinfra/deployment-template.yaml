@@ -1,0 +1,363 @@
+# Deployment Template
+# This template provides a comprehensive deployment configuration
+
+name: "BMAD Application Deployment"
+version: "1.0.0"
+description: "Deployment configuration for BMAD application"
+
+# Deployment Configuration
+deployment:
+  strategy:
+    type: "blue-green"  # blue-green, rolling, canary
+    max_surge: 1
+    max_unavailable: 0
+    progress_deadline_seconds: 600
+  
+  replicas:
+    min: 3
+    max: 10
+    target: 5
+  
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "512Mi"
+    limits:
+      cpu: "1000m"
+      memory: "1Gi"
+  
+  health_checks:
+    liveness_probe:
+      http_get:
+        path: "/health"
+        port: 8080
+      initial_delay_seconds: 30
+      period_seconds: 10
+      timeout_seconds: 5
+      failure_threshold: 3
+    
+    readiness_probe:
+      http_get:
+        path: "/ready"
+        port: 8080
+      initial_delay_seconds: 5
+      period_seconds: 5
+      timeout_seconds: 3
+      failure_threshold: 3
+
+# Environment Configuration
+environments:
+  development:
+    name: "Development"
+    description: "Development environment"
+    namespace: "bmad-dev"
+    replicas: 2
+    resources:
+      requests:
+        cpu: "250m"
+        memory: "256Mi"
+      limits:
+        cpu: "500m"
+        memory: "512Mi"
+    variables:
+      NODE_ENV: "development"
+      API_URL: "http://localhost:3000"
+      DATABASE_URL: "postgresql://dev:dev@localhost:5432/bmad_dev"
+      LOG_LEVEL: "debug"
+    
+  staging:
+    name: "Staging"
+    description: "Staging environment for testing"
+    namespace: "bmad-staging"
+    replicas: 3
+    resources:
+      requests:
+        cpu: "500m"
+        memory: "512Mi"
+      limits:
+        cpu: "1000m"
+        memory: "1Gi"
+    variables:
+      NODE_ENV: "staging"
+      API_URL: "https://staging-api.bmad.com"
+      DATABASE_URL: "postgresql://staging:staging@staging-db:5432/bmad_staging"
+      LOG_LEVEL: "info"
+    
+  production:
+    name: "Production"
+    description: "Production environment"
+    namespace: "bmad-prod"
+    replicas: 5
+    resources:
+      requests:
+        cpu: "1000m"
+        memory: "1Gi"
+      limits:
+        cpu: "2000m"
+        memory: "2Gi"
+    variables:
+      NODE_ENV: "production"
+      API_URL: "https://api.bmad.com"
+      DATABASE_URL: "postgresql://prod:prod@prod-db:5432/bmad_production"
+      LOG_LEVEL: "warn"
+
+# Container Configuration
+container:
+  image:
+    repository: "bmad-app"
+    tag: "latest"
+    pull_policy: "Always"
+  
+  ports:
+    - name: "http"
+      container_port: 8080
+      protocol: "TCP"
+    - name: "metrics"
+      container_port: 9090
+      protocol: "TCP"
+  
+  volume_mounts:
+    - name: "config"
+      mount_path: "/app/config"
+      read_only: true
+    - name: "logs"
+      mount_path: "/app/logs"
+    - name: "cache"
+      mount_path: "/app/cache"
+  
+  env:
+    - name: "NODE_ENV"
+      value_from:
+        config_map_key_ref:
+          name: "bmad-config"
+          key: "NODE_ENV"
+    - name: "API_URL"
+      value_from:
+        config_map_key_ref:
+          name: "bmad-config"
+          key: "API_URL"
+    - name: "DATABASE_URL"
+      value_from:
+        secret_key_ref:
+          name: "bmad-secrets"
+          key: "DATABASE_URL"
+
+# Service Configuration
+service:
+  type: "LoadBalancer"
+  ports:
+    - name: "http"
+      port: 80
+      target_port: 8080
+      protocol: "TCP"
+    - name: "https"
+      port: 443
+      target_port: 8080
+      protocol: "TCP"
+  
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+
+# Ingress Configuration
+ingress:
+  enabled: true
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+  
+  hosts:
+    - host: "api.bmad.com"
+      paths:
+        - path: "/"
+          path_type: "Prefix"
+          backend:
+            service:
+              name: "bmad-service"
+              port:
+                number: 80
+  
+  tls:
+    - secret_name: "bmad-tls"
+      hosts:
+        - "api.bmad.com"
+
+# ConfigMap Configuration
+config_map:
+  name: "bmad-config"
+  data:
+    NODE_ENV: "production"
+    API_URL: "https://api.bmad.com"
+    LOG_LEVEL: "info"
+    CORS_ORIGIN: "https://bmad.com"
+    SESSION_SECRET: "your-session-secret"
+    REDIS_URL: "redis://redis:6379"
+
+# Secret Configuration
+secrets:
+  name: "bmad-secrets"
+  type: "Opaque"
+  data:
+    DATABASE_URL: "base64-encoded-database-url"
+    JWT_SECRET: "base64-encoded-jwt-secret"
+    API_KEY: "base64-encoded-api-key"
+    ENCRYPTION_KEY: "base64-encoded-encryption-key"
+
+# Persistent Volume Configuration
+persistent_volumes:
+  - name: "config"
+    claim_name: "bmad-config-pvc"
+    access_mode: "ReadWriteOnce"
+    size: "1Gi"
+    storage_class: "gp2"
+  
+  - name: "logs"
+    claim_name: "bmad-logs-pvc"
+    access_mode: "ReadWriteOnce"
+    size: "10Gi"
+    storage_class: "gp2"
+  
+  - name: "cache"
+    claim_name: "bmad-cache-pvc"
+    access_mode: "ReadWriteOnce"
+    size: "5Gi"
+    storage_class: "gp2"
+
+# Horizontal Pod Autoscaler
+hpa:
+  enabled: true
+  min_replicas: 3
+  max_replicas: 10
+  target_cpu_utilization_percentage: 70
+  target_memory_utilization_percentage: 80
+  
+  metrics:
+    - type: "Resource"
+      resource:
+        name: "cpu"
+        target:
+          type: "Utilization"
+          average_utilization: 70
+    - type: "Resource"
+      resource:
+        name: "memory"
+        target:
+          type: "Utilization"
+          average_utilization: 80
+
+# Network Policies
+network_policies:
+  - name: "bmad-network-policy"
+    pod_selector:
+      match_labels:
+        app: "bmad"
+    
+    policy_types:
+      - "Ingress"
+      - "Egress"
+    
+    ingress:
+      - from:
+          - namespace_selector:
+              match_labels:
+                name: "bmad-frontend"
+        ports:
+          - protocol: "TCP"
+            port: 8080
+    
+    egress:
+      - to:
+          - namespace_selector:
+              match_labels:
+                name: "bmad-database"
+        ports:
+          - protocol: "TCP"
+            port: 5432
+
+# Security Context
+security_context:
+  run_as_non_root: true
+  run_as_user: 1000
+  run_as_group: 1000
+  fs_group: 1000
+  
+  capabilities:
+    drop:
+      - "ALL"
+  
+  read_only_root_filesystem: true
+  allow_privilege_escalation: false
+
+# Resource Quotas
+resource_quotas:
+  name: "bmad-quota"
+  hard:
+    requests.cpu: "10"
+    requests.memory: "10Gi"
+    limits.cpu: "20"
+    limits.memory: "20Gi"
+    persistentvolumeclaims: "10"
+    services: "10"
+    services.loadbalancers: "2"
+
+# Monitoring Configuration
+monitoring:
+  service_monitor:
+    enabled: true
+    interval: "30s"
+    path: "/metrics"
+    port: "metrics"
+  
+  pod_disruption_budget:
+    enabled: true
+    min_available: 2
+    max_unavailable: 1
+
+# Backup Configuration
+backup:
+  enabled: true
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  retention: "30 days"
+  
+  volumes:
+    - name: "logs"
+      mount_path: "/app/logs"
+    - name: "cache"
+      mount_path: "/app/cache"
+  
+  storage:
+    type: "s3"
+    bucket: "bmad-backups"
+    region: "us-west-2"
+
+# Rollback Configuration
+rollback:
+  enabled: true
+  max_revision_history: 10
+  
+  triggers:
+    - health_check_failure: true
+    - performance_degradation: true
+    - security_vulnerability: true
+  
+  strategy:
+    type: "blue-green"
+    health_check_timeout: "5m"
+    rollback_timeout: "10m"
+
+# Documentation
+documentation:
+  runbooks:
+    - name: "deployment-troubleshooting"
+      description: "Troubleshooting guide for deployment issues"
+      url: "https://docs.bmad.com/runbooks/deployment"
+    
+    - name: "rollback-procedures"
+      description: "Rollback procedures for failed deployments"
+      url: "https://docs.bmad.com/runbooks/rollback"
+    
+    - name: "scaling-procedures"
+      description: "Scaling procedures for high load"
+      url: "https://docs.bmad.com/runbooks/scaling" 
