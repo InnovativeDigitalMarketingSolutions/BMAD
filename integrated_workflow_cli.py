@@ -186,6 +186,22 @@ class IntegratedWorkflowCLI:
         print("🧪 Testing Repository Integrations")
         print("=" * 50)
         
+        # Test Test Sprites
+        print("🧪 Testing Test Sprites...")
+        try:
+            sprites = self.orchestrator.get_component_sprites()
+            print(f"   ✅ Test Sprites: {len(sprites)} sprites available")
+            
+            # Test a component
+            if sprites:
+                test_result = await self.orchestrator.run_component_tests("AgentStatus", "all")
+                print(f"   ✅ Component Test: {test_result['status']}")
+                print(f"   ⏱️  Duration: {test_result.get('performance_metrics', {}).get('duration', 0):.2f}s")
+        except Exception as e:
+            print(f"   ❌ Test Sprites: {e}")
+        
+        print()
+        
         # Test OpenRouter
         print("🔗 Testing OpenRouter...")
         if self.orchestrator.openrouter_client:
@@ -281,6 +297,77 @@ class IntegratedWorkflowCLI:
         print(f"⏱️  Workflow Timeout: {config.workflow_timeout}s")
         print(f"🔄 Max Retries: {config.max_retries}")
         print(f"📋 Policy Rules: {', '.join(config.policy_rules) if config.policy_rules else 'None'}")
+    
+    async def list_sprites(self):
+        """List all available component sprites."""
+        sprites = self.orchestrator.get_component_sprites()
+        
+        if not sprites:
+            print("❌ Geen sprites gevonden")
+            return
+        
+        print("🧪 Available Component Sprites")
+        print("=" * 50)
+        
+        for i, sprite in enumerate(sprites, 1):
+            print(f"{i}. {sprite['name']}")
+            print(f"   📋 Type: {sprite['type']}")
+            print(f"   🧩 Component: {sprite['component_name']}")
+            print(f"   🔄 States: {sprite['states']}")
+            print(f"   ♿ Accessibility: {len(sprite['accessibility_checks'])} checks")
+            print(f"   🎨 Visual: {len(sprite['visual_checks'])} checks")
+            print(f"   🖱️  Interactions: {len(sprite['interaction_tests'])} tests")
+            print()
+    
+    async def test_component(self, component_name: str, test_type: str = "all"):
+        """Test a specific component using sprites."""
+        print(f"🧪 Testing component: {component_name}")
+        print(f"🔧 Test type: {test_type}")
+        print("=" * 50)
+        
+        try:
+            result = await self.orchestrator.run_component_tests(component_name, test_type)
+            
+            print(f"📊 Test Results for {result['component_name']}")
+            print(f"   📈 Status: {result['status']}")
+            
+            if result['status'] == 'passed':
+                print("   ✅ All tests passed!")
+                print(f"   ⏱️  Duration: {result.get('performance_metrics', {}).get('duration', 0):.2f}s")
+            else:
+                print(f"   ❌ Tests failed: {result.get('error', 'Unknown error')}")
+            
+            # Show detailed results
+            if result.get('details'):
+                print("\n📋 Detailed Results:")
+                for key, value in result['details'].items():
+                    print(f"   {key}: {value}")
+            
+            if result.get('accessibility_issues'):
+                print("\n♿ Accessibility Issues:")
+                for issue in result['accessibility_issues']:
+                    print(f"   ⚠️  {issue}")
+                    
+        except Exception as e:
+            print(f"❌ Component test failed: {e}")
+    
+    def export_sprite_report(self, format: str = "json", output_file: Optional[str] = None):
+        """Export sprite test report."""
+        print(f"📊 Exporting sprite test report in {format} format")
+        print("=" * 50)
+        
+        try:
+            report = self.orchestrator.export_sprite_test_report(format)
+            
+            if output_file:
+                with open(output_file, 'w') as f:
+                    f.write(report)
+                print(f"✅ Report exported to: {output_file}")
+            else:
+                print(report)
+                
+        except Exception as e:
+            print(f"❌ Failed to export report: {e}")
     
     async def update_agent_config(
         self, 
@@ -395,6 +482,18 @@ Examples:
     update_agent_parser.add_argument('--disable-workflow', action='store_true', 
                                     help='Disable workflow orchestration')
     
+    # Test sprites commands
+    subparsers.add_parser('list-sprites', help='List all available component sprites')
+    
+    test_component_parser = subparsers.add_parser('test-component', help='Test a specific component using sprites')
+    test_component_parser.add_argument('component_name', help='Name of the component to test')
+    test_component_parser.add_argument('--type', choices=['all', 'accessibility', 'visual', 'interaction'], 
+                                     default='all', help='Type of tests to run')
+    
+    export_sprite_parser = subparsers.add_parser('export-sprite-report', help='Export sprite test report')
+    export_sprite_parser.add_argument('--format', choices=['json'], default='json', help='Report format')
+    export_sprite_parser.add_argument('--output', help='Output file path')
+    
     args = parser.parse_args()
     
     if not args.command:
@@ -456,6 +555,21 @@ Examples:
                 enable_policy=enable_policy,
                 enable_cost=enable_cost,
                 enable_workflow=enable_workflow
+            )
+        
+        elif args.command == 'list-sprites':
+            await cli.list_sprites()
+        
+        elif args.command == 'test-component':
+            await cli.test_component(
+                component_name=args.component_name,
+                test_type=args.type
+            )
+        
+        elif args.command == 'export-sprite-report':
+            cli.export_sprite_report(
+                format=args.format,
+                output_file=args.output
             )
     
     except KeyboardInterrupt:

@@ -31,6 +31,7 @@ from .openrouter_client import OpenRouterClient, LLMConfig, RoutingStrategy
 from .opentelemetry_tracing import BMADTracer, TracingConfig, TraceLevel
 from .opa_policy_engine import OPAPolicyEngine, PolicyRule, PolicyRequest
 from .prefect_workflow import PrefectWorkflowOrchestrator, PrefectWorkflowConfig
+from .test_sprites import TestSpriteLibrary, get_sprite_library
 
 logger = logging.getLogger(__name__)
 
@@ -81,6 +82,9 @@ class IntegratedWorkflowOrchestrator:
         self.active_workflows: Dict[str, Dict[str, Any]] = {}
         self.workflow_definitions: Dict[str, WorkflowDefinition] = {}
         self.agent_configs: Dict[str, AgentWorkflowConfig] = {}
+        
+        # Initialize test sprites library
+        self.sprite_library = get_sprite_library()
         
         # Register default agent configurations
         self._register_default_agent_configs()
@@ -659,6 +663,54 @@ class IntegratedWorkflowOrchestrator:
         """Get performance metrics for a workflow."""
         # This would return performance metrics
         return {"workflow_id": workflow_id, "metrics": {}}
+    
+    async def run_component_tests(self, component_name: str, test_type: str = "all") -> Dict[str, Any]:
+        """Run component tests using test sprites."""
+        try:
+            sprite_name = f"{component_name}_sprite"
+            result = await self.sprite_library.run_sprite_test(sprite_name, test_type)
+            
+            return {
+                "component_name": component_name,
+                "sprite_name": sprite_name,
+                "test_type": test_type,
+                "status": result.status,
+                "details": result.details,
+                "accessibility_issues": result.accessibility_issues,
+                "performance_metrics": result.performance_metrics,
+                "timestamp": result.timestamp
+            }
+        except Exception as e:
+            logger.error(f"Component test failed for {component_name}: {e}")
+            return {
+                "component_name": component_name,
+                "status": "failed",
+                "error": str(e)
+            }
+    
+    def get_component_sprites(self, component_name: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Get available component sprites."""
+        sprites = self.sprite_library.list_sprites()
+        
+        if component_name:
+            sprites = [s for s in sprites if s.component_name == component_name]
+        
+        return [
+            {
+                "name": sprite.name,
+                "type": sprite.sprite_type.value,
+                "component_name": sprite.component_name,
+                "states": [s.value for s in sprite.states],
+                "accessibility_checks": sprite.accessibility_checks,
+                "visual_checks": sprite.visual_checks,
+                "interaction_tests": sprite.interaction_tests
+            }
+            for sprite in sprites
+        ]
+    
+    def export_sprite_test_report(self, format: str = "json") -> str:
+        """Export sprite test results as a report."""
+        return self.sprite_library.export_test_report(format)
 
 # Global orchestrator instance
 _orchestrator = None
