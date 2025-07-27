@@ -6,6 +6,11 @@ Command-line interface voor project management
 
 import argparse
 import sys
+from pathlib import Path
+
+# Add BMAD to path
+sys.path.append(str(Path(__file__).parent.parent))
+
 from bmad.projects.project_manager import project_manager
 
 def main():

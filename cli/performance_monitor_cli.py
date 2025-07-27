@@ -17,7 +17,7 @@ from datetime import datetime, timedelta
 import time
 
 # Add BMAD to path
-sys.path.append(str(Path(__file__).parent))
+sys.path.append(str(Path(__file__).parent.parent))
 
 # Import BMAD modules
 from bmad.agents.core.agent_performance_monitor import (

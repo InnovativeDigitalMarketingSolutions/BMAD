@@ -16,7 +16,7 @@ from typing import Dict, Any, Optional
 from datetime import datetime
 
 # Add BMAD to path
-sys.path.append(str(Path(__file__).parent))
+sys.path.append(str(Path(__file__).parent.parent))
 
 # Import BMAD modules
 from bmad.agents.core.test_sprites import (

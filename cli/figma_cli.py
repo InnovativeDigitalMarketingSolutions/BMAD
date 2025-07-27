@@ -19,6 +19,11 @@ Commands:
 
 import sys
 import logging
+from pathlib import Path
+
+# Add BMAD to path
+sys.path.append(str(Path(__file__).parent.parent))
+
 from bmad.agents.core.figma_client import FigmaClient
 from bmad.agents.Agent.FrontendDeveloper.frontenddeveloper import generate_components_from_figma
 from bmad.agents.Agent.UXUIDesigner.uxuidesigner import analyze_figma_design

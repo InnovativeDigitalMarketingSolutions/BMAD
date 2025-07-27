@@ -1,7 +1,7 @@
-from agents.core.message_bus import publish, subscribe
-from agents.core.supabase_context import save_context, get_context
-from agents.core.llm_client import ask_openai
-from agents.core.figma_client import FigmaClient
+from bmad.agents.core.message_bus import publish, subscribe
+from bmad.agents.core.supabase_context import save_context, get_context
+from bmad.agents.core.llm_client import ask_openai
+from bmad.agents.core.figma_client import FigmaClient
 import logging
 import json
 from typing import Dict, List, Optional

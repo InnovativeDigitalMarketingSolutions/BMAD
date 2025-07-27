@@ -1,6 +1,6 @@
-from agents.core.llm_client import ask_openai
-from agents.core.message_bus import subscribe
-from agents.core.figma_client import FigmaClient
+from bmad.agents.core.llm_client import ask_openai
+from bmad.agents.core.message_bus import subscribe
+from bmad.agents.core.figma_client import FigmaClient
 import logging
 import json
 from typing import Dict, List, Optional
