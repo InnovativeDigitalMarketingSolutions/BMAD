@@ -840,7 +840,7 @@ Orchestrator Agent Commands:
         return False
 
     def monitor_agents(self):
-        agents = ["ProductOwner", "Architect", "TestEngineer", "FeedbackAgent", "DevOpsInfra", "Retrospective"]
+        agents = ["ProductOwner", "Architect", "TestEngineer", "FeedbackAgent", "DevOpsInfra", "Retrospective", "MobileDeveloper"]
         for agent in agents:
             status = get_context(agent, context_type="status")
             self.status[agent] = status
@@ -852,6 +852,74 @@ Orchestrator Agent Commands:
         logger.info("OrchestratorAgent ready and listening for events...")
         print("[Orchestrator] Ready and listening for events...")
         self.collaborate_example()
+
+# Workflow templates
+WORKFLOW_TEMPLATES = {
+    # --- Bestaande workflows ---
+    "feature": [
+        {"event_type": "new_task", "task_desc": "Nieuwe feature ontwikkelen"},
+        {"event_type": "user_story_requested", "requirement": "Feature requirement"},
+        {"event_type": "test_generation_requested", "function_description": "Feature test"},
+    ],
+    "incident_response": [
+        {"event_type": "incident_reported", "incident_desc": "Incident details"},
+        {"event_type": "incident_response_requested", "incident_desc": "Incident details"},
+    ],
+    # --- Geavanceerde workflows ---
+    "automated_deployment": [
+        {"event_type": "build_triggered", "desc": "Build gestart"},
+        {"event_type": "tests_requested", "desc": "Tests uitvoeren"},
+        {"event_type": "tests_completed", "desc": "Tests voltooid"},
+        {"event_type": "hitl_required", "desc": "Goedkeuring voor deployment", "hitl": True},
+        {"event_type": "deployment_executed", "desc": "Deployment uitgevoerd"},
+        {"event_type": "deployment_completed", "desc": "Deployment afgerond"},
+    ],
+    "feature_delivery": [
+        {"event_type": "feature_planned", "desc": "Feature gepland"},
+        {"event_type": "tasks_assigned", "desc": "Taken toegewezen"},
+        {"event_type": "development_started", "desc": "Ontwikkeling gestart"},
+        {"event_type": "testing_started", "desc": "Testen gestart"},
+        {"event_type": "acceptance_required", "desc": "Acceptatie vereist", "hitl": True},
+        {"event_type": "feature_delivered", "desc": "Feature opgeleverd"},
+    ],
+    "security_review": [
+        {"event_type": "security_scan_started", "desc": "Security scan gestart"},
+        {"event_type": "security_findings_reported", "desc": "Security bevindingen gerapporteerd"},
+        {"event_type": "hitl_required", "desc": "Security review goedkeuring", "hitl": True},
+        {"event_type": "security_review_completed", "desc": "Security review afgerond"},
+    ],
+    "retrospective_feedback": [
+        {"event_type": "retro_planned", "desc": "Retrospective gepland"},
+        {"event_type": "feedback_collected", "desc": "Feedback verzameld"},
+        {"event_type": "trends_analyzed", "desc": "Trends geanalyseerd"},
+        {"event_type": "retro_results_shared", "desc": "Resultaten gedeeld in Slack"},
+    ],
+    # --- Mobile Development Workflows ---
+    "mobile_app_development": [
+        {"event_type": "mobile_app_planned", "desc": "Mobile app gepland"},
+        {"event_type": "ux_design_requested", "desc": "UX design voor mobile"},
+        {"event_type": "mobile_development_started", "desc": "Mobile development gestart"},
+        {"event_type": "cross_platform_testing", "desc": "Cross-platform testing"},
+        {"event_type": "app_store_submission", "desc": "App store submission"},
+        {"event_type": "hitl_required", "desc": "App store goedkeuring", "hitl": True},
+        {"event_type": "mobile_app_released", "desc": "Mobile app vrijgegeven"},
+    ],
+    "mobile_feature_delivery": [
+        {"event_type": "mobile_feature_planned", "desc": "Mobile feature gepland"},
+        {"event_type": "mobile_ux_design", "desc": "Mobile UX design"},
+        {"event_type": "mobile_development", "desc": "Mobile development"},
+        {"event_type": "mobile_testing", "desc": "Mobile testing"},
+        {"event_type": "performance_optimization", "desc": "Performance optimalisatie"},
+        {"event_type": "app_store_update", "desc": "App store update"},
+    ],
+    "mobile_performance_optimization": [
+        {"event_type": "performance_analysis", "desc": "Performance analyse"},
+        {"event_type": "optimization_planning", "desc": "Optimalisatie planning"},
+        {"event_type": "optimization_implementation", "desc": "Optimalisatie implementatie"},
+        {"event_type": "performance_testing", "desc": "Performance testing"},
+        {"event_type": "optimization_validation", "desc": "Optimalisatie validatie"},
+    ],
+}
 
 # Event handlers
 def handle_slack_command(event):
