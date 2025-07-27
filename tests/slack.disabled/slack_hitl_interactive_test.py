@@ -5,7 +5,7 @@ import pytest
 from bmad.agents.core.slack_notify import send_human_in_loop_alert
 from bmad.agents.core.message_bus import subscribe
 
-@pytest.mark.skipif(os.getenv("CI"), reason="Handmatige test, niet geschikt voor CI")
+@pytest.mark.skipif(os.getenv("CI") == "true", reason="Handmatige test, niet geschikt voor CI")
 def test_slack_hitl_interactive():
     channel = os.getenv("SLACK_DEFAULT_CHANNEL", "C097FTDU1A5")
     alert_id = "test-hitl-interactive-001"

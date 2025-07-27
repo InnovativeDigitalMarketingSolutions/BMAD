@@ -19,10 +19,10 @@ Commands:
 
 import sys
 import logging
-from agents.core.figma_client import FigmaClient
-from agents.Agent.FrontendDeveloper.frontenddeveloper import generate_components_from_figma
-from agents.Agent.UXUIDesigner.uxuidesigner import analyze_figma_design
-from agents.Agent.DocumentationAgent.documentationagent import document_figma_ui
+from bmad.agents.core.figma_client import FigmaClient
+from bmad.agents.Agent.FrontendDeveloper.frontenddeveloper import generate_components_from_figma
+from bmad.agents.Agent.UXUIDesigner.uxuidesigner import analyze_figma_design
+from bmad.agents.Agent.DocumentationAgent.documentationagent import document_figma_ui
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
