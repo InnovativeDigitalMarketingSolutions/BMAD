@@ -312,11 +312,39 @@ BMAD is een event-driven multi-agent framework. Agents communiceren via een mess
 - **Supabase:** Contextopslag en resource management
 - **LLM:** Voor intelligente taken (testgeneratie, story parsing, etc.)
 
-## Mappenstructuur
+## 📚 Documentation
+
+### **🔗 Integrations**
+- [Repository Integrations](docs/integrations/REPOSITORY_INTEGRATIONS_README.md)
+- [Agent Workflow Integration](docs/integrations/AGENT_WORKFLOW_INTEGRATION_README.md)
+- [Performance Monitor](docs/integrations/PERFORMANCE_MONITOR_INTEGRATION_README.md)
+- [Test Sprites](docs/integrations/TEST_SPRITES_INTEGRATION_README.md)
+- [Advanced Policy Engine](docs/integrations/ADVANCED_POLICY_ENGINE_README.md)
+- [LangGraph Integration](docs/integrations/LANGGRAPH_INTEGRATION_README.md)
+- [Webhook Integration](docs/integrations/WEBHOOK_INTEGRATION_README.md)
+- [Figma Integration](docs/integrations/FIGMA_INTEGRATION_README.md)
+- [ClickUp Workflow](docs/integrations/BMAD_CLICKUP_WORKFLOW_README.md)
+
+### **📊 Status & Guides**
+- [Environment Setup](docs/guides/ENVIRONMENT_SETUP.md)
+- [Implementation Status](docs/status/IMPLEMENTATION_STATUS.md)
+- [Production Status](docs/status/PRODUCTION_STATUS.md)
+- [Contributing Guidelines](docs/guides/CONTRIBUTING.md)
+
+### **📖 Core Documentation**
+- [BMAD Method](bmad/resources/data/general/bmad-method.md)
+- [Agent Metrics](bmad/resources/data/general/agent-metrics.md)
+- [Confidence Scoring](bmad/resources/data/general/confidence-scoring.md)
+- [CLI Tools](cli/README.md)
+- [Full Documentation Index](docs/README.md)
+
+## 📁 Project Structure
 
 - `bmad/agents/` — Alle agent-implementaties en core modules
 - `bmad/resources/` — Templates, data, changelogs, context
 - `bmad/api.py` — REST API (Flask) met orchestrator- en agent-endpoints
+- `cli/` — Alle CLI tools georganiseerd
+- `docs/` — Georganiseerde documentatie (integrations, status, guides, results)
 - `swagger-ui/` — Swagger UI frontend en OpenAPI-spec
 - `tests/` — Alle tests, gestructureerd per domein (slack, orchestrator, agents, utils)
 - `.github/workflows/` — CI/CD workflows (linting, testen, health checks)
