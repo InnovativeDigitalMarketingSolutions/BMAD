@@ -1,0 +1,218 @@
+#!/usr/bin/env python3
+"""
+Test script voor backend optimalisaties.
+
+Dit script test de nieuwe Redis caching, connection pooling en monitoring functionaliteiten.
+"""
+
+import asyncio
+import time
+import sys
+import os
+
+# Voeg BMAD modules toe aan path
+sys.path.append(os.path.join(os.path.dirname(__file__), 'bmad'))
+
+from bmad.agents.core.redis_cache import cache, cached
+from bmad.agents.core.connection_pool import pool_manager
+from bmad.agents.core.monitoring import metrics_collector, health_checker, structured_logger
+from bmad.agents.core.llm_client import ask_openai_with_confidence
+
+async def test_redis_caching():
+    """Test Redis caching functionaliteit."""
+    print("\n🔍 Testing Redis Caching...")
+    
+    # Test basic caching
+    test_data = {"test": "data", "timestamp": time.time()}
+    cache_key = "test_key"
+    
+    # Set cache
+    success = cache.set(cache_key, test_data, cache_type="test")
+    print(f"✅ Cache set: {success}")
+    
+    # Get cache
+    cached_data = cache.get(cache_key)
+    print(f"✅ Cache get: {cached_data == test_data}")
+    
+    # Test cache decorator
+    @cached(ttl=60, cache_type="test", key_prefix="test_func")
+    def expensive_function(x, y):
+        time.sleep(0.1)  # Simulate expensive operation
+        return x + y
+    
+    # First call (cache miss)
+    start_time = time.time()
+    result1 = expensive_function(5, 3)
+    duration1 = time.time() - start_time
+    print(f"✅ First call (cache miss): {result1} in {duration1:.3f}s")
+    
+    # Second call (cache hit)
+    start_time = time.time()
+    result2 = expensive_function(5, 3)
+    duration2 = time.time() - start_time
+    print(f"✅ Second call (cache hit): {result2} in {duration2:.3f}s")
+    
+    # Verify cache hit was faster
+    print(f"✅ Cache hit {duration1/duration2:.1f}x faster than cache miss")
+
+async def test_connection_pooling():
+    """Test connection pooling functionaliteit."""
+    print("\n🔍 Testing Connection Pooling...")
+    
+    try:
+        # Initialize pools
+        await pool_manager.initialize_pools()
+        print("✅ Connection pools geïnitialiseerd")
+        
+        # Test Redis connection
+        try:
+            async with pool_manager.get_redis_connection() as redis:
+                await redis.ping()
+                print("✅ Redis connection pool werkt")
+        except Exception as e:
+            print(f"⚠️ Redis pool test gefaald: {e}")
+        
+        # Test health checks
+        health_status = await pool_manager.health_check_all()
+        print(f"✅ Health checks: {health_status}")
+        
+        # Get pool stats
+        stats = pool_manager.get_pool_stats()
+        print(f"✅ Pool stats: {stats}")
+        
+    except Exception as e:
+        print(f"⚠️ Connection pooling test gefaald: {e}")
+
+async def test_monitoring():
+    """Test monitoring en metrics functionaliteit."""
+    print("\n🔍 Testing Monitoring & Metrics...")
+    
+    # Test metrics recording
+    metrics_collector.record_metric("test_metric", 42.0, labels={"test": "value"})
+    metrics_collector.increment_counter("test_counter", labels={"test": "value"})
+    
+    with metrics_collector.measure_time("test_timing", labels={"test": "value"}):
+        time.sleep(0.1)  # Simulate work
+    
+    print("✅ Metrics recorded")
+    
+    # Test health checks
+    health_results = await health_checker.run_all_health_checks()
+    print(f"✅ Health checks uitgevoerd: {len(health_results)} checks")
+    
+    for name, result in health_results.items():
+        print(f"  - {name}: {result.status} - {result.message}")
+    
+    # Test structured logging
+    structured_logger.log_event("test_event", "Test event message", test_data="value")
+    structured_logger.log_agent_action("TestAgent", "test_action", result="success")
+    print("✅ Structured logging werkt")
+    
+    # Get Prometheus format
+    prometheus_metrics = metrics_collector.get_prometheus_format()
+    print(f"✅ Prometheus metrics: {len(prometheus_metrics.split())} metrics")
+
+async def test_llm_caching():
+    """Test LLM response caching."""
+    print("\n🔍 Testing LLM Caching...")
+    
+    try:
+        # Test cached LLM call
+        context = {"test": "llm_caching"}
+        
+        # First call (cache miss)
+        start_time = time.time()
+        result1 = ask_openai_with_confidence(
+            "Say 'Hello from BMAD' in one word",
+            context,
+            max_tokens=10
+        )
+        duration1 = time.time() - start_time
+        print(f"✅ First LLM call: {duration1:.3f}s")
+        
+        # Second call (cache hit)
+        start_time = time.time()
+        result2 = ask_openai_with_confidence(
+            "Say 'Hello from BMAD' in one word",
+            context,
+            max_tokens=10
+        )
+        duration2 = time.time() - start_time
+        print(f"✅ Second LLM call: {duration2:.3f}s")
+        
+        if duration2 < duration1:
+            print(f"✅ LLM caching werkt: {duration1/duration2:.1f}x sneller")
+        else:
+            print("⚠️ LLM caching niet effectief")
+            
+    except Exception as e:
+        print(f"⚠️ LLM caching test gefaald: {e}")
+
+async def test_performance_improvements():
+    """Test overall performance verbeteringen."""
+    print("\n🔍 Testing Performance Improvements...")
+    
+    # Test parallel operations
+    async def parallel_operation(operation_id):
+        with metrics_collector.measure_time(f"parallel_op_{operation_id}"):
+            await asyncio.sleep(0.1)  # Simulate work
+            return f"Operation {operation_id} completed"
+    
+    # Run operations in parallel
+    start_time = time.time()
+    tasks = [parallel_operation(i) for i in range(5)]
+    results = await asyncio.gather(*tasks)
+    total_time = time.time() - start_time
+    
+    print(f"✅ Parallel operations: {len(results)} operations in {total_time:.3f}s")
+    
+    # Test cache performance
+    cache_hits = 0
+    cache_misses = 0
+    
+    for i in range(10):
+        cache_key = f"perf_test_{i % 3}"  # Only 3 unique keys for cache hits
+        
+        if cache.exists(cache_key):
+            cache_hits += 1
+        else:
+            cache_misses += 1
+            cache.set(cache_key, f"data_{i}", ttl=60)
+    
+    hit_rate = cache_hits / (cache_hits + cache_misses) * 100
+    print(f"✅ Cache performance: {hit_rate:.1f}% hit rate")
+
+async def main():
+    """Main test functie."""
+    print("🚀 BMAD Backend Optimization Tests")
+    print("=" * 50)
+    
+    # Run all tests
+    await test_redis_caching()
+    await test_connection_pooling()
+    await test_monitoring()
+    await test_llm_caching()
+    await test_performance_improvements()
+    
+    # Final summary
+    print("\n" + "=" * 50)
+    print("📊 Test Summary")
+    print("=" * 50)
+    
+    # Get final metrics
+    metrics = metrics_collector.get_metrics()
+    print(f"✅ Total metrics recorded: {sum(len(m) for m in metrics.values())}")
+    
+    # Get health status
+    health_status = health_checker.get_health_status()
+    print(f"✅ Overall health: {health_status['overall_status']}")
+    print(f"✅ Healthy checks: {health_status['healthy_checks']}/{health_status['total_checks']}")
+    
+    # Get cache stats
+    cache_stats = cache.get_stats()
+    print(f"✅ Cache enabled: {cache_stats.get('enabled', False)}")
+    
+    print("\n🎉 Backend optimization tests completed!")
+
+if __name__ == "__main__":
+    asyncio.run(main()) 

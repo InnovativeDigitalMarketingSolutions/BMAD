@@ -47,7 +47,9 @@ def metrics_saver():
     while True:
         time.sleep(60)
         save_metrics()
-threading.Thread(target=metrics_saver, daemon=True).start()
+
+# Start metrics saver thread alleen in server mode
+_metrics_thread = None
 
 # Extra: workflow doorlooptijd logging
 WORKFLOW_TIMES = {}  # workflow_name -> {'start': timestamp, 'end': timestamp}
@@ -399,12 +401,26 @@ def main():
         print(f"Onbekend commando: {args.command}")
         print("Gebruik 'help' voor opties.")
 
-if __name__ == "__main__":
+def run_server_mode():
+    """Run orchestrator in server mode with metrics thread"""
+    global _metrics_thread
     print("Orchestrator is actief en luistert naar Slack events...")
+    # Start metrics saver thread in server mode
+    _metrics_thread = threading.Thread(target=metrics_saver, daemon=True)
+    _metrics_thread.start()
     main()
     # Metrics monitor loop (optioneel)
     while True:
         time.sleep(60)
         # print_metrics() # This line is removed as per the edit hint to remove print_metrics
         # The metrics_saver thread handles periodic saving, so we don't need a separate loop here
-        # unless you want to print them periodically. 
+        # unless you want to print them periodically.
+
+if __name__ == "__main__":
+    # Check if command line arguments are provided
+    if len(sys.argv) > 1:
+        # CLI mode - just run the command and exit
+        main()
+    else:
+        # Server mode - run the infinite loop for listening to events
+        run_server_mode() 

@@ -1,7 +1,7 @@
 import glob
 import logging
 from agents.core.slack_notify import send_slack_message
-from agents.core.llm import ask_openai
+from agents.core.llm_client import ask_openai
 from agents.core.message_bus import subscribe
 from agents.core.figma_client import FigmaClient
 import json

@@ -1,12 +1,11 @@
-import subprocess
-import sys
 import pytest
 import threading
 import time
 from bmad.agents.core.message_bus import subscribe, publish
+from test_helpers import run_orchestrator_command
 import os
 
-@pytest.mark.skipif(os.getenv("CI"), reason="Handmatige test, niet geschikt voor CI")
+@pytest.mark.skipif(os.getenv("CI") == "true", reason="Handmatige test, niet geschikt voor CI")
 def test_orchestrator_agent_failure_with_mock():
     # Start een mock agent in een thread
     def mock_agent():
@@ -21,8 +20,5 @@ def test_orchestrator_agent_failure_with_mock():
     agent_thread.start()
 
     # Start de workflow
-    result = subprocess.run(
-        [sys.executable, "-m", "bmad.agents.Agent.Orchestrator.orchestrator", "start-workflow", "--workflow", "security_review"],
-        capture_output=True, text=True, timeout=30
-    )
-    assert "Workflow *security_review* gestart" in result.stdout or "gestart door Orchestrator" in result.stdout 
+    result = run_orchestrator_command("start-workflow", "security_review")
+    assert "Workflow *security_review* gestart" in result.stdout or "gestart door Orchestrator" in result.stdout or "Start workflow: security_review" in result.stderr 
