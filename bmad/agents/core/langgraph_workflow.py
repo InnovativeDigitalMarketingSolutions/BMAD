@@ -169,12 +169,14 @@ class LangGraphWorkflowOrchestrator:
         # Add end node
         workflow.add_node("end", lambda state: state)
         
-        # Add conditional edges from start
-        workflow.add_conditional_edges(
-            "start",
-            self._route_to_next_task,
-            {task.id: task.id for task in workflow_def.tasks}
-        )
+        # Add conditional edges from start to first available tasks
+        start_edges = {}
+        for task in workflow_def.tasks:
+            if not task.dependencies:
+                start_edges[task.id] = task.id
+        
+        if start_edges:
+            workflow.add_conditional_edges("start", self._route_to_next_task, start_edges)
         
         # Add edges between tasks based on dependencies
         for task in workflow_def.tasks:
@@ -182,17 +184,15 @@ class LangGraphWorkflowOrchestrator:
                 # Task has dependencies, add edges from dependencies
                 for dep in task.dependencies:
                     workflow.add_edge(dep, task.id)
-            else:
-                # Task has no dependencies, can start immediately
-                workflow.add_edge("start", task.id)
         
-        # Add edges from tasks to end
+        # Add conditional edges from tasks to next tasks or end
         for task in workflow_def.tasks:
-            workflow.add_conditional_edges(
-                task.id,
-                self._route_to_next_task,
-                {"end": "end"}
-            )
+            next_edges = {"end": "end"}
+            for next_task in workflow_def.tasks:
+                if task.id in next_task.dependencies:
+                    next_edges[next_task.id] = next_task.id
+            
+            workflow.add_conditional_edges(task.id, self._route_to_next_task, next_edges)
         
         # Add end condition
         workflow.add_edge("end", END)
@@ -318,20 +318,30 @@ class LangGraphWorkflowOrchestrator:
     def _route_to_next_task(self, state: WorkflowState) -> str:
         """Route to the next available task."""
         workflow_def = self.workflow_definitions[state["workflow_name"]]
+        current_task = state.get("current_task")
         
         # If we're at the end, stay at end
-        if state.get("current_task") == "end":
+        if current_task == "end":
             return "end"
         
-        # Find next available task
-        for task in workflow_def.tasks:
-            if (task.id not in state["completed_tasks"] and 
-                task.id not in state["failed_tasks"] and 
-                task.id not in state["skipped_tasks"]):
-                
-                # Check if dependencies are met
-                if all(dep in state["completed_tasks"] for dep in task.dependencies):
+        # If we're at start, find first available task
+        if current_task is None or current_task == "start":
+            for task in workflow_def.tasks:
+                if (task.id not in state["completed_tasks"] and 
+                    task.id not in state["failed_tasks"] and 
+                    task.id not in state["skipped_tasks"] and
+                    all(dep in state["completed_tasks"] for dep in task.dependencies)):
                     return task.id
+            return "end"
+        
+        # Find next task that depends on current task
+        for task in workflow_def.tasks:
+            if (current_task in task.dependencies and
+                task.id not in state["completed_tasks"] and 
+                task.id not in state["failed_tasks"] and 
+                task.id not in state["skipped_tasks"] and
+                all(dep in state["completed_tasks"] for dep in task.dependencies)):
+                return task.id
         
         # No more tasks available
         return "end"

@@ -1386,6 +1386,55 @@
         "status": "completed",
         "timestamp": 1753606874.770544
       }
+    },
+    {
+      "timestamp": "2025-07-27T11:32:53.240209",
+      "event": "review_requested",
+      "data": {
+        "workflow_id": "integration_test_workflow_1753608773",
+        "task_id": "test_task_2",
+        "result": {
+          "output": "Architect executed: design_system",
+          "confidence": 0.5934999999999999,
+          "review_required": true,
+          "review_level": "medium",
+          "metadata": {
+            "agent": "Architect",
+            "task_type": "design_system",
+            "timestamp": "2025-07-27T11:32:53.239574",
+            "context": {
+              "test_mode": true,
+              "integration_test": true,
+              "agent": "Architect",
+              "task": "design_system",
+              "timestamp": "2025-07-27T11:32:53.239574"
+            }
+          }
+        },
+        "timestamp": 1753608773.2396002
+      }
+    },
+    {
+      "timestamp": "2025-07-27T11:32:53.243028",
+      "event": "workflow_completed",
+      "data": {
+        "workflow_id": "integration_test_workflow_1753608773",
+        "status": "completed",
+        "timestamp": 1753608773.242792
+      }
+    },
+    {
+      "timestamp": "2025-07-27T11:32:53.244351",
+      "event": "workflow_success",
+      "data": {
+        "timestamp": "2025-07-27T11:32:53.243028",
+        "event": "workflow_completed",
+        "data": {
+          "workflow_id": "integration_test_workflow_1753608773",
+          "status": "completed",
+          "timestamp": 1753608773.242792
+        }
+      }
     }
   ]
 }
