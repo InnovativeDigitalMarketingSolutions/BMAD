@@ -1,6 +1,7 @@
-from bmad.agents.core.message_bus import subscribe
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import logging
-from bmad.agents.core.slack_notify import send_slack_message
+from integrations.slack.slack_notify import send_slack_message
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
@@ -18,6 +19,11 @@ def on_deployment_failed(event):
     logging.error("[ReleaseManager] Deployment failed! Rollback gestart.")
     send_slack_message("[ReleaseManager] Deployment failed! Rollback gestart.")
     # Start rollback (stub)
+
+from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.data.supabase_context import save_context, get_context
+from bmad.agents.core.ai.llm_client import ask_openai
+from bmad.agents.core.ai.confidence_scoring import confidence_scoring
 
 subscribe("tests_passed", on_tests_passed)
 subscribe("release_approved", on_release_approved)

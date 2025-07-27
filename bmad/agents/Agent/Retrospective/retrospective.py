@@ -1,9 +1,12 @@
-from bmad.agents.core.message_bus import publish
-from bmad.agents.core.supabase_context import save_context
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
+from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.data.supabase_context import save_context, get_context
+from bmad.agents.core.ai.llm_client import ask_openai
+from bmad.agents.core.ai.confidence_scoring import confidence_scoring
+from integrations.slack.slack_notify import send_slack_message
 import logging
 from datetime import datetime
-from bmad.agents.core.slack_notify import send_slack_message
-from bmad.agents.core.llm_client import ask_openai
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
@@ -44,7 +47,6 @@ def on_feedback_sentiment_analyzed(event):
         result = ask_openai(prompt, structured_output=structured_output)
         logging.info(f"[Retrospective][LLM Verbeteracties]: {result}")
 
-from bmad.agents.core.message_bus import subscribe
 subscribe("retro_feedback", on_retro_feedback)
 subscribe("generate_actions", on_generate_actions)
 subscribe("feedback_sentiment_analyzed", on_feedback_sentiment_analyzed)

@@ -1,9 +1,12 @@
 import logging
 import time
-from bmad.agents.core.message_bus import subscribe, publish
-from bmad.agents.core.supabase_context import save_context, get_context
-from bmad.agents.core.slack_notify import send_slack_message
-from bmad.agents.core.llm_client import ask_openai
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
+from bmad.agents.core.communication.message_bus import subscribe, publish
+from bmad.agents.core.data.supabase_context import save_context, get_context
+from integrations.slack.slack_notify import send_slack_message
+from bmad.agents.core.ai.llm_client import ask_openai
+from bmad.agents.core.ai.confidence_scoring import confidence_scoring
 
 class TestEngineerAgent:
     def __init__(self):
@@ -34,7 +37,7 @@ def on_test_generation_requested(event):
     result = ask_openai(prompt)
     print(f"[TestEngineer][LLM Tests automatisch]: {result}")
 
-from bmad.agents.core.message_bus import subscribe
+from bmad.agents.core.communication.message_bus import subscribe
 subscribe("test_generation_requested", on_test_generation_requested)
 
 

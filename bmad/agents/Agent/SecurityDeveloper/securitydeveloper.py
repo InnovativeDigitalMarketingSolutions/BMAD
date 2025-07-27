@@ -1,8 +1,12 @@
-from bmad.agents.core.slack_notify import send_slack_message
+import sys, os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import logging
 import time
-from bmad.agents.core.llm import ask_openai
-from bmad.agents.core.message_bus import subscribe, publish
+from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.data.supabase_context import save_context, get_context
+from bmad.agents.core.ai.llm_client import ask_openai
+from bmad.agents.core.ai.confidence_scoring import confidence_scoring
+from integrations.slack.slack_notify import send_slack_message
 
 def notify_security_event(event):
     send_slack_message(f"[SecurityDeveloper] Security event: {event}")
@@ -38,7 +42,7 @@ def handle_security_findings_reported(event):
     # HITL wordt afgehandeld door orchestrator
     pass
 
-from bmad.agents.core.message_bus import subscribe
+from bmad.agents.core.communication.message_bus import subscribe
 subscribe("security_review_requested", on_security_review_requested)
 subscribe("summarize_incidents", on_summarize_incidents)
 subscribe("security_scan_started", handle_security_scan_started)

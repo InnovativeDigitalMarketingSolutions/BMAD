@@ -181,7 +181,7 @@ class TestOrchestratorWorkflow:
     def test_orchestrator_workflow_import(self):
         """Test that orchestrator workflow module can be imported."""
         try:
-            import bmad.agents.Agent.Orchestrator.test_orchestrator_workflow
+            import tests.orchestrator.test_orchestrator_workflow
             assert True
         except ImportError as e:
             pytest.skip(f"orchestrator workflow module not available: {e}")
@@ -189,10 +189,10 @@ class TestOrchestratorWorkflow:
     def test_orchestrator_workflow_functions(self):
         """Test orchestrator workflow functions."""
         try:
-            from bmad.agents.Agent.Orchestrator.test_orchestrator_workflow import test_workflow
+            from tests.orchestrator.test_orchestrator_workflow import test_automated_deployment
             
             # Test workflow function
-            result = test_workflow()
+            result = test_automated_deployment()
             assert result is not None
             
         except ImportError as e:
