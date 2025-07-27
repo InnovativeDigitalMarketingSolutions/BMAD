@@ -15,7 +15,16 @@ except ImportError:
     SLACK_AVAILABLE = False
 
 try:
-    from .webhook_notify import send_webhook_message, send_webhook_hitl_alert, send_webhook_workflow_notification
+    from .webhook_notify import (
+        send_webhook_message, 
+        send_webhook_hitl_alert, 
+        send_webhook_workflow_notification,
+        send_webhook_error_notification,
+        send_webhook_success_notification,
+        send_webhook_deployment_notification,
+        test_webhook_connection,
+        get_webhook_status
+    )
     WEBHOOK_AVAILABLE = True
 except ImportError:
     WEBHOOK_AVAILABLE = False
@@ -96,9 +105,88 @@ class NotificationManager:
             logger.error(f"Failed to send workflow notification: {e}")
             return False
     
+    def send_error_notification(self, error_message: str, context: Optional[str] = None,
+                               channel: Optional[str] = None, **kwargs) -> bool:
+        """Send an error notification."""
+        try:
+            if self.notification_type == NotificationType.WEBHOOK:
+                return send_webhook_error_notification(error_message, context, channel, **kwargs)
+            elif self.notification_type == NotificationType.SLACK:
+                # For Slack, use regular message with error formatting
+                text = f"❌ **Error**: {error_message}"
+                if context:
+                    text += f"\n**Context**: {context}"
+                return send_slack_message(text, channel=channel, use_api=False, **kwargs)
+            else:
+                logger.error(f"Unknown notification type: {self.notification_type}")
+                return False
+        except Exception as e:
+            logger.error(f"Failed to send error notification: {e}")
+            return False
+    
+    def send_success_notification(self, success_message: str, context: Optional[str] = None,
+                                 channel: Optional[str] = None, **kwargs) -> bool:
+        """Send a success notification."""
+        try:
+            if self.notification_type == NotificationType.WEBHOOK:
+                return send_webhook_success_notification(success_message, context, channel, **kwargs)
+            elif self.notification_type == NotificationType.SLACK:
+                # For Slack, use regular message with success formatting
+                text = f"✅ **Success**: {success_message}"
+                if context:
+                    text += f"\n**Context**: {context}"
+                return send_slack_message(text, channel=channel, use_api=False, **kwargs)
+            else:
+                logger.error(f"Unknown notification type: {self.notification_type}")
+                return False
+        except Exception as e:
+            logger.error(f"Failed to send success notification: {e}")
+            return False
+    
+    def send_deployment_notification(self, deployment_name: str, status: str,
+                                   environment: Optional[str] = None,
+                                   channel: Optional[str] = None, **kwargs) -> bool:
+        """Send a deployment notification."""
+        try:
+            if self.notification_type == NotificationType.WEBHOOK:
+                return send_webhook_deployment_notification(deployment_name, status, environment, channel, **kwargs)
+            elif self.notification_type == NotificationType.SLACK:
+                # For Slack, use regular message with deployment formatting
+                status_emoji = {
+                    "started": "🚀",
+                    "completed": "✅",
+                    "failed": "❌",
+                    "rolled_back": "🔄"
+                }.get(status, "ℹ️")
+                text = f"{status_emoji} **Deployment**: {deployment_name} - {status}"
+                if environment:
+                    text += f"\n**Environment**: {environment}"
+                return send_slack_message(text, channel=channel, use_api=False, **kwargs)
+            else:
+                logger.error(f"Unknown notification type: {self.notification_type}")
+                return False
+        except Exception as e:
+            logger.error(f"Failed to send deployment notification: {e}")
+            return False
+    
+    def test_connection(self, channel: Optional[str] = None) -> bool:
+        """Test the notification system connection."""
+        try:
+            if self.notification_type == NotificationType.WEBHOOK:
+                return test_webhook_connection(channel)
+            elif self.notification_type == NotificationType.SLACK:
+                # For Slack, send a test message
+                return send_slack_message("🧪 Test message from BMAD", channel=channel, use_api=False)
+            else:
+                logger.error(f"Unknown notification type: {self.notification_type}")
+                return False
+        except Exception as e:
+            logger.error(f"Failed to test connection: {e}")
+            return False
+    
     def get_status(self) -> Dict[str, Any]:
         """Get the status of the notification system."""
-        return {
+        status = {
             "type": self.notification_type.value,
             "slack_available": SLACK_AVAILABLE,
             "webhook_available": WEBHOOK_AVAILABLE,
@@ -106,6 +194,16 @@ class NotificationManager:
             "webhook_configured": bool(os.getenv("WEBHOOK_URL")),
             "default_type": self.default_type.value
         }
+        
+        # Add webhook-specific status if available
+        if WEBHOOK_AVAILABLE:
+            try:
+                webhook_status = get_webhook_status()
+                status["webhook_details"] = webhook_status
+            except Exception as e:
+                status["webhook_details"] = {"error": str(e)}
+        
+        return status
 
 # Global notification manager instance
 _notification_manager = None
@@ -146,4 +244,53 @@ def send_workflow_notification(workflow_name: str, status: str, channel: Optiona
     else:
         manager = get_notification_manager()
     
-    return manager.send_workflow_notification(workflow_name, status, channel=channel, **kwargs) 
+    return manager.send_workflow_notification(workflow_name, status, channel=channel, **kwargs)
+
+def send_error_notification(error_message: str, context: Optional[str] = None,
+                           channel: Optional[str] = None,
+                           notification_type: Optional[NotificationType] = None, **kwargs) -> bool:
+    """Send an error notification using the global manager."""
+    if notification_type:
+        manager = NotificationManager(notification_type)
+    else:
+        manager = get_notification_manager()
+    
+    return manager.send_error_notification(error_message, context, channel=channel, **kwargs)
+
+def send_success_notification(success_message: str, context: Optional[str] = None,
+                             channel: Optional[str] = None,
+                             notification_type: Optional[NotificationType] = None, **kwargs) -> bool:
+    """Send a success notification using the global manager."""
+    if notification_type:
+        manager = NotificationManager(notification_type)
+    else:
+        manager = get_notification_manager()
+    
+    return manager.send_success_notification(success_message, context, channel=channel, **kwargs)
+
+def send_deployment_notification(deployment_name: str, status: str,
+                                environment: Optional[str] = None,
+                                channel: Optional[str] = None,
+                                notification_type: Optional[NotificationType] = None, **kwargs) -> bool:
+    """Send a deployment notification using the global manager."""
+    if notification_type:
+        manager = NotificationManager(notification_type)
+    else:
+        manager = get_notification_manager()
+    
+    return manager.send_deployment_notification(deployment_name, status, environment, channel=channel, **kwargs)
+
+def test_notification_connection(channel: Optional[str] = None,
+                                notification_type: Optional[NotificationType] = None) -> bool:
+    """Test notification connection using the global manager."""
+    if notification_type:
+        manager = NotificationManager(notification_type)
+    else:
+        manager = get_notification_manager()
+    
+    return manager.test_connection(channel)
+
+def get_notification_status() -> Dict[str, Any]:
+    """Get notification system status using the global manager."""
+    manager = get_notification_manager()
+    return manager.get_status() 
