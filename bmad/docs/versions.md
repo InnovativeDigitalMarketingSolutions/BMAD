@@ -6,16 +6,80 @@
 - [Version 2](https://github.com/bmadcode/BMad-Method/tree/V2)
 - [Version 1](https://github.com/bmadcode/BMad-Method/tree/V1)
 
-## Current Version: V4 - Alpha
+## Current Version: V4 - Agent Optimization & Mobile Development
 
-Guiding Principles of V4:
+### V4 Major Features
 
-- Simple to understand, install and start using
-- Support Greenfield and Brownfield Scenarios
-- Greater configurability and more scenarios for usage - but kept out of the main package to maintain simplicity
-- Helpers for installers and web builders that will work with any OS and IDE easily
-- Align all agents to be the same for IDE and Web, without losing the power of the web versions, or the leanness of the files in the IDE to reduce context
-- Further improvements to the two most important agents - the SM and DEV
+**Complete Agent Optimization:**
+- All agents optimized to class-based Python architecture
+- Comprehensive CLI interfaces for all agents
+- Advanced resource management and history tracking
+- Performance monitoring and metrics collection
+- Inter-agent collaboration and event-driven communication
+- Multi-format export capabilities (Markdown, CSV, JSON)
+
+**Advanced Services Integration:**
+- Performance Monitor: Real-time performance tracking and optimization
+- Policy Engine: Rule-based decision making and access control
+- Message Bus: Event-driven inter-agent communication
+- Test Sprites: Component testing and quality assurance
+- Supabase Context: Persistent context storage and sharing
+- LLM Client: Advanced AI integration capabilities
+- Confidence Scoring: Quality assessment and optimization
+
+**Mobile Development Capabilities:**
+- **MobileDeveloper Agent**: New cross-platform mobile development specialist
+  - React Native development
+  - Flutter development
+  - iOS native development (Swift/SwiftUI)
+  - Android native development (Kotlin/Jetpack Compose)
+  - PWA development
+  - Hybrid development (Cordova/PhoneGap)
+  - App store deployment
+  - Performance optimization
+  - Cross-platform testing
+
+**Enhanced Frontend Development:**
+- **Shadcn/ui Integration**: Modern UI component library integration
+- **Enhanced UXUIDesigner**: Mobile UX capabilities and design system management
+- **AccessibilityAgent**: WCAG compliance with Shadcn integration
+- **Cross-Platform Support**: Comprehensive cross-platform development
+
+**Advanced Orchestration:**
+- **Enhanced Orchestrator**: Advanced workflow management with HITL capabilities
+- **Mobile Development Workflows**: Complete mobile app development workflows
+- **Intelligent Task Assignment**: AI-powered task assignment and load balancing
+- **Human-in-the-Loop (HITL)**: Approval workflows and decision points
+- **Performance Optimization**: Real-time performance monitoring and optimization
+
+**Specialized Development Agents:**
+- **AiDeveloper**: AI/ML development with Prefect workflows
+- **SecurityDeveloper**: Security implementation and compliance
+- **DataEngineer**: Data pipeline development and management
+- **DevOpsInfra**: CI/CD pipeline and infrastructure management
+- **ReleaseManager**: Release planning and deployment coordination
+- **Retrospective**: Process improvement and feedback analysis
+- **FeedbackAgent**: Feedback collection and sentiment analysis
+- **RnD**: Research and development with innovation generation
+- **DocumentationAgent**: Technical documentation and Figma integration
+
+**Comprehensive Documentation:**
+- Complete agent optimization guide
+- Enhanced expansion packs documentation
+- Updated core architecture documentation
+- Mobile development workflows and templates
+- Advanced services integration documentation
+
+### V4 Guiding Principles
+
+- **Preserve Original Functionality**: All original agent functionality preserved and enhanced
+- **Class-Based Architecture**: Modern Python class structure for all agents
+- **Comprehensive CLI**: Full command-line interface for all agents
+- **Resource Management**: Structured template and data file management
+- **Performance Monitoring**: Real-time performance tracking and optimization
+- **Inter-Agent Collaboration**: Seamless agent-to-agent communication
+- **Cross-Platform Development**: Comprehensive mobile and web development support
+- **Advanced Orchestration**: Intelligent workflow management with HITL capabilities
 
 ## V3
 
