@@ -43,6 +43,8 @@ METRICS = {
 
 METRICS_PATH = "metrics.json"
 
+EVENT_LOG_PATH = "event_log.json"
+
 def save_metrics():
     with open(METRICS_PATH, "w", encoding="utf-8") as f:
         json.dump(METRICS, f, indent=2)
@@ -974,7 +976,6 @@ subscribe('hitl_decision', handle_hitl_decision)
 
 # --- Productieklare agent-handler voorbeeld ---
 # Plaats dit in de relevante agent (bijv. DevOpsInfra, TestEngineer, etc.)
-from bmad.agents.core.communication.message_bus import subscribe
 
 def handle_build_triggered(event):
     logging.info("[DevOpsInfra] Build gestart...")
@@ -982,8 +983,6 @@ def handle_build_triggered(event):
     time.sleep(2)
     publish("tests_requested", {"desc": "Tests uitvoeren"})
     logging.info("[DevOpsInfra] Build afgerond, tests_requested gepubliceerd.")
-
-subscribe("build_triggered", handle_build_triggered)
 
 # Herhaal dit patroon voor andere events en agents.
 

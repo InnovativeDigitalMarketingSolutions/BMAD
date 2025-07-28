@@ -1,8 +1,7 @@
-import os
+import os, json
 from typing import Any, Dict, Optional
 from supabase import create_client, Client
 from datetime import datetime, timedelta
-import json
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://sjdupcpozyaipljqpyrc.supabase.co")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "your-key")

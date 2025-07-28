@@ -10,7 +10,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 from bmad.agents.core.communication.message_bus import publish, subscribe
 from bmad.agents.core.data.supabase_context import save_context, get_context
-from bmad.agents.core.ai.llm_client import ask_openai_with_confidence as ask_openai
+from bmad.agents.core.ai.llm_client import ask_openai_with_confidence
 from bmad.agents.core.ai.confidence_scoring import confidence_scoring, create_review_request, format_confidence_message
 from bmad.projects.project_manager import project_manager
 from dotenv import load_dotenv
@@ -159,15 +159,15 @@ def create_bmad_frontend_story():
         """
     
     print("\n🔄 ProductOwner aan het werk...")
-    result = ask_openai(prompt)
+    result = ask_openai_with_confidence(prompt)
     
     print("\n🎯 User Stories:")
     print("=" * 50)
-    print(result)
+    print(result["answer"])
     print("=" * 50)
     
     # Sla de user stories op in project context
-    project_manager.add_user_story(result, "high")
+    project_manager.add_user_story(result["answer"], "high")
     
     # Publiceer event voor andere agents
     publish("user_stories_created", {
@@ -194,10 +194,10 @@ def create_user_story(requirement):
         "requirement": requirement
     }
     
-    result = ask_openai(prompt, context=context)
+    result = ask_openai_with_confidence(prompt, context=context)
     print(f"🎯 User Story voor: {requirement}")
     print("=" * 50)
-    print(result)
+    print(result["answer"])
     print("=" * 50)
 
 def show_bmad_vision():
@@ -289,8 +289,8 @@ def on_user_story_requested(event):
     requirement = event.get("requirement", "Onbekende requirement")
     context = event.get("context", "")
     prompt = f"Schrijf een user story in Gherkin-formaat voor de volgende requirement: {requirement}. Context: {context}."
-    result = ask_openai(prompt)
-    print(f"[ProductOwner][LLM User Story automatisch]: {result}")
+    result = ask_openai_with_confidence(prompt)
+    print(f"[ProductOwner][LLM User Story automatisch]: {result['answer']}")
 
 
 def on_feedback_sentiment_analyzed(event):
@@ -300,8 +300,8 @@ def on_feedback_sentiment_analyzed(event):
     if sentiment == "negatief":
         prompt = f"Schrijf een user story voor een verbetering op basis van deze negatieve feedback: '{feedback}'. Motivatie: {motivatie}. Geef alleen de user story en acceptatiecriteria, geen uitleg."
         structured_output = '{"user_story": "Als ... wil ik ... zodat ...", "acceptatiecriteria": ["...", "..."]}'
-        result = ask_openai(prompt, structured_output=structured_output)
-        print(f"[ProductOwner][LLM Verbeteruserstory]: {result}")
+        result = ask_openai_with_confidence(prompt, structured_output=structured_output)
+        print(f"[ProductOwner][LLM Verbeteruserstory]: {result['answer']}")
 
 
 def handle_feature_planned(event):

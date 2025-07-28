@@ -10,14 +10,11 @@ import asyncio
 import logging
 import time
 import json
+import os
 from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
 from enum import Enum
-import os
 from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
 
 # Import existing BMAD core modules
 from .advanced_workflow import WorkflowTask, WorkflowDefinition, WorkflowStatus
@@ -31,6 +28,9 @@ from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_e
 from integrations.prefect.prefect_workflow import PrefectWorkflowOrchestrator, PrefectWorkflowConfig
 from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor
+
+# Load environment variables
+load_dotenv()
 
 logger = logging.getLogger(__name__)
 
