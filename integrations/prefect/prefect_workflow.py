@@ -17,6 +17,7 @@ from prefect import flow, task, get_run_logger
 from prefect.artifacts import create_markdown_artifact
 from prefect.context import get_run_context
 from prefect.server.schemas.schedules import CronSchedule
+from prefect.deployments import Deployment
 from bmad.agents.core.communication.message_bus import publish, subscribe
 from bmad.agents.core.ai.confidence_scoring import confidence_scoring
 
@@ -175,25 +176,24 @@ class PrefectWorkflowOrchestrator:
                     description=f"Error from {task_config.agent_name} task"
                 )
         
-        # Create final workflow artifact
-        success_count = sum(1 for r in results.values() if r.get('status') != 'failed')
-        total_count = len(results)
-        
+        # Create final summary artifact
         create_markdown_artifact(
             key=f"{workflow_name}-summary",
             markdown=f"""
 # Workflow Summary: {workflow_name}
 
-**Status**: {'✅ Success' if success_count == total_count else '⚠️ Partial Success' if success_count > 0 else '❌ Failed'}
-**Tasks Completed**: {success_count}/{total_count}
 **Environment**: {workflow_context['environment']}
 **Run ID**: {workflow_context['run_id']}
 
 ## Task Results:
-{chr(10).join([f"- **{task}**: {'✅ Success' if result.get('status') != 'failed' else '❌ Failed'}" for task, result in results.items()])}
+{chr(10).join([f"- **{task_name}**: {'✅ Success' if result.get('status') != 'failed' else '❌ Failed'}" for task_name, result in results.items()])}
             """,
             description=f"Summary of {workflow_name} workflow execution"
         )
+        
+        # Calculate success metrics
+        total_count = len(results)
+        success_count = sum(1 for result in results.values() if result.get('status') != 'failed')
         
         logger.info(f"Workflow {workflow_name} completed. Success: {success_count}/{total_count}")
         
