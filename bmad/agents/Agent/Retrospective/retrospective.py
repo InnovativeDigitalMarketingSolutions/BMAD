@@ -1,4 +1,5 @@
-import sys, os
+import sys
+import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import argparse
 import logging
@@ -7,7 +8,6 @@ import csv
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Any
-import asyncio
 import time
 
 from bmad.agents.core.communication.message_bus import publish, subscribe
@@ -16,7 +16,6 @@ from bmad.agents.core.agent.agent_performance_monitor import get_performance_mon
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from bmad.agents.core.data.supabase_context import save_context, get_context
 from bmad.agents.core.ai.llm_client import ask_openai
-from bmad.agents.core.ai.confidence_scoring import confidence_scoring
 from integrations.slack.slack_notify import send_slack_message
 
 # Configure logging
@@ -621,7 +620,7 @@ Retrospective Agent Commands:
         retro_result = self.conduct_retrospective("Sprint 15", 8)
         
         # Analyze feedback
-        analysis_result = self.analyze_feedback()
+        self.analyze_feedback()
         
         # Create action plan
         action_plan_result = self.create_action_plan(retro_result)
@@ -660,14 +659,14 @@ Retrospective Agent Commands:
 
     def summarize_retro(self, feedback_list: List[str]):
         """Summarize retrospective feedback with enhanced functionality."""
-        prompt = f"Vat de volgende retro-feedback samen in maximaal 3 bullets:\n" + "\n".join(feedback_list)
+        prompt = "Vat de volgende retro-feedback samen in maximaal 3 bullets:\n" + "\n".join(feedback_list)
         result = ask_openai(prompt)
         logger.info(f"[Retrospective][LLM Retro-samenvatting]: {result}")
         return result
 
     def generate_retro_actions(self, feedback_list: List[str]):
         """Generate retrospective actions with enhanced functionality."""
-        prompt = f"Bedenk 3 concrete verbeteracties op basis van deze retro-feedback:\n" + "\n".join(feedback_list)
+        prompt = "Bedenk 3 concrete verbeteracties op basis van deze retro-feedback:\n" + "\n".join(feedback_list)
         result = ask_openai(prompt)
         logger.info(f"[Retrospective][LLM Actiepunten]: {result}")
         return result

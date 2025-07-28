@@ -1,4 +1,5 @@
-import sys, os
+import sys
+import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import argparse
 import logging
@@ -6,8 +7,7 @@ import json
 import csv
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any
-import asyncio
+from typing import Dict, Optional, Any
 import time
 import hashlib
 
@@ -16,8 +16,6 @@ from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor, MetricType
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from bmad.agents.core.data.supabase_context import save_context, get_context
-from bmad.agents.core.ai.llm_client import ask_openai
-from bmad.agents.core.ai.confidence_scoring import confidence_scoring
 from integrations.slack.slack_notify import send_slack_message
 
 # Configure logging
@@ -735,10 +733,10 @@ RnD Agent Commands:
         })
         
         # Conduct research
-        research_result = self.conduct_research("AI-powered automation", "Technology Research")
+        self.conduct_research("AI-powered automation", "Technology Research")
         
         # Design experiment
-        experiment_design = self.design_experiment("AI Automation Pilot", "AI automation will improve efficiency by 30%")
+        self.design_experiment("AI Automation Pilot", "AI automation will improve efficiency by 30%")
         
         # Run experiment
         experiment_results = self.run_experiment("exp_12345", "AI Automation Pilot")

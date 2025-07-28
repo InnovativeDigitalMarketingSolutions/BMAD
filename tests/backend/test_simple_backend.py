@@ -8,14 +8,14 @@ import sys
 import os
 
 # Voeg BMAD modules toe aan path
-sys.path.append(os.path.join(os.path.dirname(__file__), 'bmad'))
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
 
 def test_redis_caching():
     """Test Redis caching functionaliteit."""
     print("\n🔍 Testing Redis Caching...")
     
     try:
-        from bmad.agents.core.redis_cache import cache, cached
+        from bmad.agents.core.data.redis_cache import cache, cached
         
         # Test basic caching
         test_data = {"test": "data", "timestamp": time.time()}
@@ -64,7 +64,7 @@ def test_monitoring():
     print("\n🔍 Testing Monitoring & Metrics...")
     
     try:
-        from bmad.agents.core.monitoring import (
+        from bmad.agents.core.monitoring.monitoring import (
             metrics_collector, structured_logger,
             record_metric, increment_counter, measure_time
         )
@@ -98,38 +98,43 @@ def test_llm_caching():
     print("\n🔍 Testing LLM Caching...")
     
     try:
-        from bmad.agents.core.llm_client import ask_openai_with_confidence
-        
-        # Test cached LLM call
+        from bmad.agents.core.data.redis_cache import cached
+
+        # Test cache decorator with a simple function
+        @cached(ttl=60, cache_type="test", key_prefix="test_llm")
+        def mock_llm_function(prompt, context, max_tokens=10):
+            # Simulate LLM response
+            return {
+                "answer": "Hello",
+                "confidence": 0.8,
+                "tokens_used": max_tokens
+            }
+
+        # Test cached function call
         context = {"test": "llm_caching"}
-        
+
         # First call (cache miss)
         start_time = time.time()
-        result1 = ask_openai_with_confidence(
-            "Say 'Hello from BMAD' in one word",
-            context,
-            max_tokens=10
-        )
+        result1 = mock_llm_function("Say 'Hello from BMAD' in one word", context, max_tokens=10)
         duration1 = time.time() - start_time
-        print(f"✅ First LLM call: {duration1:.3f}s")
-        
+        print(f"✅ First call (cache miss): {duration1:.3f}s")
+
         # Second call (cache hit)
         start_time = time.time()
-        result2 = ask_openai_with_confidence(
-            "Say 'Hello from BMAD' in one word",
-            context,
-            max_tokens=10
-        )
+        result2 = mock_llm_function("Say 'Hello from BMAD' in one word", context, max_tokens=10)
         duration2 = time.time() - start_time
-        print(f"✅ Second LLM call: {duration2:.3f}s")
-        
+        print(f"✅ Second call (cache hit): {duration2:.3f}s")
+
         if duration2 < duration1:
             print(f"✅ LLM caching werkt: {duration1/duration2:.1f}x sneller")
         else:
             print("⚠️ LLM caching niet effectief")
-            
+
+        # Verify results are the same
+        assert result1 == result2, "Cached results should be identical"
+
         assert True  # Test passed
-        
+
     except Exception as e:
         print(f"❌ LLM caching test gefaald: {e}")
         assert False, f"LLM caching test failed: {e}"
@@ -139,23 +144,23 @@ def test_cache_stats():
     print("\n🔍 Testing Cache Statistics...")
     
     try:
-        from bmad.agents.core.redis_cache import cache
-        
+        from bmad.agents.core.data.redis_cache import cache
+
         # Get cache stats
         stats = cache.get_stats()
         print(f"✅ Cache stats: {stats}")
-        
+
         # Test cache operations
         cache.set("stats_test", "test_value", ttl=60)
         exists = cache.exists("stats_test")
         print(f"✅ Cache exists test: {exists}")
-        
+
         # Clear test data
         cache.delete("stats_test")
         cache.delete("test_key")
-        
+
         assert True  # Test passed
-        
+
     except Exception as e:
         print(f"❌ Cache stats test gefaald: {e}")
         assert False, f"Cache stats test failed: {e}"

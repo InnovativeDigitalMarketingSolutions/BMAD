@@ -5,7 +5,7 @@ This template provides a comprehensive ETL pipeline structure.
 """
 
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List
 from datetime import datetime, timedelta
 import pandas as pd
 import numpy as np
@@ -258,7 +258,7 @@ class DataValidator:
         for rule in rules:
             rule_type = rule.get("type")
             column = rule.get("column")
-            condition = rule.get("condition")
+            rule.get("condition")
             
             if rule_type == "range":
                 min_val = rule.get("min")

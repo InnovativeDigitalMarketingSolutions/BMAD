@@ -1,9 +1,7 @@
 # Test Template voor FullstackDeveloper
 
 import pytest
-from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock
-import json
+from unittest.mock import patch
 from datetime import datetime
 
 # Import your FastAPI app

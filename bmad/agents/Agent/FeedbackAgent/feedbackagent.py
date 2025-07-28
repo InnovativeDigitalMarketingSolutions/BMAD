@@ -1,4 +1,5 @@
-import sys, os
+import sys
+import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import argparse
 import logging
@@ -7,7 +8,6 @@ import csv
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Any
-import asyncio
 import time
 import hashlib
 
@@ -17,7 +17,6 @@ from bmad.agents.core.agent.agent_performance_monitor import get_performance_mon
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from bmad.agents.core.data.supabase_context import save_context, get_context
 from bmad.agents.core.ai.llm_client import ask_openai
-from bmad.agents.core.ai.confidence_scoring import confidence_scoring
 from integrations.slack.slack_notify import send_slack_message
 
 # Configure logging
@@ -685,13 +684,13 @@ Feedback Agent Commands:
         })
         
         # Collect feedback
-        feedback_result = self.collect_feedback("The new dashboard is much more user-friendly", "User Survey")
+        self.collect_feedback("The new dashboard is much more user-friendly", "User Survey")
         
         # Analyze sentiment
         sentiment_result = self.analyze_sentiment("The new dashboard is much more user-friendly")
         
         # Summarize feedback
-        summary_result = self.summarize_feedback()
+        self.summarize_feedback()
         
         # Publish completion
         publish("feedback_analysis_completed", {
@@ -742,7 +741,7 @@ Feedback Agent Commands:
 
     def summarize_feedback_original(self, feedback_list: List[str]):
         """Summarize feedback with enhanced functionality."""
-        prompt = f"Vat de volgende feedback samen in maximaal 3 bullets:\n" + "\n".join(feedback_list)
+        prompt = "Vat de volgende feedback samen in maximaal 3 bullets:\n" + "\n".join(feedback_list)
         result = ask_openai(prompt)
         logger.info(f"[FeedbackAgent][LLM Samenvatting]: {result}")
         return result

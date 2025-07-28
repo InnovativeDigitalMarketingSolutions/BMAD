@@ -4,7 +4,7 @@ Notification Manager - Unified interface for Slack and Webhook notifications.
 
 import os
 import logging
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any
 from enum import Enum
 
 # Import notification systems

@@ -3,7 +3,8 @@ MobileDeveloper Agent - Geoptimaliseerde mobile development agent
 Handles mobile app development, cross-platform development, and mobile-specific features.
 """
 
-import sys, os
+import sys
+import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import logging
 import argparse
@@ -11,21 +12,17 @@ import json
 import csv
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any
-import asyncio
+from typing import Dict, Optional, Any
 import time
 import hashlib
-import threading
 from dotenv import load_dotenv
 
-from bmad.agents.core.communication.message_bus import publish, subscribe, get_events
+from bmad.agents.core.communication.message_bus import publish
 from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor, MetricType
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from bmad.agents.core.data.supabase_context import save_context, get_context
-from bmad.agents.core.ai.llm_client import ask_openai
-from bmad.agents.core.ai.confidence_scoring import confidence_scoring
-from integrations.slack.slack_notify import send_slack_message, send_human_in_loop_alert
+from integrations.slack.slack_notify import send_slack_message
 
 load_dotenv()
 
@@ -889,10 +886,10 @@ MobileDeveloper Agent Commands:
         app_result = self.create_app("MyMobileApp", "react-native", "business")
         
         # Build component
-        component_result = self.build_component("CustomButton", "react-native", "ui")
+        self.build_component("CustomButton", "react-native", "ui")
         
         # Optimize performance
-        optimization_result = self.optimize_performance("MyMobileApp", "general")
+        self.optimize_performance("MyMobileApp", "general")
         
         # Publish completion
         publish("mobile_development_completed", {

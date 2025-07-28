@@ -9,7 +9,7 @@ import os
 import json
 from typing import Dict, Any, Optional, List
 from pathlib import Path
-from bmad.agents.core.data.supabase_context import save_context, get_context
+from bmad.agents.core.data.supabase_context import save_context
 
 class ProjectManager:
     """

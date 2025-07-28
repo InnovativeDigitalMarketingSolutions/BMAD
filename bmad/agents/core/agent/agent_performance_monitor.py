@@ -5,7 +5,6 @@ Dit module biedt real-time performance monitoring, resource tracking, en intelli
 voor BMAD agents. Integreert met OpenTelemetry voor distributed tracing en metrics.
 """
 
-import asyncio
 import logging
 import time
 import json
@@ -14,13 +13,10 @@ import threading
 from typing import Dict, List, Any, Optional, Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from datetime import datetime, timedelta
+from datetime import timedelta
 from collections import defaultdict, deque
-import os
-from pathlib import Path
 
 # Import BMAD modules
-from integrations.opentelemetry.opentelemetry_tracing import BMADTracer, TraceLevel
 
 logger = logging.getLogger(__name__)
 
@@ -458,7 +454,7 @@ class PerformanceMonitor:
         recommendations = []
         
         current_metrics = summary["current_metrics"]
-        baseline_metrics = summary["baseline_metrics"]
+        summary["baseline_metrics"]
         
         # CPU recommendations
         if "cpu_usage" in current_metrics:

@@ -10,10 +10,9 @@ import asyncio
 import logging
 import time
 import json
-from typing import Dict, List, Any, Optional, Callable
+from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
 from enum import Enum
-from datetime import datetime
 import os
 from dotenv import load_dotenv
 
@@ -21,19 +20,17 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Import existing BMAD core modules
-from bmad.agents.core.communication.message_bus import publish, subscribe
-from bmad.agents.core.ai.confidence_scoring import confidence_scoring
-from .advanced_workflow import WorkflowTask, WorkflowDefinition, WorkflowStatus, TaskStatus
+from .advanced_workflow import WorkflowTask, WorkflowDefinition, WorkflowStatus
 
 # Import new repository integrations
 from integrations.langgraph.langgraph_workflow import LangGraphWorkflowOrchestrator
-from integrations.openrouter.openrouter_client import OpenRouterClient, LLMConfig, RoutingStrategy
+from integrations.openrouter.openrouter_client import OpenRouterClient, LLMConfig
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer, TracingConfig, TraceLevel
-from integrations.opa.opa_policy_engine import OPAPolicyEngine, PolicyRule, PolicyRequest
-from bmad.agents.core.policy.advanced_policy_engine import AdvancedPolicyEngine, get_advanced_policy_engine
+from integrations.opa.opa_policy_engine import OPAPolicyEngine, PolicyRequest
+from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.prefect.prefect_workflow import PrefectWorkflowOrchestrator, PrefectWorkflowConfig
-from bmad.agents.core.agent.test_sprites import TestSpriteLibrary, get_sprite_library
-from bmad.agents.core.agent.agent_performance_monitor import PerformanceMonitor, get_performance_monitor
+from bmad.agents.core.agent.test_sprites import get_sprite_library
+from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor
 
 logger = logging.getLogger(__name__)
 

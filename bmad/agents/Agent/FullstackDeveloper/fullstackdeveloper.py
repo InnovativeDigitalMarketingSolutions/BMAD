@@ -11,14 +11,13 @@ import textwrap
 import logging
 import time
 import json
-import csv
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Dict, Optional, Any
 import asyncio
 from dotenv import load_dotenv
 load_dotenv()
-import sys, os
+import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 
 from bmad.agents.core.communication.message_bus import publish, subscribe
@@ -26,8 +25,6 @@ from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor, MetricType
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from bmad.agents.core.data.supabase_context import save_context, get_context
-from bmad.agents.core.ai.llm_client import ask_openai
-from bmad.agents.core.ai.confidence_scoring import confidence_scoring
 from integrations.slack.slack_notify import send_slack_message
 
 # Configure logging
@@ -320,7 +317,7 @@ FullstackDeveloper Agent Commands:
 
     def handle_fullstack_development_requested(self, event):
         logger.info(f"Fullstack development requested: {event}")
-        story = event.get("story", "User Authentication")
+        event.get("story", "User Authentication")
         self.implement_story()
 
     async def handle_fullstack_development_completed(self, event):
@@ -389,7 +386,7 @@ FullstackDeveloper Agent Commands:
         print("=" * 60)
         
         # Haal architectuur op van de Architect
-        architecture = get_context("Architect", "frontend_architecture")
+        get_context("Architect", "frontend_architecture")
         
         print("📋 BMAD Dashboard Componenten:")
         print("=" * 40)

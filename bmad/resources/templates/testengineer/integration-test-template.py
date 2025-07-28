@@ -1,4 +1,3 @@
-import pytest
 
 """
 Integration test voor samenwerking tussen module_a en module_b.

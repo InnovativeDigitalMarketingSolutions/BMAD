@@ -7,9 +7,8 @@ Implementeert connection pooling met health checks en automatic reconnection.
 
 import os
 import logging
-import asyncio
 import time
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any
 from contextlib import asynccontextmanager
 import aiohttp
 import asyncpg

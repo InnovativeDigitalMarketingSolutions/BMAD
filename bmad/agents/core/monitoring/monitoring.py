@@ -5,12 +5,10 @@ Dit module biedt monitoring, metrics en observability voor BMAD agents.
 Implementeert Prometheus metrics, structured logging en health checks.
 """
 
-import os
 import time
 import json
 import logging
-import asyncio
-from typing import Dict, Any, Optional, List, Callable, Union
+from typing import Dict, Any, Optional, List, Callable
 from datetime import datetime, timedelta
 from dataclasses import dataclass, field
 from collections import defaultdict, deque

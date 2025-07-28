@@ -1,8 +1,8 @@
 # API Template voor FullstackDeveloper
 
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import List
 import jwt
 from datetime import datetime, timedelta
 
