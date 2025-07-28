@@ -122,7 +122,16 @@ class ClickUpIntegration:
         try:
             # Haal project mapping op
             project_scope = project_manager.get_project_scope(self.project_id)
-            project_mapping = get_context("clickup_projects", project_name, scope=project_scope)
+            project_mapping_result = get_context("clickup_projects", project_name, scope=project_scope)
+            
+            # Handle both list and dict return types from get_context
+            if isinstance(project_mapping_result, list) and project_mapping_result:
+                project_mapping = project_mapping_result[0]  # Take first item from list
+            elif isinstance(project_mapping_result, dict):
+                project_mapping = project_mapping_result
+            else:
+                project_mapping = None
+                
             if not project_mapping:
                 logger.error(f"Project mapping niet gevonden voor: {project_name}")
                 return None

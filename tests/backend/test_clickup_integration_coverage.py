@@ -123,7 +123,8 @@ class TestClickUpIntegration:
     @patch('integrations.clickup.clickup_integration.requests.post')
     @patch('integrations.clickup.clickup_integration.save_context')
     @patch('integrations.clickup.clickup_integration.publish')
-    def test_create_task_success(self, mock_publish, mock_save_context, mock_post):
+    @patch('integrations.clickup.clickup_integration.get_context')
+    def test_create_task_success(self, mock_get_context, mock_publish, mock_save_context, mock_post):
         """Test successful task creation."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
             with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
@@ -134,6 +135,12 @@ class TestClickUpIntegration:
                     "list_id": "list123"
                 }
                 mock_pm.get_project_scope.return_value = "test_scope"
+                
+                # Mock project mapping
+                mock_get_context.return_value = [{
+                    "project_name": "Test Project",
+                    "clickup_task_id": "project123"
+                }]
                 
                 # Mock successful API response
                 mock_response = MagicMock()
@@ -216,7 +223,8 @@ class TestClickUpIntegration:
     
     @patch('integrations.clickup.clickup_integration.requests.post')
     @patch('integrations.clickup.clickup_integration.save_context')
-    def test_sync_project_requirements_success(self, mock_save_context, mock_post):
+    @patch('integrations.clickup.clickup_integration.get_context')
+    def test_sync_project_requirements_success(self, mock_get_context, mock_save_context, mock_post):
         """Test successful project requirements sync."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
             with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
@@ -227,6 +235,12 @@ class TestClickUpIntegration:
                     "list_id": "list123"
                 }
                 mock_pm.get_project_scope.return_value = "test_scope"
+                
+                # Mock project mapping
+                mock_get_context.return_value = [{
+                    "project_name": "Test Project",
+                    "clickup_task_id": "project123"
+                }]
                 
                 # Mock successful API response
                 mock_response = MagicMock()
@@ -262,7 +276,8 @@ class TestClickUpIntegration:
     
     @patch('integrations.clickup.clickup_integration.requests.post')
     @patch('integrations.clickup.clickup_integration.save_context')
-    def test_sync_user_stories_success(self, mock_save_context, mock_post):
+    @patch('integrations.clickup.clickup_integration.get_context')
+    def test_sync_user_stories_success(self, mock_get_context, mock_save_context, mock_post):
         """Test successful user stories sync."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
             with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
@@ -273,6 +288,12 @@ class TestClickUpIntegration:
                     "list_id": "list123"
                 }
                 mock_pm.get_project_scope.return_value = "test_scope"
+                
+                # Mock project mapping
+                mock_get_context.return_value = [{
+                    "project_name": "Test Project",
+                    "clickup_task_id": "project123"
+                }]
                 
                 # Mock successful API response
                 mock_response = MagicMock()
@@ -359,7 +380,8 @@ class TestClickUpIntegration:
     @patch('integrations.clickup.clickup_integration.requests.post')
     @patch('integrations.clickup.clickup_integration.save_context')
     @patch('integrations.clickup.clickup_integration.publish')
-    def test_create_agent_task_success(self, mock_publish, mock_save_context, mock_post):
+    @patch('integrations.clickup.clickup_integration.get_context')
+    def test_create_agent_task_success(self, mock_get_context, mock_publish, mock_save_context, mock_post):
         """Test successful agent task creation."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
             with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
@@ -370,6 +392,12 @@ class TestClickUpIntegration:
                     "list_id": "list123"
                 }
                 mock_pm.get_project_scope.return_value = "test_scope"
+                
+                # Mock project mapping
+                mock_get_context.return_value = [{
+                    "project_name": "Test Project",
+                    "clickup_task_id": "project123"
+                }]
                 
                 # Mock successful API response
                 mock_response = MagicMock()
