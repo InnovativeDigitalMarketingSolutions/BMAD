@@ -9,9 +9,10 @@ import time
 from pathlib import Path
 from typing import Dict, List, Optional, Any
 from dotenv import load_dotenv
-load_dotenv()
 
 from bmad.agents.core.message_bus import publish
+
+load_dotenv()
 
 class ProjectManager:
     def __init__(self):

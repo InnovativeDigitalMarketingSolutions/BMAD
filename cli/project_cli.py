@@ -9,12 +9,13 @@ import argparse
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
-load_dotenv()
 
 # Add bmad to path
 sys.path.append(str(Path(__file__).parent.parent))
 
 from bmad.agents.core.project_manager import project_manager
+
+load_dotenv()
 
 def main():
     parser = argparse.ArgumentParser(description="BMAD Project Management CLI")

@@ -12,6 +12,7 @@ import argparse
 import json
 import sys
 import logging
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, Optional
 from dotenv import load_dotenv
@@ -19,15 +20,15 @@ from dotenv import load_dotenv
 # Add BMAD to path
 sys.path.append(str(Path(__file__).parent.parent))
 
-# Load environment variables
-load_dotenv()
-
 # Import BMAD modules
 from bmad.agents.core.integrated_workflow_orchestrator import (
     IntegratedWorkflowOrchestrator,
     AgentWorkflowConfig,
     IntegrationLevel
 )
+
+# Load environment variables
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(

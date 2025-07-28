@@ -1,22 +1,21 @@
-from flask import Flask, request, jsonify, make_response
+from flask import Flask, request, jsonify, make_response, abort
 import logging
 import time
 import os
 import requests
-from bmad.agents.core.message_bus import publish
 import hmac
 import hashlib
-from flask import abort
+import json
 from dotenv import load_dotenv
+
+from bmad.agents.core.message_bus import publish
+from bmad.agents.core.slack_notify import send_slack_message
+
 load_dotenv()
 
 app = Flask(__name__)
-import os
-import logging
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(level=getattr(logging, LOG_LEVEL), format="[%(levelname)s] %(message)s")
-
-from bmad.agents.core.slack_notify import send_slack_message
 
 # (Optioneel) Slack bot token en signing secret uit env vars
 SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
@@ -36,7 +35,6 @@ def verify_slack_signature(request):
     if not timestamp or not slack_signature:
         return False
     # Voorkom replay attacks (optioneel: timestamp check)
-    import time
     if abs(time.time() - int(timestamp)) > 60 * 5:
         logging.warning("[Slack] Request timestamp te oud.")
         return False
@@ -88,7 +86,6 @@ def slack_interactivity():
     payload = request.form.get('payload')
     if not payload:
         return make_response("No payload", 400)
-    import json
     data = json.loads(payload)
     user = data.get('user', {}).get('id')
     actions = data.get('actions', [])
