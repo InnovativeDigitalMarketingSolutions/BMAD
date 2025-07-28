@@ -18,10 +18,10 @@ from typing import Any, Dict, List
 import requests
 
 # BMAD imports
-sys.path.append(".")
-from bmad.agents.core.clickup_integration import ClickUpIntegration
-from bmad.agents.core.llm_client import ask_openai_with_confidence
+sys.path.append('.')
+from integrations.clickup.clickup_integration import ClickUpIntegration
 from bmad.agents.core.project_manager import ProjectManager
+from bmad.agents.core.llm_client import ask_openai_with_confidence
 
 
 class BMADClickUpWorkflow:

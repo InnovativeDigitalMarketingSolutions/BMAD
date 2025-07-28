@@ -5,19 +5,36 @@ Uitgebreide policy engine met complexe conditions, inheritance, composition,
 dynamic updates, en versioning. Bouwt voort op de basis OPA integratie.
 """
 
+import asyncio
 import json
 import logging
 import time
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import datetime, timedelta
 from enum import Enum
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
+from collections import defaultdict
 
 # Import BMAD modules
 from integrations.opa.opa_policy_engine import OPAPolicyEngine, PolicyRequest
 
 logger = logging.getLogger(__name__)
+
+@dataclass
+class PolicyResult:
+    """Result of policy evaluation."""
+    allowed: bool
+    reason: str
+    metadata: Optional[Dict[str, Any]] = None
+
+@dataclass
+class PolicyRequest:
+    """Request for policy evaluation."""
+    policy_id: str
+    context: Dict[str, Any]
+    user_id: Optional[str] = None
+    timestamp: Optional[datetime] = None
 
 class PolicyType(Enum):
     """Types of policies."""
@@ -130,34 +147,45 @@ class PolicyVersion:
 
 class AdvancedPolicyEngine:
     """
-    Advanced policy engine with complex conditions, inheritance, and dynamic updates.
+    Advanced Policy Engine voor BMAD agents.
+    Ondersteunt complexe policy evaluatie, inheritance, en dynamic updates.
     """
-
-    def __init__(self, opa_url: str = "http://localhost:8181", policies_dir: str = "policies"):
-        self.opa_engine = OPAPolicyEngine(opa_url=opa_url)
-        self.policies_dir = Path(policies_dir)
-        self.policies_dir.mkdir(exist_ok=True)
-
-        # Policy storage
-        self.policies: Dict[str, PolicyDefinition] = {}
-        self.policy_versions: Dict[str, List[PolicyVersion]] = {}
-        self.policy_cache: Dict[str, Any] = {}
-
-        # Condition evaluators
-        self.condition_evaluators: Dict[str, Callable] = {}
-        self._register_default_evaluators()
-
-        # Policy inheritance registry
-        self.inheritance_registry: Dict[str, List[str]] = {}
-
-        # Dynamic policy updates
-        self.policy_update_callbacks: List[Callable] = []
-        self.last_policy_sync = datetime.now()
-
-        # Load existing policies
-        self._load_policies()
-
-        logger.info("Advanced Policy Engine geïnitialiseerd")
+    
+    _instance = None
+    _initialized = False
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    
+    def __init__(self):
+        if not self._initialized:
+            self.policies: Dict[str, Dict[str, Any]] = {}
+            self.policy_cache: Dict[str, Any] = {}
+            self.evaluation_cache: Dict[str, Any] = {}
+            self.audit_log: List[Dict[str, Any]] = []
+            self.performance_metrics: Dict[str, List[float]] = defaultdict(list)
+            
+            # Lazy loading flags
+            self._policies_loaded = False
+            self._default_policies_created = False
+            
+            # Initialize basic structure without loading policies
+            logger.info("Advanced Policy Engine geïnitialiseerd (lazy loading)")
+            self._initialized = True
+    
+    def _ensure_policies_loaded(self):
+        """Lazy load policies only when needed."""
+        if not self._policies_loaded:
+            self._load_policies()
+            self._policies_loaded = True
+    
+    def _ensure_default_policies_created(self):
+        """Lazy create default policies only when needed."""
+        if not self._default_policies_created:
+            self.create_default_policies()
+            self._default_policies_created = True
 
     def _register_default_evaluators(self):
         """Register default condition evaluators."""
@@ -459,100 +487,105 @@ class AdvancedPolicyEngine:
             except Exception as e:
                 logger.error(f"Failed to load policy from {policy_file}: {e}")
 
-    async def evaluate_policy(self, policy_id: str, request: PolicyRequest) -> PolicyEvaluationResult:
-        """Evaluate a specific policy."""
-        if policy_id not in self.policies:
-            return PolicyEvaluationResult(
-                policy_id=policy_id,
-                rule_id="",
-                allowed=False,
-                reason=f"Policy {policy_id} not found",
-                conditions_met=[],
-                conditions_failed=[],
-                severity=PolicySeverity.HIGH,
-                timestamp=datetime.now()
-            )
-
-        policy = self.policies[policy_id]
-
-        # Check if policy is active
-        if policy.status != PolicyStatus.ACTIVE:
-            return PolicyEvaluationResult(
-                policy_id=policy_id,
-                rule_id="",
-                allowed=False,
-                reason=f"Policy {policy_id} is not active (status: {policy.status.value})",
-                conditions_met=[],
-                conditions_failed=[],
-                severity=PolicySeverity.MEDIUM,
-                timestamp=datetime.now()
-            )
-
-        # Check expiration
-        if policy.expires_at and datetime.now() > policy.expires_at:
-            return PolicyEvaluationResult(
-                policy_id=policy_id,
-                rule_id="",
-                allowed=False,
-                reason=f"Policy {policy_id} has expired",
-                conditions_met=[],
-                conditions_failed=[],
-                severity=PolicySeverity.HIGH,
-                timestamp=datetime.now()
-            )
-
-        # Evaluate rules in priority order
-        sorted_rules = sorted(policy.rules, key=lambda r: r.priority, reverse=True)
-
-        for rule in sorted_rules:
-            if not rule.enabled:
-                continue
-
-            # Evaluate conditions
-            conditions_met = []
-            conditions_failed = []
-
-            for condition in rule.conditions:
-                if not condition.enabled:
-                    continue
-
-                evaluator = self.condition_evaluators.get(condition.condition_type)
-                if evaluator:
-                    if evaluator(condition, request.context):
-                        conditions_met.append(condition.condition_id)
-                    else:
-                        conditions_failed.append(condition.condition_id)
-                else:
-                    conditions_failed.append(condition.condition_id)
-
-            # If all conditions are met, apply the rule
-            if not conditions_failed:
-                allowed = "allow" in rule.actions
-                reason = f"Rule {rule.rule_name} applied successfully"
-
-                return PolicyEvaluationResult(
-                    policy_id=policy_id,
-                    rule_id=rule.rule_id,
-                    allowed=allowed,
-                    reason=reason,
-                    conditions_met=conditions_met,
-                    conditions_failed=conditions_failed,
-                    severity=max([c.severity for c in rule.conditions], default=PolicySeverity.MEDIUM),
-                    timestamp=datetime.now(),
-                    metadata={"rule_name": rule.rule_name, "actions": rule.actions}
+    async def evaluate_policy(self, policy_id: str, context: Dict[str, Any]) -> PolicyResult:
+        """
+        Evalueer een policy met lazy loading en performance monitoring.
+        
+        Args:
+            policy_id: Policy ID om te evalueren
+            context: Context data voor evaluatie
+            
+        Returns:
+            PolicyResult met evaluatie resultaat
+        """
+        start_time = time.time()
+        
+        try:
+            # Lazy load policies if needed
+            self._ensure_policies_loaded()
+            self._ensure_default_policies_created()
+            
+            if policy_id not in self.policies:
+                logger.warning(f"Policy {policy_id} niet gevonden")
+                return PolicyResult(
+                    allowed=False,
+                    reason=f"Policy {policy_id} niet gevonden",
+                    metadata={"policy_id": policy_id, "error": "policy_not_found"}
                 )
-
-        # No rules matched
-        return PolicyEvaluationResult(
-            policy_id=policy_id,
-            rule_id="",
-            allowed=False,
-            reason=f"No matching rules found in policy {policy_id}",
-            conditions_met=[],
-            conditions_failed=[],
-            severity=PolicySeverity.MEDIUM,
-            timestamp=datetime.now()
-        )
+            
+            policy = self.policies[policy_id]
+            
+            # Check cache first
+            cache_key = self._generate_cache_key(policy_id, context)
+            if cache_key in self.evaluation_cache:
+                cached_result = self.evaluation_cache[cache_key]
+                if time.time() - cached_result.get("timestamp", 0) < 300:  # 5 min cache
+                    logger.debug(f"Policy {policy_id} resultaat uit cache")
+                    return PolicyResult(**cached_result["result"])
+            
+            # Evaluate policy rules
+            allowed = True
+            reasons = []
+            
+            for rule in policy.get("rules", []):
+                rule_result = await self._evaluate_rule(rule, context)
+                if not rule_result["allowed"]:
+                    allowed = False
+                    reasons.append(rule_result["reason"])
+            
+            # Create result
+            result = PolicyResult(
+                allowed=allowed,
+                reason="; ".join(reasons) if reasons else "Policy evaluation passed",
+                metadata={
+                    "policy_id": policy_id,
+                    "policy_name": policy.get("policy_name", ""),
+                    "evaluation_time": time.time() - start_time
+                }
+            )
+            
+            # Cache result
+            self.evaluation_cache[cache_key] = {
+                "result": result.__dict__,
+                "timestamp": time.time()
+            }
+            
+            # Record performance metrics
+            evaluation_time = time.time() - start_time
+            self.performance_metrics[policy_id].append(evaluation_time)
+            
+            # Keep only last 100 metrics per policy
+            if len(self.performance_metrics[policy_id]) > 100:
+                self.performance_metrics[policy_id] = self.performance_metrics[policy_id][-100:]
+            
+            # Audit logging
+            self.audit_log.append({
+                "timestamp": datetime.now().isoformat(),
+                "policy_id": policy_id,
+                "context": context,
+                "result": result.__dict__,
+                "evaluation_time": evaluation_time
+            })
+            
+            # Keep only last 1000 audit entries
+            if len(self.audit_log) > 1000:
+                self.audit_log = self.audit_log[-1000:]
+            
+            logger.debug(f"Policy {policy_id} geëvalueerd in {evaluation_time*1000:.2f}ms")
+            return result
+            
+        except Exception as e:
+            evaluation_time = time.time() - start_time
+            logger.error(f"Policy evaluation error: {e}")
+            return PolicyResult(
+                allowed=False,
+                reason=f"Policy evaluation error: {str(e)}",
+                metadata={
+                    "policy_id": policy_id,
+                    "error": str(e),
+                    "evaluation_time": evaluation_time
+                }
+            )
 
     async def evaluate_composite_policy(self, policy_ids: List[str], request: PolicyRequest) -> List[PolicyEvaluationResult]:
         """Evaluate multiple policies and return composite result."""

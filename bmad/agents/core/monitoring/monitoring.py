@@ -692,3 +692,184 @@ def measure_time(name: str, **kwargs):
 def log_event(event_type: str, message: str, **kwargs):
     """Convenience functie voor event logging."""
     structured_logger.log_event(event_type, message, **kwargs)
+
+class PerformanceMonitor:
+    """
+    Enhanced Performance Monitor voor BMAD agents.
+    Met real-time metrics, alerting, en performance profiling.
+    """
+    
+    def __init__(self):
+        self.metrics_collector = MetricsCollector()
+        self.health_checker = HealthChecker()
+        self.structured_logger = StructuredLogger()
+        
+        # Performance profiles
+        self.agent_profiles: Dict[str, Dict[str, Any]] = {}
+        
+        # Real-time monitoring
+        self.performance_alerts: List[Dict[str, Any]] = []
+        self.alert_thresholds = {
+            "response_time": 5.0,  # seconds
+            "memory_usage": 512,   # MB
+            "cpu_usage": 80,       # percentage
+            "error_rate": 0.05     # 5%
+        }
+        
+        # Performance history
+        self.performance_history: Dict[str, List[Dict[str, Any]]] = defaultdict(list)
+        
+        logger.info("Performance Monitor geïnitialiseerd")
+    
+    def register_agent_profile(self, agent_name: str, profile: Dict[str, Any]):
+        """Register performance profile voor een agent."""
+        self.agent_profiles[agent_name] = profile
+        logger.info(f"Performance profile geregistreerd voor agent: {agent_name}")
+    
+    def record_agent_performance(self, agent_name: str, operation: str, 
+                               duration: float, success: bool = True, 
+                               memory_usage: Optional[float] = None,
+                               cpu_usage: Optional[float] = None):
+        """Record agent performance metrics."""
+        timestamp = time.time()
+        
+        # Record basic metrics
+        self.metrics_collector.record_metric(
+            f"agent_{operation}_duration",
+            duration,
+            {"agent": agent_name, "success": str(success)},
+            prefix="bmad"
+        )
+        
+        if memory_usage:
+            self.metrics_collector.record_metric(
+                f"agent_memory_usage",
+                memory_usage,
+                {"agent": agent_name},
+                prefix="bmad"
+            )
+        
+        if cpu_usage:
+            self.metrics_collector.record_metric(
+                f"agent_cpu_usage",
+                cpu_usage,
+                {"agent": agent_name},
+                prefix="bmad"
+            )
+        
+        # Store in history
+        performance_record = {
+            "timestamp": timestamp,
+            "agent": agent_name,
+            "operation": operation,
+            "duration": duration,
+            "success": success,
+            "memory_usage": memory_usage,
+            "cpu_usage": cpu_usage
+        }
+        
+        self.performance_history[agent_name].append(performance_record)
+        
+        # Keep only last 1000 records per agent
+        if len(self.performance_history[agent_name]) > 1000:
+            self.performance_history[agent_name] = self.performance_history[agent_name][-1000:]
+        
+        # Check for performance alerts
+        self._check_performance_alerts(agent_name, performance_record)
+        
+        # Log performance event
+        self.structured_logger.log_performance(
+            operation=f"{agent_name}.{operation}",
+            duration=duration,
+            agent=agent_name,
+            success=success
+        )
+    
+    def _check_performance_alerts(self, agent_name: str, record: Dict[str, Any]):
+        """Check for performance alerts."""
+        profile = self.agent_profiles.get(agent_name, {})
+        
+        alerts = []
+        
+        # Response time alert
+        if record["duration"] > profile.get("response_time_threshold", self.alert_thresholds["response_time"]):
+            alerts.append({
+                "type": "response_time",
+                "severity": "warning",
+                "message": f"Agent {agent_name} operation {record['operation']} took {record['duration']:.2f}s"
+            })
+        
+        # Memory usage alert
+        if record.get("memory_usage") and record["memory_usage"] > profile.get("memory_threshold", self.alert_thresholds["memory_usage"]):
+            alerts.append({
+                "type": "memory_usage",
+                "severity": "warning",
+                "message": f"Agent {agent_name} using {record['memory_usage']:.1f}MB memory"
+            })
+        
+        # CPU usage alert
+        if record.get("cpu_usage") and record["cpu_usage"] > profile.get("cpu_threshold", self.alert_thresholds["cpu_usage"]):
+            alerts.append({
+                "type": "cpu_usage",
+                "severity": "warning",
+                "message": f"Agent {agent_name} using {record['cpu_usage']:.1f}% CPU"
+            })
+        
+        # Add alerts
+        for alert in alerts:
+            alert["timestamp"] = record["timestamp"]
+            alert["agent"] = agent_name
+            self.performance_alerts.append(alert)
+            
+            # Keep only last 100 alerts
+            if len(self.performance_alerts) > 100:
+                self.performance_alerts = self.performance_alerts[-100:]
+            
+            logger.warning(f"Performance Alert: {alert['message']}")
+    
+    def get_agent_performance_summary(self, agent_name: str) -> Dict[str, Any]:
+        """Get performance summary voor een agent."""
+        history = self.performance_history.get(agent_name, [])
+        
+        if not history:
+            return {"agent": agent_name, "no_data": True}
+        
+        # Calculate metrics
+        durations = [r["duration"] for r in history]
+        success_count = sum(1 for r in history if r["success"])
+        total_count = len(history)
+        
+        return {
+            "agent": agent_name,
+            "total_operations": total_count,
+            "success_rate": success_count / total_count if total_count > 0 else 0,
+            "avg_duration": sum(durations) / len(durations) if durations else 0,
+            "min_duration": min(durations) if durations else 0,
+            "max_duration": max(durations) if durations else 0,
+            "recent_alerts": [a for a in self.performance_alerts if a["agent"] == agent_name][-5:]
+        }
+    
+    def get_system_performance_summary(self) -> Dict[str, Any]:
+        """Get overall system performance summary."""
+        import psutil
+        
+        # System metrics
+        cpu_usage = psutil.cpu_percent(interval=1)
+        memory = psutil.virtual_memory()
+        
+        # Agent metrics
+        agent_summaries = {}
+        for agent_name in self.agent_profiles.keys():
+            agent_summaries[agent_name] = self.get_agent_performance_summary(agent_name)
+        
+        return {
+            "system": {
+                "cpu_usage": cpu_usage,
+                "memory_usage": memory.percent,
+                "memory_available": memory.available / (1024**3),  # GB
+                "timestamp": time.time()
+            },
+            "agents": agent_summaries,
+            "recent_alerts": self.performance_alerts[-10:],
+            "total_alerts": len(self.performance_alerts)
+        }

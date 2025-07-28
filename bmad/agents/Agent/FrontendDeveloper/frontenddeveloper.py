@@ -17,7 +17,6 @@ from bmad.agents.core.agent.agent_performance_monitor import (
 )
 from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.ai.llm_client import ask_openai
-from bmad.agents.core.communication.message_bus import publish, subscribe
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.figma.figma_client import FigmaClient
 from integrations.slack.slack_notify import send_slack_message
@@ -27,33 +26,75 @@ logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
 class FrontendDeveloperAgent:
+    """
+    Frontend Developer Agent voor BMAD.
+    Gespecialiseerd in React/Next.js, Shadcn/ui, en moderne frontend development.
+    """
+    
     def __init__(self):
-        self.monitor = get_performance_monitor()
-        self.policy_engine = get_advanced_policy_engine()
-        self.sprite_library = get_sprite_library()
-
-        # Resource paths
-        self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
-        self.template_paths = {
-            "best-practices": self.resource_base / "templates/frontenddeveloper/best-practices.md",
-            "component-template": self.resource_base / "templates/frontenddeveloper/component-template.md",
-            "component-export-md": self.resource_base / "templates/frontenddeveloper/component-export-template.md",
-            "component-export-json": self.resource_base / "templates/frontenddeveloper/component-export-template.json",
-            "performance-report": self.resource_base / "templates/frontenddeveloper/performance-report-template.md",
-            "storybook": self.resource_base / "templates/frontenddeveloper/storybook-template.mdx",
-            "accessibility-checklist": self.resource_base / "templates/frontenddeveloper/accessibility-checklist.md"
-        }
-        self.data_paths = {
-            "changelog": self.resource_base / "data/frontenddeveloper/component-changelog.md",
-            "component-history": self.resource_base / "data/frontenddeveloper/component-history.md",
-            "performance-history": self.resource_base / "data/frontenddeveloper/performance-history.md"
-        }
-
-        # Initialize histories
+        """Initialize FrontendDeveloper agent met lazy loading."""
+        self.agent_name = "FrontendDeveloper"
         self.component_history = []
         self.performance_history = []
-        self._load_component_history()
-        self._load_performance_history()
+        
+        # Lazy loading flags
+        self._services_initialized = False
+        self._resources_loaded = False
+        self._policy_engine_initialized = False
+        self._message_bus_initialized = False
+        
+        # Basic initialization only
+        logger.info(f"{self.agent_name} Agent geïnitialiseerd (lazy loading)")
+    
+    def _ensure_message_bus_initialized(self):
+        """Lazy initialize MessageBus only when needed."""
+        if not self._message_bus_initialized:
+            from bmad.agents.core.message_bus import message_bus
+            
+            # Register event handlers
+            message_bus.subscribe("figma_design_feedback", self.on_figma_design_feedback)
+            message_bus.subscribe("figma_components_generated", self.on_figma_components_generated)
+            message_bus.subscribe("figma_analysis_completed", self.on_figma_analysis_completed)
+            
+            self._message_bus_initialized = True
+            logger.debug(f"{self.agent_name} MessageBus geïnitialiseerd")
+    
+    def _ensure_services_initialized(self):
+        """Lazy initialize core services only when needed."""
+        if not self._services_initialized:
+            # Initialize core services
+            self.performance_monitor = get_performance_monitor()
+            self.policy_engine = get_advanced_policy_engine()
+            self.sprite_library = get_sprite_library()
+            
+            # Register performance profile
+            self.performance_monitor.register_agent_profile(
+                self.agent_name,
+                {
+                    "response_time_threshold": 2.0,
+                    "success_rate_threshold": 0.95,
+                    "memory_threshold": 512,
+                    "cpu_threshold": 80
+                }
+            )
+            
+            self._services_initialized = True
+            logger.debug(f"{self.agent_name} services geïnitialiseerd")
+    
+    def _ensure_resources_loaded(self):
+        """Lazy load resources only when needed."""
+        if not self._resources_loaded:
+            self._load_component_history()
+            self._load_performance_history()
+            self._resources_loaded = True
+            logger.debug(f"{self.agent_name} resources geladen")
+    
+    def _ensure_policy_engine_initialized(self):
+        """Lazy initialize policy engine only when needed."""
+        if not self._policy_engine_initialized:
+            self._ensure_services_initialized()
+            # Policy engine is already initialized in services
+            self._policy_engine_initialized = True
 
     def _load_component_history(self):
         try:

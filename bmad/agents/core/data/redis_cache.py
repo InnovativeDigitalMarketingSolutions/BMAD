@@ -5,17 +5,84 @@ Dit module biedt een geavanceerde caching laag met Redis voor performance optima
 Implementeert intelligent caching met TTL, cache invalidation en fallback strategieën.
 """
 
-import hashlib
-import json
-import logging
 import os
+import json
+import gzip
+import pickle
+import logging
+import time
+from typing import Any, Dict, Optional, Callable
 from functools import wraps
-from typing import Any, Dict, Optional
-
 import redis
-from redis.exceptions import ConnectionError, RedisError
+from redis.connection import ConnectionPool
 
 logger = logging.getLogger(__name__)
+
+# Global connection pool for better performance
+_redis_pool = None
+_redis_client = None
+
+def get_redis_client():
+    """Get Redis client with connection pooling."""
+    global _redis_client, _redis_pool
+    
+    if _redis_client is None:
+        try:
+            # Create connection pool
+            _redis_pool = ConnectionPool(
+                host=os.getenv("REDIS_HOST", "localhost"),
+                port=int(os.getenv("REDIS_PORT", 6379)),
+                db=int(os.getenv("REDIS_DB", 0)),
+                password=os.getenv("REDIS_PASSWORD"),
+                max_connections=20,  # Connection pooling
+                retry_on_timeout=True,
+                socket_keepalive=True,
+                socket_keepalive_options={},
+                health_check_interval=30
+            )
+            
+            _redis_client = redis.Redis(connection_pool=_redis_pool)
+            
+            # Test connection
+            _redis_client.ping()
+            logger.info("✅ Redis cache verbonden met connection pooling")
+            
+        except Exception as e:
+            logger.warning(f"Redis connection failed: {e}")
+            _redis_client = None
+    
+    return _redis_client
+
+def _compress_data(data: Any) -> bytes:
+    """Compress data for storage."""
+    try:
+        serialized = pickle.dumps(data)
+        if len(serialized) > 1024:  # Only compress if > 1KB
+            return gzip.compress(serialized)
+        return serialized
+    except Exception:
+        # Fallback to JSON
+        return json.dumps(data).encode('utf-8')
+
+def _decompress_data(data: bytes) -> Any:
+    """Decompress data from storage."""
+    try:
+        if data.startswith(b'\x1f\x8b'):  # Gzip header
+            decompressed = gzip.decompress(data)
+            return pickle.loads(decompressed)
+        else:
+            return pickle.loads(data)
+    except Exception:
+        # Fallback to JSON
+        return json.loads(data.decode('utf-8'))
+
+def _generate_key(func_name: str, *args, **kwargs) -> str:
+    """Generate cache key with better performance."""
+    # Use hash for better performance
+    import hashlib
+    
+    key_data = f"{func_name}:{str(args)}:{str(sorted(kwargs.items()))}"
+    return f"bmad:cache:{hashlib.md5(key_data.encode()).hexdigest()}"
 
 class RedisCache:
     """
@@ -52,19 +119,10 @@ class RedisCache:
             # Test connection
             self.client.ping()
             logger.info("✅ Redis cache verbonden")
-        except (RedisError, ConnectionError) as e:
+        except (redis.RedisError, redis.ConnectionError) as e:
             logger.warning(f"⚠️ Redis niet beschikbaar: {e}")
             self.enabled = False
             self.client = None
-
-    def _generate_key(self, *args, **kwargs):
-        """Generate a cache key from arguments."""
-        # Combine args and kwargs into a single list
-        key_parts = [str(arg) for arg in args]
-        key_parts.extend([f"{k}:{v}" for k, v in sorted(kwargs.items())])
-        key_string = ":".join(key_parts)
-        # Use SHA256 instead of MD5 for security
-        return f"bmad:{hashlib.sha256(key_string.encode()).hexdigest()}"
 
     def get(self, key: str, default: Any = None) -> Any:
         """
@@ -88,7 +146,7 @@ class RedisCache:
             except json.JSONDecodeError:
                 return value
 
-        except RedisError as e:
+        except redis.RedisError as e:
             logger.warning(f"Redis get error: {e}")
             return default
 
@@ -122,7 +180,7 @@ class RedisCache:
             logger.debug(f"Cache set: {key} (TTL: {ttl}s)")
             return True
 
-        except RedisError as e:
+        except redis.RedisError as e:
             logger.warning(f"Redis set error: {e}")
             return False
 
@@ -140,7 +198,7 @@ class RedisCache:
             result = self.client.delete(key)
             logger.debug(f"Cache delete: {key}")
             return result > 0
-        except RedisError as e:
+        except redis.RedisError as e:
             logger.warning(f"Redis delete error: {e}")
             return False
 
@@ -156,7 +214,7 @@ class RedisCache:
 
         try:
             return bool(self.client.exists(key))
-        except RedisError as e:
+        except redis.RedisError as e:
             logger.warning(f"Redis exists error: {e}")
             return False
 
@@ -177,7 +235,7 @@ class RedisCache:
                 logger.info(f"Cache clear pattern '{pattern}': {deleted} keys verwijderd")
                 return deleted
             return 0
-        except RedisError as e:
+        except redis.RedisError as e:
             logger.warning(f"Redis clear pattern error: {e}")
             return 0
 
@@ -200,7 +258,7 @@ class RedisCache:
                 "keyspace_misses": info.get("keyspace_misses", 0),
                 "total_commands_processed": info.get("total_commands_processed", 0),
             }
-        except RedisError as e:
+        except redis.RedisError as e:
             logger.warning(f"Redis stats error: {e}")
             return {"enabled": False, "error": str(e)}
 
@@ -239,9 +297,55 @@ def cached(ttl: Optional[int] = None, cache_type: str = "default",
         return wrapper
     return decorator
 
-def cache_llm_response(func):
-    """Decorator specifiek voor LLM response caching."""
-    return cached(ttl=3600, cache_type="llm_response", key_prefix="llm")(func)
+def cache_llm_response(ttl: int = 3600):
+    """
+    Cache decorator voor LLM responses met verbeterde performance.
+    
+    Args:
+        ttl: Time to live in seconds (default: 1 hour)
+    """
+    def decorator(func: Callable) -> Callable:
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            start_time = time.time()
+            
+            # Get Redis client
+            redis_client = get_redis_client()
+            if redis_client is None:
+                # Fallback to function execution
+                return func(*args, **kwargs)
+            
+            try:
+                # Generate cache key
+                cache_key = _generate_key(func.__name__, *args, **kwargs)
+                
+                # Try to get from cache
+                cached_data = redis_client.get(cache_key)
+                if cached_data is not None:
+                    result = _decompress_data(cached_data)
+                    cache_time = time.time() - start_time
+                    logger.debug(f"Cache hit for {func.__name__} in {cache_time*1000:.2f}ms")
+                    return result
+                
+                # Execute function
+                result = func(*args, **kwargs)
+                
+                # Cache result
+                compressed_data = _compress_data(result)
+                redis_client.setex(cache_key, ttl, compressed_data)
+                
+                execution_time = time.time() - start_time
+                logger.debug(f"Cache miss for {func.__name__}, executed in {execution_time*1000:.2f}ms")
+                
+                return result
+                
+            except Exception as e:
+                logger.warning(f"Cache operation failed: {e}")
+                # Fallback to function execution
+                return func(*args, **kwargs)
+        
+        return wrapper
+    return decorator
 
 def cache_agent_confidence(func):
     """Decorator specifiek voor agent confidence caching."""

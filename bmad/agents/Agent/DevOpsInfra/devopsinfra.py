@@ -305,7 +305,7 @@ DevOps Infrastructure Agent Commands:
         logger.info(f"Incident response completed: {response_result}")
         return response_result
 
-    def deploy_infrastructure(self, infrastructure_type: str = "kubernetes") -> Dict[str, Any]:
+    async def deploy_infrastructure(self, infrastructure_type: str = "kubernetes") -> Dict[str, Any]:
         """Deploy infrastructure components with policy approval."""
 
         # Policy evaluation for deployment approval
