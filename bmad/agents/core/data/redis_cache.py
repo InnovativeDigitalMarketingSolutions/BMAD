@@ -9,8 +9,7 @@ import os
 import json
 import logging
 import hashlib
-import time
-from typing import Any, Optional, Dict, List, Union
+from typing import Any, Optional, Dict
 from functools import wraps
 import redis
 from redis.exceptions import RedisError, ConnectionError
@@ -57,28 +56,14 @@ class RedisCache:
             self.enabled = False
             self.client = None
     
-    def _generate_key(self, prefix: str, *args, **kwargs) -> str:
-        """
-        Genereer een unieke cache key.
-        
-        :param prefix: Cache key prefix
-        :param args: Positionele argumenten
-        :param kwargs: Keyword argumenten
-        :return: Unieke cache key
-        """
-        key_parts = [prefix]
-        
-        # Voeg positionele argumenten toe
-        for arg in args:
-            key_parts.append(str(arg))
-        
-        # Voeg keyword argumenten toe (gesorteerd voor consistentie)
-        for key, value in sorted(kwargs.items()):
-            key_parts.append(f"{key}:{value}")
-        
-        # Maak hash van de key voor consistentie
+    def _generate_key(self, *args, **kwargs):
+        """Generate a cache key from arguments."""
+        # Combine args and kwargs into a single list
+        key_parts = [str(arg) for arg in args]
+        key_parts.extend([f"{k}:{v}" for k, v in sorted(kwargs.items())])
         key_string = ":".join(key_parts)
-        return f"bmad:{hashlib.md5(key_string.encode()).hexdigest()}"
+        # Use SHA256 instead of MD5 for security
+        return f"bmad:{hashlib.sha256(key_string.encode()).hexdigest()}"
     
     def get(self, key: str, default: Any = None) -> Any:
         """

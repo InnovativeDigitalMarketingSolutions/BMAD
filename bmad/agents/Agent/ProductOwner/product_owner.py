@@ -5,7 +5,8 @@ Product Owner Agent voor BMAD
 import argparse
 import logging
 import time
-import sys, os
+import sys
+import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 from bmad.agents.core.communication.message_bus import publish, subscribe
 from bmad.agents.core.data.supabase_context import save_context, get_context
@@ -274,7 +275,7 @@ def ask_llm_user_story(requirement):
     
     # Als review vereist is, maak review request
     if enhanced_output["review_required"]:
-        review_request = create_review_request(enhanced_output)
+        create_review_request(enhanced_output)
         print("🔍 Review vereist - User story wordt ter goedkeuring voorgelegd")
         print(format_confidence_message(enhanced_output))
         

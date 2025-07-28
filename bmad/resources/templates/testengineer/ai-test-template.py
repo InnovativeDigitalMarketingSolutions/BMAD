@@ -1,4 +1,3 @@
-import pytest
 
 """
 AI test voor voorspellingen van een AI-model.

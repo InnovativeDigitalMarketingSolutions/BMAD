@@ -1,4 +1,3 @@
-import pytest
 
 """
 Unit test voor een eenvoudige rekensom.

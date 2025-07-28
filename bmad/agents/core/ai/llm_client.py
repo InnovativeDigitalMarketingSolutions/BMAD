@@ -4,18 +4,39 @@ import hashlib
 import json
 import logging
 import time
-from typing import Dict, Any, Optional, Tuple
-from bmad.agents.core.data.redis_cache import cache_llm_response, cache
+from typing import Dict, Any, Optional
+from copy import deepcopy
+from bmad.agents.core.data.redis_cache import cache_llm_response
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-nano")
 CACHE_DIR = os.getenv("LLM_CACHE_DIR", ".llm_cache")
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
-
 os.makedirs(CACHE_DIR, exist_ok=True)
 
-def _cache_key(prompt, model, temperature, max_tokens, logprobs):
+# --- Helper: file-cache fallback ---
+def _file_cache_get(key: str) -> Optional[dict]:
+    path = os.path.join(CACHE_DIR, f"{key}.json")
+    if os.path.exists(path):
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception as e:
+            logging.warning(f"[LLM][FILECACHE] Fout bij lezen: {e}")
+    return None
+
+def _file_cache_set(key: str, value: dict):
+    path = os.path.join(CACHE_DIR, f"{key}.json")
+    try:
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(value, f, indent=2)
+    except Exception as e:
+        logging.warning(f"[LLM][FILECACHE] Fout bij schrijven: {e}")
+
+# --- Einde file-cache helpers ---
+
+def _cache_key(prompt: str, model: str, temperature: float, max_tokens: int, logprobs: bool) -> str:
     key = json.dumps({
         "prompt": prompt, 
         "model": model, 
@@ -25,108 +46,61 @@ def _cache_key(prompt, model, temperature, max_tokens, logprobs):
     }, sort_keys=True)
     return hashlib.sha256(key.encode()).hexdigest()
 
-def calculate_confidence_from_logprobs(logprobs_data):
-    """
-    Bereken confidence score uit OpenAI logprobs data.
-    :param logprobs_data: Logprobs data van OpenAI response
-    :return: Confidence score tussen 0.0 en 1.0
-    """
+def calculate_confidence_from_logprobs(logprobs_data: dict) -> float:
     if not logprobs_data:
-        return 0.5  # Default confidence als geen logprobs beschikbaar
-    
+        return 0.5
     try:
-        # Bereken gemiddelde logprob per token
         total_logprob = 0
         token_count = 0
-        
         for choice in logprobs_data.get("choices", []):
             for token in choice.get("logprobs", {}).get("content", []):
                 if "logprob" in token:
                     total_logprob += token["logprob"]
                     token_count += 1
-        
         if token_count == 0:
             return 0.5
-        
         avg_logprob = total_logprob / token_count
-        
-        # Converteer logprob naar confidence score (0.0 - 1.0)
-        # Logprobs zijn meestal negatief, hogere (minder negatieve) waarden = hogere confidence
         confidence = min(1.0, max(0.0, (avg_logprob + 2.0) / 2.0))
-        
         return confidence
-    
     except Exception as e:
         logging.warning(f"Error calculating confidence from logprobs: {e}")
         return 0.5
 
 def assess_complexity(task_description: str) -> float:
-    """
-    Beoordeel de complexiteit van een taak op basis van keywords en context.
-    :param task_description: Beschrijving van de taak
-    :return: Complexity score tussen 0.0 (eenvoudig) en 1.0 (zeer complex)
-    """
     complexity_keywords = {
         "high": ["architect", "design", "security", "authentication", "deployment", "infrastructure", "database", "api"],
         "medium": ["integration", "testing", "optimization", "refactoring", "documentation"],
         "low": ["simple", "basic", "update", "fix", "minor", "small"]
     }
-    
     task_lower = task_description.lower()
-    complexity_score = 0.5  # Default medium complexity
-    
-    # Tel keywords per complexiteitsniveau
+    complexity_score = 0.5
     high_count = sum(1 for keyword in complexity_keywords["high"] if keyword in task_lower)
     medium_count = sum(1 for keyword in complexity_keywords["medium"] if keyword in task_lower)
     low_count = sum(1 for keyword in complexity_keywords["low"] if keyword in task_lower)
-    
-    # Bereken gewogen score
     if high_count > 0:
         complexity_score = 0.8 + (high_count * 0.1)
     elif medium_count > 0:
         complexity_score = 0.5 + (medium_count * 0.1)
     elif low_count > 0:
         complexity_score = 0.2 + (low_count * 0.1)
-    
     return min(1.0, complexity_score)
 
 def assess_security_risk(output: str, context: Dict[str, Any]) -> float:
-    """
-    Beoordeel security risico van agent output.
-    :param output: Agent output
-    :param context: Context informatie
-    :return: Security risk score tussen 0.0 (geen risico) en 1.0 (hoog risico)
-    """
     security_keywords = [
         "password", "token", "key", "secret", "auth", "login", "admin", "root",
         "delete", "drop", "remove", "update", "modify", "change", "deploy"
     ]
-    
     output_lower = output.lower()
     context_lower = str(context).lower()
-    
-    # Tel security-gerelateerde keywords
     security_count = sum(1 for keyword in security_keywords if keyword in output_lower)
     context_security_count = sum(1 for keyword in security_keywords if keyword in context_lower)
-    
-    # Bereken risico score
     risk_score = min(1.0, (security_count + context_security_count) * 0.1)
-    
-    # Verhoog risico voor bepaalde agent types
     agent_type = context.get("agent", "").lower()
     if "security" in agent_type or "admin" in agent_type:
         risk_score = min(1.0, risk_score + 0.2)
-    
     return risk_score
 
 def get_agent_success_rate(agent_name: str) -> float:
-    """
-    Haal historische success rate op voor een agent.
-    :param agent_name: Naam van de agent
-    :return: Success rate tussen 0.0 en 1.0
-    """
-    # TODO: Implementeer database lookup voor agent metrics
-    # Voor nu: default success rates gebaseerd op agent type
     default_rates = {
         "ProductOwner": 0.92,
         "Architect": 0.89,
@@ -137,50 +111,31 @@ def get_agent_success_rate(agent_name: str) -> float:
         "SecurityDeveloper": 0.88,
         "DevOpsInfra": 0.86
     }
-    
     return default_rates.get(agent_name, 0.8)
 
 def calculate_confidence(output: str, context: Dict[str, Any]) -> float:
-    """
-    Bereken overall confidence score voor agent output.
-    :param output: Agent output
-    :param context: Context informatie
-    :return: Confidence score tussen 0.0 en 1.0
-    """
     confidence = 0.0
-    
-    # LLM confidence (als beschikbaar)
     llm_confidence = context.get("llm_confidence", 0.5)
     confidence += llm_confidence * 0.3
-    
-    # Code quality (als applicable)
     if "code" in output.lower() or "function" in output.lower():
-        # Simpele code quality check
         code_quality = 0.8 if "def " in output or "class " in output else 0.6
         confidence += code_quality * 0.2
     else:
-        confidence += 0.7 * 0.2  # Default voor non-code output
-    
-    # Complexity assessment
+        confidence += 0.7 * 0.2
     task_description = context.get("task", "")
     complexity = assess_complexity(task_description)
     confidence += (1 - complexity) * 0.2
-    
-    # Security risk
     security_risk = assess_security_risk(output, context)
     confidence += (1 - security_risk) * 0.15
-    
-    # Historical success
     agent_name = context.get("agent", "")
     agent_success_rate = get_agent_success_rate(agent_name)
     confidence += agent_success_rate * 0.15
-    
     return min(confidence, 1.0)
 
 @cache_llm_response
 def ask_openai_with_confidence(
     prompt: str, 
-    context: Dict[str, Any],
+    context: Optional[Dict[str, Any]] = None,
     model: Optional[str] = None, 
     temperature: float = 0.7, 
     max_tokens: int = 512, 
@@ -189,42 +144,43 @@ def ask_openai_with_confidence(
 ) -> Dict[str, Any]:
     """
     Stuur een prompt naar OpenAI en ontvang antwoord met confidence scoring.
-    :param prompt: De prompttekst
-    :param context: Context informatie voor confidence calculation
-    :param model: Modelnaam
-    :param temperature: Creativiteit
-    :param max_tokens: Maximaal aantal tokens
-    :param structured_output: Optioneel JSON schema
-    :param include_logprobs: Of logprobs moeten worden opgevraagd
-    :return: Dict met answer, confidence, en metadata
+    Probeert Redis cache, valt terug op file-cache als Redis niet beschikbaar is.
     """
+    # --- Extra validatie ---
     if not OPENAI_API_KEY:
         raise RuntimeError("OPENAI_API_KEY niet gezet in environment!")
-    
+    if not isinstance(prompt, str) or not prompt:
+        raise ValueError("Prompt moet een niet-lege string zijn.")
+    if context is None:
+        context = {}
+    else:
+        context = deepcopy(context)
+    # --- Einde validatie ---
     if structured_output:
         prompt += f"\nGeef het antwoord als geldige JSON volgens dit voorbeeld:\n{structured_output}"
-    
     model = model or OPENAI_MODEL
     cache_key = _cache_key(prompt, model, temperature, max_tokens, include_logprobs)
-    cache_path = os.path.join(CACHE_DIR, f"{cache_key}.json")
-    
-    # Check cache
-    if os.path.exists(cache_path):
-        with open(cache_path, "r", encoding="utf-8") as f:
-            cached = json.load(f)
-        logging.info(f"[LLM][CACHE HIT] {prompt[:60]}...")
-        
-        # Recalculate confidence for cached response
+    # --- Redis cache proberen ---
+    try:
+        # De decorator cache_llm_response regelt Redis cache
+        # Maar we checken ook handmatig voor fallback
+        pass  # Decorator doet het werk
+    except Exception as e:
+        logging.warning(f"[LLM][REDIS] Redis cache niet beschikbaar: {e}")
+    # --- File-cache fallback ---
+    cached = _file_cache_get(cache_key)
+    if cached:
+        logging.info(f"[LLM][FILECACHE] Cache hit: {cache_key}")
         confidence = calculate_confidence(cached["answer"], context)
         return {
             "answer": cached["answer"],
             "confidence": confidence,
             "cached": True,
             "model": model,
-            "timestamp": time.time()
+            "timestamp": time.time(),
+            "llm_confidence": cached.get("llm_confidence", 0.5)
         }
-    
-    # Prepare request
+    # --- LLM call ---
     url = "https://api.openai.com/v1/chat/completions"
     headers = {"Authorization": f"Bearer {OPENAI_API_KEY}"}
     data = {
@@ -233,186 +189,54 @@ def ask_openai_with_confidence(
         "temperature": temperature,
         "max_tokens": max_tokens,
     }
-    
-    # Add logprobs if requested
     if include_logprobs and model in ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo"]:
         data["logprobs"] = True
         data["top_logprobs"] = 1
-    
     logging.info(f"[LLM][REQUEST] {prompt[:60]}... [model={model}]")
-    
-    response = requests.post(url, headers=headers, json=data)
-    response.raise_for_status()
-    response_data = response.json()
-    
-    # Extract answer
-    answer = response_data["choices"][0]["message"]["content"]
-    
-    # Calculate confidence
-    llm_confidence = 0.5  # Default
-    if include_logprobs and "logprobs" in response_data:
-        llm_confidence = calculate_confidence_from_logprobs(response_data)
-    
-    # Update context with LLM confidence
-    context["llm_confidence"] = llm_confidence
-    
-    # Calculate overall confidence
-    confidence = calculate_confidence(answer, context)
-    
-    # Cache response
-    with open(cache_path, "w", encoding="utf-8") as f:
-        json.dump({
-            "prompt": prompt, 
+    try:
+        response = requests.post(url, headers=headers, json=data, timeout=30)
+        response.raise_for_status()
+        response_data = response.json()
+        answer = response_data["choices"][0]["message"]["content"]
+        llm_confidence = 0.5
+        if include_logprobs and "logprobs" in response_data:
+            llm_confidence = calculate_confidence_from_logprobs(response_data)
+        context["llm_confidence"] = llm_confidence
+        confidence = calculate_confidence(answer, context)
+        logging.info(f"[LLM][RESPONSE] {answer[:60]}... [confidence={confidence:.2f}]")
+        # --- Cache in file fallback ---
+        _file_cache_set(cache_key, {
             "answer": answer,
             "llm_confidence": llm_confidence
-        }, f)
-    
-    logging.info(f"[LLM][RESPONSE] {answer[:60]}... [confidence={confidence:.2f}]")
-    
-    # Parse JSON if structured output requested
-    if structured_output:
-        try:
-            parsed_answer = json.loads(answer)
-            return {
-                "answer": parsed_answer,
-                "confidence": confidence,
-                "cached": False,
-                "model": model,
-                "timestamp": time.time(),
-                "llm_confidence": llm_confidence
-            }
-        except Exception:
-            return {
-                "answer": answer,
-                "confidence": confidence,
-                "cached": False,
-                "model": model,
-                "timestamp": time.time(),
-                "llm_confidence": llm_confidence
-            }
-    
-    return {
-        "answer": answer,
-        "confidence": confidence,
-        "cached": False,
-        "model": model,
-        "timestamp": time.time(),
-        "llm_confidence": llm_confidence
-    }
-
-def ask_openai(prompt, model=None, temperature=0.7, max_tokens=512, structured_output=None):
-    """
-    Stuur een prompt naar OpenAI en ontvang het antwoord. Optioneel structured_output (JSON schema/voorbeeld).
-    :param prompt: De prompttekst (str)
-    :param model: Modelnaam (str, default uit .env of 'gpt-4.1-nano')
-    :param temperature: Creativiteit (float)
-    :param max_tokens: Maximaal aantal tokens in antwoord (int)
-    :param structured_output: Optioneel, string met JSON schema/voorbeeld
-    :return: Antwoord van de LLM (str of dict)
-    """
-    if not OPENAI_API_KEY:
-        raise RuntimeError("OPENAI_API_KEY niet gezet in environment!")
-    if structured_output:
-        prompt += f"\nGeef het antwoord als geldige JSON volgens dit voorbeeld:\n{structured_output}"
-    model = model or OPENAI_MODEL
-    cache_key = _cache_key(prompt, model, temperature, max_tokens)
-    cache_path = os.path.join(CACHE_DIR, f"{cache_key}.json")
-    
-    # Check cache
-    if os.path.exists(cache_path):
-        with open(cache_path, "r", encoding="utf-8") as f:
-            cached = json.load(f)
-        logging.info(f"[LLM][CACHE HIT] {prompt[:60]}...")
-        
-        # Recalculate confidence for cached response
-        confidence = calculate_confidence(cached["answer"], context)
+        })
+        if structured_output:
+            try:
+                parsed_answer = json.loads(answer)
+                return {
+                    "answer": parsed_answer,
+                    "confidence": confidence,
+                    "cached": False,
+                    "model": model,
+                    "timestamp": time.time(),
+                    "llm_confidence": llm_confidence
+                }
+            except Exception:
+                pass
         return {
-            "answer": cached["answer"],
-            "confidence": confidence,
-            "cached": True,
-            "model": model,
-            "timestamp": time.time()
-        }
-    
-    # Prepare request
-    url = "https://api.openai.com/v1/chat/completions"
-    headers = {"Authorization": f"Bearer {OPENAI_API_KEY}"}
-    data = {
-        "model": model,
-        "messages": [{"role": "user", "content": prompt}],
-        "temperature": temperature,
-        "max_tokens": max_tokens,
-    }
-    
-    # Add logprobs if requested
-    if include_logprobs and model in ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo"]:
-        data["logprobs"] = True
-        data["top_logprobs"] = 1
-    
-    logging.info(f"[LLM][REQUEST] {prompt[:60]}... [model={model}]")
-    
-    response = requests.post(url, headers=headers, json=data)
-    response.raise_for_status()
-    response_data = response.json()
-    
-    # Extract answer
-    answer = response_data["choices"][0]["message"]["content"]
-    
-    # Calculate confidence
-    llm_confidence = 0.5  # Default
-    if include_logprobs and "logprobs" in response_data:
-        llm_confidence = calculate_confidence_from_logprobs(response_data)
-    
-    # Update context with LLM confidence
-    context["llm_confidence"] = llm_confidence
-    
-    # Calculate overall confidence
-    confidence = calculate_confidence(answer, context)
-    
-    # Cache response
-    with open(cache_path, "w", encoding="utf-8") as f:
-        json.dump({
-            "prompt": prompt, 
             "answer": answer,
+            "confidence": confidence,
+            "cached": False,
+            "model": model,
+            "timestamp": time.time(),
             "llm_confidence": llm_confidence
-        }, f)
-    
-    logging.info(f"[LLM][RESPONSE] {answer[:60]}... [confidence={confidence:.2f}]")
-    
-    # Parse JSON if structured output requested
-    if structured_output:
-        try:
-            parsed_answer = json.loads(answer)
-            return {
-                "answer": parsed_answer,
-                "confidence": confidence,
-                "cached": False,
-                "model": model,
-                "timestamp": time.time(),
-                "llm_confidence": llm_confidence
-            }
-        except Exception:
-            return {
-                "answer": answer,
-                "confidence": confidence,
-                "cached": False,
-                "model": model,
-                "timestamp": time.time(),
-                "llm_confidence": llm_confidence
-            }
-    
-    return {
-        "answer": answer,
-        "confidence": confidence,
-        "cached": False,
-        "model": model,
-        "timestamp": time.time(),
-        "llm_confidence": llm_confidence
-    }
+        }
+    except Exception as e:
+        logging.error(f"[LLM][ERROR] {e}")
+        raise
 
-def ask_openai(prompt, context=None, model=None, temperature=0.7, max_tokens=512, structured_output=None):
+def ask_openai(prompt: str, context: Optional[Dict[str, Any]] = None, model: Optional[str] = None, temperature: float = 0.7, max_tokens: int = 512, structured_output: Optional[str] = None) -> Any:
     """
-    Legacy functie voor backward compatibility.
+    Backward compatible wrapper voor ask_openai_with_confidence.
     """
     if context is None:
         context = {"task": "general", "agent": "unknown"}

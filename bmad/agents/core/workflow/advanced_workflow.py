@@ -8,7 +8,6 @@ multi-agent samenwerking met dependencies, parallel execution en error handling.
 import asyncio
 import logging
 import time
-import json
 from typing import Dict, List, Any, Optional, Callable
 from dataclasses import dataclass, field
 from enum import Enum

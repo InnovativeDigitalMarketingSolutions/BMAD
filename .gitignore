@@ -3,31 +3,159 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.Python
 .venv/
 venv/
 env/
 ENV/
+env.bak/
+venv.bak/
 *.egg-info/
 dist/
 build/
-.env
+eggs/
+parts/
+bin/
+var/
+sdist/
+develop-eggs/
+.installed.cfg
+lib/
+lib64/
 
-# VSCode/PyCharm/IDE
+# Environment variables - SECURITY CRITICAL
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+.env.production
+.env.staging
+*.env
+secrets/
+secrets.json
+config/secrets.json
+credentials/
+credentials.json
+api_keys.txt
+tokens.txt
+
+# IDE/Editor
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
 
-# Tijdelijke/bijproducten
+# Logs and temporary files
 *.log
 *.out
 *.bak
 *.tmp
-*.swp
-*.txt
+*.temp
+logs/
+temp/
+tmp/
 
-# Analyse/merge/rapport folders
+# Test coverage and reports
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+.tox/
+.cache
+nosetests.xml
+coverage/
+
+# Documentation builds
+docs/_build/
+site/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# pipenv
+Pipfile.lock
+
+# PEP 582
+__pypackages__/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# Spyder project settings
+.spyderproject
+.spyproject
+
+# Rope project settings
+.ropeproject
+
+# mkdocs documentation
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# Analysis/merge/rapport folders
 merge_conflicts/
+analysis_reports/
+performance_reports/
 
-# Environment variables
-.env
-.env.local
-.env.*.local 
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Backup files
+*.backup
+*.old
+*.orig
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Node.js (if any frontend components)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Terraform
+*.tfstate
+*.tfstate.*
+.terraform/
+.terraform.lock.hcl
+
+# Kubernetes
+*.kubeconfig
+
+# Local development
+local/
+dev/
+development/ 

@@ -1,4 +1,3 @@
-import pytest
 
 """
 E2E test voor een gebruikersflow van begin tot eind.

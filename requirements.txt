@@ -1,0 +1,53 @@
+# Core dependencies
+supabase>=2.0.0
+pyyaml>=6.0.0
+requests>=2.31.0
+openai>=1.0.0
+
+# Agent Orchestration / AI Pipeline Structure
+langgraph>=0.2.0
+langchain>=0.2.0
+langchain-openai>=0.1.0
+
+# Multi-LLM Routering & Provider Integration
+# openrouter>=0.5.0  # Using OpenAI library with OpenRouter base URL instead
+
+# DevOps Tooling / CI Integration
+prefect>=2.14.0
+
+# Observability & Telemetry
+opentelemetry-api>=1.24.0
+opentelemetry-sdk>=1.24.0
+opentelemetry-instrumentation>=0.56b0
+opentelemetry-instrumentation-requests>=0.56b0
+# opentelemetry-instrumentation-aiohttp>=0.56b0  # Not available for Python 3.13
+# opentelemetry-instrumentation-asyncio>=0.56b0  # Not available for Python 3.13
+opentelemetry-exporter-jaeger>=1.21.0
+opentelemetry-exporter-otlp-proto-http>=1.15.0
+
+# Security / Rights Management / Autonomy
+# Note: OPA is typically deployed as a separate service
+# We'll use the Python client for OPA integration
+# opa-client>=0.1.0  # Temporarily disabled - using direct HTTP calls
+
+# Performance & Caching
+redis>=4.5.0
+aiohttp>=3.8.0
+asyncpg>=0.28.0
+
+# Monitoring & Metrics
+prometheus-client>=0.17.0
+psutil>=5.9.0
+
+# Development & Testing
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+pytest-benchmark>=4.0.0
+
+# Utilities
+python-dotenv>=1.0.0
+structlog>=23.0.0
+
+# Optional dependencies (for specific features)
+# slack-sdk>=3.21.0  # Uncomment for Slack integration
+# figma-api>=1.0.0   # Uncomment for Figma integration 

@@ -1,4 +1,5 @@
-import sys, os
+import sys
+import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import logging
 import argparse
@@ -6,8 +7,7 @@ import json
 import csv
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any
-import asyncio
+from typing import Dict, Optional, Any
 import time
 import hashlib
 import threading
@@ -19,7 +19,6 @@ from bmad.agents.core.agent.agent_performance_monitor import get_performance_mon
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from bmad.agents.core.data.supabase_context import save_context, get_context
 from bmad.agents.core.ai.llm_client import ask_openai
-from bmad.agents.core.ai.confidence_scoring import confidence_scoring
 from integrations.slack.slack_notify import send_slack_message, send_human_in_loop_alert
 
 load_dotenv()
@@ -664,10 +663,10 @@ Orchestrator Agent Commands:
         monitoring_result = self.monitor_workflows()
         
         # Orchestrate agents
-        orchestration_result = self.orchestrate_agents("task_assignment", "Feature development")
+        self.orchestrate_agents("task_assignment", "Feature development")
         
         # Manage escalations
-        escalation_result = self.manage_escalations("workflow_blocked", "feature_delivery")
+        self.manage_escalations("workflow_blocked", "feature_delivery")
         
         # Publish completion
         publish("orchestration_completed", {
@@ -780,7 +779,7 @@ Orchestrator Agent Commands:
                     logging.warning(f"[Orchestrator] Workflow '{workflow_name}' gepauzeerd/afgebroken door HITL. Escalatie verstuurd.")
                     break
                 else:
-                    send_slack_message(f":white_check_mark: HITL-goedkeuring ontvangen, workflow vervolgt.", channel=slack_channel, use_api=True)
+                    send_slack_message(":white_check_mark: HITL-goedkeuring ontvangen, workflow vervolgt.", channel=slack_channel, use_api=True)
             else:
                 try:
                     publish(event_type, event)
@@ -938,14 +937,14 @@ def handle_slack_command(event):
             status = orch.get_workflow_status(workflow_name)
             send_slack_message(f"Status van workflow *{workflow_name}*: {status}", channel=channel, use_api=True)
         else:
-            send_slack_message(f"Gebruik: workflow status <workflow_naam>", channel=channel, use_api=True)
+            send_slack_message("Gebruik: workflow status <workflow_naam>", channel=channel, use_api=True)
         return
     if command and command.strip() == "metrics":
         metrics_str = "\n".join([f"- {k}: {v}" for k, v in METRICS.items()])
         send_slack_message(f"[Orchestrator Metrics]\n{metrics_str}", channel=channel, use_api=True)
         return
     if command == "start workflow":
-        send_slack_message(f"Workflow 'feature' wordt gestart door Orchestrator.", channel=channel, use_api=True)
+        send_slack_message("Workflow 'feature' wordt gestart door Orchestrator.", channel=channel, use_api=True)
         orch.start_workflow("feature")
         log_metric('workflows_started')
     else:
@@ -975,7 +974,7 @@ subscribe('hitl_decision', handle_hitl_decision)
 
 # --- Productieklare agent-handler voorbeeld ---
 # Plaats dit in de relevante agent (bijv. DevOpsInfra, TestEngineer, etc.)
-from bmad.agents.core.communication.message_bus import subscribe, publish
+from bmad.agents.core.communication.message_bus import subscribe
 
 def handle_build_triggered(event):
     logging.info("[DevOpsInfra] Build gestart...")

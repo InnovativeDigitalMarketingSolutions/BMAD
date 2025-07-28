@@ -8,7 +8,6 @@ import argparse
 import subprocess
 import sys
 import yaml
-from pathlib import Path
 
 
 def load_config(config_path="bmad.yaml"):
@@ -28,7 +27,7 @@ def run_command(command, cwd=None):
     """Run a shell command and return the result"""
     print(f"🚀 Running: {command}")
     try:
-        result = subprocess.run(
+        subprocess.run(
             command,
             shell=True,
             cwd=cwd,
@@ -36,7 +35,7 @@ def run_command(command, cwd=None):
             capture_output=False,
             text=True
         )
-        print(f"✅ Command completed successfully")
+        print("✅ Command completed successfully")
         return True
     except subprocess.CalledProcessError as e:
         print(f"❌ Command failed with exit code {e.returncode}")

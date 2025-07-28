@@ -5,11 +5,10 @@ Dit module biedt utilities voor agents om confidence scores te berekenen
 en review requirements te bepalen voor hun output.
 """
 
-import json
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 from datetime import datetime
-from .llm_client import calculate_confidence, assess_complexity, assess_security_risk
+from .llm_client import calculate_confidence
 
 logger = logging.getLogger(__name__)
 

@@ -1,12 +1,12 @@
-import sys, os
+import sys
+import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import argparse
 import logging
 import json
-import csv
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any
+from typing import Dict, Optional, Any
 import asyncio
 import time
 
@@ -16,7 +16,6 @@ from bmad.agents.core.agent.agent_performance_monitor import get_performance_mon
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from bmad.agents.core.data.supabase_context import save_context, get_context
 from bmad.agents.core.ai.llm_client import ask_openai
-from bmad.agents.core.ai.confidence_scoring import confidence_scoring
 from integrations.slack.slack_notify import send_slack_message
 
 # Configure logging
@@ -370,7 +369,7 @@ SecurityDeveloper Agent Commands:
         scan_result = self.run_security_scan("BMAD Application")
         
         # Perform vulnerability assessment
-        vuln_assessment = self.vulnerability_assessment("API")
+        self.vulnerability_assessment("API")
         
         # Publish completion
         publish("security_scan_completed", {
@@ -438,7 +437,7 @@ SecurityDeveloper Agent Commands:
         return result
 
     def summarize_incidents(self, incident_list):
-        prompt = f"Vat de volgende security-incidenten samen in maximaal 3 bullets:\n" + "\n".join(incident_list)
+        prompt = "Vat de volgende security-incidenten samen in maximaal 3 bullets:\n" + "\n".join(incident_list)
         result = ask_openai(prompt)
         logging.info(f"[SecurityDeveloper][LLM Incident-samenvatting]: {result}")
         

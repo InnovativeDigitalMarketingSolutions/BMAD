@@ -5,20 +5,17 @@ Uitgebreide policy engine met complexe conditions, inheritance, composition,
 dynamic updates, en versioning. Bouwt voort op de basis OPA integratie.
 """
 
-import asyncio
 import json
 import logging
 import time
-import hashlib
-from typing import Dict, List, Any, Optional, Union, Callable
+from typing import Dict, List, Any, Optional, Callable
 from dataclasses import dataclass, field
 from enum import Enum
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
-import yaml
 
 # Import BMAD modules
-from integrations.opa.opa_policy_engine import OPAPolicyEngine, PolicyRequest, PolicyResponse
+from integrations.opa.opa_policy_engine import OPAPolicyEngine, PolicyRequest
 
 logger = logging.getLogger(__name__)
 

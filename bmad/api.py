@@ -16,7 +16,7 @@ orch = OrchestratorAgent()
 def start_workflow():
     data = request.json or {}
     workflow = data.get("workflow")
-    parameters = data.get("parameters", {})
+    data.get("parameters", {})
     if not workflow:
         return jsonify({"error": "workflow is required"}), 400
     orch.start_workflow(workflow)
@@ -81,4 +81,4 @@ def swagger_redirect():
     return redirect('/swagger-ui/index.html')
 
 if __name__ == "__main__":
-    app.run(port=5001, debug=True) 
+    app.run(port=5001, debug=False) 

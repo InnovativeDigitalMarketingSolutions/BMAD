@@ -1,4 +1,5 @@
-import sys, os
+import sys
+import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import argparse
 import logging
@@ -6,8 +7,7 @@ import json
 import csv
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any
-import asyncio
+from typing import Dict, Optional, Any
 import time
 
 from bmad.agents.core.communication.message_bus import publish, subscribe
@@ -15,8 +15,6 @@ from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor, MetricType
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from bmad.agents.core.data.supabase_context import save_context, get_context
-from bmad.agents.core.ai.llm_client import ask_openai
-from bmad.agents.core.ai.confidence_scoring import confidence_scoring
 from integrations.slack.slack_notify import send_slack_message
 
 # Configure logging
@@ -527,10 +525,10 @@ Release Manager Agent Commands:
         })
         
         # Create release
-        release_result = self.create_release("1.2.0", "Feature release with new dashboard")
+        self.create_release("1.2.0", "Feature release with new dashboard")
         
         # Approve release
-        approval_result = self.approve_release("1.2.0")
+        self.approve_release("1.2.0")
         
         # Deploy release
         deployment_result = self.deploy_release("1.2.0")
