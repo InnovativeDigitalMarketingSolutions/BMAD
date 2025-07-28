@@ -1,13 +1,20 @@
 """
-Tests for bmad.agents.core.advanced_workflow module.
+Tests for bmad.agents.core.workflow.integrated_workflow_orchestrator module.
 """
 
 import pytest
 import time
 from unittest.mock import patch, AsyncMock
 
-from bmad.agents.core.advanced_workflow import (
-    AdvancedWorkflowOrchestrator,
+# Mock Prefect to avoid Pydantic compatibility issues
+import sys
+import unittest.mock
+sys.modules['prefect'] = unittest.mock.MagicMock()
+sys.modules['prefect.flow'] = unittest.mock.MagicMock()
+sys.modules['prefect.deployments'] = unittest.mock.MagicMock()
+
+from bmad.agents.core.workflow.integrated_workflow_orchestrator import (
+    IntegratedWorkflowOrchestrator,
     WorkflowDefinition,
     WorkflowTask,
     WorkflowStatus,
@@ -116,29 +123,25 @@ class TestWorkflowDefinition:
         assert workflow.notify_on_failure is False
 
 
-class TestAdvancedWorkflowOrchestrator:
-    """Test AdvancedWorkflowOrchestrator class."""
+class TestIntegratedWorkflowOrchestrator:
+    """Test IntegratedWorkflowOrchestrator class."""
     
     def test_orchestrator_initialization(self):
         """Test orchestrator initialization."""
-        orchestrator = AdvancedWorkflowOrchestrator()
+        orchestrator = IntegratedWorkflowOrchestrator()
         
-        assert orchestrator.active_workflows == {}
         assert orchestrator.workflow_definitions == {}
-        # task_executors contains default executors, so it's not empty
-        assert len(orchestrator.task_executors) > 0
-        assert orchestrator.event_handlers == {}
+        assert orchestrator.active_workflows == {}
+        assert orchestrator.task_executors == {}
+        assert orchestrator.max_parallel_workflows == 5
+        assert orchestrator.workflow_timeout == 3600
     
     def test_register_workflow(self):
-        """Test registering a workflow."""
-        orchestrator = AdvancedWorkflowOrchestrator()
+        """Test workflow registration."""
+        orchestrator = IntegratedWorkflowOrchestrator()
         
         tasks = [WorkflowTask(id="task1", name="Task 1", agent="Agent1", command="cmd1")]
-        workflow = WorkflowDefinition(
-            name="test_workflow",
-            description="Test workflow",
-            tasks=tasks
-        )
+        workflow = WorkflowDefinition(name="test_workflow", description="Test", tasks=tasks)
         
         orchestrator.register_workflow(workflow)
         
@@ -146,300 +149,248 @@ class TestAdvancedWorkflowOrchestrator:
         assert orchestrator.workflow_definitions["test_workflow"] == workflow
     
     def test_register_task_executor(self):
-        """Test registering a task executor."""
-        orchestrator = AdvancedWorkflowOrchestrator()
+        """Test task executor registration."""
+        orchestrator = IntegratedWorkflowOrchestrator()
         
         def test_executor(task, context):
-            return {"result": "success"}
+            return {"output": "test"}
         
-        orchestrator.register_task_executor("test_type", test_executor)
+        orchestrator.register_task_executor("TestAgent", test_executor)
         
-        assert "test_type" in orchestrator.task_executors
-        assert orchestrator.task_executors["test_type"] == test_executor
+        assert "TestAgent" in orchestrator.task_executors
+        assert orchestrator.task_executors["TestAgent"] == test_executor
     
     def test_start_workflow_success(self):
-        """Test starting a workflow successfully."""
-        orchestrator = AdvancedWorkflowOrchestrator()
+        """Test successful workflow start."""
+        orchestrator = IntegratedWorkflowOrchestrator()
         
         tasks = [WorkflowTask(id="task1", name="Task 1", agent="Agent1", command="cmd1")]
-        workflow = WorkflowDefinition(
-            name="test_workflow",
-            description="Test workflow",
-            tasks=tasks
-        )
-        
+        workflow = WorkflowDefinition(name="test_workflow", description="Test", tasks=tasks)
         orchestrator.register_workflow(workflow)
         
-        # Mock the async execution to avoid event loop issues
-        with patch('asyncio.create_task'):
-            workflow_id = orchestrator.start_workflow("test_workflow", {"context": "test"})
-            
-            assert workflow_id.startswith("test_workflow_")
-            assert workflow_id in orchestrator.active_workflows
+        workflow_id = orchestrator.start_workflow("test_workflow", {"project": "test"})
+        
+        assert workflow_id is not None
+        assert workflow_id in orchestrator.active_workflows
+        assert orchestrator.active_workflows[workflow_id]["name"] == "test_workflow"
+        assert orchestrator.active_workflows[workflow_id]["status"] == WorkflowStatus.RUNNING
     
     def test_start_workflow_not_found(self):
-        """Test starting a non-existent workflow."""
-        orchestrator = AdvancedWorkflowOrchestrator()
+        """Test starting non-existent workflow."""
+        orchestrator = IntegratedWorkflowOrchestrator()
         
-        with pytest.raises(ValueError, match="Workflow 'nonexistent' niet gevonden"):
-            orchestrator.start_workflow("nonexistent")
+        workflow_id = orchestrator.start_workflow("non_existent", {})
+        
+        assert workflow_id is None
     
     def test_get_workflow_status(self):
         """Test getting workflow status."""
-        orchestrator = AdvancedWorkflowOrchestrator()
+        orchestrator = IntegratedWorkflowOrchestrator()
         
-        tasks = [WorkflowTask(id="task1", name="Task 1", agent="Agent1", command="cmd1")]
-        workflow = WorkflowDefinition(
-            name="test_workflow",
-            description="Test workflow",
-            tasks=tasks
-        )
+        # Setup mock workflow
+        workflow_id = "test_workflow"
+        orchestrator.active_workflows[workflow_id] = {
+            "id": workflow_id,
+            "name": "test_workflow",
+            "status": WorkflowStatus.RUNNING,
+            "start_time": time.time(),
+            "end_time": None,
+            "metrics": {
+                "total_tasks": 2,
+                "completed_tasks": 1,
+                "failed_tasks": 0,
+                "skipped_tasks": 0
+            },
+            "tasks": {
+                "task1": WorkflowTask(id="task1", name="Task 1", agent="Agent1", command="cmd1", status=TaskStatus.COMPLETED),
+                "task2": WorkflowTask(id="task2", name="Task 2", agent="Agent2", command="cmd2", status=TaskStatus.RUNNING)
+            }
+        }
         
-        orchestrator.register_workflow(workflow)
+        status = orchestrator.get_workflow_status(workflow_id)
         
-        # Mock the async execution to avoid event loop issues
-        with patch('asyncio.create_task'):
-            workflow_id = orchestrator.start_workflow("test_workflow")
-            
-            status = orchestrator.get_workflow_status(workflow_id)
-        
-        assert status is not None
-        assert "id" in status  # Changed from workflow_id to id
-        assert "status" in status
-        assert "tasks" in status
+        assert status["id"] == workflow_id
+        assert status["name"] == "test_workflow"
+        assert status["status"] == "running"
+        assert status["metrics"]["total_tasks"] == 2
+        assert status["metrics"]["completed_tasks"] == 1
+        assert len(status["tasks"]) == 2
     
     def test_get_workflow_status_not_found(self):
         """Test getting status of non-existent workflow."""
-        orchestrator = AdvancedWorkflowOrchestrator()
+        orchestrator = IntegratedWorkflowOrchestrator()
         
-        status = orchestrator.get_workflow_status("nonexistent")
+        status = orchestrator.get_workflow_status("non_existent")
+        
         assert status is None
     
     def test_cancel_workflow(self):
-        """Test canceling a workflow."""
-        orchestrator = AdvancedWorkflowOrchestrator()
+        """Test workflow cancellation."""
+        orchestrator = IntegratedWorkflowOrchestrator()
         
-        tasks = [WorkflowTask(id="task1", name="Task 1", agent="Agent1", command="cmd1")]
-        workflow = WorkflowDefinition(
-            name="test_workflow",
-            description="Test workflow",
-            tasks=tasks
-        )
+        # Setup mock workflow
+        workflow_id = "test_workflow"
+        orchestrator.active_workflows[workflow_id] = {
+            "id": workflow_id,
+            "name": "test_workflow",
+            "status": WorkflowStatus.RUNNING,
+            "start_time": time.time(),
+            "end_time": None
+        }
         
-        orchestrator.register_workflow(workflow)
+        result = orchestrator.cancel_workflow(workflow_id)
         
-        # Mock the async execution to avoid event loop issues
-        with patch('asyncio.create_task'):
-            workflow_id = orchestrator.start_workflow("test_workflow")
-            
-            orchestrator.cancel_workflow(workflow_id)
-        
-        # Check that workflow is marked as cancelled
-        status = orchestrator.get_workflow_status(workflow_id)
-        assert status["status"] == WorkflowStatus.CANCELLED.value
+        assert result is True
+        assert orchestrator.active_workflows[workflow_id]["status"] == WorkflowStatus.CANCELLED
+        assert orchestrator.active_workflows[workflow_id]["end_time"] is not None
     
     def test_group_tasks_by_dependency(self):
-        """Test grouping tasks by dependency."""
-        orchestrator = AdvancedWorkflowOrchestrator()
+        """Test task dependency grouping."""
+        orchestrator = IntegratedWorkflowOrchestrator()
         
-        # Create tasks with dependencies
-        task1 = WorkflowTask(id="task1", name="Task 1", agent="Agent1", command="cmd1")
-        task2 = WorkflowTask(id="task2", name="Task 2", agent="Agent2", command="cmd2", dependencies=["task1"])
-        task3 = WorkflowTask(id="task3", name="Task 3", agent="Agent3", command="cmd3", dependencies=["task2"])
-        
-        tasks = {"task1": task1, "task2": task2, "task3": task3}
+        tasks = {
+            "task1": WorkflowTask(id="task1", name="Task 1", agent="Agent1", command="cmd1"),
+            "task2": WorkflowTask(id="task2", name="Task 2", agent="Agent2", command="cmd2", dependencies=["task1"]),
+            "task3": WorkflowTask(id="task3", name="Task 3", agent="Agent3", command="cmd3", dependencies=["task1"]),
+            "task4": WorkflowTask(id="task4", name="Task 4", agent="Agent4", command="cmd4", dependencies=["task2", "task3"])
+        }
         
         groups = orchestrator._group_tasks_by_dependency(tasks)
         
         assert len(groups) == 3
         assert "task1" in groups[0]
-        assert "task2" in groups[1]
-        assert "task3" in groups[2]
+        assert "task2" in groups[1] and "task3" in groups[1]
+        assert "task4" in groups[2]
     
     def test_check_dependencies(self):
-        """Test checking task dependencies."""
-        orchestrator = AdvancedWorkflowOrchestrator()
+        """Test dependency checking."""
+        orchestrator = IntegratedWorkflowOrchestrator()
         
-        # Create a workflow with dependencies
-        task1 = WorkflowTask(id="task1", name="Task 1", agent="Agent1", command="cmd1")
-        task2 = WorkflowTask(id="task2", name="Task 2", agent="Agent2", command="cmd2", dependencies=["task1"])
+        # Setup workflow state
+        workflow_id = "test_workflow"
+        orchestrator.active_workflows[workflow_id] = {
+            "tasks": {
+                "task1": WorkflowTask(id="task1", name="Task 1", agent="Agent1", command="cmd1", status=TaskStatus.COMPLETED),
+                "task2": WorkflowTask(id="task2", name="Task 2", agent="Agent2", command="cmd2", dependencies=["task1"], status=TaskStatus.PENDING)
+            }
+        }
         
-        workflow = WorkflowDefinition(
-            name="test_workflow",
-            description="Test workflow",
-            tasks=[task1, task2]
-        )
+        # Test dependency check
+        assert orchestrator._check_dependencies(workflow_id, "task2")
         
-        orchestrator.register_workflow(workflow)
-        
-        # Mock the async execution to avoid event loop issues
-        with patch('asyncio.create_task'):
-            workflow_id = orchestrator.start_workflow("test_workflow")
-            
-            # Task1 has no dependencies, should be ready
-            assert orchestrator._check_dependencies(workflow_id, "task1") is True
-        
-        # Task2 depends on task1, should not be ready initially
-        assert orchestrator._check_dependencies(workflow_id, "task2") is False
-        
-        # Mark task1 as completed
-        orchestrator.active_workflows[workflow_id]["tasks"]["task1"].status = TaskStatus.COMPLETED
-        
-        # Now task2 should be ready
-        assert orchestrator._check_dependencies(workflow_id, "task2") is True
+        # Test failed dependency
+        orchestrator.active_workflows[workflow_id]["tasks"]["task1"].status = TaskStatus.FAILED
+        assert not orchestrator._check_dependencies(workflow_id, "task2")
     
     def test_should_skip_task(self):
-        """Test checking if a task should be skipped."""
-        orchestrator = AdvancedWorkflowOrchestrator()
+        """Test task skip logic."""
+        orchestrator = IntegratedWorkflowOrchestrator()
         
-        # Create a workflow
-        task1 = WorkflowTask(id="task1", name="Task 1", agent="Agent1", command="cmd1", required=False)
-        workflow = WorkflowDefinition(
-            name="test_workflow",
-            description="Test workflow",
-            tasks=[task1]
-        )
+        # Setup workflow state
+        workflow_id = "test_workflow"
+        orchestrator.active_workflows[workflow_id] = {
+            "tasks": {
+                "task1": WorkflowTask(id="task1", name="Task 1", agent="Agent1", command="cmd1", status=TaskStatus.COMPLETED),
+                "task2": WorkflowTask(id="task2", name="Task 2", agent="Agent2", command="cmd2", status=TaskStatus.SKIPPED),
+                "task3": WorkflowTask(id="task3", name="Task 3", agent="Agent3", command="cmd3", status=TaskStatus.PENDING)
+            }
+        }
         
-        orchestrator.register_workflow(workflow)
-        
-        # Mock the async execution to avoid event loop issues
-        with patch('asyncio.create_task'):
-            workflow_id = orchestrator.start_workflow("test_workflow")
-            
-            # Task should not be skipped initially
-            assert orchestrator._should_skip_task(workflow_id, "task1") is False
-        
-        # Mark task as failed
-        orchestrator.active_workflows[workflow_id]["tasks"]["task1"].status = TaskStatus.FAILED
-        
-        # _should_skip_task is currently a placeholder that always returns False
-        assert orchestrator._should_skip_task(workflow_id, "task1") is False
+        # Test skip logic
+        assert not orchestrator._should_skip_task(workflow_id, "task1")  # Already completed
+        assert orchestrator._should_skip_task(workflow_id, "task2")  # Already skipped
+        assert not orchestrator._should_skip_task(workflow_id, "task3")  # Pending
 
 
-class TestAdvancedWorkflowOrchestratorAsync:
-    """Test async methods of AdvancedWorkflowOrchestrator."""
+class TestIntegratedWorkflowOrchestratorAsync:
+    """Test async methods of IntegratedWorkflowOrchestrator."""
     
     @pytest.mark.asyncio
     async def test_execute_task_success(self):
         """Test successful task execution."""
-        orchestrator = AdvancedWorkflowOrchestrator()
+        orchestrator = IntegratedWorkflowOrchestrator()
         
         # Mock task executor
-        mock_executor = AsyncMock(return_value={"result": "success", "confidence": 0.8})
-        orchestrator.task_executors["ProductOwner"] = mock_executor
+        async def mock_executor(task, context):
+            return {"output": "success", "confidence": 0.9}
         
-        task = WorkflowTask(
-            id="test_task",
-            name="Test Task",
-            agent="ProductOwner",
-            command="test_command"
-        )
+        orchestrator.register_task_executor("TestAgent", mock_executor)
         
-        workflow_id = "test_workflow_123"
-        orchestrator.active_workflows[workflow_id] = {
-            "definition": WorkflowDefinition(name="test", description="test", tasks=[task]),
-            "status": WorkflowStatus.RUNNING,
-            "tasks": {"test_task": task},
-            "context": {"test": "context"}
-        }
+        task = WorkflowTask(id="task1", name="Task 1", agent="TestAgent", command="cmd1")
+        context = {"project": "test"}
         
-        await orchestrator._execute_task(workflow_id, "test_task")
+        result = await orchestrator._execute_task(task, context)
         
-        # Check that task was executed
-        mock_executor.assert_called_once()
-        assert orchestrator.active_workflows[workflow_id]["tasks"]["test_task"].status == TaskStatus.COMPLETED
+        assert result["output"] == "success"
+        assert result["confidence"] == 0.9
+        assert task.status == TaskStatus.COMPLETED
     
     @pytest.mark.asyncio
     async def test_execute_task_failure(self):
         """Test task execution failure."""
-        orchestrator = AdvancedWorkflowOrchestrator()
+        orchestrator = IntegratedWorkflowOrchestrator()
         
-        # Mock task executor that raises an exception
-        mock_executor = AsyncMock(side_effect=Exception("Task failed"))
-        orchestrator.task_executors["test_type"] = mock_executor
+        # Mock task executor that raises exception
+        async def mock_executor(task, context):
+            raise Exception("Task failed")
         
-        task = WorkflowTask(
-            id="test_task",
-            name="Test Task",
-            agent="TestAgent",
-            command="test_command"
-        )
+        orchestrator.register_task_executor("TestAgent", mock_executor)
         
-        workflow_id = "test_workflow_123"
-        orchestrator.active_workflows[workflow_id] = {
-            "definition": WorkflowDefinition(name="test", description="test", tasks=[task]),
-            "status": WorkflowStatus.RUNNING,
-            "tasks": {"test_task": {"status": TaskStatus.PENDING}},
-            "context": {"test": "context"}
-        }
+        task = WorkflowTask(id="task1", name="Task 1", agent="TestAgent", command="cmd1")
+        context = {"project": "test"}
         
-        await orchestrator._execute_task(workflow_id, "test_task")
+        result = await orchestrator._execute_task(task, context)
         
-        # Check that task failed
-        assert orchestrator.active_workflows[workflow_id]["tasks"]["test_task"]["status"] == TaskStatus.FAILED
-        assert "error" in orchestrator.active_workflows[workflow_id]["tasks"]["test_task"]
+        assert result is None
+        assert task.status == TaskStatus.FAILED
     
     @pytest.mark.asyncio
     async def test_retry_task(self):
-        """Test task retry functionality."""
-        orchestrator = AdvancedWorkflowOrchestrator()
+        """Test task retry logic."""
+        orchestrator = IntegratedWorkflowOrchestrator()
         
         # Mock task executor that fails first, then succeeds
-        mock_executor = AsyncMock(side_effect=[Exception("First failure"), {"result": "success"}])
-        orchestrator.task_executors["test_type"] = mock_executor
+        call_count = 0
+        async def mock_executor(task, context):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                raise Exception("Task failed")
+            return {"output": "success"}
         
-        task = WorkflowTask(
-            id="test_task",
-            name="Test Task",
-            agent="TestAgent",
-            command="test_command",
-            retries=2
-        )
+        orchestrator.register_task_executor("TestAgent", mock_executor)
         
-        workflow_id = "test_workflow_123"
-        orchestrator.active_workflows[workflow_id] = {
-            "definition": WorkflowDefinition(name="test", description="test", tasks=[task]),
-            "status": WorkflowStatus.RUNNING,
-            "tasks": {"test_task": {"status": TaskStatus.FAILED, "retry_count": 0}},
-            "context": {"test": "context"}
-        }
+        task = WorkflowTask(id="task1", name="Task 1", agent="TestAgent", command="cmd1", retries=2)
+        context = {"project": "test"}
         
-        await orchestrator._retry_task(workflow_id, "test_task")
+        result = await orchestrator._execute_task(task, context)
         
-        # Check that task was retried and succeeded
-        assert mock_executor.call_count == 2
-        assert orchestrator.active_workflows[workflow_id]["tasks"]["test_task"]["status"] == TaskStatus.COMPLETED
+        assert result["output"] == "success"
+        assert task.status == TaskStatus.COMPLETED
+        assert call_count == 2
     
     @pytest.mark.asyncio
     async def test_execute_tasks_parallel(self):
         """Test parallel task execution."""
-        orchestrator = AdvancedWorkflowOrchestrator()
+        orchestrator = IntegratedWorkflowOrchestrator()
         
         # Mock task executor
-        mock_executor = AsyncMock(return_value={"result": "success"})
-        orchestrator.task_executors["test_type"] = mock_executor
+        async def mock_executor(task, context):
+            return {"output": f"success_{task.id}"}
         
-        # Create parallel tasks
-        task1 = WorkflowTask(id="task1", name="Task 1", agent="Agent1", command="cmd1", parallel=True)
-        task2 = WorkflowTask(id="task2", name="Task 2", agent="Agent2", command="cmd2", parallel=True)
+        orchestrator.register_task_executor("TestAgent", mock_executor)
         
-        workflow = WorkflowDefinition(
-            name="test_workflow",
-            description="Test workflow",
-            tasks=[task1, task2],
-            max_parallel=2
-        )
+        tasks = [
+            WorkflowTask(id="task1", name="Task 1", agent="TestAgent", command="cmd1", parallel=True),
+            WorkflowTask(id="task2", name="Task 2", agent="TestAgent", command="cmd2", parallel=True)
+        ]
+        context = {"project": "test"}
         
-        orchestrator.register_workflow(workflow)
-        workflow_id = orchestrator.start_workflow("test_workflow")
+        results = await orchestrator._execute_tasks_parallel(tasks, context)
         
-        # Execute tasks
-        await orchestrator._execute_tasks(workflow_id)
-        
-        # Check that both tasks were executed
-        assert mock_executor.call_count == 2
-        assert orchestrator.active_workflows[workflow_id]["tasks"]["task1"]["status"] == TaskStatus.COMPLETED
-        assert orchestrator.active_workflows[workflow_id]["tasks"]["task2"]["status"] == TaskStatus.COMPLETED
+        assert len(results) == 2
+        assert results[0]["output"] == "success_task1"
+        assert results[1]["output"] == "success_task2"
 
 
 class TestWorkflowIntegration:
@@ -447,107 +398,92 @@ class TestWorkflowIntegration:
     
     @pytest.mark.asyncio
     async def test_complete_workflow_execution(self):
-        """Test complete workflow execution from start to finish."""
-        orchestrator = AdvancedWorkflowOrchestrator()
+        """Test complete workflow execution."""
+        orchestrator = IntegratedWorkflowOrchestrator()
         
-        # Mock task executors
-        mock_executor = AsyncMock(return_value={"result": "success", "confidence": 0.9})
-        orchestrator.task_executors["test_type"] = mock_executor
+        # Mock task executor
+        async def mock_executor(task, context):
+            return {"output": f"completed_{task.id}"}
         
-        # Create workflow with multiple tasks
-        task1 = WorkflowTask(id="task1", name="Task 1", agent="Agent1", command="cmd1")
-        task2 = WorkflowTask(id="task2", name="Task 2", agent="Agent2", command="cmd2", dependencies=["task1"])
-        task3 = WorkflowTask(id="task3", name="Task 3", agent="Agent3", command="cmd3", dependencies=["task2"])
+        orchestrator.register_task_executor("TestAgent", mock_executor)
         
-        workflow = WorkflowDefinition(
-            name="test_workflow",
-            description="Test workflow",
-            tasks=[task1, task2, task3]
-        )
-        
+        # Create workflow
+        tasks = [
+            WorkflowTask(id="task1", name="Task 1", agent="TestAgent", command="cmd1"),
+            WorkflowTask(id="task2", name="Task 2", agent="TestAgent", command="cmd2", dependencies=["task1"])
+        ]
+        workflow = WorkflowDefinition(name="test_workflow", description="Test", tasks=tasks)
         orchestrator.register_workflow(workflow)
-        workflow_id = orchestrator.start_workflow("test_workflow", {"context": "test"})
         
-        # Execute workflow
+        # Start and execute workflow
+        workflow_id = orchestrator.start_workflow("test_workflow", {"project": "test"})
         await orchestrator._execute_workflow(workflow_id)
         
-        # Check that all tasks were executed in order
-        assert mock_executor.call_count == 3
-        assert orchestrator.active_workflows[workflow_id]["status"] == WorkflowStatus.COMPLETED
-        
-        # Check task execution order (dependencies)
-        calls = mock_executor.call_args_list
-        assert "task1" in str(calls[0])
-        assert "task2" in str(calls[1])
-        assert "task3" in str(calls[2])
+        # Check results
+        status = orchestrator.get_workflow_status(workflow_id)
+        assert status["status"] == "completed"
+        assert status["metrics"]["completed_tasks"] == 2
     
     @pytest.mark.asyncio
     async def test_workflow_with_failure_and_retry(self):
         """Test workflow with task failure and retry."""
-        orchestrator = AdvancedWorkflowOrchestrator()
+        orchestrator = IntegratedWorkflowOrchestrator()
         
-        # Mock task executor that fails first, then succeeds
-        mock_executor = AsyncMock(side_effect=[Exception("First failure"), {"result": "success"}])
-        orchestrator.task_executors["test_type"] = mock_executor
+        # Mock task executor with retry logic
+        call_count = {"task1": 0, "task2": 0}
+        async def mock_executor(task, context):
+            call_count[task.id] += 1
+            if task.id == "task1" and call_count[task.id] == 1:
+                raise Exception("Task failed")
+            return {"output": f"completed_{task.id}"}
         
-        task = WorkflowTask(
-            id="task1",
-            name="Task 1",
-            agent="Agent1",
-            command="cmd1",
-            retries=1
-        )
+        orchestrator.register_task_executor("TestAgent", mock_executor)
         
-        workflow = WorkflowDefinition(
-            name="test_workflow",
-            description="Test workflow",
-            tasks=[task],
-            auto_retry=True
-        )
-        
+        # Create workflow
+        tasks = [
+            WorkflowTask(id="task1", name="Task 1", agent="TestAgent", command="cmd1", retries=2),
+            WorkflowTask(id="task2", name="Task 2", agent="TestAgent", command="cmd2", dependencies=["task1"])
+        ]
+        workflow = WorkflowDefinition(name="test_workflow", description="Test", tasks=tasks)
         orchestrator.register_workflow(workflow)
-        workflow_id = orchestrator.start_workflow("test_workflow")
         
-        # Execute workflow
+        # Start and execute workflow
+        workflow_id = orchestrator.start_workflow("test_workflow", {"project": "test"})
         await orchestrator._execute_workflow(workflow_id)
         
-        # Check that task was retried and succeeded
-        assert mock_executor.call_count == 2
-        assert orchestrator.active_workflows[workflow_id]["status"] == WorkflowStatus.COMPLETED
+        # Check results
+        status = orchestrator.get_workflow_status(workflow_id)
+        assert status["status"] == "completed"
+        assert call_count["task1"] == 2  # Retried once
+        assert call_count["task2"] == 1  # Executed once
     
     @pytest.mark.asyncio
     async def test_workflow_with_required_task_failure(self):
         """Test workflow with required task failure."""
-        orchestrator = AdvancedWorkflowOrchestrator()
+        orchestrator = IntegratedWorkflowOrchestrator()
         
         # Mock task executor that always fails
-        mock_executor = AsyncMock(side_effect=Exception("Task failed"))
-        orchestrator.task_executors["test_type"] = mock_executor
+        async def mock_executor(task, context):
+            raise Exception("Task failed")
         
-        task = WorkflowTask(
-            id="task1",
-            name="Task 1",
-            agent="Agent1",
-            command="cmd1",
-            required=True,
-            retries=0
-        )
+        orchestrator.register_task_executor("TestAgent", mock_executor)
         
-        workflow = WorkflowDefinition(
-            name="test_workflow",
-            description="Test workflow",
-            tasks=[task]
-        )
-        
+        # Create workflow
+        tasks = [
+            WorkflowTask(id="task1", name="Task 1", agent="TestAgent", command="cmd1", required=True),
+            WorkflowTask(id="task2", name="Task 2", agent="TestAgent", command="cmd2", dependencies=["task1"])
+        ]
+        workflow = WorkflowDefinition(name="test_workflow", description="Test", tasks=tasks)
         orchestrator.register_workflow(workflow)
-        workflow_id = orchestrator.start_workflow("test_workflow")
         
-        # Execute workflow
+        # Start and execute workflow
+        workflow_id = orchestrator.start_workflow("test_workflow", {"project": "test"})
         await orchestrator._execute_workflow(workflow_id)
         
-        # Check that workflow failed
-        assert orchestrator.active_workflows[workflow_id]["status"] == WorkflowStatus.FAILED
-        assert orchestrator.active_workflows[workflow_id]["tasks"]["task1"]["status"] == TaskStatus.FAILED
+        # Check results
+        status = orchestrator.get_workflow_status(workflow_id)
+        assert status["status"] == "failed"
+        assert status["metrics"]["failed_tasks"] == 1
 
 
 class TestWorkflowEventHandling:
@@ -555,120 +491,91 @@ class TestWorkflowEventHandling:
     
     def test_handle_review_approval(self):
         """Test handling review approval event."""
-        orchestrator = AdvancedWorkflowOrchestrator()
+        orchestrator = IntegratedWorkflowOrchestrator()
         
-        # Create a workflow with a task that needs review
-        task = WorkflowTask(id="task1", name="Task 1", agent="Agent1", command="cmd1")
-        workflow = WorkflowDefinition(
-            name="test_workflow",
-            description="Test workflow",
-            tasks=[task]
-        )
-        
-        orchestrator.register_workflow(workflow)
-        
-        # Mock the async execution to avoid event loop issues
-        with patch('asyncio.create_task'):
-            workflow_id = orchestrator.start_workflow("test_workflow")
-            
-            # Simulate review approval event
-            event = {
-            "type": "review_approval",
-            "workflow_id": workflow_id,
-            "task_id": "task1",
-            "approved": True,
-            "feedback": "Good work!"
+        # Setup workflow with pending review
+        workflow_id = "test_workflow"
+        orchestrator.active_workflows[workflow_id] = {
+            "id": workflow_id,
+            "name": "test_workflow",
+            "status": WorkflowStatus.PAUSED,
+            "current_task": "review_task",
+            "tasks": {
+                "review_task": WorkflowTask(id="review_task", name="Review", agent="Reviewer", command="review", status=TaskStatus.PENDING)
+            }
         }
         
-        orchestrator._handle_review_approval(event)
+        # Handle approval
+        result = orchestrator.handle_review_approval(workflow_id, "review_task", "Approved")
         
-        # Check that task was marked as completed
-        assert orchestrator.active_workflows[workflow_id]["tasks"]["task1"]["status"] == TaskStatus.COMPLETED
+        assert result is True
+        assert orchestrator.active_workflows[workflow_id]["tasks"]["review_task"].status == TaskStatus.COMPLETED
+        assert orchestrator.active_workflows[workflow_id]["status"] == WorkflowStatus.RUNNING
     
     def test_handle_review_rejection(self):
         """Test handling review rejection event."""
-        orchestrator = AdvancedWorkflowOrchestrator()
+        orchestrator = IntegratedWorkflowOrchestrator()
         
-        # Create a workflow with a task that needs review
-        task = WorkflowTask(id="task1", name="Task 1", agent="Agent1", command="cmd1")
-        workflow = WorkflowDefinition(
-            name="test_workflow",
-            description="Test workflow",
-            tasks=[task]
-        )
-        
-        orchestrator.register_workflow(workflow)
-        
-        # Mock the async execution to avoid event loop issues
-        with patch('asyncio.create_task'):
-            workflow_id = orchestrator.start_workflow("test_workflow")
-            
-            # Simulate review rejection event
-            event = {
-            "type": "review_rejection",
-            "workflow_id": workflow_id,
-            "task_id": "task1",
-            "approved": False,
-            "feedback": "Needs improvement"
+        # Setup workflow with pending review
+        workflow_id = "test_workflow"
+        orchestrator.active_workflows[workflow_id] = {
+            "id": workflow_id,
+            "name": "test_workflow",
+            "status": WorkflowStatus.PAUSED,
+            "current_task": "review_task",
+            "tasks": {
+                "review_task": WorkflowTask(id="review_task", name="Review", agent="Reviewer", command="review", status=TaskStatus.PENDING)
+            }
         }
         
-        orchestrator._handle_review_rejection(event)
+        # Handle rejection
+        result = orchestrator.handle_review_rejection(workflow_id, "review_task", "Rejected - needs changes")
         
-        # Check that task was marked as failed
-        assert orchestrator.active_workflows[workflow_id]["tasks"]["task1"]["status"] == TaskStatus.FAILED
-        assert "feedback" in orchestrator.active_workflows[workflow_id]["tasks"]["task1"]["error"]
+        assert result is True
+        assert orchestrator.active_workflows[workflow_id]["tasks"]["review_task"].status == TaskStatus.FAILED
+        assert orchestrator.active_workflows[workflow_id]["status"] == WorkflowStatus.FAILED
 
 
 class TestWorkflowNotifications:
-    """Test workflow notification functionality."""
+    """Test workflow notifications."""
     
-    @patch('bmad.agents.core.advanced_workflow.publish')
+    @patch('bmad.agents.core.workflow.integrated_workflow_orchestrator.publish')
     def test_notify_workflow_completion(self, mock_publish):
         """Test workflow completion notification."""
-        orchestrator = AdvancedWorkflowOrchestrator()
+        orchestrator = IntegratedWorkflowOrchestrator()
         
-        workflow_id = "test_workflow_123"
+        workflow_id = "test_workflow"
         orchestrator.active_workflows[workflow_id] = {
-            "definition": WorkflowDefinition(name="test", description="test", tasks=[]),
-            "status": WorkflowStatus.COMPLETED,
-            "tasks": {},
-            "context": {"test": "context"},
+            "id": workflow_id,
             "name": "test_workflow",
-            "metrics": {},
-            "start_time": time.time() - 100,
-            "end_time": time.time()
+            "status": WorkflowStatus.COMPLETED,
+            "metrics": {"total_tasks": 2, "completed_tasks": 2}
         }
         
         orchestrator._notify_workflow_completion(workflow_id)
         
-        # Check that notification was published
         mock_publish.assert_called_once()
         call_args = mock_publish.call_args[0]
         assert call_args[0] == "workflow_completed"
         assert call_args[1]["workflow_id"] == workflow_id
     
-    @patch('bmad.agents.core.advanced_workflow.publish')
+    @patch('bmad.agents.core.workflow.integrated_workflow_orchestrator.publish')
     def test_notify_workflow_failure(self, mock_publish):
         """Test workflow failure notification."""
-        orchestrator = AdvancedWorkflowOrchestrator()
+        orchestrator = IntegratedWorkflowOrchestrator()
         
-        workflow_id = "test_workflow_123"
+        workflow_id = "test_workflow"
         orchestrator.active_workflows[workflow_id] = {
-            "definition": WorkflowDefinition(name="test", description="test", tasks=[]),
-            "status": WorkflowStatus.FAILED,
-            "tasks": {"task1": {"status": TaskStatus.FAILED, "error": "Task failed"}},
-            "context": {"test": "context"},
+            "id": workflow_id,
             "name": "test_workflow",
-            "error": "Workflow failed",
-            "failed_tasks": ["task1"],
-            "metrics": {}
+            "status": WorkflowStatus.FAILED,
+            "metrics": {"total_tasks": 2, "failed_tasks": 1}
         }
         
-        orchestrator._notify_workflow_failure(workflow_id)
+        orchestrator._notify_workflow_failure(workflow_id, "Task failed")
         
-        # Check that notification was published
         mock_publish.assert_called_once()
         call_args = mock_publish.call_args[0]
         assert call_args[0] == "workflow_failed"
         assert call_args[1]["workflow_id"] == workflow_id
-        assert "error" in call_args[1] 
+        assert call_args[1]["error"] == "Task failed" 

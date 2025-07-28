@@ -1,11 +1,11 @@
 """
-Tests for bmad.agents.core.clickup_integration module.
+Tests for integrations.clickup.clickup_integration module.
 """
 
 import os
 from unittest.mock import patch, MagicMock
 
-from bmad.agents.core.clickup_integration import ClickUpIntegration
+from integrations.clickup.clickup_integration import ClickUpIntegration
 
 
 class TestClickUpIntegration:
@@ -14,7 +14,7 @@ class TestClickUpIntegration:
     def test_initialization_with_api_key(self):
         """Test initialization with API key."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key', 'CLICKUP_SPACE_ID': 'space123'}):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {
                     "space_id": "space123",
@@ -35,7 +35,7 @@ class TestClickUpIntegration:
     def test_initialization_without_api_key(self):
         """Test initialization without API key."""
         with patch.dict(os.environ, {}, clear=True):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {}
                 
@@ -47,7 +47,7 @@ class TestClickUpIntegration:
     def test_initialization_with_project_id(self):
         """Test initialization with specific project ID."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.get_clickup_config.return_value = {
                     "space_id": "space123",
                     "folder_id": "folder123",
@@ -59,13 +59,13 @@ class TestClickUpIntegration:
                 assert integration.project_id == "custom_project"
                 mock_pm.get_clickup_config.assert_called_with("custom_project")
     
-    @patch('bmad.agents.core.clickup_integration.requests.post')
-    @patch('bmad.agents.core.clickup_integration.save_context')
-    @patch('bmad.agents.core.clickup_integration.publish')
+    @patch('integrations.clickup.clickup_integration.requests.post')
+    @patch('integrations.clickup.clickup_integration.save_context')
+    @patch('integrations.clickup.clickup_integration.publish')
     def test_create_project_success(self, mock_publish, mock_save_context, mock_post):
         """Test successful project creation."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {
                     "space_id": "space123",
@@ -91,7 +91,7 @@ class TestClickUpIntegration:
     def test_create_project_disabled(self):
         """Test project creation when integration is disabled."""
         with patch.dict(os.environ, {}, clear=True):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {}
                 
@@ -100,11 +100,11 @@ class TestClickUpIntegration:
                 
                 assert result is None
     
-    @patch('bmad.agents.core.clickup_integration.requests.post')
+    @patch('integrations.clickup.clickup_integration.requests.post')
     def test_create_project_api_error(self, mock_post):
         """Test project creation with API error."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {
                     "space_id": "space123",
@@ -120,13 +120,13 @@ class TestClickUpIntegration:
                 
                 assert result is None
     
-    @patch('bmad.agents.core.clickup_integration.requests.post')
-    @patch('bmad.agents.core.clickup_integration.save_context')
-    @patch('bmad.agents.core.clickup_integration.publish')
+    @patch('integrations.clickup.clickup_integration.requests.post')
+    @patch('integrations.clickup.clickup_integration.save_context')
+    @patch('integrations.clickup.clickup_integration.publish')
     def test_create_task_success(self, mock_publish, mock_save_context, mock_post):
         """Test successful task creation."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {
                     "space_id": "space123",
@@ -158,7 +158,7 @@ class TestClickUpIntegration:
     def test_create_task_disabled(self):
         """Test task creation when integration is disabled."""
         with patch.dict(os.environ, {}, clear=True):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {}
                 
@@ -167,11 +167,11 @@ class TestClickUpIntegration:
                 
                 assert result is None
     
-    @patch('bmad.agents.core.clickup_integration.requests.put')
+    @patch('integrations.clickup.clickup_integration.requests.put')
     def test_update_task_status_success(self, mock_put):
         """Test successful task status update."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {}
                 
@@ -189,7 +189,7 @@ class TestClickUpIntegration:
     def test_update_task_status_disabled(self):
         """Test task status update when integration is disabled."""
         with patch.dict(os.environ, {}, clear=True):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {}
                 
@@ -198,11 +198,11 @@ class TestClickUpIntegration:
                 
                 assert result is False
     
-    @patch('bmad.agents.core.clickup_integration.requests.put')
+    @patch('integrations.clickup.clickup_integration.requests.put')
     def test_update_task_status_api_error(self, mock_put):
         """Test task status update with API error."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {}
                 
@@ -214,12 +214,12 @@ class TestClickUpIntegration:
                 
                 assert result is False
     
-    @patch('bmad.agents.core.clickup_integration.requests.post')
-    @patch('bmad.agents.core.clickup_integration.save_context')
+    @patch('integrations.clickup.clickup_integration.requests.post')
+    @patch('integrations.clickup.clickup_integration.save_context')
     def test_sync_project_requirements_success(self, mock_save_context, mock_post):
         """Test successful project requirements sync."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {
                     "space_id": "space123",
@@ -249,7 +249,7 @@ class TestClickUpIntegration:
     def test_sync_project_requirements_disabled(self):
         """Test project requirements sync when integration is disabled."""
         with patch.dict(os.environ, {}, clear=True):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {}
                 
@@ -260,12 +260,12 @@ class TestClickUpIntegration:
                 
                 assert result is False
     
-    @patch('bmad.agents.core.clickup_integration.requests.post')
-    @patch('bmad.agents.core.clickup_integration.save_context')
+    @patch('integrations.clickup.clickup_integration.requests.post')
+    @patch('integrations.clickup.clickup_integration.save_context')
     def test_sync_user_stories_success(self, mock_save_context, mock_post):
         """Test successful user stories sync."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {
                     "space_id": "space123",
@@ -295,7 +295,7 @@ class TestClickUpIntegration:
     def test_sync_user_stories_disabled(self):
         """Test user stories sync when integration is disabled."""
         with patch.dict(os.environ, {}, clear=True):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {}
                 
@@ -306,12 +306,12 @@ class TestClickUpIntegration:
                 
                 assert result is False
     
-    @patch('bmad.agents.core.clickup_integration.requests.get')
-    @patch('bmad.agents.core.clickup_integration.get_context')
+    @patch('integrations.clickup.clickup_integration.requests.get')
+    @patch('integrations.clickup.clickup_integration.get_context')
     def test_get_project_tasks_success(self, mock_get_context, mock_get):
         """Test successful project tasks retrieval."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {
                     "space_id": "space123",
@@ -347,7 +347,7 @@ class TestClickUpIntegration:
     def test_get_project_tasks_disabled(self):
         """Test project tasks retrieval when integration is disabled."""
         with patch.dict(os.environ, {}, clear=True):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {}
                 
@@ -356,13 +356,13 @@ class TestClickUpIntegration:
                 
                 assert result == []
     
-    @patch('bmad.agents.core.clickup_integration.requests.post')
-    @patch('bmad.agents.core.clickup_integration.save_context')
-    @patch('bmad.agents.core.clickup_integration.publish')
+    @patch('integrations.clickup.clickup_integration.requests.post')
+    @patch('integrations.clickup.clickup_integration.save_context')
+    @patch('integrations.clickup.clickup_integration.publish')
     def test_create_agent_task_success(self, mock_publish, mock_save_context, mock_post):
         """Test successful agent task creation."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {
                     "space_id": "space123",
@@ -393,7 +393,7 @@ class TestClickUpIntegration:
     def test_create_agent_task_disabled(self):
         """Test agent task creation when integration is disabled."""
         with patch.dict(os.environ, {}, clear=True):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {}
                 
@@ -402,11 +402,11 @@ class TestClickUpIntegration:
                 
                 assert result is None
     
-    @patch('bmad.agents.core.clickup_integration.requests.put')
+    @patch('integrations.clickup.clickup_integration.requests.put')
     def test_mark_task_completed_success(self, mock_put):
         """Test successful task completion marking."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {}
                 
@@ -424,7 +424,7 @@ class TestClickUpIntegration:
     def test_mark_task_completed_disabled(self):
         """Test task completion marking when integration is disabled."""
         with patch.dict(os.environ, {}, clear=True):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {}
                 
@@ -433,12 +433,12 @@ class TestClickUpIntegration:
                 
                 assert result is False
     
-    @patch('bmad.agents.core.clickup_integration.requests.get')
-    @patch('bmad.agents.core.clickup_integration.get_context')
+    @patch('integrations.clickup.clickup_integration.requests.get')
+    @patch('integrations.clickup.clickup_integration.get_context')
     def test_get_project_metrics_success(self, mock_get_context, mock_get):
         """Test successful project metrics retrieval."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {
                     "space_id": "space123",
@@ -481,7 +481,7 @@ class TestClickUpIntegration:
     def test_get_project_metrics_disabled(self):
         """Test project metrics retrieval when integration is disabled."""
         with patch.dict(os.environ, {}, clear=True):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {}
                 
@@ -500,11 +500,11 @@ class TestClickUpIntegration:
 class TestClickUpIntegrationErrorHandling:
     """Test error handling in ClickUpIntegration."""
     
-    @patch('bmad.agents.core.clickup_integration.requests.post')
+    @patch('integrations.clickup.clickup_integration.requests.post')
     def test_create_project_api_error_handling(self, mock_post):
         """Test API error handling in project creation."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {
                     "space_id": "space123",
@@ -520,11 +520,11 @@ class TestClickUpIntegrationErrorHandling:
                 
                 assert result is None
     
-    @patch('bmad.agents.core.clickup_integration.requests.post')
+    @patch('integrations.clickup.clickup_integration.requests.post')
     def test_create_task_api_error_handling(self, mock_post):
         """Test API error handling in task creation."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {
                     "space_id": "space123",
@@ -540,12 +540,12 @@ class TestClickUpIntegrationErrorHandling:
                 
                 assert result is None
     
-    @patch('bmad.agents.core.clickup_integration.requests.get')
-    @patch('bmad.agents.core.clickup_integration.get_context')
+    @patch('integrations.clickup.clickup_integration.requests.get')
+    @patch('integrations.clickup.clickup_integration.get_context')
     def test_get_project_tasks_api_error_handling(self, mock_get_context, mock_get):
         """Test API error handling in project tasks retrieval."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {
                     "space_id": "space123",
@@ -566,12 +566,12 @@ class TestClickUpIntegrationErrorHandling:
                 
                 assert result == []
     
-    @patch('bmad.agents.core.clickup_integration.requests.get')
-    @patch('bmad.agents.core.clickup_integration.get_context')
+    @patch('integrations.clickup.clickup_integration.requests.get')
+    @patch('integrations.clickup.clickup_integration.get_context')
     def test_get_project_metrics_api_error_handling(self, mock_get_context, mock_get):
         """Test API error handling in project metrics retrieval."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {
                     "space_id": "space123",
@@ -605,7 +605,7 @@ class TestClickUpIntegrationEdgeCases:
     def test_initialization_with_missing_config(self):
         """Test initialization with missing ClickUp config."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {}
                 
@@ -615,11 +615,11 @@ class TestClickUpIntegrationEdgeCases:
                 assert integration.folder_id is None
                 assert integration.list_id is None
     
-    @patch('bmad.agents.core.clickup_integration.requests.post')
+    @patch('integrations.clickup.clickup_integration.requests.post')
     def test_create_project_with_empty_description(self, mock_post):
         """Test project creation with empty description."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {
                     "space_id": "space123",
@@ -640,11 +640,11 @@ class TestClickUpIntegrationEdgeCases:
                 assert result == "task123"
                 mock_post.assert_called_once()
     
-    @patch('bmad.agents.core.clickup_integration.requests.post')
+    @patch('integrations.clickup.clickup_integration.requests.post')
     def test_create_task_without_assignee(self, mock_post):
         """Test task creation without assignee."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {
                     "space_id": "space123",
@@ -665,12 +665,12 @@ class TestClickUpIntegrationEdgeCases:
                 assert result == "task456"
                 mock_post.assert_called_once()
     
-    @patch('bmad.agents.core.clickup_integration.requests.get')
-    @patch('bmad.agents.core.clickup_integration.get_context')
+    @patch('integrations.clickup.clickup_integration.requests.get')
+    @patch('integrations.clickup.clickup_integration.get_context')
     def test_get_project_tasks_without_mapping(self, mock_get_context, mock_get):
         """Test project tasks retrieval without project mapping."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {
                     "space_id": "space123",
@@ -688,12 +688,12 @@ class TestClickUpIntegrationEdgeCases:
                 assert result == []
                 mock_get.assert_not_called()
     
-    @patch('bmad.agents.core.clickup_integration.requests.get')
-    @patch('bmad.agents.core.clickup_integration.get_context')
+    @patch('integrations.clickup.clickup_integration.requests.get')
+    @patch('integrations.clickup.clickup_integration.get_context')
     def test_get_project_metrics_without_mapping(self, mock_get_context, mock_get):
         """Test project metrics retrieval without project mapping."""
         with patch.dict(os.environ, {'CLICKUP_API_KEY': 'test-key'}):
-            with patch('bmad.agents.core.clickup_integration.project_manager') as mock_pm:
+            with patch('integrations.clickup.clickup_integration.project_manager') as mock_pm:
                 mock_pm.active_project = "test_project"
                 mock_pm.get_clickup_config.return_value = {
                     "space_id": "space123",

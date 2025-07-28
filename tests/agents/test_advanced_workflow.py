@@ -2,14 +2,20 @@
 """
 Test script voor advanced workflow orchestrator
 """
-import sys
 import os
+import sys
 import asyncio
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+# Mock Prefect to avoid Pydantic compatibility issues
+import unittest.mock
+sys.modules['prefect'] = unittest.mock.MagicMock()
+sys.modules['prefect.flow'] = unittest.mock.MagicMock()
+sys.modules['prefect.deployments'] = unittest.mock.MagicMock()
+
 import pytest
-from bmad.agents.core.advanced_workflow import (
-    AdvancedWorkflowOrchestrator, 
+from bmad.agents.core.workflow.integrated_workflow_orchestrator import (
+    IntegratedWorkflowOrchestrator, 
     WorkflowDefinition, 
     WorkflowTask, 
     WorkflowStatus, 
@@ -63,7 +69,7 @@ def test_workflow_definition():
 
 def test_workflow_registration():
     """Test workflow registratie."""
-    orchestrator = AdvancedWorkflowOrchestrator()
+    orchestrator = IntegratedWorkflowOrchestrator()
     
     # Maak workflow definitie
     tasks = [
@@ -90,7 +96,7 @@ def test_workflow_registration():
 
 def test_task_dependency_grouping():
     """Test task dependency grouping."""
-    orchestrator = AdvancedWorkflowOrchestrator()
+    orchestrator = IntegratedWorkflowOrchestrator()
     
     # Maak taken met dependencies
     tasks = {
@@ -111,7 +117,7 @@ def test_task_dependency_grouping():
 
 def test_dependency_checking():
     """Test dependency checking."""
-    orchestrator = AdvancedWorkflowOrchestrator()
+    orchestrator = IntegratedWorkflowOrchestrator()
     
     # Setup workflow state
     workflow_id = "test_workflow"
@@ -132,7 +138,7 @@ def test_dependency_checking():
 @pytest.mark.asyncio
 async def test_workflow_execution():
     """Test workflow execution."""
-    orchestrator = AdvancedWorkflowOrchestrator()
+    orchestrator = IntegratedWorkflowOrchestrator()
     
     # Maak een eenvoudige workflow
     tasks = [
@@ -174,7 +180,7 @@ async def test_workflow_execution():
 
 def test_workflow_status_tracking():
     """Test workflow status tracking."""
-    orchestrator = AdvancedWorkflowOrchestrator()
+    orchestrator = IntegratedWorkflowOrchestrator()
     
     # Setup mock workflow
     workflow_id = "test_workflow"
@@ -224,7 +230,7 @@ def test_workflow_status_tracking():
 
 def test_workflow_cancellation():
     """Test workflow cancellation."""
-    orchestrator = AdvancedWorkflowOrchestrator()
+    orchestrator = IntegratedWorkflowOrchestrator()
     
     # Setup mock workflow
     workflow_id = "test_workflow"
@@ -246,7 +252,7 @@ def test_workflow_cancellation():
 
 def test_parallel_task_execution():
     """Test parallel task execution."""
-    orchestrator = AdvancedWorkflowOrchestrator()
+    orchestrator = IntegratedWorkflowOrchestrator()
     
     # Maak taken die parallel kunnen worden uitgevoerd
     tasks = {
@@ -265,7 +271,7 @@ def test_parallel_task_execution():
 
 def test_task_executor_registration():
     """Test task executor registratie."""
-    orchestrator = AdvancedWorkflowOrchestrator()
+    orchestrator = IntegratedWorkflowOrchestrator()
     
     # Test custom executor
     def custom_executor(task, context):
