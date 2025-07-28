@@ -1,8 +1,9 @@
-import os
 import json
-from typing import Any, Dict, Optional
-from supabase import create_client, Client
+import os
 from datetime import datetime, timedelta
+from typing import Any, Dict, Optional
+
+from supabase import Client, create_client
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "https://sjdupcpozyaipljqpyrc.supabase.co")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "your-key")
@@ -62,4 +63,4 @@ def archive_old_context(days: int = 90):
     if old_context:
         for record in old_context:
             supabase.table(ARCHIVE_TABLE).insert(record).execute()
-            supabase.table(CONTEXT_TABLE).delete().eq("agent_name", record["agent_name"]).eq("context_type", record["context_type"]).eq("scope", record.get("scope")).execute() 
+            supabase.table(CONTEXT_TABLE).delete().eq("agent_name", record["agent_name"]).eq("context_type", record["context_type"]).eq("scope", record.get("scope")).execute()

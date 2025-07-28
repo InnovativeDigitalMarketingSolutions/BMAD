@@ -1,22 +1,26 @@
-import sys
 import os
+import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import argparse
-import logging
+import asyncio
 import json
+import logging
+import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, Any
-import asyncio
-import time
+from typing import Any, Dict, Optional
 
-from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.agent.agent_performance_monitor import (
+    MetricType,
+    get_performance_monitor,
+)
 from bmad.agents.core.agent.test_sprites import get_sprite_library
-from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor, MetricType
-from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from bmad.agents.core.ai.llm_client import ask_openai
-from integrations.slack.slack_notify import send_slack_message
+from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.figma.figma_client import FigmaClient
+from integrations.slack.slack_notify import send_slack_message
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
@@ -27,7 +31,7 @@ class FrontendDeveloperAgent:
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
-        
+
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
         self.template_paths = {
@@ -44,7 +48,7 @@ class FrontendDeveloperAgent:
             "component-history": self.resource_base / "data/frontenddeveloper/component-history.md",
             "performance-history": self.resource_base / "data/frontenddeveloper/performance-history.md"
         }
-        
+
         # Initialize histories
         self.component_history = []
         self.performance_history = []
@@ -54,11 +58,11 @@ class FrontendDeveloperAgent:
     def _load_component_history(self):
         try:
             if self.data_paths["component-history"].exists():
-                with open(self.data_paths["component-history"], 'r') as f:
+                with open(self.data_paths["component-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.component_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load component history: {e}")
@@ -66,21 +70,20 @@ class FrontendDeveloperAgent:
     def _save_component_history(self):
         try:
             self.data_paths["component-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["component-history"], 'w') as f:
+            with open(self.data_paths["component-history"], "w") as f:
                 f.write("# Component History\n\n")
-                for comp in self.component_history[-50:]:
-                    f.write(f"- {comp}\n")
+                f.writelines(f"- {comp}\n" for comp in self.component_history[-50:])
         except Exception as e:
             logger.error(f"Could not save component history: {e}")
 
     def _load_performance_history(self):
         try:
             if self.data_paths["performance-history"].exists():
-                with open(self.data_paths["performance-history"], 'r') as f:
+                with open(self.data_paths["performance-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.performance_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load performance history: {e}")
@@ -88,10 +91,9 @@ class FrontendDeveloperAgent:
     def _save_performance_history(self):
         try:
             self.data_paths["performance-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["performance-history"], 'w') as f:
+            with open(self.data_paths["performance-history"], "w") as f:
                 f.write("# Performance History\n\n")
-                for perf in self.performance_history[-50:]:
-                    f.write(f"- {perf}\n")
+                f.writelines(f"- {perf}\n" for perf in self.performance_history[-50:])
         except Exception as e:
             logger.error(f"Could not save performance history: {e}")
 
@@ -126,7 +128,7 @@ FrontendDeveloper Agent Commands:
                 print(f"Unknown resource type: {resource_type}")
                 return
             if path.exists():
-                with open(path, 'r') as f:
+                with open(path) as f:
                     print(f.read())
             else:
                 print(f"Resource file not found: {path}")
@@ -154,7 +156,7 @@ FrontendDeveloper Agent Commands:
     def build_shadcn_component(self, component_name: str = "Button") -> Dict[str, Any]:
         """Build a Shadcn/ui component with accessibility and performance optimization."""
         logger.info(f"Building Shadcn component: {component_name}")
-        
+
         # Simulate Shadcn component build with accessibility focus
         time.sleep(1)
         result = {
@@ -175,22 +177,22 @@ FrontendDeveloper Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "FrontendDeveloperAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("FrontendDeveloper", MetricType.SUCCESS_RATE, result["accessibility_score"], "%")
         self.monitor._record_metric("FrontendDeveloper", MetricType.RESPONSE_TIME, result["performance_score"], "ms")
-        
+
         # Add to component history
         comp_entry = f"{datetime.now().isoformat()}: Shadcn {component_name} component built with {result['accessibility_score']}% accessibility score"
         self.component_history.append(comp_entry)
         self._save_component_history()
-        
+
         logger.info(f"Shadcn component build result: {result}")
         return result
 
     def build_component(self, component_name: str = "Button") -> Dict[str, Any]:
         logger.info(f"Building component: {component_name}")
-        
+
         # Simuleer component bouw
         time.sleep(1)
         result = {
@@ -202,21 +204,21 @@ FrontendDeveloper Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "FrontendDeveloperAgent"
         }
-        
+
         # Voeg aan historie toe
         comp_entry = f"{result['timestamp']}: {component_name} - Status: {result['status']}, Accessibility: {result['accessibility_score']}%"
         self.component_history.append(comp_entry)
         self._save_component_history()
-        
+
         # Log performance metric
         self.monitor._record_metric("FrontendDeveloper", MetricType.SUCCESS_RATE, result["accessibility_score"], "%")
-        
+
         logger.info(f"Component build result: {result}")
         return result
 
     def run_accessibility_check(self, component_name: str = "Button") -> Dict[str, Any]:
         logger.info(f"Running accessibility check for: {component_name}")
-        
+
         # Simuleer accessibility check
         time.sleep(1)
         result = {
@@ -229,10 +231,10 @@ FrontendDeveloper Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "FrontendDeveloperAgent"
         }
-        
+
         # Log performance metric
         self.monitor._record_metric("FrontendDeveloper", MetricType.SUCCESS_RATE, result["score"], "%")
-        
+
         logger.info(f"Accessibility check result: {result}")
         return result
 
@@ -243,7 +245,7 @@ FrontendDeveloper Agent Commands:
                 component_data = self.build_component(component_name)
             else:
                 component_data = self.build_component()
-        
+
         try:
             if format_type == "md":
                 self._export_markdown(component_data)
@@ -257,41 +259,41 @@ FrontendDeveloper Agent Commands:
     def _export_markdown(self, component_data: Dict):
         template_path = self.template_paths["component-export-md"]
         if template_path.exists():
-            with open(template_path, 'r') as f:
+            with open(template_path) as f:
                 template = f.read()
-            
+
             # Vul template
             content = template.replace("{{date}}", datetime.now().strftime("%Y-%m-%d"))
             content = content.replace("{{component_name}}", component_data["name"])
             content = content.replace("{{component_type}}", component_data["type"])
             content = content.replace("{{accessibility_score}}", str(component_data["accessibility_score"]))
-            
+
             # Save to file
             output_file = f"component_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-            with open(output_file, 'w') as f:
+            with open(output_file, "w") as f:
                 f.write(content)
             print(f"Component export saved to: {output_file}")
 
     def _export_json(self, component_data: Dict):
         output_file = f"component_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             json.dump(component_data, f, indent=2)
-        
+
         print(f"Component export saved to: {output_file}")
 
     def test_resource_completeness(self):
         print("Testing resource completeness...")
         missing_resources = []
-        
+
         for name, path in self.template_paths.items():
             if not path.exists():
                 missing_resources.append(f"Template: {name} ({path})")
-        
+
         for name, path in self.data_paths.items():
             if not path.exists():
                 missing_resources.append(f"Data: {name} ({path})")
-        
+
         if missing_resources:
             print("Missing resources:")
             for resource in missing_resources:
@@ -301,24 +303,24 @@ FrontendDeveloper Agent Commands:
 
     def collaborate_example(self):
         logger.info("Starting collaboration example...")
-        
+
         # Publish component build request
         publish("component_build_requested", {
             "agent": "FrontendDeveloperAgent",
             "component_name": "Button",
             "timestamp": datetime.now().isoformat()
         })
-        
+
         # Build component
         component_result = self.build_component("Button")
-        
+
         # Run accessibility check
         accessibility_result = self.run_accessibility_check("Button")
-        
+
         # Publish completion
         publish("component_build_completed", component_result)
         publish("accessibility_check_completed", accessibility_result)
-        
+
         # Notify via Slack
         try:
             send_slack_message(f"Component {component_result['name']} built successfully with {accessibility_result['score']}% accessibility score")
@@ -332,7 +334,7 @@ FrontendDeveloper Agent Commands:
 
     async def handle_component_build_completed(self, event):
         logger.info(f"Component build completed: {event}")
-        
+
         # Evaluate policy
         try:
             allowed = await self.policy_engine.evaluate_policy("component_build", event)
@@ -355,36 +357,36 @@ FrontendDeveloper Agent Commands:
     def parse_figma_components(self, figma_file_id: str) -> Dict:
         try:
             client = FigmaClient()
-            
+
             # Haal file info op
             file_data = client.get_file(figma_file_id)
             components_data = client.get_components(figma_file_id)
-            
+
             logger.info(f"[FrontendDeveloper][Figma Parse] File: {file_data.get('name', 'Unknown')}")
-            
+
             # Parse components naar abstract model
             components = []
-            for component_id, component_info in components_data.get('meta', {}).get('components', {}).items():
+            for component_id, component_info in components_data.get("meta", {}).get("components", {}).items():
                 component = {
-                    'id': component_id,
-                    'name': component_info.get('name', ''),
-                    'description': component_info.get('description', ''),
-                    'key': component_info.get('key', ''),
-                    'created_at': component_info.get('created_at', ''),
-                    'updated_at': component_info.get('updated_at', '')
+                    "id": component_id,
+                    "name": component_info.get("name", ""),
+                    "description": component_info.get("description", ""),
+                    "key": component_info.get("key", ""),
+                    "created_at": component_info.get("created_at", ""),
+                    "updated_at": component_info.get("updated_at", "")
                 }
                 components.append(component)
-            
+
             return {
-                'file_name': file_data.get('name', ''),
-                'file_id': figma_file_id,
-                'components': components,
-                'total_components': len(components)
+                "file_name": file_data.get("name", ""),
+                "file_id": figma_file_id,
+                "components": components,
+                "total_components": len(components)
             }
-            
+
         except Exception as e:
-            logger.error(f"[FrontendDeveloper][Figma Parse Error]: {str(e)}")
-            return {'error': str(e)}
+            logger.error(f"[FrontendDeveloper][Figma Parse Error]: {e!s}")
+            return {"error": str(e)}
 
     def generate_nextjs_component(self, component_data: Dict, component_name: str) -> str:
         try:
@@ -404,74 +406,74 @@ FrontendDeveloper Agent Commands:
             
             Genereer alleen de component code, geen uitleg.
             """
-            
+
             result = ask_openai(prompt)
             logger.info(f"[FrontendDeveloper][Component Generation] Generated component: {component_name}")
             return result
-            
+
         except Exception as e:
-            logger.error(f"[FrontendDeveloper][Component Generation Error]: {str(e)}")
-            return f"// Error generating component: {str(e)}"
+            logger.error(f"[FrontendDeveloper][Component Generation Error]: {e!s}")
+            return f"// Error generating component: {e!s}"
 
     def generate_components_from_figma(self, figma_file_id: str, output_dir: str = "components") -> Dict:
         try:
             # Parse Figma components
             figma_data = self.parse_figma_components(figma_file_id)
-            
-            if 'error' in figma_data:
+
+            if "error" in figma_data:
                 return figma_data
-            
+
             generated_components = []
-            
+
             # Genereer component voor elke Figma component
-            for component in figma_data['components']:
-                component_name = component['name'].replace(' ', '').replace('-', '')
+            for component in figma_data["components"]:
+                component_name = component["name"].replace(" ", "").replace("-", "")
                 component_code = self.generate_nextjs_component(component, component_name)
-                
+
                 generated_components.append({
-                    'name': component_name,
-                    'figma_id': component['id'],
-                    'code': component_code,
-                    'file_path': f"{output_dir}/{component_name}.tsx"
+                    "name": component_name,
+                    "figma_id": component["id"],
+                    "code": component_code,
+                    "file_path": f"{output_dir}/{component_name}.tsx"
                 })
-            
+
             result = {
-                'file_name': figma_data['file_name'],
-                'file_id': figma_file_id,
-                'generated_components': generated_components,
-                'total_generated': len(generated_components)
+                "file_name": figma_data["file_name"],
+                "file_id": figma_file_id,
+                "generated_components": generated_components,
+                "total_generated": len(generated_components)
             }
-            
+
             logger.info(f"[FrontendDeveloper][Figma Codegen] Generated {len(generated_components)} components")
             return result
-            
+
         except Exception as e:
-            logger.error(f"[FrontendDeveloper][Figma Codegen Error]: {str(e)}")
-            return {'error': str(e)}
+            logger.error(f"[FrontendDeveloper][Figma Codegen Error]: {e!s}")
+            return {"error": str(e)}
 
     def run(self):
         def sync_handler(event):
             asyncio.run(self.handle_component_build_completed(event))
-        
+
         subscribe("component_build_completed", sync_handler)
         subscribe("component_build_requested", self.handle_component_build_requested)
-        
+
         logger.info("FrontendDeveloperAgent ready and listening for events...")
         self.collaborate_example()
 
 def main():
     parser = argparse.ArgumentParser(description="FrontendDeveloper Agent CLI")
-    parser.add_argument("command", nargs="?", default="help", 
-                       choices=["help", "build-component", "build-shadcn-component", "run-accessibility-check", "show-component-history", 
-                               "show-performance", "show-best-practices", "show-changelog", "export-component", 
+    parser.add_argument("command", nargs="?", default="help",
+                       choices=["help", "build-component", "build-shadcn-component", "run-accessibility-check", "show-component-history",
+                               "show-performance", "show-best-practices", "show-changelog", "export-component",
                                "test", "collaborate", "run"])
     parser.add_argument("--name", default="Button", help="Component name")
     parser.add_argument("--format", choices=["md", "json"], default="md", help="Export format")
-    
+
     args = parser.parse_args()
-    
+
     agent = FrontendDeveloperAgent()
-    
+
     if args.command == "help":
         agent.show_help()
     elif args.command == "build-component":

@@ -8,10 +8,10 @@ __version__ = "1.0.0"
 __author__ = "BMAD Team"
 
 # Import main integration components
-from .opentelemetry_tracing import BMADTracer, TracingConfig, TraceLevel
+from .opentelemetry_tracing import BMADTracer, TraceLevel, TracingConfig
 
 __all__ = [
     "BMADTracer",
-    "TracingConfig", 
-    "TraceLevel"
-] 
+    "TraceLevel",
+    "TracingConfig"
+]

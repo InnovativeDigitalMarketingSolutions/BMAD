@@ -1,21 +1,25 @@
-import sys
 import os
+import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import argparse
-import logging
-import json
 import csv
+import json
+import logging
+import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any
-import time
+from typing import Any, Dict, List, Optional
 
-from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.agent.agent_performance_monitor import (
+    MetricType,
+    get_performance_monitor,
+)
 from bmad.agents.core.agent.test_sprites import get_sprite_library
-from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor, MetricType
-from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
-from bmad.agents.core.data.supabase_context import save_context, get_context
 from bmad.agents.core.ai.llm_client import ask_openai
+from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.data.supabase_context import get_context, save_context
+from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.slack.slack_notify import send_slack_message
 
 # Configure logging
@@ -27,7 +31,7 @@ class RetrospectiveAgent:
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
-        
+
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
         self.template_paths = {
@@ -43,7 +47,7 @@ class RetrospectiveAgent:
             "history": self.resource_base / "data/retrospective/retro-history.md",
             "action-history": self.resource_base / "data/retrospective/action-history.md"
         }
-        
+
         # Initialize history
         self.retro_history = []
         self.action_history = []
@@ -54,11 +58,11 @@ class RetrospectiveAgent:
         """Load retrospective history from data file"""
         try:
             if self.data_paths["history"].exists():
-                with open(self.data_paths["history"], 'r') as f:
+                with open(self.data_paths["history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.retro_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load retrospective history: {e}")
@@ -67,7 +71,7 @@ class RetrospectiveAgent:
         """Save retrospective history to data file"""
         try:
             self.data_paths["history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["history"], 'w') as f:
+            with open(self.data_paths["history"], "w") as f:
                 f.write("# Retrospective History\n\n")
                 for retro in self.retro_history[-50:]:  # Keep last 50 retrospectives
                     f.write(f"- {retro}\n")
@@ -78,11 +82,11 @@ class RetrospectiveAgent:
         """Load action history from data file"""
         try:
             if self.data_paths["action-history"].exists():
-                with open(self.data_paths["action-history"], 'r') as f:
+                with open(self.data_paths["action-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.action_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load action history: {e}")
@@ -91,7 +95,7 @@ class RetrospectiveAgent:
         """Save action history to data file"""
         try:
             self.data_paths["action-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["action-history"], 'w') as f:
+            with open(self.data_paths["action-history"], "w") as f:
                 f.write("# Action History\n\n")
                 for action in self.action_history[-50:]:  # Keep last 50 actions
                     f.write(f"- {action}\n")
@@ -132,7 +136,7 @@ Retrospective Agent Commands:
                 print(f"Unknown resource type: {resource_type}")
                 return
             if path.exists():
-                with open(path, 'r') as f:
+                with open(path) as f:
                     print(f.read())
             else:
                 print(f"Resource file not found: {path}")
@@ -162,10 +166,10 @@ Retrospective Agent Commands:
     def conduct_retrospective(self, sprint_name: str = "Sprint 15", team_size: int = 8) -> Dict[str, Any]:
         """Conduct a new retrospective with enhanced functionality."""
         logger.info(f"Conducting retrospective for {sprint_name}")
-        
+
         # Simulate retrospective conduction
         time.sleep(2)
-        
+
         retro_result = {
             "sprint_name": sprint_name,
             "retrospective_type": "Sprint Retrospective",
@@ -238,15 +242,15 @@ Retrospective Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "RetrospectiveAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("Retrospective", MetricType.SUCCESS_RATE, 95, "%")
-        
+
         # Add to retrospective history
         retro_entry = f"{datetime.now().isoformat()}: Retrospective completed for {sprint_name} with {len(retro_result['action_items'])} action items"
         self.retro_history.append(retro_entry)
         self._save_retro_history()
-        
+
         logger.info(f"Retrospective completed: {retro_result}")
         return retro_result
 
@@ -260,12 +264,12 @@ Retrospective Agent Commands:
                 "Code quality is good",
                 "Deployment process needs improvement"
             ]
-        
+
         logger.info("Analyzing feedback and generating insights")
-        
+
         # Simulate feedback analysis
         time.sleep(1)
-        
+
         analysis_result = {
             "feedback_analysis_type": "Feedback Sentiment and Theme Analysis",
             "total_feedback_items": len(feedback_list),
@@ -316,10 +320,10 @@ Retrospective Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "RetrospectiveAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("Retrospective", MetricType.SUCCESS_RATE, 92, "%")
-        
+
         logger.info(f"Feedback analysis completed: {analysis_result}")
         return analysis_result
 
@@ -334,12 +338,12 @@ Retrospective Agent Commands:
                     {"action": "Optimize meeting structure", "priority": "medium"}
                 ]
             }
-        
+
         logger.info("Creating action plan from retrospective data")
-        
+
         # Simulate action plan creation
         time.sleep(1)
-        
+
         action_plan_result = {
             "action_plan_type": "Sprint Improvement Action Plan",
             "sprint_name": retrospective_data.get("sprint_name", "Sprint 15"),
@@ -409,25 +413,25 @@ Retrospective Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "RetrospectiveAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("Retrospective", MetricType.SUCCESS_RATE, 88, "%")
-        
+
         # Add to action history
         action_entry = f"{datetime.now().isoformat()}: Action plan created for {retrospective_data.get('sprint_name', 'Sprint 15')} with {len(action_plan_result['action_plan']['high_priority_actions']) + len(action_plan_result['action_plan']['medium_priority_actions'])} actions"
         self.action_history.append(action_entry)
         self._save_action_history()
-        
+
         logger.info(f"Action plan created: {action_plan_result}")
         return action_plan_result
 
     def track_improvements(self, sprint_name: str = "Sprint 15") -> Dict[str, Any]:
         """Track improvement progress from previous retrospectives."""
         logger.info(f"Tracking improvements for {sprint_name}")
-        
+
         # Simulate improvement tracking
         time.sleep(1)
-        
+
         tracking_result = {
             "sprint_name": sprint_name,
             "tracking_type": "Improvement Progress Tracking",
@@ -492,10 +496,10 @@ Retrospective Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "RetrospectiveAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("Retrospective", MetricType.SUCCESS_RATE, 85, "%")
-        
+
         logger.info(f"Improvement tracking completed: {tracking_result}")
         return tracking_result
 
@@ -512,7 +516,7 @@ Retrospective Agent Commands:
                 "timestamp": datetime.now().isoformat(),
                 "agent": "RetrospectiveAgent"
             }
-        
+
         try:
             if format_type == "md":
                 self._export_markdown(report_data)
@@ -528,7 +532,7 @@ Retrospective Agent Commands:
     def _export_markdown(self, report_data: Dict):
         """Export report data as markdown."""
         output_file = f"retrospective_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-        
+
         content = f"""# Retrospective Report
 
 ## Summary
@@ -556,48 +560,48 @@ Retrospective Agent Commands:
 ## Recent Actions
 {chr(10).join([f"- {action}" for action in self.action_history[-5:]])}
 """
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             f.write(content)
         print(f"Report export saved to: {output_file}")
 
     def _export_csv(self, report_data: Dict):
         """Export report data as CSV."""
         output_file = f"retrospective_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-        
-        with open(output_file, 'w', newline='') as f:
+
+        with open(output_file, "w", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow(['Metric', 'Value'])
-            writer.writerow(['Sprint Name', report_data.get('sprint_name', 'N/A')])
-            writer.writerow(['Status', report_data.get('status', 'N/A')])
-            writer.writerow(['Total Actions', report_data.get('total_actions', 0)])
-            writer.writerow(['Completion Rate', report_data.get('completion_rate', 'N/A')])
-            writer.writerow(['Team Satisfaction', report_data.get('team_satisfaction', 'N/A')])
-        
+            writer.writerow(["Metric", "Value"])
+            writer.writerow(["Sprint Name", report_data.get("sprint_name", "N/A")])
+            writer.writerow(["Status", report_data.get("status", "N/A")])
+            writer.writerow(["Total Actions", report_data.get("total_actions", 0)])
+            writer.writerow(["Completion Rate", report_data.get("completion_rate", "N/A")])
+            writer.writerow(["Team Satisfaction", report_data.get("team_satisfaction", "N/A")])
+
         print(f"Report export saved to: {output_file}")
 
     def _export_json(self, report_data: Dict):
         """Export report data as JSON."""
         output_file = f"retrospective_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             json.dump(report_data, f, indent=2)
-        
+
         print(f"Report export saved to: {output_file}")
 
     def test_resource_completeness(self):
         """Test if all required resources are available."""
         print("Testing resource completeness...")
         missing_resources = []
-        
+
         for name, path in self.template_paths.items():
             if not path.exists():
                 missing_resources.append(f"Template: {name} ({path})")
-        
+
         for name, path in self.data_paths.items():
             if not path.exists():
                 missing_resources.append(f"Data: {name} ({path})")
-        
+
         if missing_resources:
             print("Missing resources:")
             for resource in missing_resources:
@@ -608,23 +612,23 @@ Retrospective Agent Commands:
     def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         logger.info("Starting retrospective collaboration example...")
-        
+
         # Publish retrospective request
         publish("retrospective_requested", {
             "agent": "RetrospectiveAgent",
             "sprint_name": "Sprint 15",
             "timestamp": datetime.now().isoformat()
         })
-        
+
         # Conduct retrospective
         retro_result = self.conduct_retrospective("Sprint 15", 8)
-        
+
         # Analyze feedback
         self.analyze_feedback()
-        
+
         # Create action plan
         action_plan_result = self.create_action_plan(retro_result)
-        
+
         # Publish completion
         publish("retrospective_completed", {
             "status": "success",
@@ -632,16 +636,16 @@ Retrospective Agent Commands:
             "sprint_name": "Sprint 15",
             "action_items_count": len(action_plan_result["action_plan"]["high_priority_actions"]) + len(action_plan_result["action_plan"]["medium_priority_actions"])
         })
-        
+
         # Save context
         save_context("Retrospective", {"retrospective_status": "completed"})
-        
+
         # Notify via Slack
         try:
             send_slack_message(f"Retrospective completed for Sprint 15 with {len(action_plan_result['action_plan']['high_priority_actions']) + len(action_plan_result['action_plan']['medium_priority_actions'])} action items")
         except Exception as e:
             logger.warning(f"Could not send Slack notification: {e}")
-        
+
         print("Event gepubliceerd en context opgeslagen.")
         context = get_context("Retrospective")
         print(f"Opgehaalde context: {context}")
@@ -699,26 +703,26 @@ Retrospective Agent Commands:
         subscribe("retro_feedback", self.on_retro_feedback)
         subscribe("generate_actions", self.on_generate_actions)
         subscribe("feedback_sentiment_analyzed", self.on_feedback_sentiment_analyzed)
-        
+
         logger.info("RetrospectiveAgent ready and listening for events...")
         self.collaborate_example()
 
 def main():
     parser = argparse.ArgumentParser(description="Retrospective Agent CLI")
-    parser.add_argument("command", nargs="?", default="help", 
+    parser.add_argument("command", nargs="?", default="help",
                        choices=["help", "conduct-retrospective", "analyze-feedback", "create-action-plan",
                                "track-improvements", "show-retro-history", "show-action-history",
-                               "show-best-practices", "show-changelog", "export-report", "test", 
+                               "show-best-practices", "show-changelog", "export-report", "test",
                                "collaborate", "run"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--sprint-name", default="Sprint 15", help="Sprint name for retrospective")
     parser.add_argument("--team-size", type=int, default=8, help="Team size for retrospective")
     parser.add_argument("--feedback-list", nargs="+", help="List of feedback items to analyze")
-    
+
     args = parser.parse_args()
-    
+
     agent = RetrospectiveAgent()
-    
+
     if args.command == "help":
         agent.show_help()
     elif args.command == "conduct-retrospective":

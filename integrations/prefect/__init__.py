@@ -8,9 +8,9 @@ __version__ = "1.0.0"
 __author__ = "BMAD Team"
 
 # Import main integration components
-from .prefect_workflow import PrefectWorkflowOrchestrator, PrefectWorkflowConfig
+from .prefect_workflow import PrefectWorkflowConfig, PrefectWorkflowOrchestrator
 
 __all__ = [
-    "PrefectWorkflowOrchestrator",
-    "PrefectWorkflowConfig"
-] 
+    "PrefectWorkflowConfig",
+    "PrefectWorkflowOrchestrator"
+]

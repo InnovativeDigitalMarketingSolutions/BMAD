@@ -1,21 +1,25 @@
-import sys
 import os
+import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import argparse
-import logging
-import json
+import asyncio
 import csv
+import json
+import logging
+import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, Any
-import asyncio
-import time
+from typing import Any, Dict, Optional
 
-from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.agent.agent_performance_monitor import (
+    MetricType,
+    get_performance_monitor,
+)
 from bmad.agents.core.agent.test_sprites import get_sprite_library
-from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor, MetricType
+from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
-from bmad.agents.core.data.supabase_context import save_context, get_context
 from integrations.slack.slack_notify import send_slack_message
 
 # Configure logging
@@ -27,7 +31,7 @@ class AccessibilityAgent:
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
-        
+
         # Resource paths - corrected path
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
         self.template_paths = {
@@ -46,7 +50,7 @@ class AccessibilityAgent:
             "audit-history": self.resource_base / "data/accessibilityagent/audit-history.md",
             "improvement-history": self.resource_base / "data/accessibilityagent/improvement-history.md"
         }
-        
+
         # Initialize audit history
         self.audit_history = []
         self._load_audit_history()
@@ -55,12 +59,12 @@ class AccessibilityAgent:
         """Load audit history from data file"""
         try:
             if self.data_paths["audit-history"].exists():
-                with open(self.data_paths["audit-history"], 'r') as f:
+                with open(self.data_paths["audit-history"]) as f:
                     content = f.read()
                     # Parse audit history from markdown
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.audit_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load audit history: {e}")
@@ -69,7 +73,7 @@ class AccessibilityAgent:
         """Save audit history to data file"""
         try:
             self.data_paths["audit-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["audit-history"], 'w') as f:
+            with open(self.data_paths["audit-history"], "w") as f:
                 f.write("# Accessibility Audit History\n\n")
                 for audit in self.audit_history[-50:]:  # Keep last 50 audits
                     f.write(f"- {audit}\n")
@@ -116,7 +120,7 @@ Accessibility Agent Commands:
                 print(f"Unknown resource type: {resource_type}")
                 return
             if path.exists():
-                with open(path, 'r') as f:
+                with open(path) as f:
                     print(f.read())
             else:
                 print(f"Resource file not found: {path}")
@@ -136,10 +140,10 @@ Accessibility Agent Commands:
     def test_shadcn_component(self, component_name: str = "Button") -> Dict[str, Any]:
         """Test Shadcn component accessibility."""
         logger.info(f"Testing Shadcn component accessibility: {component_name}")
-        
+
         # Simulate Shadcn component accessibility testing
         time.sleep(1)
-        
+
         test_result = {
             "component": component_name,
             "type": "Shadcn/ui",
@@ -174,25 +178,25 @@ Accessibility Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "AccessibilityAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("AccessibilityAgent", MetricType.SUCCESS_RATE, test_result["accessibility_score"], "%")
-        
+
         # Add to audit history
         audit_entry = f"{datetime.now().isoformat()}: Shadcn {component_name} component tested with {test_result['accessibility_score']}% accessibility score"
         self.audit_history.append(audit_entry)
         self._save_audit_history()
-        
+
         logger.info(f"Shadcn component accessibility test completed: {test_result}")
         return test_result
 
     def validate_aria(self, component_code: str = "") -> Dict[str, Any]:
         """Validate ARIA attributes in component code."""
         logger.info("Validating ARIA attributes")
-        
+
         # Simulate ARIA validation
         time.sleep(1)
-        
+
         validation_result = {
             "validation_type": "ARIA attributes",
             "overall_score": 94,
@@ -235,20 +239,20 @@ Accessibility Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "AccessibilityAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("AccessibilityAgent", MetricType.SUCCESS_RATE, validation_result["overall_score"], "%")
-        
+
         logger.info(f"ARIA validation completed: {validation_result}")
         return validation_result
 
     def test_screen_reader(self, component_name: str = "Button") -> Dict[str, Any]:
         """Test screen reader compatibility."""
         logger.info(f"Testing screen reader compatibility for: {component_name}")
-        
+
         # Simulate screen reader testing
         time.sleep(1)
-        
+
         screen_reader_test = {
             "component": component_name,
             "test_type": "Screen reader compatibility",
@@ -294,20 +298,20 @@ Accessibility Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "AccessibilityAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("AccessibilityAgent", MetricType.SUCCESS_RATE, screen_reader_test["overall_score"], "%")
-        
+
         logger.info(f"Screen reader test completed: {screen_reader_test}")
         return screen_reader_test
 
     def check_design_tokens(self, design_system: str = "Shadcn") -> Dict[str, Any]:
         """Check design token accessibility."""
         logger.info(f"Checking design token accessibility for: {design_system}")
-        
+
         # Simulate design token accessibility check
         time.sleep(1)
-        
+
         design_token_check = {
             "design_system": design_system,
             "check_type": "Design token accessibility",
@@ -368,20 +372,20 @@ Accessibility Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "AccessibilityAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("AccessibilityAgent", MetricType.SUCCESS_RATE, design_token_check["overall_score"], "%")
-        
+
         logger.info(f"Design token accessibility check completed: {design_token_check}")
         return design_token_check
 
     def run_accessibility_audit(self, target: str = "/mock/page") -> Dict[str, Any]:
         """Run accessibility audit on target."""
         logger.info(f"Running accessibility audit on: {target}")
-        
+
         # Simulate accessibility audit
         time.sleep(2)
-        
+
         audit_result = {
             "target": target,
             "audit_type": "comprehensive",
@@ -416,15 +420,15 @@ Accessibility Agent Commands:
             ],
             "agent": "AccessibilityAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("AccessibilityAgent", MetricType.SUCCESS_RATE, audit_result["overall_score"], "%")
-        
+
         # Add to audit history
         audit_entry = f"{datetime.now().isoformat()}: Accessibility audit completed on {target} with {audit_result['overall_score']}% score"
         self.audit_history.append(audit_entry)
         self._save_audit_history()
-        
+
         logger.info(f"Accessibility audit completed: {audit_result}")
         return audit_result
 
@@ -440,7 +444,7 @@ Accessibility Agent Commands:
                 "timestamp": datetime.now().isoformat(),
                 "agent": "AccessibilityAgent"
             }
-        
+
         try:
             if format_type == "md":
                 self._export_markdown(audit_data)
@@ -456,7 +460,7 @@ Accessibility Agent Commands:
     def _export_markdown(self, audit_data: Dict):
         """Export audit data as markdown."""
         output_file = f"accessibility_audit_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-        
+
         content = f"""# Accessibility Audit Report
 
 ## Summary
@@ -480,42 +484,42 @@ Accessibility Agent Commands:
 ## Recommendations
 {chr(10).join([f"- {rec}" for rec in audit_data.get('recommendations', [])])}
 """
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             f.write(content)
         print(f"Audit export saved to: {output_file}")
 
     def _export_csv(self, audit_data: Dict):
         """Export audit data as CSV."""
         output_file = f"accessibility_audit_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-        
-        with open(output_file, 'w', newline='') as f:
+
+        with open(output_file, "w", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow(['Category', 'Score', 'Issues'])
-            
-            categories = audit_data.get('categories', {})
+            writer.writerow(["Category", "Score", "Issues"])
+
+            categories = audit_data.get("categories", {})
             for category, data in categories.items():
-                issues = ', '.join(data.get('issues', []))
-                writer.writerow([category, data.get('score', 0), issues])
-        
+                issues = ", ".join(data.get("issues", []))
+                writer.writerow([category, data.get("score", 0), issues])
+
         print(f"Audit export saved to: {output_file}")
 
     def _export_json(self, audit_data: Dict):
         """Export audit data as JSON."""
         output_file = f"accessibility_audit_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             json.dump(audit_data, f, indent=2)
-        
+
         print(f"Audit export saved to: {output_file}")
 
     def generate_improvement_report(self):
         """Generate improvement report based on audit history."""
         logger.info("Generating improvement report")
-        
+
         # Analyze common issues
         common_issues = self._analyze_common_issues()
-        
+
         report = {
             "report_type": "Accessibility Improvement",
             "generated_date": datetime.now().isoformat(),
@@ -532,7 +536,7 @@ Accessibility Agent Commands:
             ],
             "agent": "AccessibilityAgent"
         }
-        
+
         logger.info(f"Improvement report generated: {report}")
         return report
 
@@ -544,15 +548,15 @@ Accessibility Agent Commands:
         """Test if all required resources are available."""
         print("Testing resource completeness...")
         missing_resources = []
-        
+
         for name, path in self.template_paths.items():
             if not path.exists():
                 missing_resources.append(f"Template: {name} ({path})")
-        
+
         for name, path in self.data_paths.items():
             if not path.exists():
                 missing_resources.append(f"Data: {name} ({path})")
-        
+
         if missing_resources:
             print("Missing resources:")
             for resource in missing_resources:
@@ -563,37 +567,37 @@ Accessibility Agent Commands:
     def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         logger.info("Starting accessibility collaboration example...")
-        
+
         # Publish accessibility audit request
         publish("accessibility_audit_requested", {
             "agent": "AccessibilityAgent",
             "target": "BMAD Application",
             "timestamp": datetime.now().isoformat()
         })
-        
+
         # Run accessibility audit
         audit_result = self.run_accessibility_audit("BMAD Application")
-        
+
         # Test Shadcn component
         shadcn_test = self.test_shadcn_component("Button")
-        
+
         # Publish completion
         publish("accessibility_audit_completed", {
-            "status": "success", 
+            "status": "success",
             "agent": "AccessibilityAgent",
             "overall_score": audit_result["overall_score"],
             "shadcn_score": shadcn_test["accessibility_score"]
         })
-        
+
         # Save context
         save_context("AccessibilityAgent", {"accessibility_status": "audited"})
-        
+
         # Notify via Slack
         try:
             send_slack_message(f"Accessibility audit completed with {audit_result['overall_score']}% score")
         except Exception as e:
             logger.warning(f"Could not send Slack notification: {e}")
-        
+
         print("Event gepubliceerd en context opgeslagen.")
         context = get_context("AccessibilityAgent")
         print(f"Opgehaalde context: {context}")
@@ -605,7 +609,7 @@ Accessibility Agent Commands:
 
     async def handle_audit_completed(self, event):
         logger.info(f"Accessibility audit completed: {event}")
-        
+
         # Evaluate policy
         try:
             allowed = await self.policy_engine.evaluate_policy("accessibility_approval", event)
@@ -617,17 +621,17 @@ Accessibility Agent Commands:
         """Run the agent and listen for events."""
         def sync_handler(event):
             asyncio.run(self.handle_audit_completed(event))
-        
+
         subscribe("accessibility_audit_completed", sync_handler)
         subscribe("accessibility_audit_requested", self.handle_audit_requested)
-        
+
         logger.info("AccessibilityAgent ready and listening for events...")
         self.collaborate_example()
 
 def main():
     parser = argparse.ArgumentParser(description="Accessibility Agent CLI")
-    parser.add_argument("command", nargs="?", default="help", 
-                       choices=["help", "audit", "test-shadcn-component", "validate-aria", 
+    parser.add_argument("command", nargs="?", default="help",
+                       choices=["help", "audit", "test-shadcn-component", "validate-aria",
                                "test-screen-reader", "check-design-tokens", "show-audit-history",
                                "show-checklist", "show-best-practices", "show-changelog",
                                "export-audit", "generate-report", "test", "collaborate", "run"])
@@ -636,11 +640,11 @@ def main():
     parser.add_argument("--component", default="Button", help="Component name for testing")
     parser.add_argument("--code", help="Component code for ARIA validation")
     parser.add_argument("--design-system", default="Shadcn", help="Design system for token check")
-    
+
     args = parser.parse_args()
-    
+
     agent = AccessibilityAgent()
-    
+
     if args.command == "help":
         agent.show_help()
     elif args.command == "audit":

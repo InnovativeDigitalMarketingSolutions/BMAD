@@ -1,22 +1,26 @@
-import sys
 import os
+import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import argparse
-import logging
-import json
 import csv
+import hashlib
+import json
+import logging
+import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any
-import time
-import hashlib
+from typing import Any, Dict, List, Optional
 
-from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.agent.agent_performance_monitor import (
+    MetricType,
+    get_performance_monitor,
+)
 from bmad.agents.core.agent.test_sprites import get_sprite_library
-from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor, MetricType
-from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
-from bmad.agents.core.data.supabase_context import save_context, get_context
 from bmad.agents.core.ai.llm_client import ask_openai
+from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.data.supabase_context import get_context, save_context
+from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.slack.slack_notify import send_slack_message
 
 # Configure logging
@@ -28,7 +32,7 @@ class FeedbackAgent:
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
-        
+
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
         self.template_paths = {
@@ -44,7 +48,7 @@ class FeedbackAgent:
             "history": self.resource_base / "data/feedbackagent/feedback-history.md",
             "sentiment-history": self.resource_base / "data/feedbackagent/sentiment-history.md"
         }
-        
+
         # Initialize history
         self.feedback_history = []
         self.sentiment_history = []
@@ -55,11 +59,11 @@ class FeedbackAgent:
         """Load feedback history from data file"""
         try:
             if self.data_paths["history"].exists():
-                with open(self.data_paths["history"], 'r') as f:
+                with open(self.data_paths["history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.feedback_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load feedback history: {e}")
@@ -68,7 +72,7 @@ class FeedbackAgent:
         """Save feedback history to data file"""
         try:
             self.data_paths["history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["history"], 'w') as f:
+            with open(self.data_paths["history"], "w") as f:
                 f.write("# Feedback History\n\n")
                 for feedback in self.feedback_history[-50:]:  # Keep last 50 feedback items
                     f.write(f"- {feedback}\n")
@@ -79,11 +83,11 @@ class FeedbackAgent:
         """Load sentiment history from data file"""
         try:
             if self.data_paths["sentiment-history"].exists():
-                with open(self.data_paths["sentiment-history"], 'r') as f:
+                with open(self.data_paths["sentiment-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.sentiment_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load sentiment history: {e}")
@@ -92,7 +96,7 @@ class FeedbackAgent:
         """Save sentiment history to data file"""
         try:
             self.data_paths["sentiment-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["sentiment-history"], 'w') as f:
+            with open(self.data_paths["sentiment-history"], "w") as f:
                 f.write("# Sentiment History\n\n")
                 for sentiment in self.sentiment_history[-50:]:  # Keep last 50 sentiment items
                     f.write(f"- {sentiment}\n")
@@ -134,7 +138,7 @@ Feedback Agent Commands:
                 print(f"Unknown resource type: {resource_type}")
                 return
             if path.exists():
-                with open(path, 'r') as f:
+                with open(path) as f:
                     print(f.read())
             else:
                 print(f"Resource file not found: {path}")
@@ -164,10 +168,10 @@ Feedback Agent Commands:
     def collect_feedback(self, feedback_text: str = "The new dashboard is much more user-friendly", source: str = "User Survey") -> Dict[str, Any]:
         """Collect new feedback with enhanced functionality."""
         logger.info(f"Collecting feedback from {source}")
-        
+
         # Simulate feedback collection
         time.sleep(1)
-        
+
         feedback_result = {
             "feedback_id": hashlib.sha256(feedback_text.encode()).hexdigest()[:8],
             "feedback_type": "Feedback Collection",
@@ -208,25 +212,25 @@ Feedback Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "FeedbackAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("FeedbackAgent", MetricType.SUCCESS_RATE, 98, "%")
-        
+
         # Add to feedback history
         feedback_entry = f"{datetime.now().isoformat()}: Feedback collected from {source} - {feedback_text[:50]}..."
         self.feedback_history.append(feedback_entry)
         self._save_feedback_history()
-        
+
         logger.info(f"Feedback collected: {feedback_result}")
         return feedback_result
 
     def analyze_sentiment(self, feedback_text: str = "The new dashboard is much more user-friendly") -> Dict[str, Any]:
         """Analyze feedback sentiment with enhanced functionality."""
         logger.info("Analyzing feedback sentiment")
-        
+
         # Simulate sentiment analysis
         time.sleep(1)
-        
+
         sentiment_result = {
             "feedback_id": hashlib.sha256(feedback_text.encode()).hexdigest()[:8],
             "sentiment_analysis_type": "Feedback Sentiment Analysis",
@@ -273,15 +277,15 @@ Feedback Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "FeedbackAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("FeedbackAgent", MetricType.SUCCESS_RATE, 95, "%")
-        
+
         # Add to sentiment history
         sentiment_entry = f"{datetime.now().isoformat()}: Sentiment analysis completed - {sentiment_result['sentiment_results']['overall_sentiment']} (score: {sentiment_result['sentiment_results']['sentiment_score']})"
         self.sentiment_history.append(sentiment_entry)
         self._save_sentiment_history()
-        
+
         logger.info(f"Sentiment analysis completed: {sentiment_result}")
         return sentiment_result
 
@@ -295,12 +299,12 @@ Feedback Agent Commands:
                 "The search functionality works great",
                 "The documentation could be more comprehensive"
             ]
-        
+
         logger.info("Summarizing feedback collection")
-        
+
         # Simulate feedback summarization
         time.sleep(1)
-        
+
         summary_result = {
             "summary_type": "Feedback Collection Summary",
             "total_feedback_items": len(feedback_list),
@@ -362,10 +366,10 @@ Feedback Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "FeedbackAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("FeedbackAgent", MetricType.SUCCESS_RATE, 92, "%")
-        
+
         logger.info(f"Feedback summary completed: {summary_result}")
         return summary_result
 
@@ -378,12 +382,12 @@ Feedback Agent Commands:
                 "negative_feedback": 5,
                 "neutral_feedback": 2
             }
-        
+
         logger.info("Generating insights from feedback data")
-        
+
         # Simulate insight generation
         time.sleep(1)
-        
+
         insights_result = {
             "insights_type": "Feedback Insights Generation",
             "status": "completed",
@@ -467,20 +471,20 @@ Feedback Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "FeedbackAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("FeedbackAgent", MetricType.SUCCESS_RATE, 90, "%")
-        
+
         logger.info(f"Insights generation completed: {insights_result}")
         return insights_result
 
     def track_trends(self, timeframe: str = "30 days") -> Dict[str, Any]:
         """Track feedback trends over time."""
         logger.info(f"Tracking feedback trends over {timeframe}")
-        
+
         # Simulate trend tracking
         time.sleep(1)
-        
+
         trends_result = {
             "trends_type": "Feedback Trends Analysis",
             "timeframe": timeframe,
@@ -566,10 +570,10 @@ Feedback Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "FeedbackAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("FeedbackAgent", MetricType.SUCCESS_RATE, 88, "%")
-        
+
         logger.info(f"Trend tracking completed: {trends_result}")
         return trends_result
 
@@ -585,7 +589,7 @@ Feedback Agent Commands:
                 "timestamp": datetime.now().isoformat(),
                 "agent": "FeedbackAgent"
             }
-        
+
         try:
             if format_type == "md":
                 self._export_markdown(report_data)
@@ -601,7 +605,7 @@ Feedback Agent Commands:
     def _export_markdown(self, report_data: Dict):
         """Export report data as markdown."""
         output_file = f"feedback_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-        
+
         content = f"""# Feedback Report
 
 ## Summary
@@ -624,47 +628,47 @@ Feedback Agent Commands:
 ## Recent Sentiment Analysis
 {chr(10).join([f"- {sentiment}" for sentiment in self.sentiment_history[-5:]])}
 """
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             f.write(content)
         print(f"Report export saved to: {output_file}")
 
     def _export_csv(self, report_data: Dict):
         """Export report data as CSV."""
         output_file = f"feedback_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-        
-        with open(output_file, 'w', newline='') as f:
+
+        with open(output_file, "w", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow(['Metric', 'Value'])
-            writer.writerow(['Timeframe', report_data.get('timeframe', 'N/A')])
-            writer.writerow(['Status', report_data.get('status', 'N/A')])
-            writer.writerow(['Total Feedback', report_data.get('total_feedback', 0)])
-            writer.writerow(['Sentiment Score', report_data.get('sentiment_score', 'N/A')])
-        
+            writer.writerow(["Metric", "Value"])
+            writer.writerow(["Timeframe", report_data.get("timeframe", "N/A")])
+            writer.writerow(["Status", report_data.get("status", "N/A")])
+            writer.writerow(["Total Feedback", report_data.get("total_feedback", 0)])
+            writer.writerow(["Sentiment Score", report_data.get("sentiment_score", "N/A")])
+
         print(f"Report export saved to: {output_file}")
 
     def _export_json(self, report_data: Dict):
         """Export report data as JSON."""
         output_file = f"feedback_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             json.dump(report_data, f, indent=2)
-        
+
         print(f"Report export saved to: {output_file}")
 
     def test_resource_completeness(self):
         """Test if all required resources are available."""
         print("Testing resource completeness...")
         missing_resources = []
-        
+
         for name, path in self.template_paths.items():
             if not path.exists():
                 missing_resources.append(f"Template: {name} ({path})")
-        
+
         for name, path in self.data_paths.items():
             if not path.exists():
                 missing_resources.append(f"Data: {name} ({path})")
-        
+
         if missing_resources:
             print("Missing resources:")
             for resource in missing_resources:
@@ -675,23 +679,23 @@ Feedback Agent Commands:
     def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         logger.info("Starting feedback collaboration example...")
-        
+
         # Publish feedback collection request
         publish("feedback_collection_requested", {
             "agent": "FeedbackAgent",
             "source": "User Survey",
             "timestamp": datetime.now().isoformat()
         })
-        
+
         # Collect feedback
         self.collect_feedback("The new dashboard is much more user-friendly", "User Survey")
-        
+
         # Analyze sentiment
         sentiment_result = self.analyze_sentiment("The new dashboard is much more user-friendly")
-        
+
         # Summarize feedback
         self.summarize_feedback()
-        
+
         # Publish completion
         publish("feedback_analysis_completed", {
             "status": "success",
@@ -699,16 +703,16 @@ Feedback Agent Commands:
             "feedback_count": 1,
             "sentiment_score": sentiment_result["sentiment_results"]["sentiment_score"]
         })
-        
+
         # Save context
         save_context("FeedbackAgent", {"feedback_status": "analyzed"})
-        
+
         # Notify via Slack
         try:
             send_slack_message(f"Feedback analysis completed with {sentiment_result['sentiment_results']['sentiment_score']} sentiment score")
         except Exception as e:
             logger.warning(f"Could not send Slack notification: {e}")
-        
+
         print("Event gepubliceerd en context opgeslagen.")
         context = get_context("FeedbackAgent")
         print(f"Opgehaalde context: {context}")
@@ -778,27 +782,27 @@ Feedback Agent Commands:
         subscribe("summarize_feedback", self.on_summarize_feedback)
         subscribe("retro_planned", self.handle_retro_planned)
         subscribe("feedback_collected", self.handle_feedback_collected)
-        
+
         logger.info("FeedbackAgent ready and listening for events...")
         self.collaborate_example()
 
 def main():
     parser = argparse.ArgumentParser(description="Feedback Agent CLI")
-    parser.add_argument("command", nargs="?", default="help", 
+    parser.add_argument("command", nargs="?", default="help",
                        choices=["help", "collect-feedback", "analyze-sentiment", "summarize-feedback",
                                "generate-insights", "track-trends", "show-feedback-history", "show-sentiment-history",
-                               "show-best-practices", "show-changelog", "export-report", "test", 
+                               "show-best-practices", "show-changelog", "export-report", "test",
                                "collaborate", "run"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--feedback-text", default="The new dashboard is much more user-friendly", help="Feedback text to analyze")
     parser.add_argument("--source", default="User Survey", help="Feedback source")
     parser.add_argument("--timeframe", default="30 days", help="Timeframe for trend analysis")
     parser.add_argument("--feedback-list", nargs="+", help="List of feedback items to summarize")
-    
+
     args = parser.parse_args()
-    
+
     agent = FeedbackAgent()
-    
+
     if args.command == "help":
         agent.show_help()
     elif args.command == "collect-feedback":

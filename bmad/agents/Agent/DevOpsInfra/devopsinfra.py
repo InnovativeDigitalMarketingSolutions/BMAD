@@ -1,22 +1,26 @@
-import sys
 import os
+import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import argparse
-import logging
-import json
+import asyncio
 import csv
+import json
+import logging
+import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, Any
-import asyncio
-import time
+from typing import Any, Dict, Optional
 
-from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.agent.agent_performance_monitor import (
+    MetricType,
+    get_performance_monitor,
+)
 from bmad.agents.core.agent.test_sprites import get_sprite_library
-from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor, MetricType
-from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
-from bmad.agents.core.data.supabase_context import save_context, get_context
 from bmad.agents.core.ai.llm_client import ask_openai
+from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.data.supabase_context import get_context, save_context
+from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.slack.slack_notify import send_slack_message
 
 # Configure logging
@@ -28,7 +32,7 @@ class DevOpsInfraAgent:
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
-        
+
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
         self.template_paths = {
@@ -44,7 +48,7 @@ class DevOpsInfraAgent:
             "history": self.resource_base / "data/devopsinfra/infrastructure-history.md",
             "incident-history": self.resource_base / "data/devopsinfra/incident-history.md"
         }
-        
+
         # Initialize history
         self.infrastructure_history = []
         self.incident_history = []
@@ -55,11 +59,11 @@ class DevOpsInfraAgent:
         """Load infrastructure history from data file"""
         try:
             if self.data_paths["history"].exists():
-                with open(self.data_paths["history"], 'r') as f:
+                with open(self.data_paths["history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.infrastructure_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load infrastructure history: {e}")
@@ -68,7 +72,7 @@ class DevOpsInfraAgent:
         """Save infrastructure history to data file"""
         try:
             self.data_paths["history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["history"], 'w') as f:
+            with open(self.data_paths["history"], "w") as f:
                 f.write("# Infrastructure History\n\n")
                 for infra in self.infrastructure_history[-50:]:  # Keep last 50 entries
                     f.write(f"- {infra}\n")
@@ -79,11 +83,11 @@ class DevOpsInfraAgent:
         """Load incident history from data file"""
         try:
             if self.data_paths["incident-history"].exists():
-                with open(self.data_paths["incident-history"], 'r') as f:
+                with open(self.data_paths["incident-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.incident_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load incident history: {e}")
@@ -92,7 +96,7 @@ class DevOpsInfraAgent:
         """Save incident history to data file"""
         try:
             self.data_paths["incident-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["incident-history"], 'w') as f:
+            with open(self.data_paths["incident-history"], "w") as f:
                 f.write("# Incident History\n\n")
                 for incident in self.incident_history[-50:]:  # Keep last 50 incidents
                     f.write(f"- {incident}\n")
@@ -133,7 +137,7 @@ DevOps Infrastructure Agent Commands:
                 print(f"Unknown resource type: {resource_type}")
                 return
             if path.exists():
-                with open(path, 'r') as f:
+                with open(path) as f:
                     print(f.read())
             else:
                 print(f"Resource file not found: {path}")
@@ -163,10 +167,10 @@ DevOps Infrastructure Agent Commands:
     def pipeline_advice(self, pipeline_config: str = "Sample CI/CD pipeline") -> Dict[str, Any]:
         """Get CI/CD pipeline optimization advice with enhanced functionality."""
         logger.info("Analyzing CI/CD pipeline configuration")
-        
+
         # Simulate pipeline analysis
         time.sleep(1)
-        
+
         advice_result = {
             "pipeline_config": pipeline_config,
             "analysis_type": "CI/CD Pipeline Optimization",
@@ -224,25 +228,25 @@ DevOps Infrastructure Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "DevOpsInfraAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("DevOpsInfra", MetricType.SUCCESS_RATE, advice_result["overall_score"], "%")
-        
+
         # Add to infrastructure history
         infra_entry = f"{datetime.now().isoformat()}: Pipeline analysis completed with {advice_result['overall_score']}% score"
         self.infrastructure_history.append(infra_entry)
         self._save_infrastructure_history()
-        
+
         logger.info(f"Pipeline advice completed: {advice_result}")
         return advice_result
 
     def incident_response(self, incident_desc: str = "Sample incident description") -> Dict[str, Any]:
         """Generate incident response plan with enhanced functionality."""
         logger.info("Generating incident response plan")
-        
+
         # Simulate incident response generation
         time.sleep(1)
-        
+
         response_result = {
             "incident_description": incident_desc,
             "response_type": "Incident Response Plan",
@@ -289,21 +293,21 @@ DevOps Infrastructure Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "DevOpsInfraAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("DevOpsInfra", MetricType.SUCCESS_RATE, 90, "%")
-        
+
         # Add to incident history
         incident_entry = f"{datetime.now().isoformat()}: Incident response plan generated for {incident_desc[:50]}..."
         self.incident_history.append(incident_entry)
         self._save_incident_history()
-        
+
         logger.info(f"Incident response completed: {response_result}")
         return response_result
 
     def deploy_infrastructure(self, infrastructure_type: str = "kubernetes") -> Dict[str, Any]:
         """Deploy infrastructure components with policy approval."""
-        
+
         # Policy evaluation for deployment approval
         event = {
             "action": "deploy_infrastructure",
@@ -311,7 +315,7 @@ DevOps Infrastructure Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "DevOpsInfra"
         }
-        
+
         try:
             allowed = await self.policy_engine.evaluate_policy("deployment_approval", event)
             if not allowed:
@@ -324,30 +328,30 @@ DevOps Infrastructure Agent Commands:
         except Exception as e:
             logger.warning(f"Policy evaluation failed: {e}")
             # Continue without policy check if evaluation fails
-        
+
         print(f"🚀 Deploying {infrastructure_type} infrastructure...")
-        
+
         # Simulate deployment process
         deployment_steps = [
             "Validating infrastructure configuration",
-            "Checking resource availability", 
+            "Checking resource availability",
             "Creating infrastructure components",
             "Configuring networking",
             "Setting up monitoring",
             "Running health checks"
         ]
-        
+
         for step in deployment_steps:
             print(f"  📋 {step}")
             time.sleep(0.5)  # Simulate processing time
-        
+
         # Record in history
         deployment_record = f"{infrastructure_type} infrastructure deployed at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
         self.infrastructure_history.append(deployment_record)
         self._save_infrastructure_history()
-        
+
         print(f"✅ {infrastructure_type} infrastructure deployed successfully!")
-        
+
         return {
             "status": "success",
             "infrastructure_type": infrastructure_type,
@@ -359,10 +363,10 @@ DevOps Infrastructure Agent Commands:
     def monitor_infrastructure(self, infrastructure_id: str = "infra_001") -> Dict[str, Any]:
         """Monitor infrastructure health."""
         logger.info(f"Monitoring infrastructure: {infrastructure_id}")
-        
+
         # Simulate infrastructure monitoring
         time.sleep(1)
-        
+
         monitoring_result = {
             "infrastructure_id": infrastructure_id,
             "monitoring_type": "Infrastructure Health Check",
@@ -411,10 +415,10 @@ DevOps Infrastructure Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "DevOpsInfraAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("DevOpsInfra", MetricType.SUCCESS_RATE, 95, "%")
-        
+
         logger.info(f"Infrastructure monitoring completed: {monitoring_result}")
         return monitoring_result
 
@@ -430,7 +434,7 @@ DevOps Infrastructure Agent Commands:
                 "timestamp": datetime.now().isoformat(),
                 "agent": "DevOpsInfraAgent"
             }
-        
+
         try:
             if format_type == "md":
                 self._export_markdown(report_data)
@@ -446,7 +450,7 @@ DevOps Infrastructure Agent Commands:
     def _export_markdown(self, report_data: Dict):
         """Export report data as markdown."""
         output_file = f"infrastructure_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-        
+
         content = f"""# Infrastructure Report
 
 ## Summary
@@ -470,46 +474,46 @@ DevOps Infrastructure Agent Commands:
 ## Alerts
 {chr(10).join([f"- {alert.get('message', 'N/A')} ({alert.get('severity', 'N/A')})" for alert in report_data.get('alerts', [])])}
 """
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             f.write(content)
         print(f"Report export saved to: {output_file}")
 
     def _export_csv(self, report_data: Dict):
         """Export report data as CSV."""
         output_file = f"infrastructure_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-        
-        with open(output_file, 'w', newline='') as f:
+
+        with open(output_file, "w", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow(['Metric', 'Value'])
-            writer.writerow(['Overall Health', report_data.get('overall_health', 'N/A')])
-            writer.writerow(['Total Components', report_data.get('total_components', 0)])
-            writer.writerow(['Healthy Components', report_data.get('healthy_components', 0)])
-        
+            writer.writerow(["Metric", "Value"])
+            writer.writerow(["Overall Health", report_data.get("overall_health", "N/A")])
+            writer.writerow(["Total Components", report_data.get("total_components", 0)])
+            writer.writerow(["Healthy Components", report_data.get("healthy_components", 0)])
+
         print(f"Report export saved to: {output_file}")
 
     def _export_json(self, report_data: Dict):
         """Export report data as JSON."""
         output_file = f"infrastructure_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             json.dump(report_data, f, indent=2)
-        
+
         print(f"Report export saved to: {output_file}")
 
     def test_resource_completeness(self):
         """Test if all required resources are available."""
         print("Testing resource completeness...")
         missing_resources = []
-        
+
         for name, path in self.template_paths.items():
             if not path.exists():
                 missing_resources.append(f"Template: {name} ({path})")
-        
+
         for name, path in self.data_paths.items():
             if not path.exists():
                 missing_resources.append(f"Data: {name} ({path})")
-        
+
         if missing_resources:
             print("Missing resources:")
             for resource in missing_resources:
@@ -520,20 +524,20 @@ DevOps Infrastructure Agent Commands:
     def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         logger.info("Starting DevOps infrastructure collaboration example...")
-        
+
         # Publish infrastructure deployment request
         publish("infrastructure_deployment_requested", {
             "agent": "DevOpsInfraAgent",
             "infrastructure_type": "kubernetes",
             "timestamp": datetime.now().isoformat()
         })
-        
+
         # Deploy infrastructure
         deployment_result = self.deploy_infrastructure("kubernetes")
-        
+
         # Generate pipeline advice
         advice_result = self.pipeline_advice("Sample CI/CD pipeline configuration")
-        
+
         # Publish completion
         publish("infrastructure_deployment_completed", {
             "status": "success",
@@ -541,16 +545,16 @@ DevOps Infrastructure Agent Commands:
             "deployment_status": deployment_result["status"],
             "pipeline_score": advice_result["overall_score"]
         })
-        
+
         # Save context
         save_context("DevOpsInfra", {"infrastructure_status": "deployed"})
-        
+
         # Notify via Slack
         try:
             send_slack_message(f"Infrastructure deployment completed with {advice_result['overall_score']}% pipeline score")
         except Exception as e:
             logger.warning(f"Could not send Slack notification: {e}")
-        
+
         print("Event gepubliceerd en context opgeslagen.")
         context = get_context("DevOpsInfra")
         print(f"Opgehaalde context: {context}")
@@ -598,33 +602,33 @@ DevOps Infrastructure Agent Commands:
         """Run the agent and listen for events."""
         def sync_handler(event):
             asyncio.run(self.on_pipeline_advice_requested(event))
-        
+
         subscribe("pipeline_advice_requested", self.on_pipeline_advice_requested)
         subscribe("incident_response_requested", self.on_incident_response_requested)
         subscribe("feedback_sentiment_analyzed", self.on_feedback_sentiment_analyzed)
         subscribe("build_triggered", self.handle_build_triggered)
         subscribe("deployment_executed", self.handle_deployment_executed)
-        
+
         logger.info("DevOpsInfraAgent ready and listening for events...")
         self.collaborate_example()
 
 def main():
     parser = argparse.ArgumentParser(description="DevOps Infrastructure Agent CLI")
-    parser.add_argument("command", nargs="?", default="help", 
+    parser.add_argument("command", nargs="?", default="help",
                        choices=["help", "pipeline-advice", "incident-response", "deploy-infrastructure",
                                "monitor-infrastructure", "show-infrastructure-history", "show-incident-history",
-                               "show-best-practices", "show-changelog", "export-report", "test", 
+                               "show-best-practices", "show-changelog", "export-report", "test",
                                "collaborate", "run"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--pipeline-config", default="Sample CI/CD pipeline", help="Pipeline configuration for analysis")
     parser.add_argument("--incident-desc", default="Sample incident description", help="Incident description for response")
     parser.add_argument("--infrastructure-type", default="kubernetes", help="Infrastructure type for deployment")
     parser.add_argument("--infrastructure-id", default="infra_001", help="Infrastructure ID for monitoring")
-    
+
     args = parser.parse_args()
-    
+
     agent = DevOpsInfraAgent()
-    
+
     if args.command == "help":
         agent.show_help()
     elif args.command == "pipeline-advice":

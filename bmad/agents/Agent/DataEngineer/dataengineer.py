@@ -1,21 +1,25 @@
-import sys
 import os
+import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import argparse
-import logging
-import json
+import asyncio
 import csv
+import json
+import logging
+import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, Any
-import asyncio
-import time
+from typing import Any, Dict, Optional
 
-from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.agent.agent_performance_monitor import (
+    MetricType,
+    get_performance_monitor,
+)
 from bmad.agents.core.agent.test_sprites import get_sprite_library
-from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor, MetricType
+from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
-from bmad.agents.core.data.supabase_context import save_context, get_context
 from integrations.slack.slack_notify import send_slack_message
 
 # Configure logging
@@ -27,7 +31,7 @@ class DataEngineerAgent:
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
-        
+
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
         self.template_paths = {
@@ -43,7 +47,7 @@ class DataEngineerAgent:
             "history": self.resource_base / "data/dataengineer/pipeline-history.md",
             "quality-history": self.resource_base / "data/dataengineer/quality-history.md"
         }
-        
+
         # Initialize history
         self.pipeline_history = []
         self.quality_history = []
@@ -54,11 +58,11 @@ class DataEngineerAgent:
         """Load pipeline history from data file"""
         try:
             if self.data_paths["history"].exists():
-                with open(self.data_paths["history"], 'r') as f:
+                with open(self.data_paths["history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.pipeline_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load pipeline history: {e}")
@@ -67,7 +71,7 @@ class DataEngineerAgent:
         """Save pipeline history to data file"""
         try:
             self.data_paths["history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["history"], 'w') as f:
+            with open(self.data_paths["history"], "w") as f:
                 f.write("# Data Pipeline History\n\n")
                 for pipeline in self.pipeline_history[-50:]:  # Keep last 50 pipelines
                     f.write(f"- {pipeline}\n")
@@ -78,11 +82,11 @@ class DataEngineerAgent:
         """Load quality history from data file"""
         try:
             if self.data_paths["quality-history"].exists():
-                with open(self.data_paths["quality-history"], 'r') as f:
+                with open(self.data_paths["quality-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.quality_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load quality history: {e}")
@@ -91,7 +95,7 @@ class DataEngineerAgent:
         """Save quality history to data file"""
         try:
             self.data_paths["quality-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["quality-history"], 'w') as f:
+            with open(self.data_paths["quality-history"], "w") as f:
                 f.write("# Data Quality History\n\n")
                 for quality in self.quality_history[-50:]:  # Keep last 50 quality checks
                     f.write(f"- {quality}\n")
@@ -132,7 +136,7 @@ Data Engineer Agent Commands:
                 print(f"Unknown resource type: {resource_type}")
                 return
             if path.exists():
-                with open(path, 'r') as f:
+                with open(path) as f:
                     print(f.read())
             else:
                 print(f"Resource file not found: {path}")
@@ -162,10 +166,10 @@ Data Engineer Agent Commands:
     def data_quality_check(self, data_summary: str = "Sample data summary") -> Dict[str, Any]:
         """Run data quality check with enhanced functionality."""
         logger.info("Running data quality check")
-        
+
         # Simulate data quality check
         time.sleep(1)
-        
+
         quality_result = {
             "check_type": "Data Quality Assessment",
             "data_summary": data_summary,
@@ -208,25 +212,25 @@ Data Engineer Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "DataEngineerAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("DataEngineer", MetricType.SUCCESS_RATE, quality_result["overall_score"], "%")
-        
+
         # Add to quality history
         quality_entry = f"{datetime.now().isoformat()}: Data quality check completed with {quality_result['overall_score']}% score"
         self.quality_history.append(quality_entry)
         self._save_quality_history()
-        
+
         logger.info(f"Data quality check completed: {quality_result}")
         return quality_result
 
     def explain_pipeline(self, pipeline_code: str = "Sample ETL pipeline") -> Dict[str, Any]:
         """Explain ETL pipeline with enhanced functionality."""
         logger.info("Explaining ETL pipeline")
-        
+
         # Simulate pipeline explanation
         time.sleep(1)
-        
+
         explanation_result = {
             "pipeline_code": pipeline_code,
             "explanation_type": "ETL Pipeline Analysis",
@@ -262,20 +266,20 @@ Data Engineer Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "DataEngineerAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("DataEngineer", MetricType.SUCCESS_RATE, 95, "%")
-        
+
         logger.info(f"Pipeline explanation completed: {explanation_result}")
         return explanation_result
 
     def build_pipeline(self, pipeline_name: str = "ETL Pipeline") -> Dict[str, Any]:
         """Build new data pipeline."""
         logger.info(f"Building data pipeline: {pipeline_name}")
-        
+
         # Simulate pipeline building
         time.sleep(2)
-        
+
         pipeline_result = {
             "pipeline_name": pipeline_name,
             "build_type": "ETL Pipeline",
@@ -304,25 +308,25 @@ Data Engineer Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "DataEngineerAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("DataEngineer", MetricType.SUCCESS_RATE, 97, "%")
-        
+
         # Add to pipeline history
         pipeline_entry = f"{datetime.now().isoformat()}: {pipeline_name} pipeline built successfully"
         self.pipeline_history.append(pipeline_entry)
         self._save_pipeline_history()
-        
+
         logger.info(f"Pipeline build completed: {pipeline_result}")
         return pipeline_result
 
     def monitor_pipeline(self, pipeline_id: str = "pipeline_001") -> Dict[str, Any]:
         """Monitor pipeline performance."""
         logger.info(f"Monitoring pipeline: {pipeline_id}")
-        
+
         # Simulate pipeline monitoring
         time.sleep(1)
-        
+
         monitoring_result = {
             "pipeline_id": pipeline_id,
             "monitoring_type": "Real-time Performance",
@@ -356,10 +360,10 @@ Data Engineer Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "DataEngineerAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("DataEngineer", MetricType.SUCCESS_RATE, 99, "%")
-        
+
         logger.info(f"Pipeline monitoring completed: {monitoring_result}")
         return monitoring_result
 
@@ -375,7 +379,7 @@ Data Engineer Agent Commands:
                 "timestamp": datetime.now().isoformat(),
                 "agent": "DataEngineerAgent"
             }
-        
+
         try:
             if format_type == "md":
                 self._export_markdown(report_data)
@@ -391,7 +395,7 @@ Data Engineer Agent Commands:
     def _export_markdown(self, report_data: Dict):
         """Export report data as markdown."""
         output_file = f"data_pipeline_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-        
+
         content = f"""# Data Pipeline Report
 
 ## Summary
@@ -413,46 +417,46 @@ Data Engineer Agent Commands:
 - **Accuracy**: {report_data.get('quality_metrics', {}).get('accuracy', 'N/A')}
 - **Consistency**: {report_data.get('quality_metrics', {}).get('consistency', 'N/A')}
 """
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             f.write(content)
         print(f"Report export saved to: {output_file}")
 
     def _export_csv(self, report_data: Dict):
         """Export report data as CSV."""
         output_file = f"data_pipeline_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-        
-        with open(output_file, 'w', newline='') as f:
+
+        with open(output_file, "w", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow(['Metric', 'Value'])
-            writer.writerow(['Overall Score', report_data.get('overall_score', 0)])
-            writer.writerow(['Success Rate', report_data.get('success_rate', 'N/A')])
-            writer.writerow(['Total Pipelines', report_data.get('total_pipelines', 0)])
-        
+            writer.writerow(["Metric", "Value"])
+            writer.writerow(["Overall Score", report_data.get("overall_score", 0)])
+            writer.writerow(["Success Rate", report_data.get("success_rate", "N/A")])
+            writer.writerow(["Total Pipelines", report_data.get("total_pipelines", 0)])
+
         print(f"Report export saved to: {output_file}")
 
     def _export_json(self, report_data: Dict):
         """Export report data as JSON."""
         output_file = f"data_pipeline_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             json.dump(report_data, f, indent=2)
-        
+
         print(f"Report export saved to: {output_file}")
 
     def test_resource_completeness(self):
         """Test if all required resources are available."""
         print("Testing resource completeness...")
         missing_resources = []
-        
+
         for name, path in self.template_paths.items():
             if not path.exists():
                 missing_resources.append(f"Template: {name} ({path})")
-        
+
         for name, path in self.data_paths.items():
             if not path.exists():
                 missing_resources.append(f"Data: {name} ({path})")
-        
+
         if missing_resources:
             print("Missing resources:")
             for resource in missing_resources:
@@ -463,20 +467,20 @@ Data Engineer Agent Commands:
     def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         logger.info("Starting data engineering collaboration example...")
-        
+
         # Publish pipeline validation event
         publish("pipeline_validated", {
-            "status": "success", 
+            "status": "success",
             "agent": "DataEngineerAgent",
             "timestamp": datetime.now().isoformat()
         })
-        
+
         # Run data quality check
         quality_result = self.data_quality_check("Sample data for quality assessment")
-        
+
         # Build pipeline
         pipeline_result = self.build_pipeline("Sample ETL Pipeline")
-        
+
         # Publish completion
         publish("data_engineering_completed", {
             "status": "success",
@@ -484,16 +488,16 @@ Data Engineer Agent Commands:
             "quality_score": quality_result["overall_score"],
             "pipeline_status": pipeline_result["status"]
         })
-        
+
         # Save context
         save_context("DataEngineer", {"pipeline_status": "validated"})
-        
+
         # Notify via Slack
         try:
             send_slack_message(f"Data engineering completed with {quality_result['overall_score']}% quality score")
         except Exception as e:
             logger.warning(f"Could not send Slack notification: {e}")
-        
+
         print("Event gepubliceerd en context opgeslagen.")
         context = get_context("DataEngineer")
         print(f"Opgehaalde context: {context}")
@@ -514,30 +518,30 @@ Data Engineer Agent Commands:
         """Run the agent and listen for events."""
         def sync_handler(event):
             asyncio.run(self.handle_data_quality_check_requested(event))
-        
+
         subscribe("data_quality_check_requested", self.handle_data_quality_check_requested)
         subscribe("explain_pipeline", self.handle_explain_pipeline)
-        
+
         logger.info("DataEngineerAgent ready and listening for events...")
         self.collaborate_example()
 
 def main():
     parser = argparse.ArgumentParser(description="Data Engineer Agent CLI")
-    parser.add_argument("command", nargs="?", default="help", 
+    parser.add_argument("command", nargs="?", default="help",
                        choices=["help", "data-quality-check", "explain-pipeline", "build-pipeline",
                                "monitor-pipeline", "show-pipeline-history", "show-quality-history",
-                               "show-best-practices", "show-changelog", "export-report", "test", 
+                               "show-best-practices", "show-changelog", "export-report", "test",
                                "collaborate", "run"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--data-summary", default="Sample data summary", help="Data summary for quality check")
     parser.add_argument("--pipeline-code", default="Sample ETL pipeline", help="Pipeline code to explain")
     parser.add_argument("--pipeline-name", default="ETL Pipeline", help="Pipeline name for building")
     parser.add_argument("--pipeline-id", default="pipeline_001", help="Pipeline ID for monitoring")
-    
+
     args = parser.parse_args()
-    
+
     agent = DataEngineerAgent()
-    
+
     if args.command == "help":
         agent.show_help()
     elif args.command == "data-quality-check":

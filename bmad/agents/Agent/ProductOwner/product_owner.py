@@ -4,16 +4,23 @@ Product Owner Agent voor BMAD
 """
 import argparse
 import logging
-import time
-import sys
 import os
+import sys
+import time
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
-from bmad.agents.core.communication.message_bus import publish, subscribe
-from bmad.agents.core.data.supabase_context import save_context, get_context
-from bmad.agents.core.ai.llm_client import ask_openai_with_confidence
-from bmad.agents.core.ai.confidence_scoring import confidence_scoring, create_review_request, format_confidence_message
-from bmad.projects.project_manager import project_manager
 from dotenv import load_dotenv
+
+from bmad.agents.core.ai.confidence_scoring import (
+    confidence_scoring,
+    create_review_request,
+    format_confidence_message,
+)
+from bmad.agents.core.ai.llm_client import ask_openai_with_confidence
+from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.data.supabase_context import get_context, save_context
+from bmad.projects.project_manager import project_manager
+
 load_dotenv()
 
 
@@ -24,7 +31,7 @@ def main():
     )
     parser.add_argument("--input", "-i", help="Input voor het commando")
     args = parser.parse_args()
-    
+
     if args.command == "help":
         show_help()
     elif args.command == "create-story":
@@ -54,19 +61,19 @@ def create_bmad_frontend_story():
     """Maak user stories voor het huidige project."""
     # Haal project context op
     project_context = project_manager.get_project_context()
-    
+
     if not project_context:
         print("❌ Geen project geladen! Laad eerst een project met:")
         print("   python -m bmad.projects.cli load <project_name>")
         return
-    
+
     project_name = project_context["project_name"]
     project_type = project_context["config"]["project_type"]
     requirements = project_context["requirements"]
-    
+
     print(f"🎯 ProductOwner - User Stories voor '{project_name}' ({project_type})")
     print("=" * 60)
-    
+
     # Toon huidige requirements
     if requirements:
         print("📋 Huidige Requirements:")
@@ -76,25 +83,25 @@ def create_bmad_frontend_story():
                 for req in reqs:
                     print(f"    - {req['description']}")
         print()
-    
+
     # Vraag gebruiker om input
     print("🤔 Wat wil je dat ik doe?")
     print("1. Genereer user stories voor alle requirements")
     print("2. Genereer user stories voor specifieke categorie")
     print("3. Genereer user stories voor nieuwe feature")
     print("4. Review en verbeter bestaande user stories")
-    
+
     choice = input("\nKies een optie (1-4) of beschrijf je eigen opdracht: ").strip()
-    
+
     if choice == "1":
         # Genereer user stories voor alle requirements
         all_requirements = []
         for category, reqs in requirements.items():
             for req in reqs:
                 all_requirements.append(f"{category}: {req['description']}")
-        
+
         requirements_text = "\n".join(all_requirements) if all_requirements else "Geen requirements gedefinieerd"
-        
+
         prompt = f"""
         Schrijf gedetailleerde user stories in Gherkin-formaat voor het project '{project_name}' ({project_type}).
         
@@ -104,12 +111,12 @@ def create_bmad_frontend_story():
         Geef voor elke requirement een user story met acceptatiecriteria.
         Focus op functionaliteit die de gebruiker nodig heeft.
         """
-    
+
     elif choice == "2":
         category = input("Welke categorie? (functional/non_functional/technical): ").strip()
         reqs = requirements.get(category, [])
         if reqs:
-            requirements_text = "\n".join([req['description'] for req in reqs])
+            requirements_text = "\n".join([req["description"] for req in reqs])
             prompt = f"""
             Schrijf user stories voor de {category} requirements van project '{project_name}':
             
@@ -120,7 +127,7 @@ def create_bmad_frontend_story():
         else:
             print(f"❌ Geen requirements gevonden in categorie '{category}'")
             return
-    
+
     elif choice == "3":
         feature = input("Beschrijf de nieuwe feature: ").strip()
         prompt = f"""
@@ -130,7 +137,7 @@ def create_bmad_frontend_story():
         
         Geef 3-5 user stories met acceptatiecriteria voor deze feature.
         """
-    
+
     elif choice == "4":
         # Review bestaande user stories
         existing_stories = project_context.get("user_stories", [])
@@ -146,7 +153,7 @@ def create_bmad_frontend_story():
         else:
             print("❌ Geen bestaande user stories gevonden")
             return
-    
+
     else:
         # Custom opdracht
         prompt = f"""
@@ -157,18 +164,18 @@ def create_bmad_frontend_story():
         
         Schrijf user stories op basis van deze opdracht.
         """
-    
+
     print("\n🔄 ProductOwner aan het werk...")
     result = ask_openai_with_confidence(prompt)
-    
+
     print("\n🎯 User Stories:")
     print("=" * 50)
     print(result["answer"])
     print("=" * 50)
-    
+
     # Sla de user stories op in project context
     project_manager.add_user_story(result["answer"], "high")
-    
+
     # Publiceer event voor andere agents
     publish("user_stories_created", {
         "agent": "ProductOwner",
@@ -185,7 +192,7 @@ def create_user_story(requirement):
     
     Geef een duidelijke user story met acceptatiecriteria.
     """
-    
+
 
     # Context voor de LLM
     context = {
@@ -193,7 +200,7 @@ def create_user_story(requirement):
         "agent": "ProductOwner",
         "requirement": requirement
     }
-    
+
     result = ask_openai_with_confidence(prompt, context=context)
     print(f"🎯 User Story voor: {requirement}")
     print("=" * 50)
@@ -225,7 +232,7 @@ def show_bmad_vision():
     - Real-time insights en metrics
     - Eenvoudige API testing en debugging
     """
-    
+
     print(vision)
 
 
@@ -251,17 +258,17 @@ def ask_llm_user_story(requirement):
     - Acceptatiecriteria
     - Prioriteit (High/Medium/Low)
     """
-    
+
     # Context voor confidence scoring
     context = {
         "task": "create_user_story",
         "agent": "ProductOwner",
         "requirement": requirement
     }
-    
+
     # Gebruik confidence scoring
     result = ask_openai_with_confidence(prompt, context)
-    
+
     # Enhance output met confidence scoring
     enhanced_output = confidence_scoring.enhance_agent_output(
         output=result["answer"],
@@ -269,19 +276,19 @@ def ask_llm_user_story(requirement):
         task_type="create_user_story",
         context=context
     )
-    
+
     # Log confidence info
     print(f"🎯 Confidence Score: {enhanced_output['confidence']:.2f} ({enhanced_output['review_level']})")
-    
+
     # Als review vereist is, maak review request
     if enhanced_output["review_required"]:
         create_review_request(enhanced_output)
         print("🔍 Review vereist - User story wordt ter goedkeuring voorgelegd")
         print(format_confidence_message(enhanced_output))
-        
+
         # TODO: Stuur review request naar Slack of andere kanalen
         # publish("review_requested", review_request)
-    
+
     return enhanced_output["output"]
 
 

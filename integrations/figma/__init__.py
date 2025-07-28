@@ -14,4 +14,4 @@ from .figma_slack_notifier import FigmaSlackNotifier
 __all__ = [
     "FigmaClient",
     "FigmaSlackNotifier"
-] 
+]

@@ -6,26 +6,30 @@ Output in code snippets, pull requests, changelogs, testresultaten en dev logs.
 """
 
 import argparse
+import asyncio
+import json
+import logging
+import os
 import sys
 import textwrap
-import logging
 import time
-import json
-import os
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, Any
-import asyncio
+from typing import Any, Dict, Optional
+
 from dotenv import load_dotenv
 
 # Add path for imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 
-from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.agent.agent_performance_monitor import (
+    MetricType,
+    get_performance_monitor,
+)
 from bmad.agents.core.agent.test_sprites import get_sprite_library
-from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor, MetricType
+from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
-from bmad.agents.core.data.supabase_context import save_context, get_context
 from integrations.slack.slack_notify import send_slack_message
 
 load_dotenv()
@@ -40,7 +44,7 @@ class FullstackDeveloperAgent:
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
-        
+
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
         self.template_paths = {
@@ -57,7 +61,7 @@ class FullstackDeveloperAgent:
             "history": self.resource_base / "data/fullstackdeveloper/history.md",
             "feedback": self.resource_base / "data/fullstackdeveloper/feedback.md"
         }
-        
+
         # Initialize histories
         self.development_history = []
         self.performance_history = []
@@ -67,11 +71,11 @@ class FullstackDeveloperAgent:
     def _load_development_history(self):
         try:
             if self.data_paths["history"].exists():
-                with open(self.data_paths["history"], 'r') as f:
+                with open(self.data_paths["history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.development_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load development history: {e}")
@@ -79,21 +83,20 @@ class FullstackDeveloperAgent:
     def _save_development_history(self):
         try:
             self.data_paths["history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["history"], 'w') as f:
+            with open(self.data_paths["history"], "w") as f:
                 f.write("# Development History\n\n")
-                for dev in self.development_history[-50:]:
-                    f.write(f"- {dev}\n")
+                f.writelines(f"- {dev}\n" for dev in self.development_history[-50:])
         except Exception as e:
             logger.error(f"Could not save development history: {e}")
 
     def _load_performance_history(self):
         try:
             if self.data_paths["feedback"].exists():
-                with open(self.data_paths["feedback"], 'r') as f:
+                with open(self.data_paths["feedback"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.performance_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load performance history: {e}")
@@ -101,10 +104,9 @@ class FullstackDeveloperAgent:
     def _save_performance_history(self):
         try:
             self.data_paths["feedback"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["feedback"], 'w') as f:
+            with open(self.data_paths["feedback"], "w") as f:
                 f.write("# Performance History\n\n")
-                for perf in self.performance_history[-50:]:
-                    f.write(f"- {perf}\n")
+                f.writelines(f"- {perf}\n" for perf in self.performance_history[-50:])
         except Exception as e:
             logger.error(f"Could not save performance history: {e}")
 
@@ -155,7 +157,7 @@ FullstackDeveloper Agent Commands:
                 print(f"Unknown resource type: {resource_type}")
                 return
             if path.exists():
-                with open(path, 'r') as f:
+                with open(path) as f:
                     print(f.read())
             else:
                 print(f"Resource file not found: {path}")
@@ -192,7 +194,7 @@ FullstackDeveloper Agent Commands:
                 "timestamp": datetime.now().isoformat(),
                 "agent": "FullstackDeveloperAgent"
             }
-        
+
         try:
             if format_type == "md":
                 self._export_markdown(report_data)
@@ -205,7 +207,7 @@ FullstackDeveloper Agent Commands:
 
     def _export_markdown(self, report_data: Dict):
         output_file = f"fullstack_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-        
+
         content = f"""# Fullstack Developer Report
 
 ## Summary
@@ -224,31 +226,31 @@ FullstackDeveloper Agent Commands:
 - Accessibility Score: {report_data.get('accessibility_score', 0)}%
 - Performance Score: {report_data.get('performance_score', 0)}%
 """
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             f.write(content)
         print(f"Report export saved to: {output_file}")
 
     def _export_json(self, report_data: Dict):
         output_file = f"fullstack_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             json.dump(report_data, f, indent=2)
-        
+
         print(f"Report export saved to: {output_file}")
 
     def test_resource_completeness(self):
         print("Testing resource completeness...")
         missing_resources = []
-        
+
         for name, path in self.template_paths.items():
             if not path.exists():
                 missing_resources.append(f"Template: {name} ({path})")
-        
+
         for name, path in self.data_paths.items():
             if not path.exists():
                 missing_resources.append(f"Data: {name} ({path})")
-        
+
         if missing_resources:
             print("Missing resources:")
             for resource in missing_resources:
@@ -258,7 +260,7 @@ FullstackDeveloper Agent Commands:
 
     def build_shadcn_component(self, component_name: str = "Button") -> Dict[str, Any]:
         logger.info(f"Building Shadcn component: {component_name}")
-        
+
         # Simuleer Shadcn component bouw
         time.sleep(1)
         result = {
@@ -271,49 +273,49 @@ FullstackDeveloper Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "FullstackDeveloperAgent"
         }
-        
+
         # Log performance metric
         self.monitor._record_metric("FullstackDeveloper", MetricType.SUCCESS_RATE, result["accessibility_score"], "%")
-        
+
         logger.info(f"Shadcn component build result: {result}")
         return result
 
     def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         logger.info("Starting collaboration example...")
-        
+
         # Publish development request
         publish("fullstack_development_requested", {
             "agent": "FullstackDeveloperAgent",
             "story": "User Authentication",
             "timestamp": datetime.now().isoformat()
         })
-        
+
         # Implement story
         self.implement_story()
-        
+
         # Build frontend with Shadcn
         self.build_frontend()
-        
+
         # Build Shadcn component
         component_result = self.build_shadcn_component("Button")
-        
+
         # Publish completion
         publish("fullstack_development_completed", {
-            "status": "success", 
+            "status": "success",
             "agent": "FullstackDeveloperAgent",
             "shadcn_components": 1
         })
-        
+
         # Save context
         save_context("FullstackDeveloper", {"feature_status": "deployed"})
-        
+
         # Notify via Slack
         try:
             send_slack_message(f"Fullstack development completed with {component_result['variants']} Shadcn component variants")
         except Exception as e:
             logger.warning(f"Could not send Slack notification: {e}")
-        
+
         print("Event gepubliceerd en context opgeslagen.")
         context = get_context("FullstackDeveloper")
         print(f"Opgehaalde context: {context}")
@@ -325,7 +327,7 @@ FullstackDeveloper Agent Commands:
 
     async def handle_fullstack_development_completed(self, event):
         logger.info(f"Fullstack development completed: {event}")
-        
+
         # Evaluate policy
         try:
             allowed = await self.policy_engine.evaluate_policy("fullstack_development", event)
@@ -336,10 +338,10 @@ FullstackDeveloper Agent Commands:
     def run(self):
         def sync_handler(event):
             asyncio.run(self.handle_fullstack_development_completed(event))
-        
+
         subscribe("fullstack_development_completed", sync_handler)
         subscribe("fullstack_development_requested", self.handle_fullstack_development_requested)
-        
+
         logger.info("FullstackDeveloperAgent ready and listening for events...")
         self.collaborate_example()
 
@@ -359,10 +361,10 @@ FullstackDeveloper Agent Commands:
         """
             )
         )
-        
+
         # Log performance metric
         self.monitor._record_metric("FullstackDeveloper", MetricType.SUCCESS_RATE, 95, "%")
-        
+
         # Add to history
         dev_entry = f"{datetime.now().isoformat()}: User Authentication story implemented"
         self.development_history.append(dev_entry)
@@ -379,7 +381,7 @@ FullstackDeveloper Agent Commands:
         """
             )
         )
-        
+
         # Log performance metric
         self.monitor._record_metric("FullstackDeveloper", MetricType.SUCCESS_RATE, 90, "%")
 
@@ -387,13 +389,13 @@ FullstackDeveloper Agent Commands:
         """Bouw de BMAD frontend dashboard."""
         print("🚀 FullstackDeveloper - BMAD Frontend Development")
         print("=" * 60)
-        
+
         # Haal architectuur op van de Architect
         get_context("Architect", "frontend_architecture")
-        
+
         print("📋 BMAD Dashboard Componenten:")
         print("=" * 40)
-        
+
         # Dashboard Component
         print("""
 // components/Dashboard.tsx
@@ -926,10 +928,10 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
         print("📁 Componenten: Dashboard, AgentStatus, WorkflowManager, APITester, MetricsChart")
         print("🎨 CSS styling en package.json inbegrepen")
         print("🔗 Klaar voor integratie met BMAD API")
-        
+
         # Log performance metric
         self.monitor._record_metric("FullstackDeveloper", MetricType.SUCCESS_RATE, 95, "%")
-        
+
         # Add to history
         dev_entry = f"{datetime.now().isoformat()}: Frontend Dashboard generated with 5 components"
         self.development_history.append(dev_entry)
@@ -1123,20 +1125,20 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
 
 def main():
     parser = argparse.ArgumentParser(description="FullstackDeveloper Agent CLI")
-    parser.add_argument("command", nargs="?", default="help", 
+    parser.add_argument("command", nargs="?", default="help",
                        choices=["help", "implement-story", "build-api", "build-frontend", "build-shadcn-component",
-                               "write-tests", "show-development-history", "show-performance", "show-best-practices", 
+                               "write-tests", "show-development-history", "show-performance", "show-best-practices",
                                "show-changelog", "export-report", "test", "collaborate", "run", "integrate-service",
                                "ci-cd", "dev-log", "review", "refactor", "security-check", "blockers", "api-contract",
                                "component-doc", "performance-profile", "a11y-check", "feature-toggle", "monitoring-setup",
                                "release-notes", "devops-handover", "tech-debt"])
     parser.add_argument("--name", default="User Authentication", help="Story/Component name")
     parser.add_argument("--format", choices=["md", "json"], default="md", help="Export format")
-    
+
     args = parser.parse_args()
-    
+
     agent = FullstackDeveloperAgent()
-    
+
     if args.command == "help":
         agent.show_help()
     elif args.command == "implement-story":

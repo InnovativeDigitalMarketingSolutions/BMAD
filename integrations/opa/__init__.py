@@ -13,4 +13,4 @@ from .opa_policy_engine import OPAPolicyEngine, PolicyResponse
 __all__ = [
     "OPAPolicyEngine",
     "PolicyResponse"
-] 
+]

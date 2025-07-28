@@ -1,21 +1,25 @@
-import sys
 import os
+import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import argparse
-import logging
-import json
 import csv
+import hashlib
+import json
+import logging
+import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, Any
-import time
-import hashlib
+from typing import Any, Dict, Optional
 
-from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.agent.agent_performance_monitor import (
+    MetricType,
+    get_performance_monitor,
+)
 from bmad.agents.core.agent.test_sprites import get_sprite_library
-from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor, MetricType
+from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
-from bmad.agents.core.data.supabase_context import save_context, get_context
 from integrations.slack.slack_notify import send_slack_message
 
 # Configure logging
@@ -27,7 +31,7 @@ class RnDAgent:
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
-        
+
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
         self.template_paths = {
@@ -43,7 +47,7 @@ class RnDAgent:
             "experiment-history": self.resource_base / "data/rnd/experiment-history.md",
             "research-history": self.resource_base / "data/rnd/research-history.md"
         }
-        
+
         # Initialize history
         self.experiment_history = []
         self.research_history = []
@@ -54,11 +58,11 @@ class RnDAgent:
         """Load experiment history from data file"""
         try:
             if self.data_paths["experiment-history"].exists():
-                with open(self.data_paths["experiment-history"], 'r') as f:
+                with open(self.data_paths["experiment-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.experiment_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load experiment history: {e}")
@@ -67,7 +71,7 @@ class RnDAgent:
         """Save experiment history to data file"""
         try:
             self.data_paths["experiment-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["experiment-history"], 'w') as f:
+            with open(self.data_paths["experiment-history"], "w") as f:
                 f.write("# Experiment History\n\n")
                 for experiment in self.experiment_history[-50:]:  # Keep last 50 experiments
                     f.write(f"- {experiment}\n")
@@ -78,11 +82,11 @@ class RnDAgent:
         """Load research history from data file"""
         try:
             if self.data_paths["research-history"].exists():
-                with open(self.data_paths["research-history"], 'r') as f:
+                with open(self.data_paths["research-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.research_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load research history: {e}")
@@ -91,7 +95,7 @@ class RnDAgent:
         """Save research history to data file"""
         try:
             self.data_paths["research-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["research-history"], 'w') as f:
+            with open(self.data_paths["research-history"], "w") as f:
                 f.write("# Research History\n\n")
                 for research in self.research_history[-50:]:  # Keep last 50 research items
                     f.write(f"- {research}\n")
@@ -135,7 +139,7 @@ RnD Agent Commands:
                 print(f"Unknown resource type: {resource_type}")
                 return
             if path.exists():
-                with open(path, 'r') as f:
+                with open(path) as f:
                     print(f.read())
             else:
                 print(f"Resource file not found: {path}")
@@ -165,10 +169,10 @@ RnD Agent Commands:
     def conduct_research(self, research_topic: str = "AI-powered automation", research_type: str = "Technology Research") -> Dict[str, Any]:
         """Conduct new research with enhanced functionality."""
         logger.info(f"Conducting research on {research_topic}")
-        
+
         # Simulate research process
         time.sleep(1)
-        
+
         research_result = {
             "research_id": hashlib.sha256(research_topic.encode()).hexdigest()[:8],
             "research_type": research_type,
@@ -211,25 +215,25 @@ RnD Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "RnDAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("RnDAgent", MetricType.SUCCESS_RATE, 95, "%")
-        
+
         # Add to research history
         research_entry = f"{datetime.now().isoformat()}: Research completed on {research_topic} - {research_type}"
         self.research_history.append(research_entry)
         self._save_research_history()
-        
+
         logger.info(f"Research completed: {research_result}")
         return research_result
 
     def design_experiment(self, experiment_name: str = "AI Automation Pilot", hypothesis: str = "AI automation will improve efficiency by 30%") -> Dict[str, Any]:
         """Design new experiment with enhanced functionality."""
         logger.info(f"Designing experiment: {experiment_name}")
-        
+
         # Simulate experiment design
         time.sleep(1)
-        
+
         experiment_design = {
             "experiment_id": hashlib.sha256(experiment_name.encode()).hexdigest()[:8],
             "experiment_name": experiment_name,
@@ -277,20 +281,20 @@ RnD Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "RnDAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("RnDAgent", MetricType.SUCCESS_RATE, 92, "%")
-        
+
         logger.info(f"Experiment designed: {experiment_design}")
         return experiment_design
 
     def run_experiment(self, experiment_id: str = "exp_12345", experiment_name: str = "AI Automation Pilot") -> Dict[str, Any]:
         """Run experiment with enhanced functionality."""
         logger.info(f"Running experiment: {experiment_name}")
-        
+
         # Simulate experiment execution
         time.sleep(2)
-        
+
         experiment_results = {
             "experiment_id": experiment_id,
             "experiment_name": experiment_name,
@@ -341,15 +345,15 @@ RnD Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "RnDAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("RnDAgent", MetricType.SUCCESS_RATE, 88, "%")
-        
+
         # Add to experiment history
         experiment_entry = f"{datetime.now().isoformat()}: Experiment completed - {experiment_name} (ID: {experiment_id})"
         self.experiment_history.append(experiment_entry)
         self._save_experiment_history()
-        
+
         logger.info(f"Experiment completed: {experiment_results}")
         return experiment_results
 
@@ -362,12 +366,12 @@ RnD Agent Commands:
                 "cost_savings": "28%",
                 "user_satisfaction": "85%"
             }
-        
+
         logger.info("Evaluating experiment results")
-        
+
         # Simulate result evaluation
         time.sleep(1)
-        
+
         evaluation_result = {
             "evaluation_type": "Experiment Results Evaluation",
             "status": "completed",
@@ -444,20 +448,20 @@ RnD Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "RnDAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("RnDAgent", MetricType.SUCCESS_RATE, 90, "%")
-        
+
         logger.info(f"Results evaluation completed: {evaluation_result}")
         return evaluation_result
 
     def generate_innovation(self, innovation_area: str = "AI and Automation", focus_area: str = "Process Optimization") -> Dict[str, Any]:
         """Generate innovation ideas with enhanced functionality."""
         logger.info(f"Generating innovation ideas for {innovation_area}")
-        
+
         # Simulate innovation generation
         time.sleep(1)
-        
+
         innovation_result = {
             "innovation_id": hashlib.sha256(f"{innovation_area}_{focus_area}".encode()).hexdigest()[:8],
             "innovation_area": innovation_area,
@@ -533,20 +537,20 @@ RnD Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "RnDAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("RnDAgent", MetricType.SUCCESS_RATE, 85, "%")
-        
+
         logger.info(f"Innovation ideas generated: {innovation_result}")
         return innovation_result
 
     def prototype_solution(self, prototype_name: str = "AI Automation Prototype", solution_type: str = "Process Automation") -> Dict[str, Any]:
         """Create prototype solution with enhanced functionality."""
         logger.info(f"Creating prototype: {prototype_name}")
-        
+
         # Simulate prototype creation
         time.sleep(2)
-        
+
         prototype_result = {
             "prototype_id": hashlib.sha256(prototype_name.encode()).hexdigest()[:8],
             "prototype_name": prototype_name,
@@ -617,10 +621,10 @@ RnD Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "RnDAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("RnDAgent", MetricType.SUCCESS_RATE, 87, "%")
-        
+
         logger.info(f"Prototype created: {prototype_result}")
         return prototype_result
 
@@ -637,7 +641,7 @@ RnD Agent Commands:
                 "timestamp": datetime.now().isoformat(),
                 "agent": "RnDAgent"
             }
-        
+
         try:
             if format_type == "md":
                 self._export_markdown(report_data)
@@ -653,7 +657,7 @@ RnD Agent Commands:
     def _export_markdown(self, report_data: Dict):
         """Export report data as markdown."""
         output_file = f"rnd_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-        
+
         content = f"""# RnD Report
 
 ## Summary
@@ -672,48 +676,48 @@ RnD Agent Commands:
 ## Recent Research
 {chr(10).join([f"- {research}" for research in self.research_history[-5:]])}
 """
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             f.write(content)
         print(f"Report export saved to: {output_file}")
 
     def _export_csv(self, report_data: Dict):
         """Export report data as CSV."""
         output_file = f"rnd_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-        
-        with open(output_file, 'w', newline='') as f:
+
+        with open(output_file, "w", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow(['Metric', 'Value'])
-            writer.writerow(['Timeframe', report_data.get('timeframe', 'N/A')])
-            writer.writerow(['Status', report_data.get('status', 'N/A')])
-            writer.writerow(['Experiments Conducted', report_data.get('experiments_conducted', 0)])
-            writer.writerow(['Research Projects', report_data.get('research_projects', 0)])
-            writer.writerow(['Prototypes Created', report_data.get('prototypes_created', 0)])
-        
+            writer.writerow(["Metric", "Value"])
+            writer.writerow(["Timeframe", report_data.get("timeframe", "N/A")])
+            writer.writerow(["Status", report_data.get("status", "N/A")])
+            writer.writerow(["Experiments Conducted", report_data.get("experiments_conducted", 0)])
+            writer.writerow(["Research Projects", report_data.get("research_projects", 0)])
+            writer.writerow(["Prototypes Created", report_data.get("prototypes_created", 0)])
+
         print(f"Report export saved to: {output_file}")
 
     def _export_json(self, report_data: Dict):
         """Export report data as JSON."""
         output_file = f"rnd_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             json.dump(report_data, f, indent=2)
-        
+
         print(f"Report export saved to: {output_file}")
 
     def test_resource_completeness(self):
         """Test if all required resources are available."""
         print("Testing resource completeness...")
         missing_resources = []
-        
+
         for name, path in self.template_paths.items():
             if not path.exists():
                 missing_resources.append(f"Template: {name} ({path})")
-        
+
         for name, path in self.data_paths.items():
             if not path.exists():
                 missing_resources.append(f"Data: {name} ({path})")
-        
+
         if missing_resources:
             print("Missing resources:")
             for resource in missing_resources:
@@ -724,23 +728,23 @@ RnD Agent Commands:
     def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         logger.info("Starting RnD collaboration example...")
-        
+
         # Publish experiment request
         publish("experiment_requested", {
             "agent": "RnDAgent",
             "experiment_type": "AI Automation",
             "timestamp": datetime.now().isoformat()
         })
-        
+
         # Conduct research
         self.conduct_research("AI-powered automation", "Technology Research")
-        
+
         # Design experiment
         self.design_experiment("AI Automation Pilot", "AI automation will improve efficiency by 30%")
-        
+
         # Run experiment
         experiment_results = self.run_experiment("exp_12345", "AI Automation Pilot")
-        
+
         # Publish completion
         publish("experiment_completed", {
             "status": "success",
@@ -748,16 +752,16 @@ RnD Agent Commands:
             "experiment_id": "exp_12345",
             "results": experiment_results["results"]
         })
-        
+
         # Save context
         save_context("RnDAgent", {"experiment_status": "completed"})
-        
+
         # Notify via Slack
         try:
             send_slack_message(f"RnD experiment completed with {experiment_results['results']['efficiency_improvement']} efficiency improvement")
         except Exception as e:
             logger.warning(f"Could not send Slack notification: {e}")
-        
+
         print("Event gepubliceerd en context opgeslagen.")
         context = get_context("RnDAgent")
         print(f"Opgehaalde context: {context}")
@@ -780,7 +784,7 @@ RnD Agent Commands:
 
 def main():
     parser = argparse.ArgumentParser(description="RnD Agent CLI")
-    parser.add_argument("command", nargs="?", default="help", 
+    parser.add_argument("command", nargs="?", default="help",
                        choices=["help", "conduct-research", "design-experiment", "run-experiment",
                                "evaluate-results", "generate-innovation", "prototype-solution",
                                "show-experiment-history", "show-research-history", "show-best-practices",
@@ -794,11 +798,11 @@ def main():
     parser.add_argument("--focus-area", default="Process Optimization", help="Focus area")
     parser.add_argument("--prototype-name", default="AI Automation Prototype", help="Prototype name")
     parser.add_argument("--solution-type", default="Process Automation", help="Solution type")
-    
+
     args = parser.parse_args()
-    
+
     agent = RnDAgent()
-    
+
     if args.command == "help":
         agent.show_help()
     elif args.command == "conduct-research":

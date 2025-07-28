@@ -4,35 +4,35 @@ Webhook CLI Tool - Test and manage webhook notifications.
 """
 
 import argparse
-import sys
-import os
 import json
+import os
+import sys
 from typing import Optional
 
 # Add the project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+from bmad.agents.core.notification_manager import (
+    get_notification_status,
+    send_deployment_notification,
+    send_error_notification,
+    send_hitl_notification,
+    send_notification,
+    send_success_notification,
+    send_workflow_notification,
+    test_notification_connection,
+)
 from bmad.agents.core.webhook_notify import (
-    send_webhook_message,
-    send_webhook_hitl_alert,
-    send_webhook_workflow_notification,
-    send_webhook_error_notification,
-    send_webhook_success_notification,
+    get_webhook_status,
     send_webhook_deployment_notification,
+    send_webhook_error_notification,
+    send_webhook_hitl_alert,
+    send_webhook_message,
+    send_webhook_success_notification,
+    send_webhook_workflow_notification,
     test_webhook_connection,
-    get_webhook_status
 )
 
-from bmad.agents.core.notification_manager import (
-    send_notification,
-    send_hitl_notification,
-    send_workflow_notification,
-    send_error_notification,
-    send_success_notification,
-    send_deployment_notification,
-    test_notification_connection,
-    get_notification_status
-)
 
 def test_webhook():
     """Test webhook connection."""
@@ -57,12 +57,12 @@ def test_notification_manager():
 def send_message(message: str, channel: Optional[str] = None, use_manager: bool = False):
     """Send a webhook message."""
     print(f"📤 Sending message: {message}")
-    
+
     if use_manager:
         success = send_notification(message, channel=channel)
     else:
         success = send_webhook_message(message, channel=channel)
-    
+
     if success:
         print("✅ Message sent successfully!")
     else:
@@ -72,12 +72,12 @@ def send_message(message: str, channel: Optional[str] = None, use_manager: bool 
 def send_hitl(reason: str, channel: Optional[str] = None, use_manager: bool = False):
     """Send a HITL alert."""
     print(f"🚨 Sending HITL alert: {reason}")
-    
+
     if use_manager:
         success = send_hitl_notification(reason, channel=channel)
     else:
         success = send_webhook_hitl_alert(reason, channel=channel)
-    
+
     if success:
         print("✅ HITL alert sent successfully!")
     else:
@@ -87,12 +87,12 @@ def send_hitl(reason: str, channel: Optional[str] = None, use_manager: bool = Fa
 def send_workflow(workflow_name: str, status: str, channel: Optional[str] = None, use_manager: bool = False):
     """Send a workflow notification."""
     print(f"🔄 Sending workflow notification: {workflow_name} - {status}")
-    
+
     if use_manager:
         success = send_workflow_notification(workflow_name, status, channel=channel)
     else:
         success = send_webhook_workflow_notification(workflow_name, status, channel=channel)
-    
+
     if success:
         print("✅ Workflow notification sent successfully!")
     else:
@@ -102,12 +102,12 @@ def send_workflow(workflow_name: str, status: str, channel: Optional[str] = None
 def send_error(error_message: str, context: Optional[str] = None, channel: Optional[str] = None, use_manager: bool = False):
     """Send an error notification."""
     print(f"❌ Sending error notification: {error_message}")
-    
+
     if use_manager:
         success = send_error_notification(error_message, context, channel=channel)
     else:
         success = send_webhook_error_notification(error_message, context, channel=channel)
-    
+
     if success:
         print("✅ Error notification sent successfully!")
     else:
@@ -117,12 +117,12 @@ def send_error(error_message: str, context: Optional[str] = None, channel: Optio
 def send_success(success_message: str, context: Optional[str] = None, channel: Optional[str] = None, use_manager: bool = False):
     """Send a success notification."""
     print(f"✅ Sending success notification: {success_message}")
-    
+
     if use_manager:
         success = send_success_notification(success_message, context, channel=channel)
     else:
         success = send_webhook_success_notification(success_message, context, channel=channel)
-    
+
     if success:
         print("✅ Success notification sent successfully!")
     else:
@@ -132,12 +132,12 @@ def send_success(success_message: str, context: Optional[str] = None, channel: O
 def send_deployment(deployment_name: str, status: str, environment: Optional[str] = None, channel: Optional[str] = None, use_manager: bool = False):
     """Send a deployment notification."""
     print(f"🚀 Sending deployment notification: {deployment_name} - {status}")
-    
+
     if use_manager:
         success = send_deployment_notification(deployment_name, status, environment, channel=channel)
     else:
         success = send_webhook_deployment_notification(deployment_name, status, environment, channel=channel)
-    
+
     if success:
         print("✅ Deployment notification sent successfully!")
     else:
@@ -149,7 +149,7 @@ def show_status():
     print("📊 Webhook Status:")
     webhook_status = get_webhook_status()
     print(json.dumps(webhook_status, indent=2))
-    
+
     print("\n📊 Notification Manager Status:")
     notification_status = get_notification_status()
     print(json.dumps(notification_status, indent=2))
@@ -157,40 +157,40 @@ def show_status():
 def demo_all():
     """Run a complete demo of all webhook functionality."""
     print("🎭 Running complete webhook demo...")
-    
+
     # Test connection
     test_webhook()
     print()
-    
+
     # Send different types of notifications
     send_message("Hello from BMAD webhook demo!", channel="general")
     print()
-    
+
     send_hitl("Deployment approval required", channel="alerts")
     print()
-    
+
     send_workflow("feature-development", "started", channel="workflows")
     print()
-    
+
     send_error("Database connection failed", "Production environment", channel="errors")
     print()
-    
+
     send_success("User registration completed", "New user: john.doe@example.com", channel="success")
     print()
-    
+
     send_deployment("frontend-app", "completed", "production", channel="deployments")
     print()
-    
+
     print("🎉 Demo completed!")
 
 def main():
     """Main CLI function."""
     parser = argparse.ArgumentParser(description="Webhook CLI Tool")
     parser.add_argument("command", choices=[
-        "test", "test-manager", "message", "hitl", "workflow", 
+        "test", "test-manager", "message", "hitl", "workflow",
         "error", "success", "deployment", "status", "demo"
     ], help="Command to execute")
-    
+
     parser.add_argument("--message", "-m", help="Message to send")
     parser.add_argument("--channel", "-c", help="Channel to send to")
     parser.add_argument("--reason", "-r", help="Reason for HITL alert")
@@ -199,9 +199,9 @@ def main():
     parser.add_argument("--context", help="Additional context")
     parser.add_argument("--environment", "-e", help="Environment (for deployment)")
     parser.add_argument("--use-manager", action="store_true", help="Use notification manager instead of direct webhook")
-    
+
     args = parser.parse_args()
-    
+
     if args.command == "test":
         test_webhook()
     elif args.command == "test-manager":
@@ -242,4 +242,4 @@ def main():
         demo_all()
 
 if __name__ == "__main__":
-    main() 
+    main()

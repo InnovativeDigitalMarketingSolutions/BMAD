@@ -1,6 +1,7 @@
 import logging
-from bmad.agents.core.communication.message_bus import publish, get_events, clear_events
-from bmad.agents.core.data.supabase_context import save_context, get_context
+
+from bmad.agents.core.communication.message_bus import clear_events, get_events, publish
+from bmad.agents.core.data.supabase_context import get_context, save_context
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
@@ -19,7 +20,7 @@ def test_context_sharing():
         )
         logging.info("[AiDeveloper] Event gepubliceerd en context opgeslagen.")
     except Exception as e:
-        logging.error(f"[AiDeveloper] Fout bij publiceren/saven: {e}")
+        logging.exception(f"[AiDeveloper] Fout bij publiceren/saven: {e}")
 
     # FullstackDeveloper leest context van AiDeveloper
     try:
@@ -29,7 +30,7 @@ def test_context_sharing():
         else:
             logging.warning("[FullstackDeveloper] Geen context gevonden voor AiDeveloper.")
     except Exception as e:
-        logging.error(f"[FullstackDeveloper] Fout bij ophalen context: {e}")
+        logging.exception(f"[FullstackDeveloper] Fout bij ophalen context: {e}")
 
     # FullstackDeveloper leest events
     try:
@@ -39,7 +40,7 @@ def test_context_sharing():
         else:
             logging.warning("[FullstackDeveloper] Geen events gevonden van AiDeveloper.")
     except Exception as e:
-        logging.error(f"[FullstackDeveloper] Fout bij ophalen events: {e}")
+        logging.exception(f"[FullstackDeveloper] Fout bij ophalen events: {e}")
 
 if __name__ == "__main__":
-    test_context_sharing() 
+    test_context_sharing()

@@ -5,14 +5,15 @@ Dit module biedt een geavanceerde caching laag met Redis voor performance optima
 Implementeert intelligent caching met TTL, cache invalidation en fallback strategieën.
 """
 
-import os
+import hashlib
 import json
 import logging
-import hashlib
-from typing import Any, Optional, Dict
+import os
 from functools import wraps
+from typing import Any, Dict, Optional
+
 import redis
-from redis.exceptions import RedisError, ConnectionError
+from redis.exceptions import ConnectionError, RedisError
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +21,7 @@ class RedisCache:
     """
     Geavanceerde Redis caching laag voor BMAD agents.
     """
-    
+
     def __init__(self, redis_url: Optional[str] = None):
         """
         Initialiseer Redis cache.
@@ -30,7 +31,7 @@ class RedisCache:
         self.redis_url = redis_url or os.getenv("REDIS_URL", "redis://localhost:6379")
         self.client = None
         self.enabled = True
-        
+
         # Default TTL settings (in seconds)
         self.default_ttls = {
             "llm_response": 3600,      # 1 uur
@@ -41,9 +42,9 @@ class RedisCache:
             "workflow_state": 7200,    # 2 uur
             "metrics": 60,             # 1 minuut
         }
-        
+
         self._connect()
-    
+
     def _connect(self):
         """Maak verbinding met Redis."""
         try:
@@ -55,7 +56,7 @@ class RedisCache:
             logger.warning(f"⚠️ Redis niet beschikbaar: {e}")
             self.enabled = False
             self.client = None
-    
+
     def _generate_key(self, *args, **kwargs):
         """Generate a cache key from arguments."""
         # Combine args and kwargs into a single list
@@ -64,7 +65,7 @@ class RedisCache:
         key_string = ":".join(key_parts)
         # Use SHA256 instead of MD5 for security
         return f"bmad:{hashlib.sha256(key_string.encode()).hexdigest()}"
-    
+
     def get(self, key: str, default: Any = None) -> Any:
         """
         Haal waarde op uit cache.
@@ -75,23 +76,23 @@ class RedisCache:
         """
         if not self.enabled or not self.client:
             return default
-        
+
         try:
             value = self.client.get(key)
             if value is None:
                 return default
-            
+
             # Probeer JSON deserialisatie
             try:
                 return json.loads(value)
             except json.JSONDecodeError:
                 return value
-                
+
         except RedisError as e:
             logger.warning(f"Redis get error: {e}")
             return default
-    
-    def set(self, key: str, value: Any, ttl: Optional[int] = None, 
+
+    def set(self, key: str, value: Any, ttl: Optional[int] = None,
             cache_type: str = "default") -> bool:
         """
         Sla waarde op in cache.
@@ -104,27 +105,27 @@ class RedisCache:
         """
         if not self.enabled or not self.client:
             return False
-        
+
         try:
             # Bepaal TTL
             if ttl is None:
                 ttl = self.default_ttls.get(cache_type, 3600)
-            
+
             # Serialiseer waarde
             if isinstance(value, (dict, list)):
                 serialized_value = json.dumps(value)
             else:
                 serialized_value = str(value)
-            
+
             # Sla op in Redis
             self.client.setex(key, ttl, serialized_value)
             logger.debug(f"Cache set: {key} (TTL: {ttl}s)")
             return True
-            
+
         except RedisError as e:
             logger.warning(f"Redis set error: {e}")
             return False
-    
+
     def delete(self, key: str) -> bool:
         """
         Verwijder waarde uit cache.
@@ -134,7 +135,7 @@ class RedisCache:
         """
         if not self.enabled or not self.client:
             return False
-        
+
         try:
             result = self.client.delete(key)
             logger.debug(f"Cache delete: {key}")
@@ -142,7 +143,7 @@ class RedisCache:
         except RedisError as e:
             logger.warning(f"Redis delete error: {e}")
             return False
-    
+
     def exists(self, key: str) -> bool:
         """
         Controleer of key bestaat in cache.
@@ -152,13 +153,13 @@ class RedisCache:
         """
         if not self.enabled or not self.client:
             return False
-        
+
         try:
             return bool(self.client.exists(key))
         except RedisError as e:
             logger.warning(f"Redis exists error: {e}")
             return False
-    
+
     def clear_pattern(self, pattern: str) -> int:
         """
         Verwijder alle keys die matchen met pattern.
@@ -168,7 +169,7 @@ class RedisCache:
         """
         if not self.enabled or not self.client:
             return 0
-        
+
         try:
             keys = self.client.keys(pattern)
             if keys:
@@ -179,7 +180,7 @@ class RedisCache:
         except RedisError as e:
             logger.warning(f"Redis clear pattern error: {e}")
             return 0
-    
+
     def get_stats(self) -> Dict[str, Any]:
         """
         Haal cache statistieken op.
@@ -188,7 +189,7 @@ class RedisCache:
         """
         if not self.enabled or not self.client:
             return {"enabled": False}
-        
+
         try:
             info = self.client.info()
             return {
@@ -206,7 +207,7 @@ class RedisCache:
 # Global cache instance
 cache = RedisCache()
 
-def cached(ttl: Optional[int] = None, cache_type: str = "default", 
+def cached(ttl: Optional[int] = None, cache_type: str = "default",
            key_prefix: str = "function"):
     """
     Decorator voor function caching.
@@ -220,20 +221,20 @@ def cached(ttl: Optional[int] = None, cache_type: str = "default",
         def wrapper(*args, **kwargs):
             # Genereer cache key
             cache_key = cache._generate_key(key_prefix, func.__name__, *args, **kwargs)
-            
+
             # Probeer cache hit
             cached_result = cache.get(cache_key)
             if cached_result is not None:
                 logger.debug(f"Cache hit: {cache_key}")
                 return cached_result
-            
+
             # Cache miss - voer functie uit
             logger.debug(f"Cache miss: {cache_key}")
             result = func(*args, **kwargs)
-            
+
             # Cache resultaat
             cache.set(cache_key, result, ttl, cache_type)
-            
+
             return result
         return wrapper
     return decorator
@@ -252,4 +253,4 @@ def cache_project_config(func):
 
 def cache_clickup_api(func):
     """Decorator specifiek voor ClickUp API response caching."""
-    return cached(ttl=300, cache_type="clickup_api", key_prefix="clickup")(func) 
+    return cached(ttl=300, cache_type="clickup_api", key_prefix="clickup")(func)

@@ -1,5 +1,6 @@
 import glob
 import os
+
 import yaml
 
 AGENT_YAMLS = glob.glob("bmad/agents/Agent/*/*.yaml")
@@ -12,12 +13,12 @@ for yaml_path in AGENT_YAMLS:
         except Exception as e:
             REPORT.append(f"[ERROR] {yaml_path}: YAML parse error: {e}")
             continue
-    if not data or 'dependencies' not in data:
+    if not data or "dependencies" not in data:
         REPORT.append(f"[WARN] {yaml_path}: geen dependencies-sectie gevonden.")
         continue
-    for dtype in ('templates', 'data'):
-        for dep in data['dependencies'].get(dtype, []):
-            dep_path = os.path.join('bmad', dep) if not dep.startswith('bmad/') else dep
+    for dtype in ("templates", "data"):
+        for dep in data["dependencies"].get(dtype, []):
+            dep_path = os.path.join("bmad", dep) if not dep.startswith("bmad/") else dep
             if not os.path.exists(dep_path):
                 REPORT.append(f"[MISSING] {yaml_path}: {dep_path} bestaat niet.")
             elif os.path.getsize(dep_path) < 32:
@@ -28,4 +29,4 @@ if not REPORT:
 else:
     print("Resource validatie rapport:")
     for line in REPORT:
-        print(line) 
+        print(line)

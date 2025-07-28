@@ -1,8 +1,10 @@
-import os
-import requests
-import sys
 import logging
+import os
+import sys
+
+import requests
 from dotenv import load_dotenv
+
 load_dotenv()
 
 
@@ -107,4 +109,4 @@ if __name__ == "__main__":
             channel="#devops-alerts",
             user_mention=None,
             alert_id="demo123"
-        ) 
+        )

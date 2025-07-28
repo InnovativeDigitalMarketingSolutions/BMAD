@@ -1,25 +1,30 @@
-import sys
 import os
+import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
-import logging
 import argparse
-import json
 import csv
+import hashlib
+import json
+import logging
+import threading
+import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, Any
-import time
-import hashlib
-import threading
+from typing import Any, Dict, Optional
+
 from dotenv import load_dotenv
 
-from bmad.agents.core.communication.message_bus import publish, subscribe, get_events
+from bmad.agents.core.agent.agent_performance_monitor import (
+    MetricType,
+    get_performance_monitor,
+)
 from bmad.agents.core.agent.test_sprites import get_sprite_library
-from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor, MetricType
-from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
-from bmad.agents.core.data.supabase_context import save_context, get_context
 from bmad.agents.core.ai.llm_client import ask_openai
-from integrations.slack.slack_notify import send_slack_message, send_human_in_loop_alert
+from bmad.agents.core.communication.message_bus import get_events, publish, subscribe
+from bmad.agents.core.data.supabase_context import get_context, save_context
+from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
+from integrations.slack.slack_notify import send_human_in_loop_alert, send_slack_message
 
 load_dotenv()
 
@@ -34,11 +39,11 @@ PO_CHANNEL = os.getenv("SLACK_PO_CHANNEL", "C097G9RFBBL")
 
 # Metrics storage (in-memory, kan later naar Prometheus of Supabase)
 METRICS = {
-    'slack_commands_received': 0,
-    'hitl_decisions': 0,
-    'workflows_started': 0,
-    'workflows_completed': 0,
-    'workflow_paused': 0,
+    "slack_commands_received": 0,
+    "hitl_decisions": 0,
+    "workflows_started": 0,
+    "workflows_completed": 0,
+    "workflow_paused": 0,
 }
 
 METRICS_PATH = "metrics.json"
@@ -52,7 +57,7 @@ def save_metrics():
 def load_metrics():
     global METRICS
     try:
-        with open(METRICS_PATH, "r", encoding="utf-8") as f:
+        with open(METRICS_PATH, encoding="utf-8") as f:
             METRICS.update(json.load(f))
     except Exception:
         pass
@@ -72,13 +77,13 @@ _metrics_thread = None
 WORKFLOW_TIMES = {}  # workflow_name -> {'start': timestamp, 'end': timestamp}
 
 def log_workflow_start(workflow_name):
-    WORKFLOW_TIMES[workflow_name] = {'start': time.time(), 'end': None}
+    WORKFLOW_TIMES[workflow_name] = {"start": time.time(), "end": None}
 
 def log_workflow_end(workflow_name):
     if workflow_name in WORKFLOW_TIMES:
-        WORKFLOW_TIMES[workflow_name]['end'] = time.time()
-        duration = WORKFLOW_TIMES[workflow_name]['end'] - WORKFLOW_TIMES[workflow_name]['start']
-        METRICS.setdefault('workflow_durations', {})[workflow_name] = duration
+        WORKFLOW_TIMES[workflow_name]["end"] = time.time()
+        duration = WORKFLOW_TIMES[workflow_name]["end"] - WORKFLOW_TIMES[workflow_name]["start"]
+        METRICS.setdefault("workflow_durations", {})[workflow_name] = duration
         save_metrics()
         logging.info(f"[Metrics] Workflow '{workflow_name}' duurde {duration:.1f} seconden.")
 
@@ -95,7 +100,7 @@ class OrchestratorAgent:
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
-        
+
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
         self.template_paths = {
@@ -111,13 +116,13 @@ class OrchestratorAgent:
             "workflow-history": self.resource_base / "data/orchestrator/workflow-history.md",
             "orchestration-history": self.resource_base / "data/orchestrator/orchestration-history.md"
         }
-        
+
         # Initialize history
         self.workflow_history = []
         self.orchestration_history = []
         self._load_workflow_history()
         self._load_orchestration_history()
-        
+
         # Original functionality
         self.status = {}  # workflow_name -> status
         self.event_log = self.load_event_log()
@@ -126,11 +131,11 @@ class OrchestratorAgent:
         """Load workflow history from data file"""
         try:
             if self.data_paths["workflow-history"].exists():
-                with open(self.data_paths["workflow-history"], 'r') as f:
+                with open(self.data_paths["workflow-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.workflow_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load workflow history: {e}")
@@ -139,7 +144,7 @@ class OrchestratorAgent:
         """Save workflow history to data file"""
         try:
             self.data_paths["workflow-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["workflow-history"], 'w') as f:
+            with open(self.data_paths["workflow-history"], "w") as f:
                 f.write("# Workflow History\n\n")
                 for workflow in self.workflow_history[-50:]:  # Keep last 50 workflows
                     f.write(f"- {workflow}\n")
@@ -150,11 +155,11 @@ class OrchestratorAgent:
         """Load orchestration history from data file"""
         try:
             if self.data_paths["orchestration-history"].exists():
-                with open(self.data_paths["orchestration-history"], 'r') as f:
+                with open(self.data_paths["orchestration-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.orchestration_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load orchestration history: {e}")
@@ -163,7 +168,7 @@ class OrchestratorAgent:
         """Save orchestration history to data file"""
         try:
             self.data_paths["orchestration-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["orchestration-history"], 'w') as f:
+            with open(self.data_paths["orchestration-history"], "w") as f:
                 f.write("# Orchestration History\n\n")
                 for orchestration in self.orchestration_history[-50:]:  # Keep last 50 orchestrations
                     f.write(f"- {orchestration}\n")
@@ -212,7 +217,7 @@ Orchestrator Agent Commands:
                 print(f"Unknown resource type: {resource_type}")
                 return
             if path.exists():
-                with open(path, 'r') as f:
+                with open(path) as f:
                     print(f.read())
             else:
                 print(f"Resource file not found: {path}")
@@ -242,10 +247,10 @@ Orchestrator Agent Commands:
     def monitor_workflows(self) -> Dict[str, Any]:
         """Monitor active workflows with enhanced functionality."""
         logger.info("Monitoring active workflows")
-        
+
         # Simulate workflow monitoring
         time.sleep(1)
-        
+
         monitoring_result = {
             "monitoring_type": "Workflow Monitoring",
             "status": "completed",
@@ -310,20 +315,20 @@ Orchestrator Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "OrchestratorAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("OrchestratorAgent", MetricType.SUCCESS_RATE, 92, "%")
-        
+
         logger.info(f"Workflow monitoring completed: {monitoring_result}")
         return monitoring_result
 
     def orchestrate_agents(self, orchestration_type: str = "task_assignment", task_description: str = "Feature development") -> Dict[str, Any]:
         """Orchestrate agent activities with enhanced functionality."""
         logger.info(f"Orchestrating agents for {orchestration_type}")
-        
+
         # Simulate agent orchestration
         time.sleep(1)
-        
+
         orchestration_result = {
             "orchestration_id": hashlib.sha256(f"{orchestration_type}_{task_description}".encode()).hexdigest()[:8],
             "orchestration_type": orchestration_type,
@@ -395,25 +400,25 @@ Orchestrator Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "OrchestratorAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("OrchestratorAgent", MetricType.SUCCESS_RATE, 88, "%")
-        
+
         # Add to orchestration history
         orchestration_entry = f"{datetime.now().isoformat()}: Agent orchestration completed for {orchestration_type} - {task_description}"
         self.orchestration_history.append(orchestration_entry)
         self._save_orchestration_history()
-        
+
         logger.info(f"Agent orchestration completed: {orchestration_result}")
         return orchestration_result
 
     def manage_escalations(self, escalation_type: str = "workflow_blocked", workflow_name: str = "feature_delivery") -> Dict[str, Any]:
         """Manage workflow escalations with enhanced functionality."""
         logger.info(f"Managing escalation: {escalation_type}")
-        
+
         # Simulate escalation management
         time.sleep(1)
-        
+
         escalation_result = {
             "escalation_id": hashlib.sha256(f"{escalation_type}_{workflow_name}".encode()).hexdigest()[:8],
             "escalation_type": escalation_type,
@@ -460,20 +465,20 @@ Orchestrator Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "OrchestratorAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("OrchestratorAgent", MetricType.SUCCESS_RATE, 85, "%")
-        
+
         logger.info(f"Escalation management completed: {escalation_result}")
         return escalation_result
 
     def analyze_metrics(self, metrics_type: str = "workflow_performance", timeframe: str = "30 days") -> Dict[str, Any]:
         """Analyze orchestration metrics with enhanced functionality."""
         logger.info(f"Analyzing {metrics_type} metrics")
-        
+
         # Simulate metrics analysis
         time.sleep(1)
-        
+
         analysis_result = {
             "analysis_type": f"{metrics_type} Analysis",
             "timeframe": timeframe,
@@ -546,10 +551,10 @@ Orchestrator Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "OrchestratorAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("OrchestratorAgent", MetricType.SUCCESS_RATE, 90, "%")
-        
+
         logger.info(f"Metrics analysis completed: {analysis_result}")
         return analysis_result
 
@@ -566,7 +571,7 @@ Orchestrator Agent Commands:
                 "timestamp": datetime.now().isoformat(),
                 "agent": "OrchestratorAgent"
             }
-        
+
         try:
             if format_type == "md":
                 self._export_markdown(report_data)
@@ -582,7 +587,7 @@ Orchestrator Agent Commands:
     def _export_markdown(self, report_data: Dict):
         """Export report data as markdown."""
         output_file = f"orchestration_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-        
+
         content = f"""# Orchestration Report
 
 ## Summary
@@ -601,48 +606,48 @@ Orchestrator Agent Commands:
 ## Recent Orchestrations
 {chr(10).join([f"- {orchestration}" for orchestration in self.orchestration_history[-5:]])}
 """
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             f.write(content)
         print(f"Report export saved to: {output_file}")
 
     def _export_csv(self, report_data: Dict):
         """Export report data as CSV."""
         output_file = f"orchestration_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-        
-        with open(output_file, 'w', newline='') as f:
+
+        with open(output_file, "w", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow(['Metric', 'Value'])
-            writer.writerow(['Timeframe', report_data.get('timeframe', 'N/A')])
-            writer.writerow(['Status', report_data.get('status', 'N/A')])
-            writer.writerow(['Workflows Managed', report_data.get('workflows_managed', 0)])
-            writer.writerow(['Escalations Handled', report_data.get('escalations_handled', 0)])
-            writer.writerow(['Success Rate', report_data.get('success_rate', 'N/A')])
-        
+            writer.writerow(["Metric", "Value"])
+            writer.writerow(["Timeframe", report_data.get("timeframe", "N/A")])
+            writer.writerow(["Status", report_data.get("status", "N/A")])
+            writer.writerow(["Workflows Managed", report_data.get("workflows_managed", 0)])
+            writer.writerow(["Escalations Handled", report_data.get("escalations_handled", 0)])
+            writer.writerow(["Success Rate", report_data.get("success_rate", "N/A")])
+
         print(f"Report export saved to: {output_file}")
 
     def _export_json(self, report_data: Dict):
         """Export report data as JSON."""
         output_file = f"orchestration_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             json.dump(report_data, f, indent=2)
-        
+
         print(f"Report export saved to: {output_file}")
 
     def test_resource_completeness(self):
         """Test if all required resources are available."""
         print("Testing resource completeness...")
         missing_resources = []
-        
+
         for name, path in self.template_paths.items():
             if not path.exists():
                 missing_resources.append(f"Template: {name} ({path})")
-        
+
         for name, path in self.data_paths.items():
             if not path.exists():
                 missing_resources.append(f"Data: {name} ({path})")
-        
+
         if missing_resources:
             print("Missing resources:")
             for resource in missing_resources:
@@ -653,23 +658,23 @@ Orchestrator Agent Commands:
     def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         logger.info("Starting orchestrator collaboration example...")
-        
+
         # Publish workflow start
         publish("workflow_started", {
             "agent": "OrchestratorAgent",
             "workflow_type": "feature_delivery",
             "timestamp": datetime.now().isoformat()
         })
-        
+
         # Monitor workflows
         monitoring_result = self.monitor_workflows()
-        
+
         # Orchestrate agents
         self.orchestrate_agents("task_assignment", "Feature development")
-        
+
         # Manage escalations
         self.manage_escalations("workflow_blocked", "feature_delivery")
-        
+
         # Publish completion
         publish("orchestration_completed", {
             "status": "success",
@@ -677,16 +682,16 @@ Orchestrator Agent Commands:
             "workflows_managed": 3,
             "escalations_handled": 1
         })
-        
+
         # Save context
         save_context("OrchestratorAgent", {"orchestration_status": "completed"})
-        
+
         # Notify via Slack
         try:
             send_slack_message(f"Orchestration completed with {monitoring_result['workflow_metrics']['success_rate']} success rate")
         except Exception as e:
             logger.warning(f"Could not send Slack notification: {e}")
-        
+
         print("Event gepubliceerd en context opgeslagen.")
         context = get_context("OrchestratorAgent")
         print(f"Opgehaalde context: {context}")
@@ -694,7 +699,7 @@ Orchestrator Agent Commands:
     # Original functionality preserved
     def load_event_log(self):
         try:
-            with open(EVENT_LOG_PATH, "r", encoding="utf-8") as f:
+            with open(EVENT_LOG_PATH, encoding="utf-8") as f:
                 return json.load(f)
         except Exception:
             return []
@@ -760,7 +765,7 @@ Orchestrator Agent Commands:
             desc = event.get("desc", event_type)
             # HITL-moment: stuur alert en wacht op beslissing
             if event.get("hitl"):
-                METRICS['hitl_moments'] = METRICS.get('hitl_moments', 0) + 1
+                METRICS["hitl_moments"] = METRICS.get("hitl_moments", 0) + 1
                 save_metrics()
                 alert_id = f"{workflow_name}_{event_type}_{int(time.time())}"
                 send_human_in_loop_alert(
@@ -773,25 +778,24 @@ Orchestrator Agent Commands:
                 # Wacht op HITL-beslissing
                 approved = self.wait_for_hitl_decision(alert_id)
                 if not approved:
-                    METRICS['escalaties'] = METRICS.get('escalaties', 0) + 1
+                    METRICS["escalaties"] = METRICS.get("escalaties", 0) + 1
                     save_metrics()
                     self.set_workflow_status(workflow_name, "gepauzeerd")
                     send_slack_message(f":no_entry: Workflow *{workflow_name}* gepauzeerd of afgebroken door HITL. Escalatie naar Product Owner.", channel=slack_channel, use_api=True)
                     send_slack_message(f":rotating_light: Escalatie: Workflow *{workflow_name}* gepauzeerd door HITL. Product Owner wordt gevraagd om actie te ondernemen.", channel=PO_CHANNEL, use_api=True)
                     logging.warning(f"[Orchestrator] Workflow '{workflow_name}' gepauzeerd/afgebroken door HITL. Escalatie verstuurd.")
                     break
-                else:
-                    send_slack_message(":white_check_mark: HITL-goedkeuring ontvangen, workflow vervolgt.", channel=slack_channel, use_api=True)
+                send_slack_message(":white_check_mark: HITL-goedkeuring ontvangen, workflow vervolgt.", channel=slack_channel, use_api=True)
             else:
                 try:
                     publish(event_type, event)
                     logging.info(f"[Orchestrator] Event gepubliceerd: {event_type} ({desc})")
                     send_slack_message(f":information_source: Stap *{desc}* gestart.", channel=slack_channel, use_api=True)
                 except Exception as e:
-                    METRICS['escalaties'] = METRICS.get('escalaties', 0) + 1
+                    METRICS["escalaties"] = METRICS.get("escalaties", 0) + 1
                     save_metrics()
                     self.set_workflow_status(workflow_name, "geblokkeerd")
-                    logging.error(f"[Orchestrator] Fout bij publiceren event {event_type}: {e}")
+                    logging.exception(f"[Orchestrator] Fout bij publiceren event {event_type}: {e}")
                     send_slack_message(f":x: Fout bij stap *{desc}*: {e}", channel=slack_channel, use_api=True)
                     send_slack_message(f":rotating_light: Escalatie: Workflow *{workflow_name}* geblokkeerd door fout. Product Owner wordt gevraagd om actie te ondernemen.", channel=PO_CHANNEL, use_api=True)
                     break
@@ -924,12 +928,12 @@ WORKFLOW_TEMPLATES = {
 
 # Event handlers
 def handle_slack_command(event):
-    data = event['data']
-    command = data.get('command')
-    agent = data.get('agent')
-    channel = data.get('channel')
-    user = data.get('user')
-    log_metric('slack_commands_received')
+    data = event["data"]
+    command = data.get("command")
+    agent = data.get("agent")
+    channel = data.get("channel")
+    user = data.get("user")
+    log_metric("slack_commands_received")
     logging.info(f"[Orchestrator] Slack commando ontvangen: {command} voor agent {agent} door user {user}")
     orch = OrchestratorAgent()
     if command and command.startswith("workflow status"):
@@ -948,31 +952,31 @@ def handle_slack_command(event):
     if command == "start workflow":
         send_slack_message("Workflow 'feature' wordt gestart door Orchestrator.", channel=channel, use_api=True)
         orch.start_workflow("feature")
-        log_metric('workflows_started')
+        log_metric("workflows_started")
     else:
         send_slack_message(f"Commando '{command}' voor agent '{agent}' wordt door Orchestrator gerouteerd.", channel=channel, use_api=True)
         # Eventueel publish naar specifieke agent event
 
 def handle_hitl_decision(event):
-    data = event['data']
-    alert_id = data.get('alert_id')
-    approved = data.get('approved')
-    user = data.get('user')
-    channel = data.get('channel')
-    log_metric('hitl_decisions')
+    data = event["data"]
+    alert_id = data.get("alert_id")
+    approved = data.get("approved")
+    user = data.get("user")
+    channel = data.get("channel")
+    log_metric("hitl_decisions")
     logging.info(f"[Orchestrator] HITL beslissing: {'goedgekeurd' if approved else 'afgewezen'} door {user} voor alert {alert_id}")
     if approved:
         send_slack_message(f"✅ Human-in-the-loop: Actie goedgekeurd door <@{user}>. Workflow wordt vervolgd.", channel=channel, use_api=True)
-        log_metric('workflows_completed')
+        log_metric("workflows_completed")
         # Hier vervolgactie, bijvoorbeeld deployment starten
     else:
         send_slack_message(f"❌ Human-in-the-loop: Actie afgewezen door <@{user}>. Workflow wordt gepauzeerd en geëscaleerd naar Product Owner.", channel=channel, use_api=True)
         send_slack_message(f":rotating_light: Escalatie: Workflow gepauzeerd na afwijzing door <@{user}>. Product Owner wordt gevraagd om actie te ondernemen.", channel=PO_CHANNEL, use_api=True)
-        log_metric('workflow_paused')
+        log_metric("workflow_paused")
         # Hier workflow pauzeren of annuleren
 
-subscribe('slack_command', handle_slack_command)
-subscribe('hitl_decision', handle_hitl_decision)
+subscribe("slack_command", handle_slack_command)
+subscribe("hitl_decision", handle_hitl_decision)
 
 # --- Productieklare agent-handler voorbeeld ---
 # Plaats dit in de relevante agent (bijv. DevOpsInfra, TestEngineer, etc.)
@@ -1000,7 +1004,7 @@ subscribe("tests_completed", handle_tests_completed)
 
 def main():
     parser = argparse.ArgumentParser(description="Orchestrator Agent CLI")
-    parser.add_argument("command", nargs="?", default="help", 
+    parser.add_argument("command", nargs="?", default="help",
                        choices=["help", "start-workflow", "monitor-workflows", "orchestrate-agents",
                                "manage-escalations", "analyze-metrics", "show-workflow-history",
                                "show-orchestration-history", "show-best-practices", "show-changelog",
@@ -1015,11 +1019,11 @@ def main():
     parser.add_argument("--workflow-name", default="feature_delivery", help="Workflow name")
     parser.add_argument("--metrics-type", default="workflow_performance", help="Metrics type")
     parser.add_argument("--timeframe", default="30 days", help="Timeframe for analysis")
-    
+
     args = parser.parse_args()
-    
+
     agent = OrchestratorAgent()
-    
+
     if args.command == "help":
         agent.show_help()
     elif args.command == "start-workflow":
@@ -1096,4 +1100,4 @@ if __name__ == "__main__":
         main()
     else:
         # Server mode - run the infinite loop for listening to events
-        run_server_mode() 
+        run_server_mode()

@@ -2,6 +2,7 @@
 
 from prefect import flow, task
 
+
 @task
 def extract():
     # Data extractie

@@ -2,28 +2,28 @@
 Notification Manager - Unified interface for Slack and Webhook notifications.
 """
 
-import os
 import logging
-from typing import Optional, Dict, Any
+import os
 from enum import Enum
+from typing import Any, Dict, Optional
 
 # Import notification systems
 try:
-    from .slack_notify import send_slack_message, send_human_in_loop_alert
+    from .slack_notify import send_human_in_loop_alert, send_slack_message
     SLACK_AVAILABLE = True
 except ImportError:
     SLACK_AVAILABLE = False
 
 try:
     from .webhook_notify import (
-        send_webhook_message, 
-        send_webhook_hitl_alert, 
-        send_webhook_workflow_notification,
-        send_webhook_error_notification,
-        send_webhook_success_notification,
+        get_webhook_status,
         send_webhook_deployment_notification,
+        send_webhook_error_notification,
+        send_webhook_hitl_alert,
+        send_webhook_message,
+        send_webhook_success_notification,
+        send_webhook_workflow_notification,
         test_webhook_connection,
-        get_webhook_status
     )
     WEBHOOK_AVAILABLE = True
 except ImportError:
@@ -39,110 +39,103 @@ class NotificationType(Enum):
 
 class NotificationManager:
     """Unified notification manager supporting both Slack and Webhook."""
-    
+
     def __init__(self, default_type: NotificationType = NotificationType.AUTO):
         self.default_type = default_type
         self.notification_type = self._determine_notification_type()
-        
+
     def _determine_notification_type(self) -> NotificationType:
         """Determine which notification type to use."""
         if self.default_type == NotificationType.AUTO:
             # Check environment variables
             if os.getenv("WEBHOOK_URL") and WEBHOOK_AVAILABLE:
                 return NotificationType.WEBHOOK
-            elif os.getenv("SLACK_WEBHOOK_URL") and SLACK_AVAILABLE:
+            if os.getenv("SLACK_WEBHOOK_URL") and SLACK_AVAILABLE:
                 return NotificationType.SLACK
-            else:
-                # Default to webhook if available
-                return NotificationType.WEBHOOK if WEBHOOK_AVAILABLE else NotificationType.SLACK
-        else:
-            return self.default_type
-    
-    def send_message(self, text: str, channel: Optional[str] = None, 
+            # Default to webhook if available
+            return NotificationType.WEBHOOK if WEBHOOK_AVAILABLE else NotificationType.SLACK
+        return self.default_type
+
+    def send_message(self, text: str, channel: Optional[str] = None,
                     use_api: bool = False, **kwargs) -> bool:
         """Send a message using the configured notification system."""
         try:
             if self.notification_type == NotificationType.WEBHOOK:
                 return send_webhook_message(text, channel=channel, **kwargs)
-            elif self.notification_type == NotificationType.SLACK:
+            if self.notification_type == NotificationType.SLACK:
                 return send_slack_message(text, channel=channel, use_api=use_api, **kwargs)
-            else:
-                logger.error(f"Unknown notification type: {self.notification_type}")
-                return False
+            logger.error(f"Unknown notification type: {self.notification_type}")
+            return False
         except Exception as e:
             logger.error(f"Failed to send message: {e}")
             return False
-    
+
     def send_hitl_alert(self, reason: str, channel: Optional[str] = None,
                        use_api: bool = False, **kwargs) -> bool:
         """Send a Human-in-the-Loop alert."""
         try:
             if self.notification_type == NotificationType.WEBHOOK:
                 return send_webhook_hitl_alert(reason, channel=channel, **kwargs)
-            elif self.notification_type == NotificationType.SLACK:
+            if self.notification_type == NotificationType.SLACK:
                 return send_human_in_loop_alert(reason, channel=channel, use_api=use_api, **kwargs)
-            else:
-                logger.error(f"Unknown notification type: {self.notification_type}")
-                return False
+            logger.error(f"Unknown notification type: {self.notification_type}")
+            return False
         except Exception as e:
             logger.error(f"Failed to send HITL alert: {e}")
             return False
-    
+
     def send_workflow_notification(self, workflow_name: str, status: str,
                                  channel: Optional[str] = None, **kwargs) -> bool:
         """Send a workflow status notification."""
         try:
             if self.notification_type == NotificationType.WEBHOOK:
                 return send_webhook_workflow_notification(workflow_name, status, channel, **kwargs)
-            elif self.notification_type == NotificationType.SLACK:
+            if self.notification_type == NotificationType.SLACK:
                 # For Slack, use regular message with workflow formatting
                 text = f"🔄 **Workflow Update**: {workflow_name} - {status}"
                 return send_slack_message(text, channel=channel, use_api=False, **kwargs)
-            else:
-                logger.error(f"Unknown notification type: {self.notification_type}")
-                return False
+            logger.error(f"Unknown notification type: {self.notification_type}")
+            return False
         except Exception as e:
             logger.error(f"Failed to send workflow notification: {e}")
             return False
-    
+
     def send_error_notification(self, error_message: str, context: Optional[str] = None,
                                channel: Optional[str] = None, **kwargs) -> bool:
         """Send an error notification."""
         try:
             if self.notification_type == NotificationType.WEBHOOK:
                 return send_webhook_error_notification(error_message, context, channel, **kwargs)
-            elif self.notification_type == NotificationType.SLACK:
+            if self.notification_type == NotificationType.SLACK:
                 # For Slack, use regular message with error formatting
                 text = f"❌ **Error**: {error_message}"
                 if context:
                     text += f"\n**Context**: {context}"
                 return send_slack_message(text, channel=channel, use_api=False, **kwargs)
-            else:
-                logger.error(f"Unknown notification type: {self.notification_type}")
-                return False
+            logger.error(f"Unknown notification type: {self.notification_type}")
+            return False
         except Exception as e:
             logger.error(f"Failed to send error notification: {e}")
             return False
-    
+
     def send_success_notification(self, success_message: str, context: Optional[str] = None,
                                  channel: Optional[str] = None, **kwargs) -> bool:
         """Send a success notification."""
         try:
             if self.notification_type == NotificationType.WEBHOOK:
                 return send_webhook_success_notification(success_message, context, channel, **kwargs)
-            elif self.notification_type == NotificationType.SLACK:
+            if self.notification_type == NotificationType.SLACK:
                 # For Slack, use regular message with success formatting
                 text = f"✅ **Success**: {success_message}"
                 if context:
                     text += f"\n**Context**: {context}"
                 return send_slack_message(text, channel=channel, use_api=False, **kwargs)
-            else:
-                logger.error(f"Unknown notification type: {self.notification_type}")
-                return False
+            logger.error(f"Unknown notification type: {self.notification_type}")
+            return False
         except Exception as e:
             logger.error(f"Failed to send success notification: {e}")
             return False
-    
+
     def send_deployment_notification(self, deployment_name: str, status: str,
                                    environment: Optional[str] = None,
                                    channel: Optional[str] = None, **kwargs) -> bool:
@@ -150,7 +143,7 @@ class NotificationManager:
         try:
             if self.notification_type == NotificationType.WEBHOOK:
                 return send_webhook_deployment_notification(deployment_name, status, environment, channel, **kwargs)
-            elif self.notification_type == NotificationType.SLACK:
+            if self.notification_type == NotificationType.SLACK:
                 # For Slack, use regular message with deployment formatting
                 status_emoji = {
                     "started": "🚀",
@@ -162,28 +155,26 @@ class NotificationManager:
                 if environment:
                     text += f"\n**Environment**: {environment}"
                 return send_slack_message(text, channel=channel, use_api=False, **kwargs)
-            else:
-                logger.error(f"Unknown notification type: {self.notification_type}")
-                return False
+            logger.error(f"Unknown notification type: {self.notification_type}")
+            return False
         except Exception as e:
             logger.error(f"Failed to send deployment notification: {e}")
             return False
-    
+
     def test_connection(self, channel: Optional[str] = None) -> bool:
         """Test the notification system connection."""
         try:
             if self.notification_type == NotificationType.WEBHOOK:
                 return test_webhook_connection(channel)
-            elif self.notification_type == NotificationType.SLACK:
+            if self.notification_type == NotificationType.SLACK:
                 # For Slack, send a test message
                 return send_slack_message("🧪 Test message from BMAD", channel=channel, use_api=False)
-            else:
-                logger.error(f"Unknown notification type: {self.notification_type}")
-                return False
+            logger.error(f"Unknown notification type: {self.notification_type}")
+            return False
         except Exception as e:
             logger.error(f"Failed to test connection: {e}")
             return False
-    
+
     def get_status(self) -> Dict[str, Any]:
         """Get the status of the notification system."""
         status = {
@@ -194,7 +185,7 @@ class NotificationManager:
             "webhook_configured": bool(os.getenv("WEBHOOK_URL")),
             "default_type": self.default_type.value
         }
-        
+
         # Add webhook-specific status if available
         if WEBHOOK_AVAILABLE:
             try:
@@ -202,7 +193,7 @@ class NotificationManager:
                 status["webhook_details"] = webhook_status
             except Exception as e:
                 status["webhook_details"] = {"error": str(e)}
-        
+
         return status
 
 # Global notification manager instance
@@ -215,7 +206,7 @@ def get_notification_manager() -> NotificationManager:
         _notification_manager = NotificationManager()
     return _notification_manager
 
-def send_notification(text: str, channel: Optional[str] = None, 
+def send_notification(text: str, channel: Optional[str] = None,
                      notification_type: Optional[NotificationType] = None, **kwargs) -> bool:
     """Send a notification using the global manager."""
     if notification_type:
@@ -223,7 +214,7 @@ def send_notification(text: str, channel: Optional[str] = None,
         manager = NotificationManager(notification_type)
     else:
         manager = get_notification_manager()
-    
+
     return manager.send_message(text, channel=channel, **kwargs)
 
 def send_hitl_notification(reason: str, channel: Optional[str] = None,
@@ -233,7 +224,7 @@ def send_hitl_notification(reason: str, channel: Optional[str] = None,
         manager = NotificationManager(notification_type)
     else:
         manager = get_notification_manager()
-    
+
     return manager.send_hitl_alert(reason, channel=channel, **kwargs)
 
 def send_workflow_notification(workflow_name: str, status: str, channel: Optional[str] = None,
@@ -243,7 +234,7 @@ def send_workflow_notification(workflow_name: str, status: str, channel: Optiona
         manager = NotificationManager(notification_type)
     else:
         manager = get_notification_manager()
-    
+
     return manager.send_workflow_notification(workflow_name, status, channel=channel, **kwargs)
 
 def send_error_notification(error_message: str, context: Optional[str] = None,
@@ -254,7 +245,7 @@ def send_error_notification(error_message: str, context: Optional[str] = None,
         manager = NotificationManager(notification_type)
     else:
         manager = get_notification_manager()
-    
+
     return manager.send_error_notification(error_message, context, channel=channel, **kwargs)
 
 def send_success_notification(success_message: str, context: Optional[str] = None,
@@ -265,7 +256,7 @@ def send_success_notification(success_message: str, context: Optional[str] = Non
         manager = NotificationManager(notification_type)
     else:
         manager = get_notification_manager()
-    
+
     return manager.send_success_notification(success_message, context, channel=channel, **kwargs)
 
 def send_deployment_notification(deployment_name: str, status: str,
@@ -277,7 +268,7 @@ def send_deployment_notification(deployment_name: str, status: str,
         manager = NotificationManager(notification_type)
     else:
         manager = get_notification_manager()
-    
+
     return manager.send_deployment_notification(deployment_name, status, environment, channel=channel, **kwargs)
 
 def test_notification_connection(channel: Optional[str] = None,
@@ -287,10 +278,10 @@ def test_notification_connection(channel: Optional[str] = None,
         manager = NotificationManager(notification_type)
     else:
         manager = get_notification_manager()
-    
+
     return manager.test_connection(channel)
 
 def get_notification_status() -> Dict[str, Any]:
     """Get notification system status using the global manager."""
     manager = get_notification_manager()
-    return manager.get_status() 
+    return manager.get_status()

@@ -1,8 +1,8 @@
 import json
-import threading
-from pathlib import Path
-from datetime import datetime
 import logging
+import threading
+from datetime import datetime
+from pathlib import Path
 from typing import Callable, Dict, List
 
 SHARED_CONTEXT_PATH = Path(__file__).parent.parent / "shared_context.json"
@@ -16,7 +16,7 @@ def publish(event, data):
     """Publiceer een event met data naar de shared context en roep subscribers aan."""
     with LOCK:
         if SHARED_CONTEXT_PATH.exists():
-            with open(SHARED_CONTEXT_PATH, "r") as f:
+            with open(SHARED_CONTEXT_PATH) as f:
                 context = json.load(f)
         else:
             context = {"events": []}
@@ -34,7 +34,7 @@ def publish(event, data):
         try:
             callback(event_obj)
         except Exception as e:
-            logging.error(f"[MessageBus] Fout in subscriber callback: {e}")
+            logging.exception(f"[MessageBus] Fout in subscriber callback: {e}")
 
 def subscribe(event_type: str, callback: Callable):
     """Abonneer een callback op een specifiek event_type."""
@@ -47,7 +47,7 @@ def get_events(event_type=None, since=None):
     """Haal events op, optioneel gefilterd op type en tijd."""
     if not SHARED_CONTEXT_PATH.exists():
         return []
-    with open(SHARED_CONTEXT_PATH, "r") as f:
+    with open(SHARED_CONTEXT_PATH) as f:
         context = json.load(f)
     events = context.get("events", [])
     if event_type:

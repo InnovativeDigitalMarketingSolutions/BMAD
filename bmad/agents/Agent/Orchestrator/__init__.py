@@ -1,1 +1,1 @@
-# BMAD Orchestrator Agent package 
+# BMAD Orchestrator Agent package

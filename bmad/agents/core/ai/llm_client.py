@@ -1,15 +1,13 @@
-import os
-import requests
 import hashlib
 import json
 import logging
+import os
 import time
-from typing import Dict, Any, Optional
 from copy import deepcopy
-import logging
-import time
-from typing import Dict, Any, Optional
-from copy import deepcopy
+from typing import Any, Dict, Optional
+
+import requests
+
 from bmad.agents.core.data.redis_cache import cache_llm_response
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -24,7 +22,7 @@ def _file_cache_get(key: str) -> Optional[dict]:
     path = os.path.join(CACHE_DIR, f"{key}.json")
     if os.path.exists(path):
         try:
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 return json.load(f)
         except Exception as e:
             logging.warning(f"[LLM][FILECACHE] Fout bij lezen: {e}")
@@ -42,9 +40,9 @@ def _file_cache_set(key: str, value: dict):
 
 def _cache_key(prompt: str, model: str, temperature: float, max_tokens: int, logprobs: bool) -> str:
     key = json.dumps({
-        "prompt": prompt, 
-        "model": model, 
-        "temperature": temperature, 
+        "prompt": prompt,
+        "model": model,
+        "temperature": temperature,
         "max_tokens": max_tokens,
         "logprobs": logprobs
     }, sort_keys=True)
@@ -138,11 +136,11 @@ def calculate_confidence(output: str, context: Dict[str, Any]) -> float:
 
 @cache_llm_response
 def ask_openai_with_confidence(
-    prompt: str, 
+    prompt: str,
     context: Optional[Dict[str, Any]] = None,
-    model: Optional[str] = None, 
-    temperature: float = 0.7, 
-    max_tokens: int = 512, 
+    model: Optional[str] = None,
+    temperature: float = 0.7,
+    max_tokens: int = 512,
     structured_output: Optional[str] = None,
     include_logprobs: bool = True
 ) -> Dict[str, Any]:
@@ -235,7 +233,7 @@ def ask_openai_with_confidence(
             "llm_confidence": llm_confidence
         }
     except Exception as e:
-        logging.error(f"[LLM][ERROR] {e}")
+        logging.exception(f"[LLM][ERROR] {e}")
         raise
 
 def ask_openai(prompt: str, context: Optional[Dict[str, Any]] = None, model: Optional[str] = None, temperature: float = 0.7, max_tokens: int = 512, structured_output: Optional[str] = None) -> Any:
@@ -245,4 +243,4 @@ def ask_openai(prompt: str, context: Optional[Dict[str, Any]] = None, model: Opt
     if context is None:
         context = {"task": "general", "agent": "unknown"}
     result = ask_openai_with_confidence(prompt, context, model, temperature, max_tokens, structured_output)
-    return result["answer"] 
+    return result["answer"]

@@ -1,20 +1,24 @@
-import sys
 import os
+import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import argparse
-import logging
-import json
 import csv
+import json
+import logging
+import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, Any
-import time
+from typing import Any, Dict, Optional
 
-from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.agent.agent_performance_monitor import (
+    MetricType,
+    get_performance_monitor,
+)
 from bmad.agents.core.agent.test_sprites import get_sprite_library
-from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor, MetricType
+from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
-from bmad.agents.core.data.supabase_context import save_context, get_context
 from integrations.slack.slack_notify import send_slack_message
 
 # Configure logging
@@ -26,7 +30,7 @@ class ReleaseManagerAgent:
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
-        
+
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
         self.template_paths = {
@@ -42,7 +46,7 @@ class ReleaseManagerAgent:
             "history": self.resource_base / "data/releasemanager/release-history.md",
             "rollback-history": self.resource_base / "data/releasemanager/rollback-history.md"
         }
-        
+
         # Initialize history
         self.release_history = []
         self.rollback_history = []
@@ -53,11 +57,11 @@ class ReleaseManagerAgent:
         """Load release history from data file"""
         try:
             if self.data_paths["history"].exists():
-                with open(self.data_paths["history"], 'r') as f:
+                with open(self.data_paths["history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.release_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load release history: {e}")
@@ -66,7 +70,7 @@ class ReleaseManagerAgent:
         """Save release history to data file"""
         try:
             self.data_paths["history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["history"], 'w') as f:
+            with open(self.data_paths["history"], "w") as f:
                 f.write("# Release History\n\n")
                 for release in self.release_history[-50:]:  # Keep last 50 releases
                     f.write(f"- {release}\n")
@@ -77,11 +81,11 @@ class ReleaseManagerAgent:
         """Load rollback history from data file"""
         try:
             if self.data_paths["rollback-history"].exists():
-                with open(self.data_paths["rollback-history"], 'r') as f:
+                with open(self.data_paths["rollback-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.rollback_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load rollback history: {e}")
@@ -90,7 +94,7 @@ class ReleaseManagerAgent:
         """Save rollback history to data file"""
         try:
             self.data_paths["rollback-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["rollback-history"], 'w') as f:
+            with open(self.data_paths["rollback-history"], "w") as f:
                 f.write("# Rollback History\n\n")
                 for rollback in self.rollback_history[-50:]:  # Keep last 50 rollbacks
                     f.write(f"- {rollback}\n")
@@ -131,7 +135,7 @@ Release Manager Agent Commands:
                 print(f"Unknown resource type: {resource_type}")
                 return
             if path.exists():
-                with open(path, 'r') as f:
+                with open(path) as f:
                     print(f.read())
             else:
                 print(f"Resource file not found: {path}")
@@ -161,10 +165,10 @@ Release Manager Agent Commands:
     def create_release(self, version: str = "1.2.0", description: str = "Feature release") -> Dict[str, Any]:
         """Create new release plan with enhanced functionality."""
         logger.info(f"Creating release plan for version {version}")
-        
+
         # Simulate release creation
         time.sleep(1)
-        
+
         release_result = {
             "version": version,
             "release_type": "Release Plan Creation",
@@ -217,25 +221,25 @@ Release Manager Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "ReleaseManagerAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("ReleaseManager", MetricType.SUCCESS_RATE, 95, "%")
-        
+
         # Add to release history
         release_entry = f"{datetime.now().isoformat()}: Release {version} plan created successfully"
         self.release_history.append(release_entry)
         self._save_release_history()
-        
+
         logger.info(f"Release plan created: {release_result}")
         return release_result
 
     def approve_release(self, version: str = "1.2.0") -> Dict[str, Any]:
         """Approve release for deployment."""
         logger.info(f"Approving release {version} for deployment")
-        
+
         # Simulate release approval
         time.sleep(1)
-        
+
         approval_result = {
             "version": version,
             "approval_type": "Release Approval",
@@ -270,20 +274,20 @@ Release Manager Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "ReleaseManagerAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("ReleaseManager", MetricType.SUCCESS_RATE, 98, "%")
-        
+
         logger.info(f"Release approved: {approval_result}")
         return approval_result
 
     def deploy_release(self, version: str = "1.2.0") -> Dict[str, Any]:
         """Deploy release to production."""
         logger.info(f"Deploying release {version} to production")
-        
+
         # Simulate release deployment
         time.sleep(2)
-        
+
         deployment_result = {
             "version": version,
             "deployment_type": "Production Deployment",
@@ -333,25 +337,25 @@ Release Manager Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "ReleaseManagerAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("ReleaseManager", MetricType.SUCCESS_RATE, 100, "%")
-        
+
         # Add to release history
         release_entry = f"{datetime.now().isoformat()}: Release {version} deployed successfully to production"
         self.release_history.append(release_entry)
         self._save_release_history()
-        
+
         logger.info(f"Release deployed: {deployment_result}")
         return deployment_result
 
     def rollback_release(self, version: str = "1.2.0", reason: str = "High error rate") -> Dict[str, Any]:
         """Rollback failed release."""
         logger.info(f"Rolling back release {version} due to: {reason}")
-        
+
         # Simulate rollback
         time.sleep(2)
-        
+
         rollback_result = {
             "version": version,
             "rollback_type": "Production Rollback",
@@ -398,15 +402,15 @@ Release Manager Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "ReleaseManagerAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("ReleaseManager", MetricType.SUCCESS_RATE, 95, "%")
-        
+
         # Add to rollback history
         rollback_entry = f"{datetime.now().isoformat()}: Release {version} rolled back due to {reason}"
         self.rollback_history.append(rollback_entry)
         self._save_rollback_history()
-        
+
         logger.info(f"Release rolled back: {rollback_result}")
         return rollback_result
 
@@ -423,7 +427,7 @@ Release Manager Agent Commands:
                 "timestamp": datetime.now().isoformat(),
                 "agent": "ReleaseManagerAgent"
             }
-        
+
         try:
             if format_type == "md":
                 self._export_markdown(report_data)
@@ -439,7 +443,7 @@ Release Manager Agent Commands:
     def _export_markdown(self, report_data: Dict):
         """Export report data as markdown."""
         output_file = f"release_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-        
+
         content = f"""# Release Report
 
 ## Summary
@@ -464,48 +468,48 @@ Release Manager Agent Commands:
 ## Recent Rollbacks
 {chr(10).join([f"- {rollback}" for rollback in self.rollback_history[-5:]])}
 """
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             f.write(content)
         print(f"Report export saved to: {output_file}")
 
     def _export_csv(self, report_data: Dict):
         """Export report data as CSV."""
         output_file = f"release_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-        
-        with open(output_file, 'w', newline='') as f:
+
+        with open(output_file, "w", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow(['Metric', 'Value'])
-            writer.writerow(['Version', report_data.get('version', 'N/A')])
-            writer.writerow(['Status', report_data.get('status', 'N/A')])
-            writer.writerow(['Total Releases', report_data.get('total_releases', 0)])
-            writer.writerow(['Successful Releases', report_data.get('successful_releases', 0)])
-            writer.writerow(['Failed Releases', report_data.get('failed_releases', 0)])
-        
+            writer.writerow(["Metric", "Value"])
+            writer.writerow(["Version", report_data.get("version", "N/A")])
+            writer.writerow(["Status", report_data.get("status", "N/A")])
+            writer.writerow(["Total Releases", report_data.get("total_releases", 0)])
+            writer.writerow(["Successful Releases", report_data.get("successful_releases", 0)])
+            writer.writerow(["Failed Releases", report_data.get("failed_releases", 0)])
+
         print(f"Report export saved to: {output_file}")
 
     def _export_json(self, report_data: Dict):
         """Export report data as JSON."""
         output_file = f"release_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             json.dump(report_data, f, indent=2)
-        
+
         print(f"Report export saved to: {output_file}")
 
     def test_resource_completeness(self):
         """Test if all required resources are available."""
         print("Testing resource completeness...")
         missing_resources = []
-        
+
         for name, path in self.template_paths.items():
             if not path.exists():
                 missing_resources.append(f"Template: {name} ({path})")
-        
+
         for name, path in self.data_paths.items():
             if not path.exists():
                 missing_resources.append(f"Data: {name} ({path})")
-        
+
         if missing_resources:
             print("Missing resources:")
             for resource in missing_resources:
@@ -516,23 +520,23 @@ Release Manager Agent Commands:
     def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         logger.info("Starting release management collaboration example...")
-        
+
         # Publish release creation request
         publish("release_creation_requested", {
             "agent": "ReleaseManagerAgent",
             "version": "1.2.0",
             "timestamp": datetime.now().isoformat()
         })
-        
+
         # Create release
         self.create_release("1.2.0", "Feature release with new dashboard")
-        
+
         # Approve release
         self.approve_release("1.2.0")
-        
+
         # Deploy release
         deployment_result = self.deploy_release("1.2.0")
-        
+
         # Publish completion
         publish("release_deployment_completed", {
             "status": "success",
@@ -540,16 +544,16 @@ Release Manager Agent Commands:
             "version": "1.2.0",
             "deployment_status": deployment_result["status"]
         })
-        
+
         # Save context
         save_context("ReleaseManager", {"release_status": "deployed"})
-        
+
         # Notify via Slack
         try:
             send_slack_message(f"Release 1.2.0 deployed successfully with {deployment_result['deployment_metrics']['success_rate']} success rate")
         except Exception as e:
             logger.warning(f"Could not send Slack notification: {e}")
-        
+
         print("Event gepubliceerd en context opgeslagen.")
         context = get_context("ReleaseManager")
         print(f"Opgehaalde context: {context}")
@@ -589,26 +593,26 @@ Release Manager Agent Commands:
         subscribe("tests_passed", self.on_tests_passed)
         subscribe("release_approved", self.on_release_approved)
         subscribe("deployment_failed", self.on_deployment_failed)
-        
+
         logger.info("ReleaseManagerAgent ready and listening for events...")
         self.collaborate_example()
 
 def main():
     parser = argparse.ArgumentParser(description="Release Manager Agent CLI")
-    parser.add_argument("command", nargs="?", default="help", 
+    parser.add_argument("command", nargs="?", default="help",
                        choices=["help", "create-release", "approve-release", "deploy-release",
                                "rollback-release", "show-release-history", "show-rollback-history",
-                               "show-best-practices", "show-changelog", "export-report", "test", 
+                               "show-best-practices", "show-changelog", "export-report", "test",
                                "collaborate", "run"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--version", default="1.2.0", help="Release version")
     parser.add_argument("--description", default="Feature release", help="Release description")
     parser.add_argument("--reason", default="High error rate", help="Rollback reason")
-    
+
     args = parser.parse_args()
-    
+
     agent = ReleaseManagerAgent()
-    
+
     if args.command == "help":
         agent.show_help()
     elif args.command == "create-release":

@@ -8,11 +8,11 @@ dynamic updates, en versioning. Bouwt voort op de basis OPA integratie.
 import json
 import logging
 import time
-from typing import Dict, List, Any, Optional, Callable
 from dataclasses import dataclass, field
-from enum import Enum
 from datetime import datetime
+from enum import Enum
 from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
 
 # Import BMAD modules
 from integrations.opa.opa_policy_engine import OPAPolicyEngine, PolicyRequest
@@ -36,7 +36,7 @@ class PolicySeverity(Enum):
     MEDIUM = "medium"
     HIGH = "high"
     CRITICAL = "critical"
-    
+
     def __lt__(self, other):
         if not isinstance(other, PolicySeverity):
             return NotImplemented
@@ -47,13 +47,13 @@ class PolicySeverity(Enum):
             PolicySeverity.CRITICAL: 4
         }
         return severity_order[self] < severity_order[other]
-    
+
     def __le__(self, other):
         return self < other or self == other
-    
+
     def __gt__(self, other):
         return not self <= other
-    
+
     def __ge__(self, other):
         return not self < other
 
@@ -132,33 +132,33 @@ class AdvancedPolicyEngine:
     """
     Advanced policy engine with complex conditions, inheritance, and dynamic updates.
     """
-    
+
     def __init__(self, opa_url: str = "http://localhost:8181", policies_dir: str = "policies"):
         self.opa_engine = OPAPolicyEngine(opa_url=opa_url)
         self.policies_dir = Path(policies_dir)
         self.policies_dir.mkdir(exist_ok=True)
-        
+
         # Policy storage
         self.policies: Dict[str, PolicyDefinition] = {}
         self.policy_versions: Dict[str, List[PolicyVersion]] = {}
         self.policy_cache: Dict[str, Any] = {}
-        
+
         # Condition evaluators
         self.condition_evaluators: Dict[str, Callable] = {}
         self._register_default_evaluators()
-        
+
         # Policy inheritance registry
         self.inheritance_registry: Dict[str, List[str]] = {}
-        
+
         # Dynamic policy updates
         self.policy_update_callbacks: List[Callable] = []
         self.last_policy_sync = datetime.now()
-        
+
         # Load existing policies
         self._load_policies()
-        
+
         logger.info("Advanced Policy Engine geïnitialiseerd")
-    
+
     def _register_default_evaluators(self):
         """Register default condition evaluators."""
         self.condition_evaluators.update({
@@ -170,17 +170,17 @@ class AdvancedPolicyEngine:
             "inheritance": self._evaluate_inheritance_condition,
             "dynamic": self._evaluate_dynamic_condition
         })
-    
+
     def _evaluate_time_condition(self, condition: PolicyCondition, context: Dict[str, Any]) -> bool:
         """Evaluate time-based conditions."""
         params = condition.parameters
         current_time = datetime.now()
-        
+
         if "time_window" in params:
             # Handle time-only strings (HH:MM:SS)
             start_str = params["time_window"]["start"]
             end_str = params["time_window"]["end"]
-            
+
             # Convert to full datetime for today
             today = current_time.date()
             try:
@@ -190,109 +190,109 @@ class AdvancedPolicyEngine:
                 else:  # Full datetime
                     start_time = datetime.fromisoformat(start_str)
                     end_time = datetime.fromisoformat(end_str)
-                
+
                 return start_time <= current_time <= end_time
             except ValueError:
                 logger.warning(f"Invalid time format in condition {condition.condition_id}")
                 return False
-        
+
         if "day_of_week" in params:
             return current_time.weekday() in params["day_of_week"]
-        
+
         if "hour_of_day" in params:
             return current_time.hour in params["hour_of_day"]
-        
+
         return True
-    
+
     def _evaluate_resource_condition(self, condition: PolicyCondition, context: Dict[str, Any]) -> bool:
         """Evaluate resource-based conditions."""
         params = condition.parameters
-        
+
         if "cpu_threshold" in params:
             cpu_usage = context.get("cpu_usage", 0)
             return cpu_usage <= params["cpu_threshold"]
-        
+
         if "memory_threshold" in params:
             memory_usage = context.get("memory_usage", 0)
             return memory_usage <= params["memory_threshold"]
-        
+
         if "api_calls_limit" in params:
             api_calls = context.get("api_calls_count", 0)
             return api_calls <= params["api_calls_limit"]
-        
+
         return True
-    
+
     def _evaluate_role_condition(self, condition: PolicyCondition, context: Dict[str, Any]) -> bool:
         """Evaluate role-based conditions."""
         params = condition.parameters
         user_roles = context.get("user_roles", [])
         required_roles = params.get("required_roles", [])
-        
+
         if not required_roles:
             return True
-        
+
         return any(role in user_roles for role in required_roles)
-    
+
     def _evaluate_context_condition(self, condition: PolicyCondition, context: Dict[str, Any]) -> bool:
         """Evaluate context-based conditions."""
         params = condition.parameters
-        
+
         for key, expected_value in params.get("context_values", {}).items():
             actual_value = context.get(key)
             if actual_value != expected_value:
                 return False
-        
+
         return True
-    
+
     def _evaluate_composite_condition(self, condition: PolicyCondition, context: Dict[str, Any]) -> bool:
         """Evaluate composite conditions."""
         params = condition.parameters
         operator = params.get("operator", "AND")
         sub_conditions = params.get("conditions", [])
-        
+
         results = []
         for sub_condition_data in sub_conditions:
             sub_condition = PolicyCondition(**sub_condition_data)
             evaluator = self.condition_evaluators.get(sub_condition.condition_type)
             if evaluator:
                 results.append(evaluator(sub_condition, context))
-        
+
         if operator == "AND":
             return all(results)
-        elif operator == "OR":
+        if operator == "OR":
             return any(results)
-        elif operator == "NOT":
+        if operator == "NOT":
             return not any(results)
-        
+
         return True
-    
+
     def _evaluate_inheritance_condition(self, condition: PolicyCondition, context: Dict[str, Any]) -> bool:
         """Evaluate inheritance conditions."""
         params = condition.parameters
         policy_id = params.get("policy_id")
-        
+
         if not policy_id or policy_id not in self.policies:
             return False
-        
+
         parent_policy = self.policies[policy_id]
         return parent_policy.status == PolicyStatus.ACTIVE
-    
+
     def _evaluate_dynamic_condition(self, condition: PolicyCondition, context: Dict[str, Any]) -> bool:
         """Evaluate dynamic conditions."""
         params = condition.parameters
         dynamic_key = params.get("dynamic_key")
         dynamic_value = params.get("dynamic_value")
-        
+
         if dynamic_key and dynamic_value:
             actual_value = context.get(dynamic_key)
             return actual_value == dynamic_value
-        
+
         return True
-    
+
     def create_policy(self, policy_data: Dict[str, Any]) -> PolicyDefinition:
         """Create a new policy definition."""
         policy_id = policy_data.get("policy_id") or f"policy_{int(time.time())}"
-        
+
         # Create policy rules
         rules = []
         for rule_data in policy_data.get("rules", []):
@@ -303,7 +303,7 @@ class AdvancedPolicyEngine:
                     condition_data["severity"] = PolicySeverity(condition_data["severity"])
                 condition = PolicyCondition(**condition_data)
                 conditions.append(condition)
-            
+
             rule = PolicyRule(
                 rule_id=rule_data.get("rule_id"),
                 rule_name=rule_data.get("rule_name"),
@@ -314,7 +314,7 @@ class AdvancedPolicyEngine:
                 description=rule_data.get("description", "")
             )
             rules.append(rule)
-        
+
         # Create policy definition
         policy = PolicyDefinition(
             policy_id=policy_id,
@@ -327,29 +327,29 @@ class AdvancedPolicyEngine:
             status=PolicyStatus(policy_data.get("status", "active")),
             metadata=policy_data.get("metadata", {})
         )
-        
+
         # Store policy
         self.policies[policy_id] = policy
-        
+
         # Create version
         self._create_policy_version(policy, "Initial version")
-        
+
         # Update inheritance registry
         if policy.parent_policy:
             if policy.parent_policy not in self.inheritance_registry:
                 self.inheritance_registry[policy.parent_policy] = []
             self.inheritance_registry[policy.parent_policy].append(policy_id)
-        
+
         # Save to file
         self._save_policy(policy)
-        
+
         logger.info(f"Policy created: {policy_id}")
         return policy
-    
+
     def _create_policy_version(self, policy: PolicyDefinition, change_description: str):
         """Create a new policy version."""
         version_id = f"{policy.policy_id}_v{policy.version}_{int(time.time())}"
-        
+
         version = PolicyVersion(
             version_id=version_id,
             policy_id=policy.policy_id,
@@ -360,17 +360,17 @@ class AdvancedPolicyEngine:
             change_description=change_description,
             is_active=(policy.status == PolicyStatus.ACTIVE)
         )
-        
+
         if policy.policy_id not in self.policy_versions:
             self.policy_versions[policy.policy_id] = []
-        
+
         self.policy_versions[policy.policy_id].append(version)
-        
+
         # Deactivate other versions
         for v in self.policy_versions[policy.policy_id]:
             if v.version_id != version_id:
                 v.is_active = False
-    
+
     def _policy_to_dict(self, policy: PolicyDefinition) -> Dict[str, Any]:
         """Convert policy to dictionary."""
         return {
@@ -389,7 +389,7 @@ class AdvancedPolicyEngine:
                             "condition_type": cond.condition_type,
                             "parameters": cond.parameters,
                             "description": cond.description,
-                            "severity": cond.severity.value if hasattr(cond.severity, 'value') else cond.severity,
+                            "severity": cond.severity.value if hasattr(cond.severity, "value") else cond.severity,
                             "enabled": cond.enabled
                         }
                         for cond in rule.conditions
@@ -410,39 +410,39 @@ class AdvancedPolicyEngine:
             "expires_at": policy.expires_at.isoformat() if policy.expires_at else None,
             "metadata": policy.metadata
         }
-    
+
     def _save_policy(self, policy: PolicyDefinition):
         """Save policy to file."""
         policy_file = self.policies_dir / f"{policy.policy_id}.json"
-        with open(policy_file, 'w') as f:
+        with open(policy_file, "w") as f:
             json.dump(self._policy_to_dict(policy), f, indent=2, default=str)
-    
+
     def _load_policies(self):
         """Load policies from files."""
         for policy_file in self.policies_dir.glob("*.json"):
             try:
-                with open(policy_file, 'r') as f:
+                with open(policy_file) as f:
                     policy_data = json.load(f)
-                
+
                 # Convert string values back to enums
                 policy_data["policy_type"] = PolicyType(policy_data["policy_type"])
                 policy_data["status"] = PolicyStatus(policy_data["status"])
-                
+
                 # Convert rules and conditions
                 rules = []
                 for rule_data in policy_data["rules"]:
                     rule_data["policy_type"] = PolicyType(rule_data["policy_type"])
-                    
+
                     conditions = []
                     for condition_data in rule_data["conditions"]:
                         condition_data["severity"] = PolicySeverity(condition_data["severity"])
                         conditions.append(PolicyCondition(**condition_data))
-                    
+
                     rule_data["conditions"] = conditions
                     rules.append(PolicyRule(**rule_data))
-                
+
                 policy_data["rules"] = rules
-                
+
                 # Convert datetime strings back to datetime objects
                 if "created_at" in policy_data and isinstance(policy_data["created_at"], str):
                     policy_data["created_at"] = datetime.fromisoformat(policy_data["created_at"])
@@ -450,15 +450,15 @@ class AdvancedPolicyEngine:
                     policy_data["updated_at"] = datetime.fromisoformat(policy_data["updated_at"])
                 if "expires_at" in policy_data and policy_data["expires_at"] and isinstance(policy_data["expires_at"], str):
                     policy_data["expires_at"] = datetime.fromisoformat(policy_data["expires_at"])
-                
+
                 # Create policy definition
                 policy_id = policy_data["policy_id"]
                 self.policies[policy_id] = PolicyDefinition(**policy_data)
                 logger.info(f"Loaded policy: {policy_id}")
-                
+
             except Exception as e:
                 logger.error(f"Failed to load policy from {policy_file}: {e}")
-    
+
     async def evaluate_policy(self, policy_id: str, request: PolicyRequest) -> PolicyEvaluationResult:
         """Evaluate a specific policy."""
         if policy_id not in self.policies:
@@ -472,9 +472,9 @@ class AdvancedPolicyEngine:
                 severity=PolicySeverity.HIGH,
                 timestamp=datetime.now()
             )
-        
+
         policy = self.policies[policy_id]
-        
+
         # Check if policy is active
         if policy.status != PolicyStatus.ACTIVE:
             return PolicyEvaluationResult(
@@ -487,7 +487,7 @@ class AdvancedPolicyEngine:
                 severity=PolicySeverity.MEDIUM,
                 timestamp=datetime.now()
             )
-        
+
         # Check expiration
         if policy.expires_at and datetime.now() > policy.expires_at:
             return PolicyEvaluationResult(
@@ -500,22 +500,22 @@ class AdvancedPolicyEngine:
                 severity=PolicySeverity.HIGH,
                 timestamp=datetime.now()
             )
-        
+
         # Evaluate rules in priority order
         sorted_rules = sorted(policy.rules, key=lambda r: r.priority, reverse=True)
-        
+
         for rule in sorted_rules:
             if not rule.enabled:
                 continue
-            
+
             # Evaluate conditions
             conditions_met = []
             conditions_failed = []
-            
+
             for condition in rule.conditions:
                 if not condition.enabled:
                     continue
-                
+
                 evaluator = self.condition_evaluators.get(condition.condition_type)
                 if evaluator:
                     if evaluator(condition, request.context):
@@ -524,12 +524,12 @@ class AdvancedPolicyEngine:
                         conditions_failed.append(condition.condition_id)
                 else:
                     conditions_failed.append(condition.condition_id)
-            
+
             # If all conditions are met, apply the rule
             if not conditions_failed:
                 allowed = "allow" in rule.actions
                 reason = f"Rule {rule.rule_name} applied successfully"
-                
+
                 return PolicyEvaluationResult(
                     policy_id=policy_id,
                     rule_id=rule.rule_id,
@@ -541,7 +541,7 @@ class AdvancedPolicyEngine:
                     timestamp=datetime.now(),
                     metadata={"rule_name": rule.rule_name, "actions": rule.actions}
                 )
-        
+
         # No rules matched
         return PolicyEvaluationResult(
             policy_id=policy_id,
@@ -553,17 +553,17 @@ class AdvancedPolicyEngine:
             severity=PolicySeverity.MEDIUM,
             timestamp=datetime.now()
         )
-    
+
     async def evaluate_composite_policy(self, policy_ids: List[str], request: PolicyRequest) -> List[PolicyEvaluationResult]:
         """Evaluate multiple policies and return composite result."""
         results = []
-        
+
         for policy_id in policy_ids:
             result = await self.evaluate_policy(policy_id, request)
             results.append(result)
-        
+
         return results
-    
+
     async def evaluate_inherited_policy(self, policy_id: str, request: PolicyRequest) -> PolicyEvaluationResult:
         """Evaluate a policy with inheritance."""
         if policy_id not in self.policies:
@@ -577,89 +577,89 @@ class AdvancedPolicyEngine:
                 severity=PolicySeverity.HIGH,
                 timestamp=datetime.now()
             )
-        
+
         policy = self.policies[policy_id]
-        
+
         # Evaluate parent policies first
         if policy.parent_policy:
             parent_result = await self.evaluate_inherited_policy(policy.parent_policy, request)
             if not parent_result.allowed:
                 return parent_result
-        
+
         # Evaluate current policy
         return await self.evaluate_policy(policy_id, request)
-    
+
     def update_policy(self, policy_id: str, updates: Dict[str, Any], change_description: str) -> PolicyDefinition:
         """Update an existing policy."""
         if policy_id not in self.policies:
             raise ValueError(f"Policy {policy_id} not found")
-        
+
         policy = self.policies[policy_id]
-        
+
         # Apply updates
         for key, value in updates.items():
             if hasattr(policy, key):
                 setattr(policy, key, value)
-        
+
         policy.updated_at = datetime.now()
-        
+
         # Create new version
         self._create_policy_version(policy, change_description)
-        
+
         # Save to file
         self._save_policy(policy)
-        
+
         # Trigger update callbacks
         for callback in self.policy_update_callbacks:
             try:
                 callback(policy_id, updates)
             except Exception as e:
                 logger.error(f"Policy update callback failed: {e}")
-        
+
         logger.info(f"Policy updated: {policy_id}")
         return policy
-    
+
     def rollback_policy(self, policy_id: str, version_number: str) -> PolicyDefinition:
         """Rollback a policy to a specific version."""
         if policy_id not in self.policy_versions:
             raise ValueError(f"No versions found for policy {policy_id}")
-        
+
         versions = self.policy_versions[policy_id]
         target_version = None
-        
+
         for version in versions:
             if version.version_number == version_number:
                 target_version = version
                 break
-        
+
         if not target_version:
             raise ValueError(f"Version {version_number} not found for policy {policy_id}")
-        
+
         # Restore policy from version
         policy_data = target_version.content
         policy_data["policy_type"] = PolicyType(policy_data["policy_type"])
         policy_data["status"] = PolicyStatus(policy_data["status"])
-        
+
         # Recreate policy
         self.policies[policy_id] = self.create_policy(policy_data)
-        
+
         # Create rollback version
         self._create_policy_version(self.policies[policy_id], f"Rollback to version {version_number}")
-        
+
         logger.info(f"Policy rolled back: {policy_id} to version {version_number}")
         return self.policies[policy_id]
-    
+
     def get_policy_versions(self, policy_id: str) -> List[PolicyVersion]:
         """Get all versions of a policy."""
         return self.policy_versions.get(policy_id, [])
-    
+
     def add_policy_update_callback(self, callback: Callable[[str, Dict[str, Any]], None]):
         """Add a callback for policy updates."""
         self.policy_update_callbacks.append(callback)
-    
+
     def create_default_policies(self):
         """Create default advanced policies."""
-        
+
         # Advanced Access Control Policy
         advanced_access_policy = {
             "policy_id": "advanced_access_control",
@@ -708,7 +708,7 @@ class AdvancedPolicyEngine:
                 "tags": ["access_control", "time_based", "role_based"]
             }
         }
-        
+
         # Resource Management Policy
         resource_policy = {
             "policy_id": "advanced_resource_management",
@@ -763,7 +763,7 @@ class AdvancedPolicyEngine:
                 "tags": ["resource_management", "monitoring", "limits"]
             }
         }
-        
+
         # Composite Security Policy
         composite_security_policy = {
             "policy_id": "composite_security_policy",
@@ -823,20 +823,20 @@ class AdvancedPolicyEngine:
                 "tags": ["composite", "multi_factor", "audit"]
             }
         }
-        
+
         # Create policies
         self.create_policy(advanced_access_policy)
         self.create_policy(resource_policy)
         self.create_policy(composite_security_policy)
-        
+
         # Agent-specific policies
         self._create_agent_policies()
-        
+
         logger.info("Default advanced policies created")
-    
+
     def _create_agent_policies(self):
         """Create agent-specific policies."""
-        
+
         # Security Developer Policy
         security_approval_policy = {
             "policy_id": "security_approval",
@@ -868,7 +868,7 @@ class AdvancedPolicyEngine:
             "status": "active",
             "metadata": {"category": "security", "tags": ["security", "approval", "scan"]}
         }
-        
+
         # Fullstack Developer Policy
         fullstack_development_policy = {
             "policy_id": "fullstack_development",
@@ -902,7 +902,7 @@ class AdvancedPolicyEngine:
             "status": "active",
             "metadata": {"category": "development", "tags": ["fullstack", "testing", "coverage"]}
         }
-        
+
         # Frontend Developer Policy
         component_build_policy = {
             "policy_id": "component_build",
@@ -935,7 +935,7 @@ class AdvancedPolicyEngine:
             "status": "active",
             "metadata": {"category": "frontend", "tags": ["component", "accessibility", "responsive"]}
         }
-        
+
         # Backend Developer Policy
         api_change_policy = {
             "policy_id": "api_change",
@@ -968,7 +968,7 @@ class AdvancedPolicyEngine:
             "status": "active",
             "metadata": {"category": "backend", "tags": ["api", "versioning", "compatibility"]}
         }
-        
+
         # AI Developer Policy
         ai_development_policy = {
             "policy_id": "ai_development",
@@ -1002,7 +1002,7 @@ class AdvancedPolicyEngine:
             "status": "active",
             "metadata": {"category": "ai", "tags": ["ai", "safety", "bias", "privacy"]}
         }
-        
+
         # Accessibility Agent Policy
         accessibility_approval_policy = {
             "policy_id": "accessibility_approval",
@@ -1036,7 +1036,7 @@ class AdvancedPolicyEngine:
             "status": "active",
             "metadata": {"category": "accessibility", "tags": ["wcag", "accessibility", "compliance"]}
         }
-        
+
         # UX/UI Designer Policy
         design_approval_policy = {
             "policy_id": "design_approval",
@@ -1070,7 +1070,7 @@ class AdvancedPolicyEngine:
             "status": "active",
             "metadata": {"category": "design", "tags": ["design", "ux", "ui", "standards"]}
         }
-        
+
         # Scrum Master Policy
         sprint_review_policy = {
             "policy_id": "sprint_review",
@@ -1104,7 +1104,7 @@ class AdvancedPolicyEngine:
             "status": "active",
             "metadata": {"category": "agile", "tags": ["sprint", "review", "agile"]}
         }
-        
+
         # Strategy Partner Policy
         alignment_policy = {
             "policy_id": "alignment",
@@ -1138,7 +1138,7 @@ class AdvancedPolicyEngine:
             "status": "active",
             "metadata": {"category": "strategy", "tags": ["strategy", "alignment", "business"]}
         }
-        
+
         # R&D Policy
         experiment_policy = {
             "policy_id": "experiment",
@@ -1172,7 +1172,7 @@ class AdvancedPolicyEngine:
             "status": "active",
             "metadata": {"category": "rnd", "tags": ["experiment", "research", "innovation"]}
         }
-        
+
         # Create all agent policies
         policies = [
             security_approval_policy,
@@ -1186,7 +1186,7 @@ class AdvancedPolicyEngine:
             alignment_policy,
             experiment_policy
         ]
-        
+
         # Additional policies for agents that have policy engine but don't use it yet
         additional_policies = [
             # DevOps Infrastructure Policy
@@ -1222,7 +1222,7 @@ class AdvancedPolicyEngine:
                 "status": "active",
                 "metadata": {"category": "devops", "tags": ["deployment", "infrastructure", "approval"]}
             },
-            
+
             # Release Manager Policy
             {
                 "policy_id": "release_approval",
@@ -1256,7 +1256,7 @@ class AdvancedPolicyEngine:
                 "status": "active",
                 "metadata": {"category": "release", "tags": ["release", "approval", "deployment"]}
             },
-            
+
             # Test Engineer Policy
             {
                 "policy_id": "test_approval",
@@ -1290,7 +1290,7 @@ class AdvancedPolicyEngine:
                 "status": "active",
                 "metadata": {"category": "testing", "tags": ["test", "coverage", "approval"]}
             },
-            
+
             # Data Engineer Policy
             {
                 "policy_id": "data_access",
@@ -1324,7 +1324,7 @@ class AdvancedPolicyEngine:
                 "status": "active",
                 "metadata": {"category": "data", "tags": ["data", "security", "access"]}
             },
-            
+
             # Feedback Agent Policy
             {
                 "policy_id": "feedback_processing",
@@ -1358,7 +1358,7 @@ class AdvancedPolicyEngine:
                 "status": "active",
                 "metadata": {"category": "feedback", "tags": ["feedback", "analysis", "sentiment"]}
             },
-            
+
             # Mobile Developer Policy
             {
                 "policy_id": "mobile_approval",
@@ -1392,7 +1392,7 @@ class AdvancedPolicyEngine:
                 "status": "active",
                 "metadata": {"category": "mobile", "tags": ["mobile", "app", "approval"]}
             },
-            
+
             # Documentation Agent Policy
             {
                 "policy_id": "doc_approval",
@@ -1426,7 +1426,7 @@ class AdvancedPolicyEngine:
                 "status": "active",
                 "metadata": {"category": "documentation", "tags": ["documentation", "approval", "standards"]}
             },
-            
+
             # Retrospective Agent Policy
             {
                 "policy_id": "retro_approval",
@@ -1461,12 +1461,12 @@ class AdvancedPolicyEngine:
                 "metadata": {"category": "retrospective", "tags": ["retrospective", "approval", "improvement"]}
             }
         ]
-        
+
         all_policies = policies + additional_policies
-        
+
         for policy in all_policies:
             self.create_policy(policy)
-        
+
         logger.info(f"Created {len(all_policies)} agent-specific policies")
 
 # Global advanced policy engine instance
@@ -1478,4 +1478,4 @@ def get_advanced_policy_engine() -> AdvancedPolicyEngine:
     if _advanced_policy_engine is None:
         _advanced_policy_engine = AdvancedPolicyEngine()
         _advanced_policy_engine.create_default_policies()
-    return _advanced_policy_engine 
+    return _advanced_policy_engine

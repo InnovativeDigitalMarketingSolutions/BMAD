@@ -1,9 +1,11 @@
-import sys
 import os
+import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
+from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor
 from bmad.agents.core.communication.message_bus import publish, subscribe
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
-from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor
+
 
 class StrategiePartnerAgent:
     def __init__(self):

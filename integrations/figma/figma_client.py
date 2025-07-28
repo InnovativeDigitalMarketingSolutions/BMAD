@@ -1,11 +1,11 @@
+import logging
 import os
 import time
-import logging
-from typing import Dict, List, Optional, Any
-import requests
-from requests.adapters import HTTPAdapter, Retry
+from typing import Any, Dict, List, Optional
 
+import requests
 from dotenv import load_dotenv
+from requests.adapters import HTTPAdapter, Retry
 
 # Load .env if present (voor lokale ontwikkeling)
 load_dotenv()
@@ -56,7 +56,7 @@ class FigmaClient:
             return self._get_mock_response(endpoint, params)
 
         url = f"{FIGMA_API_URL}{endpoint}"
-        cache_key = f"{method}:{url}:{str(params)}"
+        cache_key = f"{method}:{url}:{params!s}"
         # Simple in-memory cache
         if cache_key in self.cache:
             logger.debug(f"Cache hit for {cache_key}")
@@ -90,7 +90,7 @@ class FigmaClient:
                 "name": "Demo User",
                 "profile_img_url": "https://via.placeholder.com/150",
             }
-        elif "/files/" in endpoint:
+        if "/files/" in endpoint:
             file_id = endpoint.split("/files/")[1]
             return {
                 "document": {
@@ -126,7 +126,7 @@ class FigmaClient:
                 "lastModified": "2025-01-27T10:00:00.000Z",
                 "thumbnailUrl": "https://via.placeholder.com/300x200",
             }
-        elif "/components" in endpoint:
+        if "/components" in endpoint:
             return {
                 "meta": {
                     "components": {
@@ -143,7 +143,7 @@ class FigmaClient:
                     }
                 }
             }
-        elif "/comments" in endpoint:
+        if "/comments" in endpoint:
             return {
                 "comments": [
                     {
@@ -154,8 +154,7 @@ class FigmaClient:
                     }
                 ]
             }
-        else:
-            return {"error": "Unknown endpoint in demo mode"}
+        return {"error": "Unknown endpoint in demo mode"}
 
     def get_file(self, file_id: str) -> dict:
         """Haalt de volledige Figma file op (inclusief pages, document tree, styles, enz.)"""
