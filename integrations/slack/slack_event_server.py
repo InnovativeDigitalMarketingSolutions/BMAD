@@ -1,12 +1,13 @@
-from flask import Flask, request, jsonify, make_response, abort
-import logging
-import time
-import os
-import requests
-import hmac
 import hashlib
+import hmac
 import json
+import logging
+import os
+import time
+
+import requests
 from dotenv import load_dotenv
+from flask import Flask, abort, jsonify, make_response, request
 
 from bmad.agents.core.message_bus import publish
 from bmad.agents.core.slack_notify import send_slack_message
@@ -30,8 +31,8 @@ def verify_slack_signature(request):
     if not SLACK_SIGNING_SECRET:
         logging.warning("[Slack] Geen SLACK_SIGNING_SECRET ingesteld!")
         return True  # Voor dev, in prod: return False
-    timestamp = request.headers.get('X-Slack-Request-Timestamp', '')
-    slack_signature = request.headers.get('X-Slack-Signature', '')
+    timestamp = request.headers.get("X-Slack-Request-Timestamp", "")
+    slack_signature = request.headers.get("X-Slack-Signature", "")
     if not timestamp or not slack_signature:
         return False
     # Voorkom replay attacks (optioneel: timestamp check)
@@ -40,8 +41,8 @@ def verify_slack_signature(request):
         return False
     # Genereer signature
     req_body = request.get_data(as_text=True)
-    basestring = f'v0:{timestamp}:{req_body}'
-    my_signature = 'v0=' + hmac.new(
+    basestring = f"v0:{timestamp}:{req_body}"
+    my_signature = "v0=" + hmac.new(
         SLACK_SIGNING_SECRET.encode(),
         basestring.encode(),
         hashlib.sha256
@@ -55,12 +56,12 @@ def verify_slack_signature(request):
 RECENT_EVENT_TS = set()
 
 # Haal deduplicatie op event_id uit slack_events()
-@app.route('/slack/events', methods=['POST'])
+@app.route("/slack/events", methods=["POST"])
 def slack_events():
     data = request.json
     # Slack URL verification vóór signature check
-    if data.get('type') == 'url_verification' or 'challenge' in data:
-        return jsonify({'challenge': data.get('challenge')})
+    if data.get("type") == "url_verification" or "challenge" in data:
+        return jsonify({"challenge": data.get("challenge")})
     if not verify_slack_signature(request):
         abort(401)
     logging.info(f"[Slack Event] Ontvangen: {data}")
@@ -68,7 +69,7 @@ def slack_events():
     event_type = event.get("type")
     if not event_type:
         logging.warning("Geen event type gevonden in payload.")
-        return '', 200
+        return "", 200
     # Event dispatcher
     if event_type == "message" or event_type == "app_mention":
         handle_message_event(event)
@@ -77,36 +78,36 @@ def slack_events():
     else:
         logging.info(f"Onbekend event type: {event_type}")
     forward_event_to_agents(event)
-    return '', 200
+    return "", 200
 
-@app.route('/slack/interactivity', methods=['POST'])
+@app.route("/slack/interactivity", methods=["POST"])
 def slack_interactivity():
     if not verify_slack_signature(request):
         abort(401)
-    payload = request.form.get('payload')
+    payload = request.form.get("payload")
     if not payload:
         return make_response("No payload", 400)
     data = json.loads(payload)
-    user = data.get('user', {}).get('id')
-    actions = data.get('actions', [])
-    channel = data.get('channel', {}).get('id')
-    response_url = data.get('response_url')
+    user = data.get("user", {}).get("id")
+    actions = data.get("actions", [])
+    channel = data.get("channel", {}).get("id")
+    response_url = data.get("response_url")
     if not actions:
         return make_response("No actions", 400)
     action = actions[0]
-    action_id = action.get('action_id')
-    value = action.get('value')
+    action_id = action.get("action_id")
+    value = action.get("value")
     # HITL acties verwerken
-    if action_id in ('hitl_approve', 'hitl_reject'):
-        approved = action_id == 'hitl_approve'
-        alert_id = value.split('_', 1)[-1] if value else None
+    if action_id in ("hitl_approve", "hitl_reject"):
+        approved = action_id == "hitl_approve"
+        alert_id = value.split("_", 1)[-1] if value else None
         logging.info(f"[HITL] User {user} {'keurde goed' if approved else 'wees af'} alert {alert_id}")
         # Publiceer event op message bus
-        publish('hitl_decision', {
-            'alert_id': alert_id,
-            'approved': approved,
-            'user': user,
-            'channel': channel
+        publish("hitl_decision", {
+            "alert_id": alert_id,
+            "approved": approved,
+            "user": user,
+            "channel": channel
         })
         # Stuur bevestiging terug naar Slack
         msg = f"{'✅ Actie goedgekeurd' if approved else '❌ Actie afgewezen'} door <@{user}>."
@@ -154,7 +155,7 @@ def handle_message_event(event):
             })
             send_slack_message(f"Commando ontvangen voor agent '{agent_name}': {command}", channel, use_api=True)
             return
-        elif mention_match:
+        if mention_match:
             # Optioneel: lookup Slack user ID naar agentnaam
             mentioned_id = mention_match.group(1)
             command = mention_match.group(2)
@@ -184,7 +185,6 @@ def forward_event_to_agents(event):
     # Stub: hier kun je events doorsturen naar andere agenten of message bus
     logging.info(f"[Router] Event doorsturen naar andere agenten: {event}")
     # Voorbeeld: message_bus.publish('slack_event', event)
-    pass
 
 
 def send_message_to_slack(channel, text):
@@ -204,8 +204,8 @@ def send_message_to_slack(channel, text):
     else:
         logging.error(f"[Slack] Fout bij versturen bericht: {response.text}")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     print("Start Slack event server op http://localhost:5000/slack/events")
     print("Gebruik ngrok om deze endpoint publiek te maken:")
     print("  ngrok http 5000")
-    app.run(host="0.0.0.0", port=5000) 
+    app.run(host="0.0.0.0", port=5000)

@@ -5,13 +5,15 @@ Dit module biedt multi-LLM routing en provider integratie via OpenRouter.
 Ondersteunt GPT, Claude, Gemini en andere LLM providers met automatische fallback en load balancing.
 """
 
+import json
 import logging
 import time
-import json
-from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
 from openai import AsyncOpenAI
+
 from bmad.agents.core.ai.confidence_scoring import confidence_scoring
 
 logger = logging.getLogger(__name__)
@@ -69,7 +71,7 @@ class OpenRouterClient:
     """
     Multi-LLM client met routing, fallback en load balancing via OpenRouter.
     """
-    
+
     def __init__(self, api_key: str, base_url: str = "https://openrouter.ai/api/v1"):
         self.api_key = api_key
         self.base_url = base_url
@@ -78,19 +80,19 @@ class OpenRouterClient:
             base_url=base_url
         )
         self.http_session = None
-        
+
         # Provider configurations
         self.provider_configs = self._initialize_provider_configs()
-        
+
         # Load balancing state
         self.provider_stats = {}
         self.response_history = []
-        
+
         # Routing strategies
         self.routing_strategies = self._initialize_routing_strategies()
-        
+
         logger.info("OpenRouter client geïnitialiseerd")
-    
+
     def _initialize_provider_configs(self) -> Dict[LLMProvider, List[LLMConfig]]:
         """Initialize default provider configurations."""
         configs = {
@@ -116,7 +118,7 @@ class OpenRouterClient:
             ],
         }
         return configs
-    
+
     def _initialize_routing_strategies(self) -> Dict[str, RoutingStrategy]:
         """Initialize default routing strategies."""
         strategies = {
@@ -149,7 +151,7 @@ class OpenRouterClient:
             ),
         }
         return strategies
-    
+
     async def generate_response(
         self,
         prompt: str,
@@ -170,47 +172,47 @@ class OpenRouterClient:
             LLMResponse with content and metadata
         """
         start_time = time.time()
-        
+
         if strategy_name not in self.routing_strategies:
             raise ValueError(f"Unknown routing strategy: {strategy_name}")
-        
+
         strategy = self.routing_strategies[strategy_name]
-        
+
         # Use custom config if provided, otherwise use strategy config
         config = custom_config or strategy.primary_config
-        
+
         # Try primary config first
         try:
             response = await self._call_llm(config, prompt, context)
             response.confidence_score = await self._calculate_confidence(response, prompt)
-            
+
             # Update provider stats
             self._update_provider_stats(config.provider, response)
-            
+
             return response
-            
+
         except Exception as e:
             logger.warning(f"Primary LLM failed: {e}")
-            
+
             # Try fallback configs
             for fallback_config in strategy.fallback_configs:
                 try:
                     response = await self._call_llm(fallback_config, prompt, context)
                     response.confidence_score = await self._calculate_confidence(response, prompt)
-                    
+
                     # Update provider stats
                     self._update_provider_stats(fallback_config.provider, response)
-                    
+
                     logger.info(f"Used fallback LLM: {fallback_config.provider.value}/{fallback_config.model}")
                     return response
-                    
+
                 except Exception as fallback_error:
                     logger.warning(f"Fallback LLM failed: {fallback_error}")
                     continue
-            
+
             # All configs failed
             raise Exception(f"All LLM providers failed for strategy: {strategy_name}")
-    
+
     async def _call_llm(
         self,
         config: LLMConfig,
@@ -219,15 +221,15 @@ class OpenRouterClient:
     ) -> LLMResponse:
         """Make a call to the LLM provider."""
         start_time = time.time()
-        
+
         # Prepare messages
         messages = [{"role": "user", "content": prompt}]
-        
+
         # Add context if provided
         if context:
             context_message = f"\n\nContext: {json.dumps(context, indent=2)}"
             messages[0]["content"] += context_message
-        
+
         try:
             # Make the API call using OpenAI client
             response = await self.client.chat.completions.create(
@@ -240,15 +242,15 @@ class OpenRouterClient:
                 presence_penalty=config.presence_penalty,
                 timeout=config.timeout,
             )
-            
+
             end_time = time.time()
             latency = end_time - start_time
-            
+
             # Extract response data
             content = response.choices[0].message.content
             tokens_used = response.usage.total_tokens
             cost = self._calculate_cost(config.provider, config.model, tokens_used)
-            
+
             return LLMResponse(
                 content=content,
                 model=config.model,
@@ -267,11 +269,11 @@ class OpenRouterClient:
                     }
                 }
             )
-            
+
         except Exception as e:
             logger.error(f"LLM call failed: {e}")
             raise
-    
+
     def _calculate_cost(self, provider: LLMProvider, model: str, tokens: int) -> float:
         """Calculate the cost of the API call."""
         # Simplified cost calculation - in production, use actual pricing
@@ -297,10 +299,10 @@ class OpenRouterClient:
                 "mistral-small": 0.0002,
             },
         }
-        
+
         cost_per_1k = base_costs.get(provider, {}).get(model, 0.001)
         return (tokens / 1000) * cost_per_1k
-    
+
     async def _calculate_confidence(self, response: LLMResponse, original_prompt: str) -> float:
         """Calculate confidence score for the response."""
         try:
@@ -316,7 +318,7 @@ class OpenRouterClient:
         except Exception as e:
             logger.warning(f"Confidence calculation failed: {e}")
             return 0.5  # Default confidence
-    
+
     def _update_provider_stats(self, provider: LLMProvider, response: LLMResponse):
         """Update provider statistics for load balancing."""
         if provider.value not in self.provider_stats:
@@ -328,14 +330,14 @@ class OpenRouterClient:
                 "success_rate": 1.0,
                 "last_used": time.time(),
             }
-        
+
         stats = self.provider_stats[provider.value]
         stats["total_calls"] += 1
         stats["total_tokens"] += response.tokens_used
         stats["total_cost"] += response.cost
         stats["avg_latency"] = (stats["avg_latency"] * (stats["total_calls"] - 1) + response.latency) / stats["total_calls"]
         stats["last_used"] = time.time()
-        
+
         # Store response in history
         self.response_history.append({
             "provider": provider.value,
@@ -346,23 +348,23 @@ class OpenRouterClient:
             "confidence": response.confidence_score,
             "timestamp": time.time(),
         })
-        
+
         # Keep only last 1000 responses
         if len(self.response_history) > 1000:
             self.response_history = self.response_history[-1000:]
-    
+
     def get_provider_stats(self) -> Dict[str, Any]:
         """Get current provider statistics."""
         return self.provider_stats
-    
+
     def get_cost_analysis(self, days: int = 7) -> Dict[str, Any]:
         """Get cost analysis for the specified period."""
         cutoff_time = time.time() - (days * 24 * 60 * 60)
         recent_responses = [r for r in self.response_history if r["timestamp"] > cutoff_time]
-        
+
         total_cost = sum(r["cost"] for r in recent_responses)
         total_tokens = sum(r["tokens"] for r in recent_responses)
-        
+
         provider_costs = {}
         for response in recent_responses:
             provider = response["provider"]
@@ -371,7 +373,7 @@ class OpenRouterClient:
             provider_costs[provider]["cost"] += response["cost"]
             provider_costs[provider]["tokens"] += response["tokens"]
             provider_costs[provider]["calls"] += 1
-        
+
         return {
             "period_days": days,
             "total_cost": total_cost,
@@ -379,12 +381,12 @@ class OpenRouterClient:
             "provider_breakdown": provider_costs,
             "avg_cost_per_call": total_cost / len(recent_responses) if recent_responses else 0,
         }
-    
+
     def add_routing_strategy(self, name: str, strategy: RoutingStrategy):
         """Add a custom routing strategy."""
         self.routing_strategies[name] = strategy
         logger.info(f"Routing strategy '{name}' toegevoegd")
-    
+
     def get_available_models(self) -> Dict[LLMProvider, List[str]]:
         """Get list of available models per provider."""
         models = {}
@@ -395,4 +397,4 @@ class OpenRouterClient:
 # Factory function
 def create_openrouter_client(api_key: str, base_url: str = "https://openrouter.ai/api/v1") -> OpenRouterClient:
     """Create a new OpenRouter client instance."""
-    return OpenRouterClient(api_key, base_url) 
+    return OpenRouterClient(api_key, base_url)

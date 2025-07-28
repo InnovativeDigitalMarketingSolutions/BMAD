@@ -1,7 +1,7 @@
 # API Endpoint Snippet (FastAPI)
 
-from fastapi import APIRouter, HTTPException
 from app.models import UserLogin
+from fastapi import APIRouter, HTTPException
 
 router = APIRouter()
 

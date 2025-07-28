@@ -1,1 +1,1 @@
-# BMAD Agents package 
+# BMAD Agents package

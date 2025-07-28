@@ -1,21 +1,25 @@
-import sys
 import os
+import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import argparse
-import logging
+import asyncio
 import json
+import logging
+import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, Any
-import asyncio
-import time
+from typing import Any, Dict, Optional
 
-from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.agent.agent_performance_monitor import (
+    MetricType,
+    get_performance_monitor,
+)
 from bmad.agents.core.agent.test_sprites import get_sprite_library
-from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor, MetricType
-from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
-from bmad.agents.core.data.supabase_context import save_context, get_context
 from bmad.agents.core.ai.llm_client import ask_openai
+from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.data.supabase_context import get_context, save_context
+from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.slack.slack_notify import send_slack_message
 
 # Configure logging
@@ -28,7 +32,7 @@ class SecurityDeveloperAgent:
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
-        
+
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
         self.template_paths = {
@@ -44,7 +48,7 @@ class SecurityDeveloperAgent:
             "scan-history": self.resource_base / "data/securitydeveloper/scan-history.md",
             "incident-history": self.resource_base / "data/securitydeveloper/incident-history.md"
         }
-        
+
         # Initialize histories
         self.scan_history = []
         self.incident_history = []
@@ -54,11 +58,11 @@ class SecurityDeveloperAgent:
     def _load_scan_history(self):
         try:
             if self.data_paths["scan-history"].exists():
-                with open(self.data_paths["scan-history"], 'r') as f:
+                with open(self.data_paths["scan-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.scan_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load scan history: {e}")
@@ -66,21 +70,20 @@ class SecurityDeveloperAgent:
     def _save_scan_history(self):
         try:
             self.data_paths["scan-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["scan-history"], 'w') as f:
+            with open(self.data_paths["scan-history"], "w") as f:
                 f.write("# Security Scan History\n\n")
-                for scan in self.scan_history[-50:]:
-                    f.write(f"- {scan}\n")
+                f.writelines(f"- {scan}\n" for scan in self.scan_history[-50:])
         except Exception as e:
             logger.error(f"Could not save scan history: {e}")
 
     def _load_incident_history(self):
         try:
             if self.data_paths["incident-history"].exists():
-                with open(self.data_paths["incident-history"], 'r') as f:
+                with open(self.data_paths["incident-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.incident_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load incident history: {e}")
@@ -88,10 +91,9 @@ class SecurityDeveloperAgent:
     def _save_incident_history(self):
         try:
             self.data_paths["incident-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["incident-history"], 'w') as f:
+            with open(self.data_paths["incident-history"], "w") as f:
                 f.write("# Security Incident History\n\n")
-                for incident in self.incident_history[-50:]:
-                    f.write(f"- {incident}\n")
+                f.writelines(f"- {incident}\n" for incident in self.incident_history[-50:])
         except Exception as e:
             logger.error(f"Could not save incident history: {e}")
 
@@ -129,7 +131,7 @@ SecurityDeveloper Agent Commands:
                 print(f"Unknown resource type: {resource_type}")
                 return
             if path.exists():
-                with open(path, 'r') as f:
+                with open(path) as f:
                     print(f.read())
             else:
                 print(f"Resource file not found: {path}")
@@ -157,10 +159,10 @@ SecurityDeveloper Agent Commands:
     def run_security_scan(self, target: str = "application") -> Dict[str, Any]:
         """Run comprehensive security scan on target."""
         logger.info(f"Running security scan on: {target}")
-        
+
         # Simulate security scan
         time.sleep(2)
-        
+
         scan_result = {
             "target": target,
             "scan_type": "comprehensive",
@@ -185,22 +187,22 @@ SecurityDeveloper Agent Commands:
             ],
             "agent": "SecurityDeveloperAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("SecurityDeveloper", MetricType.SUCCESS_RATE, scan_result["security_score"], "%")
-        
+
         # Add to scan history
         scan_entry = f"{datetime.now().isoformat()}: Security scan completed on {target} with {scan_result['security_score']}% security score"
         self.scan_history.append(scan_entry)
         self._save_scan_history()
-        
+
         logger.info(f"Security scan completed: {scan_result}")
         return scan_result
 
     def vulnerability_assessment(self, component: str = "API") -> Dict[str, Any]:
         """Perform detailed vulnerability assessment."""
         logger.info(f"Performing vulnerability assessment on: {component}")
-        
+
         assessment = {
             "component": component,
             "assessment_type": "detailed",
@@ -230,17 +232,17 @@ SecurityDeveloper Agent Commands:
             ],
             "agent": "SecurityDeveloperAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("SecurityDeveloper", MetricType.SUCCESS_RATE, 85, "%")
-        
+
         logger.info(f"Vulnerability assessment completed: {assessment}")
         return assessment
 
     def compliance_check(self, framework: str = "OWASP") -> Dict[str, Any]:
         """Check compliance with security frameworks."""
         logger.info(f"Checking compliance with: {framework}")
-        
+
         compliance_result = {
             "framework": framework,
             "check_date": datetime.now().isoformat(),
@@ -264,10 +266,10 @@ SecurityDeveloper Agent Commands:
             ],
             "agent": "SecurityDeveloperAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("SecurityDeveloper", MetricType.SUCCESS_RATE, 85, "%")
-        
+
         logger.info(f"Compliance check completed: {compliance_result}")
         return compliance_result
 
@@ -284,7 +286,7 @@ SecurityDeveloper Agent Commands:
                 "timestamp": datetime.now().isoformat(),
                 "agent": "SecurityDeveloperAgent"
             }
-        
+
         try:
             if format_type == "md":
                 self._export_markdown(report_data)
@@ -297,7 +299,7 @@ SecurityDeveloper Agent Commands:
 
     def _export_markdown(self, report_data: Dict):
         output_file = f"security_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-        
+
         content = f"""# Security Assessment Report
 
 ## Summary
@@ -322,31 +324,31 @@ SecurityDeveloper Agent Commands:
 4. Enable security headers
 5. Conduct regular security audits
 """
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             f.write(content)
         print(f"Report export saved to: {output_file}")
 
     def _export_json(self, report_data: Dict):
         output_file = f"security_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             json.dump(report_data, f, indent=2)
-        
+
         print(f"Report export saved to: {output_file}")
 
     def test_resource_completeness(self):
         print("Testing resource completeness...")
         missing_resources = []
-        
+
         for name, path in self.template_paths.items():
             if not path.exists():
                 missing_resources.append(f"Template: {name} ({path})")
-        
+
         for name, path in self.data_paths.items():
             if not path.exists():
                 missing_resources.append(f"Data: {name} ({path})")
-        
+
         if missing_resources:
             print("Missing resources:")
             for resource in missing_resources:
@@ -357,37 +359,37 @@ SecurityDeveloper Agent Commands:
     def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         logger.info("Starting security collaboration example...")
-        
+
         # Publish security scan request
         publish("security_scan_requested", {
             "agent": "SecurityDeveloperAgent",
             "target": "BMAD Application",
             "timestamp": datetime.now().isoformat()
         })
-        
+
         # Run security scan
         scan_result = self.run_security_scan("BMAD Application")
-        
+
         # Perform vulnerability assessment
         self.vulnerability_assessment("API")
-        
+
         # Publish completion
         publish("security_scan_completed", {
-            "status": "success", 
+            "status": "success",
             "agent": "SecurityDeveloperAgent",
             "security_score": scan_result["security_score"],
             "vulnerabilities_found": len(scan_result["vulnerabilities"])
         })
-        
+
         # Save context
         save_context("SecurityDeveloper", {"security_status": "scanned"})
-        
+
         # Notify via Slack
         try:
             send_slack_message(f"Security scan completed with {scan_result['security_score']}% security score")
         except Exception as e:
             logger.warning(f"Could not send Slack notification: {e}")
-        
+
         print("Event gepubliceerd en context opgeslagen.")
         context = get_context("SecurityDeveloper")
         print(f"Opgehaalde context: {context}")
@@ -399,7 +401,7 @@ SecurityDeveloper Agent Commands:
 
     async def handle_security_scan_completed(self, event):
         logger.info(f"Security scan completed: {event}")
-        
+
         # Evaluate policy
         try:
             allowed = await self.policy_engine.evaluate_policy("security_approval", event)
@@ -410,10 +412,10 @@ SecurityDeveloper Agent Commands:
     def run(self):
         def sync_handler(event):
             asyncio.run(self.handle_security_scan_completed(event))
-        
+
         subscribe("security_scan_completed", sync_handler)
         subscribe("security_scan_requested", self.handle_security_scan_requested)
-        
+
         logger.info("SecurityDeveloperAgent ready and listening for events...")
         self.collaborate_example()
 
@@ -425,30 +427,30 @@ SecurityDeveloper Agent Commands:
         prompt = f"Geef een security review van de volgende code/config:\n{code_snippet}"
         result = ask_openai(prompt)
         logging.info(f"[SecurityDeveloper][LLM Security Review]: {result}")
-        
+
         # Add to incident history
         incident_entry = f"{datetime.now().isoformat()}: Security review completed - {code_snippet[:50]}..."
         self.incident_history.append(incident_entry)
         self._save_incident_history()
-        
+
         # Log performance metric
         self.monitor._record_metric("SecurityDeveloper", MetricType.SUCCESS_RATE, 92, "%")
-        
+
         return result
 
     def summarize_incidents(self, incident_list):
         prompt = "Vat de volgende security-incidenten samen in maximaal 3 bullets:\n" + "\n".join(incident_list)
         result = ask_openai(prompt)
         logging.info(f"[SecurityDeveloper][LLM Incident-samenvatting]: {result}")
-        
+
         # Add to incident history
         summary_entry = f"{datetime.now().isoformat()}: Incident summary generated for {len(incident_list)} incidents"
         self.incident_history.append(summary_entry)
         self._save_incident_history()
-        
+
         # Log performance metric
         self.monitor._record_metric("SecurityDeveloper", MetricType.SUCCESS_RATE, 88, "%")
-        
+
         return result
 
     def on_security_review_requested(self, event):
@@ -468,11 +470,10 @@ SecurityDeveloper Agent Commands:
     def handle_security_findings_reported(self, event):
         logging.info("[SecurityDeveloper] Wacht op HITL-review...")
         # HITL wordt afgehandeld door orchestrator
-        pass
 
 def main():
     parser = argparse.ArgumentParser(description="SecurityDeveloper Agent CLI")
-    parser.add_argument("command", nargs="?", default="help", 
+    parser.add_argument("command", nargs="?", default="help",
                        choices=["help", "security-review", "summarize-incidents", "run-security-scan",
                                "vulnerability-assessment", "compliance-check", "incident-report",
                                "show-scan-history", "show-incident-history", "show-best-practices",
@@ -483,11 +484,11 @@ def main():
     parser.add_argument("--target", default="application", help="Target for security scan")
     parser.add_argument("--component", default="API", help="Component for vulnerability assessment")
     parser.add_argument("--framework", default="OWASP", help="Framework for compliance check")
-    
+
     args = parser.parse_args()
-    
+
     agent = SecurityDeveloperAgent()
-    
+
     if args.command == "help":
         agent.show_help()
     elif args.command == "security-review":
@@ -535,5 +536,5 @@ if __name__ == "__main__":
     subscribe("summarize_incidents", agent.on_summarize_incidents)
     subscribe("security_scan_started", agent.handle_security_scan_started)
     subscribe("security_findings_reported", agent.handle_security_findings_reported)
-    
+
     main()

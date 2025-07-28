@@ -1,12 +1,13 @@
-from flask import Flask, request, jsonify, send_from_directory, redirect
-import sys
 import os
+import sys
+
+from flask import Flask, jsonify, redirect, request, send_from_directory
 
 # Add the project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from bmad.agents.Agent.Orchestrator.orchestrator import OrchestratorAgent, METRICS
-from bmad.agents.core.supabase_context import save_context, get_context
+from bmad.agents.Agent.Orchestrator.orchestrator import METRICS, OrchestratorAgent
+from bmad.agents.core.supabase_context import get_context, save_context
 
 app = Flask(__name__)
 
@@ -68,17 +69,17 @@ def test_ping():
 def test_echo():
     return jsonify(request.json or {})
 
-@app.route('/swagger-ui/<path:filename>')
+@app.route("/swagger-ui/<path:filename>")
 def swagger_ui_static(filename):
-    return send_from_directory('swagger-ui', filename)
+    return send_from_directory("swagger-ui", filename)
 
-@app.route('/openapi.yaml')
+@app.route("/openapi.yaml")
 def openapi_spec():
-    return send_from_directory('swagger-ui', 'openapi.yaml')
+    return send_from_directory("swagger-ui", "openapi.yaml")
 
-@app.route('/swagger')
+@app.route("/swagger")
 def swagger_redirect():
-    return redirect('/swagger-ui/index.html')
+    return redirect("/swagger-ui/index.html")
 
 if __name__ == "__main__":
-    app.run(port=5001, debug=False) 
+    app.run(port=5001, debug=False)

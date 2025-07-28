@@ -1,11 +1,13 @@
+import logging
 import os
 import time
-import logging
 from typing import Dict, List
+
+from dotenv import load_dotenv
+
+from bmad.agents.core.communication.message_bus import subscribe
 from integrations.figma.figma_client import FigmaClient
 from integrations.slack.slack_notify import send_slack_message
-from bmad.agents.core.communication.message_bus import subscribe
-from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -35,7 +37,7 @@ class FigmaSlackNotifier:
                 self._check_new_comments(file_id)
 
         except Exception as e:
-            logging.error(f"[FigmaSlackNotifier] Error monitoring files: {str(e)}")
+            logging.exception(f"[FigmaSlackNotifier] Error monitoring files: {e!s}")
 
     def _check_file_updates(self, file_id: str):
         """Check voor file updates en stuur notificatie."""
@@ -53,7 +55,7 @@ class FigmaSlackNotifier:
             self.last_file_versions[file_id] = current_version
 
         except Exception as e:
-            logging.error(f"[FigmaSlackNotifier] Error checking file updates for {file_id}: {str(e)}")
+            logging.exception(f"[FigmaSlackNotifier] Error checking file updates for {file_id}: {e!s}")
 
     def _check_new_comments(self, file_id: str):
         """Check voor nieuwe comments en stuur notificatie."""
@@ -76,7 +78,7 @@ class FigmaSlackNotifier:
                 self.last_comment_timestamps[file_id] = latest_time
 
         except Exception as e:
-            logging.error(f"[FigmaSlackNotifier] Error checking comments for {file_id}: {str(e)}")
+            logging.exception(f"[FigmaSlackNotifier] Error checking comments for {file_id}: {e!s}")
 
     def _send_file_update_notification(self, file_id: str, file_name: str, old_version: str, new_version: str):
         """Stuur notificatie voor file update."""
@@ -268,7 +270,7 @@ def start_figma_monitoring():
             logging.info("[FigmaSlackNotifier] Monitoring gestopt")
             break
         except Exception as e:
-            logging.error(f"[FigmaSlackNotifier] Error in monitoring loop: {str(e)}")
+            logging.exception(f"[FigmaSlackNotifier] Error in monitoring loop: {e!s}")
             time.sleep(60)  # Wacht 1 minuut bij error
 
 

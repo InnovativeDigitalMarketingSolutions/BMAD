@@ -17,17 +17,19 @@ Commands:
     help                     - Toon deze help
 """
 
-import sys
 import logging
+import sys
 from pathlib import Path
 
 # Add BMAD to path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from bmad.agents.core.figma_client import FigmaClient
-from bmad.agents.Agent.FrontendDeveloper.frontenddeveloper import generate_components_from_figma
-from bmad.agents.Agent.UXUIDesigner.uxuidesigner import analyze_figma_design
 from bmad.agents.Agent.DocumentationAgent.documentationagent import document_figma_ui
+from bmad.agents.Agent.FrontendDeveloper.frontenddeveloper import (
+    generate_components_from_figma,
+)
+from bmad.agents.Agent.UXUIDesigner.uxuidesigner import analyze_figma_design
+from bmad.agents.core.figma_client import FigmaClient
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
@@ -67,7 +69,7 @@ def test_figma_connection(file_id: str):
         return True
 
     except Exception as e:
-        print(f"❌ Figma API connection failed: {str(e)}")
+        print(f"❌ Figma API connection failed: {e!s}")
         return False
 
 
@@ -92,7 +94,7 @@ def generate_components(file_id: str, output_dir: str = "components"):
         return True
 
     except Exception as e:
-        print(f"❌ Error generating components: {str(e)}")
+        print(f"❌ Error generating components: {e!s}")
         return False
 
 
@@ -129,7 +131,7 @@ def analyze_design(file_id: str):
         return True
 
     except Exception as e:
-        print(f"❌ Error analyzing design: {str(e)}")
+        print(f"❌ Error analyzing design: {e!s}")
         return False
 
 
@@ -166,7 +168,7 @@ def generate_documentation(file_id: str, output_file: str = None):
         return True
 
     except Exception as e:
-        print(f"❌ Error generating documentation: {str(e)}")
+        print(f"❌ Error generating documentation: {e!s}")
         return False
 
 
@@ -199,13 +201,13 @@ def start_monitoring(file_id: str):
                 print("\n🛑 Monitoring stopped")
                 break
             except Exception as e:
-                print(f"⚠️  Monitoring error: {str(e)}")
+                print(f"⚠️  Monitoring error: {e!s}")
                 time.sleep(30)
 
         return True
 
     except Exception as e:
-        print(f"❌ Error starting monitoring: {str(e)}")
+        print(f"❌ Error starting monitoring: {e!s}")
         return False
 
 

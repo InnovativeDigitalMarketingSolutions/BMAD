@@ -4,9 +4,9 @@ BMAD (Business Multi-Agent DevOps) Launcher
 Centrale launcher voor alle BMAD agents
 """
 
-import sys
-import subprocess
 import argparse
+import subprocess
+import sys
 from pathlib import Path
 
 # Agent directory
@@ -40,7 +40,7 @@ def show_help():
     print("=" * 50)
     print("\nBeschikbare agents:")
     for agent_id, agent_path in AVAILABLE_AGENTS.items():
-        agent_name = agent_path.split('/')[0]
+        agent_name = agent_path.split("/")[0]
         print(f"  {agent_id:15} -> {agent_name}")
     print("\nGebruik:")
     print("  python3 bmad.py <agent> <command> [args...]")
@@ -62,7 +62,7 @@ def run_agent(agent_id, *args):
         return 1
     try:
         cmd = [sys.executable, str(agent_path)] + list(args)
-        result = subprocess.run(cmd, cwd=agent_path.parent)
+        result = subprocess.run(cmd, check=False, cwd=agent_path.parent)
         return result.returncode
     except Exception as e:
         print(f"❌ Fout bij uitvoeren van agent: {e}")

@@ -1,23 +1,27 @@
-import sys
 import os
+import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import argparse
-import logging
+import asyncio
 import json
+import logging
+import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional, Any
-import asyncio
-import time
+from typing import Any, Dict, List, Optional
 
-from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.agent.agent_performance_monitor import (
+    MetricType,
+    get_performance_monitor,
+)
 from bmad.agents.core.agent.test_sprites import get_sprite_library
-from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor, MetricType
-from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
-from bmad.agents.core.data.supabase_context import save_context, get_context
 from bmad.agents.core.ai.llm_client import ask_openai
-from integrations.slack.slack_notify import send_slack_message
+from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.data.supabase_context import get_context, save_context
+from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.figma.figma_client import FigmaClient
+from integrations.slack.slack_notify import send_slack_message
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
@@ -29,7 +33,7 @@ class UXUIDesignerAgent:
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
-        
+
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
         self.template_paths = {
@@ -47,7 +51,7 @@ class UXUIDesignerAgent:
             "design-history": self.resource_base / "data/uxuidesigner/design-history.md",
             "feedback-history": self.resource_base / "data/uxuidesigner/feedback-history.md"
         }
-        
+
         # Initialize histories
         self.design_history = []
         self.feedback_history = []
@@ -57,10 +61,10 @@ class UXUIDesignerAgent:
     def create_mobile_ux_design(self, platform: str = "iOS", app_type: str = "native") -> Dict[str, Any]:
         """Create comprehensive mobile UX design for specified platform."""
         logger.info(f"Creating mobile UX design for {platform} - {app_type}")
-        
+
         # Simulate mobile UX design creation
         time.sleep(1)
-        
+
         mobile_ux_result = {
             "design_id": f"mobile_ux_{platform}_{app_type}_{int(time.time())}",
             "platform": platform,
@@ -129,25 +133,25 @@ class UXUIDesignerAgent:
             "timestamp": datetime.now().isoformat(),
             "agent": "UXUIDesigner"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("UXUIDesigner", MetricType.SUCCESS_RATE, 95, "%")
-        
+
         # Add to design history
         design_entry = f"{datetime.now().isoformat()}: Mobile UX design created - {platform} {app_type}"
         self.design_history.append(design_entry)
         self._save_design_history()
-        
+
         logger.info(f"Mobile UX design created: {mobile_ux_result}")
         return mobile_ux_result
 
     def design_mobile_component(self, component_name: str = "Button", platform: str = "iOS") -> Dict[str, Any]:
         """Design mobile-specific component for specified platform."""
         logger.info(f"Designing mobile component: {component_name} for {platform}")
-        
+
         # Simulate mobile component design
         time.sleep(1)
-        
+
         mobile_component_result = {
             "component_id": f"mobile_{component_name}_{platform}_{int(time.time())}",
             "component_name": component_name,
@@ -212,25 +216,25 @@ class UXUIDesignerAgent:
             "timestamp": datetime.now().isoformat(),
             "agent": "UXUIDesigner"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("UXUIDesigner", MetricType.SUCCESS_RATE, 94, "%")
-        
+
         # Add to design history
         design_entry = f"{datetime.now().isoformat()}: Mobile component designed - {component_name} for {platform}"
         self.design_history.append(design_entry)
         self._save_design_history()
-        
+
         logger.info(f"Mobile component designed: {mobile_component_result}")
         return mobile_component_result
 
     def create_mobile_user_flow(self, flow_name: str = "Onboarding", platform: str = "iOS") -> Dict[str, Any]:
         """Create mobile user flow design for specified platform."""
         logger.info(f"Creating mobile user flow: {flow_name} for {platform}")
-        
+
         # Simulate mobile user flow creation
         time.sleep(1)
-        
+
         mobile_flow_result = {
             "flow_id": f"mobile_flow_{flow_name}_{platform}_{int(time.time())}",
             "flow_name": flow_name,
@@ -286,26 +290,26 @@ class UXUIDesignerAgent:
             "timestamp": datetime.now().isoformat(),
             "agent": "UXUIDesigner"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("UXUIDesigner", MetricType.SUCCESS_RATE, 93, "%")
-        
+
         # Add to design history
         design_entry = f"{datetime.now().isoformat()}: Mobile user flow created - {flow_name} for {platform}"
         self.design_history.append(design_entry)
         self._save_design_history()
-        
+
         logger.info(f"Mobile user flow created: {mobile_flow_result}")
         return mobile_flow_result
 
     def _load_design_history(self):
         try:
             if self.data_paths["design-history"].exists():
-                with open(self.data_paths["design-history"], 'r') as f:
+                with open(self.data_paths["design-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.design_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load design history: {e}")
@@ -313,21 +317,20 @@ class UXUIDesignerAgent:
     def _save_design_history(self):
         try:
             self.data_paths["design-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["design-history"], 'w') as f:
+            with open(self.data_paths["design-history"], "w") as f:
                 f.write("# Design History\n\n")
-                for design in self.design_history[-50:]:
-                    f.write(f"- {design}\n")
+                f.writelines(f"- {design}\n" for design in self.design_history[-50:])
         except Exception as e:
             logger.error(f"Could not save design history: {e}")
 
     def _load_feedback_history(self):
         try:
             if self.data_paths["feedback-history"].exists():
-                with open(self.data_paths["feedback-history"], 'r') as f:
+                with open(self.data_paths["feedback-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.feedback_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load feedback history: {e}")
@@ -335,10 +338,9 @@ class UXUIDesignerAgent:
     def _save_feedback_history(self):
         try:
             self.data_paths["feedback-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["feedback-history"], 'w') as f:
+            with open(self.data_paths["feedback-history"], "w") as f:
                 f.write("# Feedback History\n\n")
-                for feedback in self.feedback_history[-50:]:
-                    f.write(f"- {feedback}\n")
+                f.writelines(f"- {feedback}\n" for feedback in self.feedback_history[-50:])
         except Exception as e:
             logger.error(f"Could not save feedback history: {e}")
 
@@ -382,7 +384,7 @@ UXUIDesigner Agent Commands:
                 print(f"Unknown resource type: {resource_type}")
                 return
             if path.exists():
-                with open(path, 'r') as f:
+                with open(path) as f:
                     print(f.read())
             else:
                 print(f"Resource file not found: {path}")
@@ -410,7 +412,7 @@ UXUIDesigner Agent Commands:
     def build_shadcn_component(self, component_name: str = "Button") -> Dict[str, Any]:
         """Build a Shadcn/ui component with design tokens and accessibility focus."""
         logger.info(f"Building Shadcn component: {component_name}")
-        
+
         # Simulate Shadcn component build with design tokens
         time.sleep(1)
         result = {
@@ -455,23 +457,23 @@ UXUIDesigner Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "UXUIDesignerAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("UXUIDesigner", MetricType.SUCCESS_RATE, result["accessibility_score"], "%")
         self.monitor._record_metric("UXUIDesigner", MetricType.RESPONSE_TIME, result["design_score"], "ms")
-        
+
         # Add to design history
         design_entry = f"{datetime.now().isoformat()}: Shadcn {component_name} component built with {result['accessibility_score']}% accessibility score"
         self.design_history.append(design_entry)
         self._save_design_history()
-        
+
         logger.info(f"Shadcn component build result: {result}")
         return result
 
     def create_component_spec(self, component_name: str = "Button") -> Dict[str, Any]:
         """Create a detailed component specification with Shadcn design tokens."""
         logger.info(f"Creating component spec for: {component_name}")
-        
+
         spec = {
             "component_name": component_name,
             "version": "1.0.0",
@@ -523,22 +525,22 @@ UXUIDesigner Agent Commands:
                 "screen_reader": "Proper ARIA attributes"
             },
             "usage_examples": [
-                f"<{component_name} variant=\"default\">Click me</{component_name}>",
-                f"<{component_name} variant=\"outline\" size=\"sm\">Small Outline</{component_name}>",
-                f"<{component_name} variant=\"destructive\">Delete</{component_name}>"
+                f'<{component_name} variant="default">Click me</{component_name}>',
+                f'<{component_name} variant="outline" size="sm">Small Outline</{component_name}>',
+                f'<{component_name} variant="destructive">Delete</{component_name}>'
             ],
             "timestamp": datetime.now().isoformat(),
             "agent": "UXUIDesignerAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("UXUIDesigner", MetricType.SUCCESS_RATE, 95, "%")
-        
+
         # Add to design history
         spec_entry = f"{datetime.now().isoformat()}: Component spec created for {component_name} with design tokens"
         self.design_history.append(spec_entry)
         self._save_design_history()
-        
+
         logger.info(f"Component spec created: {spec}")
         return spec
 
@@ -554,7 +556,7 @@ UXUIDesigner Agent Commands:
                 "timestamp": datetime.now().isoformat(),
                 "agent": "UXUIDesignerAgent"
             }
-        
+
         try:
             if format_type == "md":
                 self._export_markdown(report_data)
@@ -567,7 +569,7 @@ UXUIDesigner Agent Commands:
 
     def _export_markdown(self, report_data: Dict):
         output_file = f"uxui_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-        
+
         content = f"""# UX/UI Designer Report
 
 ## Summary
@@ -589,31 +591,31 @@ UXUIDesigner Agent Commands:
 - Accessibility Compliance: {report_data.get('accessibility_score', 0)}%
 - User Satisfaction: {report_data.get('user_satisfaction', 'N/A')}
 """
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             f.write(content)
         print(f"Report export saved to: {output_file}")
 
     def _export_json(self, report_data: Dict):
         output_file = f"uxui_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             json.dump(report_data, f, indent=2)
-        
+
         print(f"Report export saved to: {output_file}")
 
     def test_resource_completeness(self):
         print("Testing resource completeness...")
         missing_resources = []
-        
+
         for name, path in self.template_paths.items():
             if not path.exists():
                 missing_resources.append(f"Template: {name} ({path})")
-        
+
         for name, path in self.data_paths.items():
             if not path.exists():
                 missing_resources.append(f"Data: {name} ({path})")
-        
+
         if missing_resources:
             print("Missing resources:")
             for resource in missing_resources:
@@ -624,37 +626,37 @@ UXUIDesigner Agent Commands:
     def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         logger.info("Starting UX/UI collaboration example...")
-        
+
         # Publish design request
         publish("design_requested", {
             "agent": "UXUIDesignerAgent",
             "task": "Create Shadcn Button Component",
             "timestamp": datetime.now().isoformat()
         })
-        
+
         # Build Shadcn component
         self.build_shadcn_component("Button")
-        
+
         # Create component spec
         self.create_component_spec("Button")
-        
+
         # Publish completion
         publish("design_completed", {
-            "status": "success", 
+            "status": "success",
             "agent": "UXUIDesignerAgent",
             "component": "Button",
             "accessibility_score": 98
         })
-        
+
         # Save context
         save_context("UXUIDesigner", {"design_status": "completed"})
-        
+
         # Notify via Slack
         try:
             send_slack_message("UX/UI design completed with 98% accessibility score")
         except Exception as e:
             logger.warning(f"Could not send Slack notification: {e}")
-        
+
         print("Event gepubliceerd en context opgeslagen.")
         context = get_context("UXUIDesigner")
         print(f"Opgehaalde context: {context}")
@@ -666,7 +668,7 @@ UXUIDesigner Agent Commands:
 
     async def handle_design_completed(self, event):
         logger.info(f"Design completed: {event}")
-        
+
         # Evaluate policy
         try:
             allowed = await self.policy_engine.evaluate_policy("design_approval", event)
@@ -677,10 +679,10 @@ UXUIDesigner Agent Commands:
     def run(self):
         def sync_handler(event):
             asyncio.run(self.handle_design_completed(event))
-        
+
         subscribe("design_completed", sync_handler)
         subscribe("design_requested", self.handle_design_requested)
-        
+
         logger.info("UXUIDesignerAgent ready and listening for events...")
         self.collaborate_example()
 
@@ -697,30 +699,30 @@ UXUIDesigner Agent Commands:
         prompt = f"Analyseer de volgende design feedback en doe 2 concrete verbetervoorstellen:\n{feedback_text}"
         result = ask_openai(prompt)
         logging.info(f"[UXUIDesigner][LLM Design Feedback]: {result}")
-        
+
         # Add to feedback history
         feedback_entry = f"{datetime.now().isoformat()}: Design feedback analyzed - {feedback_text[:50]}..."
         self.feedback_history.append(feedback_entry)
         self._save_feedback_history()
-        
+
         # Log performance metric
         self.monitor._record_metric("UXUIDesigner", MetricType.SUCCESS_RATE, 92, "%")
-        
+
         return result
 
     def document_component(self, component_desc):
         prompt = f"Genereer een korte documentatie voor deze UI-component:\n{component_desc}"
         result = ask_openai(prompt)
         logging.info(f"[UXUIDesigner][LLM Component Doc]: {result}")
-        
+
         # Add to design history
         doc_entry = f"{datetime.now().isoformat()}: Component documented - {component_desc[:50]}..."
         self.design_history.append(doc_entry)
         self._save_design_history()
-        
+
         # Log performance metric
         self.monitor._record_metric("UXUIDesigner", MetricType.SUCCESS_RATE, 88, "%")
-        
+
         return result
 
     def analyze_figma_design(self, figma_file_id: str) -> Dict:
@@ -729,98 +731,98 @@ UXUIDesigner Agent Commands:
         """
         try:
             client = FigmaClient()
-            
+
             # Haal file data op
             file_data = client.get_file(figma_file_id)
-            
+
             logging.info(f"[UXUIDesigner][Figma Analysis] Analyzing file: {file_data.get('name', 'Unknown')}")
-            
+
             # Analyseer document structuur
-            document = file_data.get('document', {})
-            pages = document.get('children', [])
-            
+            document = file_data.get("document", {})
+            pages = document.get("children", [])
+
             analysis_result = {
-                'file_name': file_data.get('name', ''),
-                'file_id': figma_file_id,
-                'total_pages': len(pages),
-                'pages': [],
-                'design_insights': {},
-                'accessibility_issues': [],
-                'color_analysis': {},
-                'layout_analysis': {}
+                "file_name": file_data.get("name", ""),
+                "file_id": figma_file_id,
+                "total_pages": len(pages),
+                "pages": [],
+                "design_insights": {},
+                "accessibility_issues": [],
+                "color_analysis": {},
+                "layout_analysis": {}
             }
-            
+
             # Analyseer elke pagina
             for page in pages:
                 page_analysis = self.analyze_page(page)
-                analysis_result['pages'].append(page_analysis)
-            
+                analysis_result["pages"].append(page_analysis)
+
             # Genereer algemene design insights met LLM
             design_insights = self.generate_design_insights(analysis_result)
-            analysis_result['design_insights'] = design_insights
-            
+            analysis_result["design_insights"] = design_insights
+
             # Analyseer kleurgebruik
             color_analysis = self.analyze_colors(file_data)
-            analysis_result['color_analysis'] = color_analysis
-            
+            analysis_result["color_analysis"] = color_analysis
+
             # Analyseer layout
             layout_analysis = self.analyze_layout(file_data)
-            analysis_result['layout_analysis'] = layout_analysis
-            
+            analysis_result["layout_analysis"] = layout_analysis
+
             # Check accessibility
             accessibility_issues = self.check_accessibility(file_data)
-            analysis_result['accessibility_issues'] = accessibility_issues
-            
+            analysis_result["accessibility_issues"] = accessibility_issues
+
             # Add to design history
             analysis_entry = f"{datetime.now().isoformat()}: Figma design analyzed - {file_data.get('name', 'Unknown')}"
             self.design_history.append(analysis_entry)
             self._save_design_history()
-            
+
             # Log performance metric
             self.monitor._record_metric("UXUIDesigner", MetricType.SUCCESS_RATE, 95, "%")
-            
+
             logging.info(f"[UXUIDesigner][Figma Analysis] Completed analysis for {len(pages)} pages")
             return analysis_result
-            
+
         except Exception as e:
-            logging.error(f"[UXUIDesigner][Figma Analysis Error]: {str(e)}")
-            return {'error': str(e)}
+            logging.exception(f"[UXUIDesigner][Figma Analysis Error]: {e!s}")
+            return {"error": str(e)}
 
     def analyze_page(self, page_data: Dict) -> Dict:
         """Analyseer een individuele Figma pagina."""
         return {
-            'name': page_data.get('name', ''),
-            'id': page_data.get('id', ''),
-            'type': page_data.get('type', ''),
-            'children_count': len(page_data.get('children', [])),
-            'has_components': self.has_components(page_data),
-            'has_text': self.has_text_elements(page_data),
-            'has_images': self.has_image_elements(page_data)
+            "name": page_data.get("name", ""),
+            "id": page_data.get("id", ""),
+            "type": page_data.get("type", ""),
+            "children_count": len(page_data.get("children", [])),
+            "has_components": self.has_components(page_data),
+            "has_text": self.has_text_elements(page_data),
+            "has_images": self.has_image_elements(page_data)
         }
 
     def has_components(self, node: Dict) -> bool:
         """Check of een node componenten bevat."""
-        if node.get('type') == 'COMPONENT':
+        if node.get("type") == "COMPONENT":
             return True
-        for child in node.get('children', []):
+        for child in node.get("children", []):
             if self.has_components(child):
                 return True
         return False
 
     def has_text_elements(self, node: Dict) -> bool:
         """Check of een node tekst elementen bevat."""
-        if node.get('type') == 'TEXT':
+        if node.get("type") == "TEXT":
             return True
-        for child in node.get('children', []):
+        for child in node.get("children", []):
             if self.has_text_elements(child):
                 return True
         return False
 
     def has_image_elements(self, node: Dict) -> bool:
         """Check of een node afbeeldingen bevat."""
-        if node.get('type') in ['RECTANGLE', 'ELLIPSE', 'VECTOR']:
+        if node.get("type") in ["RECTANGLE", "ELLIPSE", "VECTOR"]:
             return True
-        for child in node.get('children', []):
+        for child in node.get("children", []):
             if self.has_image_elements(child):
                 return True
         return False
@@ -836,84 +838,84 @@ UXUIDesigner Agent Commands:
         
         Geef 3 concrete design aanbevelingen.
         """
-        
+
         result = ask_openai(prompt)
         return {
-            'llm_insights': result,
-            'summary': f"Design met {analysis_data.get('total_pages', 0)} pagina's geanalyseerd"
+            "llm_insights": result,
+            "summary": f"Design met {analysis_data.get('total_pages', 0)} pagina's geanalyseerd"
         }
 
     def analyze_colors(self, file_data: Dict) -> Dict:
         """Analyseer kleurgebruik in Figma design."""
         colors = set()
-        
+
         def extract_colors(node):
-            if 'fills' in node:
-                for fill in node['fills']:
-                    if fill.get('type') == 'SOLID':
-                        color = fill.get('color', {})
+            if "fills" in node:
+                for fill in node["fills"]:
+                    if fill.get("type") == "SOLID":
+                        color = fill.get("color", {})
                         if color:
                             colors.add(f"rgb({color.get('r', 0)}, {color.get('g', 0)}, {color.get('b', 0)})")
-            for child in node.get('children', []):
+            for child in node.get("children", []):
                 extract_colors(child)
-        
-        extract_colors(file_data.get('document', {}))
-        
+
+        extract_colors(file_data.get("document", {}))
+
         return {
-            'unique_colors': len(colors),
-            'color_palette': list(colors)[:10]  # Eerste 10 kleuren
+            "unique_colors": len(colors),
+            "color_palette": list(colors)[:10]  # Eerste 10 kleuren
         }
 
     def analyze_layout(self, file_data: Dict) -> Dict:
         """Analyseer layout structuur."""
-        layout_info = {'total_elements': 0, 'max_depth': 0}
-        
+        layout_info = {"total_elements": 0, "max_depth": 0}
+
         def analyze_node(node, depth=0):
-            layout_info['total_elements'] += 1
-            layout_info['max_depth'] = max(layout_info['max_depth'], depth)
-            
-            for child in node.get('children', []):
+            layout_info["total_elements"] += 1
+            layout_info["max_depth"] = max(layout_info["max_depth"], depth)
+
+            for child in node.get("children", []):
                 analyze_node(child, depth + 1)
-        
-        analyze_node(file_data.get('document', {}))
-        
+
+        analyze_node(file_data.get("document", {}))
+
         return layout_info
 
     def check_accessibility(self, file_data: Dict) -> List[Dict]:
         """Check accessibility issues in design."""
         issues = []
-        
+
         def check_node(node):
             # Check voor tekst contrast
-            if node.get('type') == 'TEXT':
+            if node.get("type") == "TEXT":
                 # Simuleer contrast check
-                if 'fills' in node and node.get('fills'):
+                if "fills" in node and node.get("fills"):
                     issues.append({
-                        'type': 'contrast_warning',
-                        'element': node.get('name', 'Text element'),
-                        'message': 'Contrast ratio should be checked'
+                        "type": "contrast_warning",
+                        "element": node.get("name", "Text element"),
+                        "message": "Contrast ratio should be checked"
                     })
-            
+
             # Check voor interactieve elementen
-            if node.get('type') in ['FRAME', 'GROUP']:
-                if node.get('name', '').lower() in ['button', 'link', 'input']:
+            if node.get("type") in ["FRAME", "GROUP"]:
+                if node.get("name", "").lower() in ["button", "link", "input"]:
                     issues.append({
-                        'type': 'interactive_element',
-                        'element': node.get('name', 'Interactive element'),
-                        'message': 'Ensure proper ARIA labels and keyboard navigation'
+                        "type": "interactive_element",
+                        "element": node.get("name", "Interactive element"),
+                        "message": "Ensure proper ARIA labels and keyboard navigation"
                     })
-            
-            for child in node.get('children', []):
+
+            for child in node.get("children", []):
                 check_node(child)
-        
-        check_node(file_data.get('document', {}))
-        
+
+        check_node(file_data.get("document", {}))
+
         return issues
 
 def on_figma_analysis_requested(event):
     """Event handler voor Figma analysis requests."""
     agent = UXUIDesignerAgent()
-    file_id = event.get('file_id', '')
+    file_id = event.get("file_id", "")
     if file_id:
         result = agent.analyze_figma_design(file_id)
         publish("figma_analysis_completed", {
@@ -925,7 +927,7 @@ def on_figma_analysis_requested(event):
 def on_design_feedback_requested(event):
     """Event handler voor design feedback requests."""
     agent = UXUIDesignerAgent()
-    feedback = event.get('feedback', '')
+    feedback = event.get("feedback", "")
     if feedback:
         result = agent.design_feedback(feedback)
         publish("design_feedback_completed", {
@@ -937,7 +939,7 @@ def on_design_feedback_requested(event):
 def on_document_component(event):
     """Event handler voor component documentation requests."""
     agent = UXUIDesignerAgent()
-    component = event.get('component', '')
+    component = event.get("component", "")
     if component:
         result = agent.document_component(component)
         publish("component_documented", {
@@ -948,11 +950,11 @@ def on_document_component(event):
 
 def main():
     parser = argparse.ArgumentParser(description="UXUIDesigner Agent CLI")
-    parser.add_argument("command", nargs="?", default="help", 
-                       choices=["help", "build-shadcn-component", "create-component-spec", 
+    parser.add_argument("command", nargs="?", default="help",
+                       choices=["help", "build-shadcn-component", "create-component-spec",
                                "create-mobile-ux", "design-mobile-component", "create-mobile-flow",
                                "design-feedback", "document-component", "analyze-figma",
-                               "show-design-history", "show-feedback-history", "show-best-practices", 
+                               "show-design-history", "show-feedback-history", "show-best-practices",
                                "show-changelog", "export-report", "test", "collaborate", "run"])
     parser.add_argument("--component-name", default="Button", help="Component name")
     parser.add_argument("--platform", choices=["iOS", "Android", "React Native", "Flutter"], default="iOS", help="Mobile platform")
@@ -962,11 +964,11 @@ def main():
     parser.add_argument("--component-desc", help="Component description")
     parser.add_argument("--figma-file-id", help="Figma file ID")
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
-    
+
     args = parser.parse_args()
-    
+
     agent = UXUIDesignerAgent()
-    
+
     if args.command == "help":
         agent.show_help()
     elif args.command == "build-shadcn-component":

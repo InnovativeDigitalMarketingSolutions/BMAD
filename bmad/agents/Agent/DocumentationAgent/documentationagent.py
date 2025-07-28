@@ -2,26 +2,32 @@
 """
 DocumentationAgent voor BMAD
 """
+import argparse
+import hashlib
+import json
 import logging
 import sys
-import argparse
-import json
 import time
-import hashlib
-from pathlib import Path
-from typing import Dict, Any, Optional, List
 from datetime import datetime
-from bmad.agents.core.communication.message_bus import publish, subscribe
-from bmad.agents.core.data.supabase_context import save_context, get_context
-from bmad.agents.core.ai.llm_client import ask_openai_with_confidence
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+from dotenv import load_dotenv
+
 from bmad.agents.core.ai.confidence_scoring import confidence_scoring
-from bmad.projects.project_manager import project_manager
-from bmad.agents.core.monitoring.agent_performance_monitor import get_performance_monitor, MetricType
+from bmad.agents.core.ai.llm_client import ask_openai_with_confidence
+from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.data.supabase_context import get_context, save_context
+from bmad.agents.core.monitoring.agent_performance_monitor import (
+    MetricType,
+    get_performance_monitor,
+)
+from bmad.agents.core.notifications.slack_notify import send_slack_message
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from bmad.agents.core.testing.test_sprites import get_sprite_library
-from bmad.agents.core.notifications.slack_notify import send_slack_message
+from bmad.projects.project_manager import project_manager
 from integrations.figma.figma_client import FigmaClient
-from dotenv import load_dotenv
+
 load_dotenv()
 
 # Configure logging
@@ -33,7 +39,7 @@ class DocumentationAgent:
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
-        
+
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
         self.template_paths = {
@@ -49,7 +55,7 @@ class DocumentationAgent:
             "docs-history": self.resource_base / "data/documentationagent/docs-history.md",
             "figma-history": self.resource_base / "data/documentationagent/figma-history.md"
         }
-        
+
         # Initialize history
         self.docs_history = []
         self.figma_history = []
@@ -60,11 +66,11 @@ class DocumentationAgent:
         """Load documentation history from data file"""
         try:
             if self.data_paths["docs-history"].exists():
-                with open(self.data_paths["docs-history"], 'r') as f:
+                with open(self.data_paths["docs-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.docs_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load docs history: {e}")
@@ -73,7 +79,7 @@ class DocumentationAgent:
         """Save documentation history to data file"""
         try:
             self.data_paths["docs-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["docs-history"], 'w') as f:
+            with open(self.data_paths["docs-history"], "w") as f:
                 f.write("# Documentation History\n\n")
                 for doc in self.docs_history[-50:]:  # Keep last 50 docs
                     f.write(f"- {doc}\n")
@@ -84,11 +90,11 @@ class DocumentationAgent:
         """Load Figma documentation history from data file"""
         try:
             if self.data_paths["figma-history"].exists():
-                with open(self.data_paths["figma-history"], 'r') as f:
+                with open(self.data_paths["figma-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.figma_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load figma history: {e}")
@@ -97,7 +103,7 @@ class DocumentationAgent:
         """Save Figma documentation history to data file"""
         try:
             self.data_paths["figma-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["figma-history"], 'w') as f:
+            with open(self.data_paths["figma-history"], "w") as f:
                 f.write("# Figma Documentation History\n\n")
                 for figma in self.figma_history[-50:]:  # Keep last 50 entries
                     f.write(f"- {figma}\n")
@@ -130,14 +136,14 @@ DocumentationAgent Commands:
         try:
             if resource_type in self.template_paths:
                 if self.template_paths[resource_type].exists():
-                    with open(self.template_paths[resource_type], 'r') as f:
+                    with open(self.template_paths[resource_type]) as f:
                         print(f"=== {resource_type.upper()} ===\n")
                         print(f.read())
                 else:
                     print(f"Template {resource_type} not found at {self.template_paths[resource_type]}")
             elif resource_type in self.data_paths:
                 if self.data_paths[resource_type].exists():
-                    with open(self.data_paths[resource_type], 'r') as f:
+                    with open(self.data_paths[resource_type]) as f:
                         print(f"=== {resource_type.upper()} ===\n")
                         print(f.read())
                 else:
@@ -164,42 +170,42 @@ DocumentationAgent Commands:
         try:
             # Get project context
             project_context = project_manager.get_project_context()
-            
+
             if not project_context:
                 print("❌ Geen project geladen! Laad eerst een project met:")
                 print("   python -m bmad.projects.cli load <project_name>")
                 return {"error": "No project loaded"}
-            
+
             project_name = project_context["project_name"]
             print(f"📋 DocumentationAgent - Changelog Samenvatting voor '{project_name}'")
             print("=" * 60)
-            
+
             # Find all changelog files
             changelog_files = []
             agent_dirs = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources/data").glob("*")
-            
+
             for agent_dir in agent_dirs:
                 if agent_dir.is_dir():
                     changelog_path = agent_dir / "changelog.md"
                     if changelog_path.exists():
                         changelog_files.append(changelog_path)
-            
+
             if not changelog_files:
                 return {"error": "No changelog files found"}
-            
+
             # Read all changelogs
             changelog_texts = []
             for changelog_file in changelog_files:
                 try:
-                    with open(changelog_file, 'r', encoding='utf-8') as f:
+                    with open(changelog_file, encoding="utf-8") as f:
                         content = f.read()
                         changelog_texts.append(f"=== {changelog_file.parent.name} ===\n{content}")
                 except Exception as e:
                     logger.warning(f"Could not read {changelog_file}: {e}")
-            
+
             # Use LLM to summarize
             combined_changelogs = "\n\n".join(changelog_texts)
-            
+
             prompt = f"""
             Samenvat alle changelogs van de BMAD agents voor project '{project_name}'.
             
@@ -218,41 +224,41 @@ DocumentationAgent Commands:
             - Belangrijkste wijzigingen
             - Impact op het project
             """
-            
+
             context = {
                 "agent": "DocumentationAgent",
                 "task": "changelog_summarization",
                 "project": project_name
             }
-            
+
             result = ask_openai_with_confidence(prompt, context)
-            
+
             if result.get("error"):
                 return {"error": f"LLM error: {result['error']}"}
-            
+
             summary = result["answer"]
-            
+
             # Log and save
             logger.info(f"[DocumentationAgent] Changelog summary generated for {project_name}")
-            
+
             # Add to history
             self.docs_history.append(f"Changelog summary for {project_name} - {datetime.now().strftime('%Y-%m-%d')}")
             self._save_docs_history()
-            
+
             # Publish event
             publish("changelog_summarized", {
                 "project": project_name,
                 "summary": summary,
                 "agent": "DocumentationAgent"
             })
-            
+
             return {
                 "status": "success",
                 "project": project_name,
                 "summary": summary,
                 "changelog_files": len(changelog_files)
             }
-            
+
         except Exception as e:
             logger.error(f"[DocumentationAgent] Error summarizing changelogs: {e}")
             return {"error": str(e)}
@@ -262,22 +268,22 @@ DocumentationAgent Commands:
         try:
             # Get project context
             project_context = project_manager.get_project_context()
-            
+
             if not project_context:
                 print("❌ Geen project geladen! Laad eerst een project met:")
                 print("   python -m bmad.projects.cli load <project_name>")
                 return {"error": "No project loaded"}
-            
+
             project_name = project_context["project_name"]
             print(f"🎨 DocumentationAgent - Figma UI Documentatie voor '{project_name}'")
             print("=" * 60)
-            
+
             # Call the global function
             result = document_figma_ui(figma_file_id)
-            
+
             if result.get("error"):
                 return {"error": f"Figma documentation error: {result['error']}"}
-            
+
             # Enhance with confidence scoring
             enhanced_result = confidence_scoring.enhance_agent_output(
                 str(result),
@@ -290,18 +296,18 @@ DocumentationAgent Commands:
                     "pages_count": result.get("total_pages", 0)
                 }
             )
-            
+
             # Log and save
             logger.info(f"[DocumentationAgent] Figma documentation completed for {figma_file_id}")
-            
+
             # Add to history
             figma_entry = f"Figma UI documentation for {figma_file_id} - {datetime.now().strftime('%Y-%m-%d')}"
             self.figma_history.append(figma_entry)
             self._save_figma_history()
-            
+
             logger.info(f"Figma documentation completed: {enhanced_result}")
             return enhanced_result
-            
+
         except Exception as e:
             logger.error(f"[DocumentationAgent] Error documenting Figma UI: {e}")
             return {"error": str(e)}
@@ -309,10 +315,10 @@ DocumentationAgent Commands:
     def create_api_docs(self, api_name: str = "BMAD API", api_type: str = "REST") -> Dict[str, Any]:
         """Create comprehensive API documentation."""
         logger.info(f"Creating API documentation for: {api_name}")
-        
+
         # Simulate API documentation creation
         time.sleep(1)
-        
+
         api_docs_result = {
             "docs_id": hashlib.sha256(f"api_docs_{api_name}".encode()).hexdigest()[:8],
             "api_name": api_name,
@@ -349,25 +355,25 @@ DocumentationAgent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "DocumentationAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("DocumentationAgent", MetricType.SUCCESS_RATE, 95, "%")
-        
+
         # Add to docs history
         docs_entry = f"{datetime.now().isoformat()}: API documentation created - {api_name}"
         self.docs_history.append(docs_entry)
         self._save_docs_history()
-        
+
         logger.info(f"API documentation created: {api_docs_result}")
         return api_docs_result
 
     def create_user_guide(self, product_name: str = "BMAD System", guide_type: str = "comprehensive") -> Dict[str, Any]:
         """Create comprehensive user guide documentation."""
         logger.info(f"Creating user guide for: {product_name}")
-        
+
         # Simulate user guide creation
         time.sleep(1)
-        
+
         user_guide_result = {
             "guide_id": hashlib.sha256(f"user_guide_{product_name}".encode()).hexdigest()[:8],
             "product_name": product_name,
@@ -404,25 +410,25 @@ DocumentationAgent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "DocumentationAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("DocumentationAgent", MetricType.SUCCESS_RATE, 94, "%")
-        
+
         # Add to docs history
         docs_entry = f"{datetime.now().isoformat()}: User guide created - {product_name}"
         self.docs_history.append(docs_entry)
         self._save_docs_history()
-        
+
         logger.info(f"User guide created: {user_guide_result}")
         return user_guide_result
 
     def create_technical_docs(self, system_name: str = "BMAD Architecture", doc_type: str = "architecture") -> Dict[str, Any]:
         """Create comprehensive technical documentation."""
         logger.info(f"Creating technical documentation for: {system_name}")
-        
+
         # Simulate technical documentation creation
         time.sleep(1)
-        
+
         technical_docs_result = {
             "docs_id": hashlib.sha256(f"tech_docs_{system_name}".encode()).hexdigest()[:8],
             "system_name": system_name,
@@ -459,15 +465,15 @@ DocumentationAgent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "DocumentationAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("DocumentationAgent", MetricType.SUCCESS_RATE, 96, "%")
-        
+
         # Add to docs history
         docs_entry = f"{datetime.now().isoformat()}: Technical docs created - {system_name}"
         self.docs_history.append(docs_entry)
         self._save_docs_history()
-        
+
         logger.info(f"Technical documentation created: {technical_docs_result}")
         return technical_docs_result
 
@@ -480,7 +486,7 @@ DocumentationAgent Commands:
                 "timestamp": datetime.now().isoformat(),
                 "agent": "DocumentationAgent"
             }
-        
+
         if format_type == "md":
             self._export_markdown(report_data)
         elif format_type == "csv":
@@ -494,18 +500,16 @@ DocumentationAgent Commands:
         """Export report as Markdown."""
         try:
             filename = f"documentation_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-            with open(filename, 'w') as f:
+            with open(filename, "w") as f:
                 f.write("# Documentation Agent Report\n\n")
                 f.write(f"Generated: {report_data['timestamp']}\n\n")
-                
+
                 f.write("## Documentation History\n\n")
-                for doc in report_data.get("docs_history", []):
-                    f.write(f"- {doc}\n")
-                
+                f.writelines(f"- {doc}\n" for doc in report_data.get("docs_history", []))
+
                 f.write("\n## Figma Documentation History\n\n")
-                for figma in report_data.get("figma_history", []):
-                    f.write(f"- {figma}\n")
-            
+                f.writelines(f"- {figma}\n" for figma in report_data.get("figma_history", []))
+
             print(f"✅ Markdown report exported to: {filename}")
         except Exception as e:
             logger.error(f"Error exporting markdown: {e}")
@@ -514,15 +518,13 @@ DocumentationAgent Commands:
         """Export report as CSV."""
         try:
             filename = f"documentation_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-            with open(filename, 'w') as f:
+            with open(filename, "w") as f:
                 f.write("Type,Entry,Timestamp\n")
-                
-                for doc in report_data.get("docs_history", []):
-                    f.write(f"Documentation,{doc},{report_data['timestamp']}\n")
-                
-                for figma in report_data.get("figma_history", []):
-                    f.write(f"Figma,{figma},{report_data['timestamp']}\n")
-            
+
+                f.writelines(f"Documentation,{doc},{report_data['timestamp']}\n" for doc in report_data.get("docs_history", []))
+
+                f.writelines(f"Figma,{figma},{report_data['timestamp']}\n" for figma in report_data.get("figma_history", []))
+
             print(f"✅ CSV report exported to: {filename}")
         except Exception as e:
             logger.error(f"Error exporting CSV: {e}")
@@ -531,9 +533,9 @@ DocumentationAgent Commands:
         """Export report as JSON."""
         try:
             filename = f"documentation_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-            with open(filename, 'w') as f:
+            with open(filename, "w") as f:
                 json.dump(report_data, f, indent=2)
-            
+
             print(f"✅ JSON report exported to: {filename}")
         except Exception as e:
             logger.error(f"Error exporting JSON: {e}")
@@ -541,19 +543,19 @@ DocumentationAgent Commands:
     def test_resource_completeness(self):
         """Test if all required resources are present."""
         print("🔍 Testing DocumentationAgent resource completeness...")
-        
+
         missing_resources = []
-        
+
         # Check template files
         for template_name, template_path in self.template_paths.items():
             if not template_path.exists():
                 missing_resources.append(f"Template: {template_name}")
-        
+
         # Check data files
         for data_name, data_path in self.data_paths.items():
             if not data_path.exists():
                 missing_resources.append(f"Data: {data_name}")
-        
+
         if missing_resources:
             print("❌ Missing resources:")
             for resource in missing_resources:
@@ -565,16 +567,16 @@ DocumentationAgent Commands:
         """Demonstrate collaboration with other agents."""
         print("🤝 DocumentationAgent - Collaboration Example")
         print("=" * 50)
-        
+
         # Create API documentation
         api_docs_result = self.create_api_docs("BMAD API", "REST")
-        
+
         # Create user guide
         self.create_user_guide("BMAD System", "comprehensive")
-        
+
         # Document Figma UI
         self.document_figma_ui("example_figma_file_id")
-        
+
         # Publish completion
         publish("documentation_completed", {
             "status": "success",
@@ -584,16 +586,16 @@ DocumentationAgent Commands:
             "user_guides": 1,
             "figma_docs": 1
         })
-        
+
         # Save context
         save_context("DocumentationAgent", {"documentation_status": "completed"})
-        
+
         # Notify via Slack
         try:
             send_slack_message(f"Documentation completed with {api_docs_result['status']} status")
         except Exception as e:
             logger.warning(f"Could not send Slack notification: {e}")
-        
+
         print("Event gepubliceerd en context opgeslagen.")
         context = get_context("DocumentationAgent")
         print(f"Opgehaalde context: {context}")
@@ -611,84 +613,84 @@ def document_figma_ui(figma_file_id: str) -> Dict:
     """
     try:
         client = FigmaClient()
-        
+
         # Haal file data op
         file_data = client.get_file(figma_file_id)
         components_data = client.get_components(figma_file_id)
-        
+
         logging.info(f"[DocumentationAgent][Figma UI Doc] Documenting file: {file_data.get('name', 'Unknown')}")
-        
+
         # Genereer documentatie structuur
         documentation = {
-            'file_name': file_data.get('name', ''),
-            'file_id': figma_file_id,
-            'last_modified': file_data.get('lastModified', ''),
-            'version': file_data.get('version', ''),
-            'components': [],
-            'pages': [],
-            'design_system': {},
-            'export_info': {}
+            "file_name": file_data.get("name", ""),
+            "file_id": figma_file_id,
+            "last_modified": file_data.get("lastModified", ""),
+            "version": file_data.get("version", ""),
+            "components": [],
+            "pages": [],
+            "design_system": {},
+            "export_info": {}
         }
-        
+
         # Documenteer componenten
-        components = components_data.get('meta', {}).get('components', {})
+        components = components_data.get("meta", {}).get("components", {})
         for component_id, component_info in components.items():
             component_doc = document_component_info(component_info, component_id)
-            documentation['components'].append(component_doc)
-        
+            documentation["components"].append(component_doc)
+
         # Documenteer pagina's
-        document = file_data.get('document', {})
-        pages = document.get('children', [])
+        document = file_data.get("document", {})
+        pages = document.get("children", [])
         for page in pages:
             page_doc = document_page_info(page)
-            documentation['pages'].append(page_doc)
-        
+            documentation["pages"].append(page_doc)
+
         # Genereer design system documentatie
         design_system = generate_design_system_doc(file_data)
-        documentation['design_system'] = design_system
-        
+        documentation["design_system"] = design_system
+
         # Genereer export informatie
         export_info = generate_export_info(file_data)
-        documentation['export_info'] = export_info
-        
+        documentation["export_info"] = export_info
+
         # Genereer markdown documentatie
         markdown_doc = generate_markdown_documentation(documentation)
-        
+
         result = {
-            'documentation': documentation,
-            'markdown': markdown_doc,
-            'total_components': len(documentation['components']),
-            'total_pages': len(documentation['pages'])
+            "documentation": documentation,
+            "markdown": markdown_doc,
+            "total_components": len(documentation["components"]),
+            "total_pages": len(documentation["pages"])
         }
-        
+
         logging.info(f"[DocumentationAgent][Figma UI Doc] Generated documentation for {len(documentation['components'])} components")
         return result
-        
+
     except Exception as e:
-        logging.error(f"[DocumentationAgent][Figma UI Doc Error]: {str(e)}")
-        return {'error': str(e)}
+        logging.exception(f"[DocumentationAgent][Figma UI Doc Error]: {e!s}")
+        return {"error": str(e)}
 
 def document_component_info(component_info: Dict, component_id: str) -> Dict:
     """Documenteer een individuele component."""
     return {
-        'id': component_id,
-        'name': component_info.get('name', ''),
-        'description': component_info.get('description', ''),
-        'key': component_info.get('key', ''),
-        'created_at': component_info.get('created_at', ''),
-        'updated_at': component_info.get('updated_at', ''),
-        'usage_count': component_info.get('usage_count', 0),
-        'documentation': generate_component_documentation(component_info)
+        "id": component_id,
+        "name": component_info.get("name", ""),
+        "description": component_info.get("description", ""),
+        "key": component_info.get("key", ""),
+        "created_at": component_info.get("created_at", ""),
+        "updated_at": component_info.get("updated_at", ""),
+        "usage_count": component_info.get("usage_count", 0),
+        "documentation": generate_component_documentation(component_info)
     }
 
 def document_page_info(page_data: Dict) -> Dict:
     """Documenteer een individuele pagina."""
     return {
-        'name': page_data.get('name', ''),
-        'id': page_data.get('id', ''),
-        'type': page_data.get('type', ''),
-        'children_count': len(page_data.get('children', [])),
-        'description': generate_page_description(page_data)
+        "name": page_data.get("name", ""),
+        "id": page_data.get("id", ""),
+        "type": page_data.get("type", ""),
+        "children_count": len(page_data.get("children", [])),
+        "description": generate_page_description(page_data)
     }
 
 def generate_component_documentation(component_info: Dict) -> str:
@@ -703,16 +705,16 @@ def generate_component_documentation(component_info: Dict) -> str:
         
         Geef een korte, duidelijke beschrijving van het doel en gebruik van dit component.
         """
-        
+
         context = {
             "agent": "DocumentationAgent",
             "task": "component_documentation",
-            "component_name": component_info.get('name', '')
+            "component_name": component_info.get("name", "")
         }
-        
+
         result = ask_openai_with_confidence(prompt, context)
         return result.get("answer", "Geen documentatie beschikbaar")
-        
+
     except Exception as e:
         logger.warning(f"Could not generate component documentation: {e}")
         return "Documentatie generatie mislukt"
@@ -729,16 +731,16 @@ def generate_page_description(page_data: Dict) -> str:
         
         Beschrijf het doel van deze pagina in de UI structuur.
         """
-        
+
         context = {
             "agent": "DocumentationAgent",
             "task": "page_description",
-            "page_name": page_data.get('name', '')
+            "page_name": page_data.get("name", "")
         }
-        
+
         result = ask_openai_with_confidence(prompt, context)
         return result.get("answer", "Geen beschrijving beschikbaar")
-        
+
     except Exception as e:
         logger.warning(f"Could not generate page description: {e}")
         return "Beschrijving generatie mislukt"
@@ -746,133 +748,133 @@ def generate_page_description(page_data: Dict) -> str:
 def generate_design_system_doc(file_data: Dict) -> Dict:
     """Genereer design system documentatie."""
     return {
-        'colors': extract_colors(file_data),
-        'typography': extract_typography(file_data),
-        'spacing': extract_spacing(file_data),
-        'components': extract_design_system_components(file_data)
+        "colors": extract_colors(file_data),
+        "typography": extract_typography(file_data),
+        "spacing": extract_spacing(file_data),
+        "components": extract_design_system_components(file_data)
     }
 
 def extract_colors(file_data: Dict) -> List[Dict]:
     """Extract color information from Figma file."""
     colors = []
-    
+
     def extract_colors_from_node(node):
-        if 'fills' in node:
-            for fill in node['fills']:
-                if fill.get('type') == 'SOLID':
-                    color = fill.get('color', {})
+        if "fills" in node:
+            for fill in node["fills"]:
+                if fill.get("type") == "SOLID":
+                    color = fill.get("color", {})
                     colors.append({
-                        'name': node.get('name', 'Unknown'),
-                        'r': color.get('r', 0),
-                        'g': color.get('g', 0),
-                        'b': color.get('b', 0),
-                        'hex': rgb_to_hex(color.get('r', 0), color.get('g', 0), color.get('b', 0))
+                        "name": node.get("name", "Unknown"),
+                        "r": color.get("r", 0),
+                        "g": color.get("g", 0),
+                        "b": color.get("b", 0),
+                        "hex": rgb_to_hex(color.get("r", 0), color.get("g", 0), color.get("b", 0))
                     })
-        
-        if 'children' in node:
-            for child in node['children']:
+
+        if "children" in node:
+            for child in node["children"]:
                 extract_colors_from_node(child)
-    
-    document = file_data.get('document', {})
+
+    document = file_data.get("document", {})
     extract_colors_from_node(document)
-    
+
     return colors
 
 def extract_typography(file_data: Dict) -> List[Dict]:
     """Extract typography information from Figma file."""
     typography = []
-    
+
     def extract_typography_from_node(node):
-        if 'style' in node and 'fontFamily' in node['style']:
+        if "style" in node and "fontFamily" in node["style"]:
             typography.append({
-                'name': node.get('name', 'Unknown'),
-                'font_family': node['style'].get('fontFamily', ''),
-                'font_size': node['style'].get('fontSize', 0),
-                'font_weight': node['style'].get('fontWeight', 400),
-                'line_height': node['style'].get('lineHeightPx', 0)
+                "name": node.get("name", "Unknown"),
+                "font_family": node["style"].get("fontFamily", ""),
+                "font_size": node["style"].get("fontSize", 0),
+                "font_weight": node["style"].get("fontWeight", 400),
+                "line_height": node["style"].get("lineHeightPx", 0)
             })
-        
-        if 'children' in node:
-            for child in node['children']:
+
+        if "children" in node:
+            for child in node["children"]:
                 extract_typography_from_node(child)
-    
-    document = file_data.get('document', {})
+
+    document = file_data.get("document", {})
     extract_typography_from_node(document)
-    
+
     return typography
 
 def extract_spacing(file_data: Dict) -> Dict:
     """Extract spacing information from Figma file."""
     spacing_values = set()
-    
+
     def extract_spacing_from_node(node):
-        if 'absoluteBoundingBox' in node:
-            x = node['absoluteBoundingBox'].get('x', 0)
-            y = node['absoluteBoundingBox'].get('y', 0)
-            width = node['absoluteBoundingBox'].get('width', 0)
-            height = node['absoluteBoundingBox'].get('height', 0)
-            
+        if "absoluteBoundingBox" in node:
+            x = node["absoluteBoundingBox"].get("x", 0)
+            y = node["absoluteBoundingBox"].get("y", 0)
+            width = node["absoluteBoundingBox"].get("width", 0)
+            height = node["absoluteBoundingBox"].get("height", 0)
+
             spacing_values.add(round(x))
             spacing_values.add(round(y))
             spacing_values.add(round(width))
             spacing_values.add(round(height))
-        
-        if 'children' in node:
-            for child in node['children']:
+
+        if "children" in node:
+            for child in node["children"]:
                 extract_spacing_from_node(child)
-    
-    document = file_data.get('document', {})
+
+    document = file_data.get("document", {})
     extract_spacing_from_node(document)
-    
+
     return {
-        'unique_spacing_values': sorted(list(spacing_values)),
-        'spacing_scale': list(set([round(val/8)*8 for val in spacing_values if val > 0]))
+        "unique_spacing_values": sorted(list(spacing_values)),
+        "spacing_scale": list(set([round(val/8)*8 for val in spacing_values if val > 0]))
     }
 
 def extract_design_system_components(file_data: Dict) -> List[Dict]:
     """Extract design system components."""
     components = []
-    
+
     def extract_components_from_node(node):
-        if node.get('type') == 'COMPONENT':
+        if node.get("type") == "COMPONENT":
             components.append({
-                'name': node.get('name', ''),
-                'id': node.get('id', ''),
-                'description': node.get('description', ''),
-                'key': node.get('key', '')
+                "name": node.get("name", ""),
+                "id": node.get("id", ""),
+                "description": node.get("description", ""),
+                "key": node.get("key", "")
             })
-        
-        if 'children' in node:
-            for child in node['children']:
+
+        if "children" in node:
+            for child in node["children"]:
                 extract_components_from_node(child)
-    
-    document = file_data.get('document', {})
+
+    document = file_data.get("document", {})
     extract_components_from_node(document)
-    
+
     return components
 
 def generate_export_info(file_data: Dict) -> Dict:
     """Genereer export informatie."""
     exportable_nodes = []
-    
+
     def find_exportable_nodes(node):
-        if node.get('exportSettings'):
+        if node.get("exportSettings"):
             exportable_nodes.append({
-                'name': node.get('name', ''),
-                'id': node.get('id', ''),
-                'export_settings': node.get('exportSettings', [])
+                "name": node.get("name", ""),
+                "id": node.get("id", ""),
+                "export_settings": node.get("exportSettings", [])
             })
-        
-        if 'children' in node:
-            for child in node['children']:
+
+        if "children" in node:
+            for child in node["children"]:
                 find_exportable_nodes(child)
-    
-    document = file_data.get('document', {})
+
+    document = file_data.get("document", {})
     find_exportable_nodes(document)
-    
+
     return {
-        'exportable_nodes': exportable_nodes,
-        'total_exportable': len(exportable_nodes)
+        "exportable_nodes": exportable_nodes,
+        "total_exportable": len(exportable_nodes)
     }
 
 def generate_markdown_documentation(documentation: Dict) -> str:
@@ -886,8 +888,8 @@ def generate_markdown_documentation(documentation: Dict) -> str:
 
 ## Components ({documentation['total_components']})
 """
-    
-    for component in documentation['components']:
+
+    for component in documentation["components"]:
         markdown += f"""
 ### {component['name']}
 - **ID**: {component['id']}
@@ -896,12 +898,12 @@ def generate_markdown_documentation(documentation: Dict) -> str:
 - **Documentation**: {component['documentation']}
 
 """
-    
+
     markdown += f"""
 ## Pages ({documentation['total_pages']})
 """
-    
-    for page in documentation['pages']:
+
+    for page in documentation["pages"]:
         markdown += f"""
 ### {page['name']}
 - **ID**: {page['id']}
@@ -910,33 +912,33 @@ def generate_markdown_documentation(documentation: Dict) -> str:
 - **Description**: {page['description']}
 
 """
-    
+
     # Design System
-    design_system = documentation['design_system']
+    design_system = documentation["design_system"]
     markdown += """
 ## Design System
 
 ### Colors
 """
-    
-    for color in design_system.get('colors', []):
+
+    for color in design_system.get("colors", []):
         markdown += f"- {color['name']}: #{color['hex']}\n"
-    
+
     markdown += """
 ### Typography
 """
-    
-    for typography in design_system.get('typography', []):
+
+    for typography in design_system.get("typography", []):
         markdown += f"- {typography['name']}: {typography['font_family']} {typography['font_size']}px\n"
-    
+
     markdown += """
 ### Spacing
 """
-    
-    spacing = design_system.get('spacing', {})
+
+    spacing = design_system.get("spacing", {})
     markdown += f"- Unique values: {len(spacing.get('unique_spacing_values', []))}\n"
     markdown += f"- Scale: {spacing.get('spacing_scale', [])}\n"
-    
+
     return markdown
 
 def rgb_to_hex(r: float, g: float, b: float) -> str:
@@ -947,7 +949,7 @@ def summarize_changelogs_llm(changelog_texts):
     """Summarize changelogs using LLM."""
     try:
         combined_text = "\n\n".join(changelog_texts)
-        
+
         prompt = f"""
         Samenvat deze changelogs in een beknopte, gestructureerde vorm:
         
@@ -959,15 +961,15 @@ def summarize_changelogs_llm(changelog_texts):
         3. Performance verbeteringen
         4. Security updates
         """
-        
+
         context = {
             "agent": "DocumentationAgent",
             "task": "changelog_summarization"
         }
-        
+
         result = ask_openai_with_confidence(prompt, context)
         return result.get("answer", "Samenvatting niet beschikbaar")
-        
+
     except Exception as e:
         logger.error(f"Error summarizing changelogs: {e}")
         return "Samenvatting mislukt"
@@ -992,7 +994,7 @@ subscribe("figma_documentation_requested", on_figma_documentation_requested)
 
 def main():
     parser = argparse.ArgumentParser(description="DocumentationAgent CLI")
-    parser.add_argument("command", nargs="?", default="help", 
+    parser.add_argument("command", nargs="?", default="help",
                        choices=["help", "summarize-changelogs", "document-figma", "create-api-docs",
                                "create-user-guide", "create-technical-docs", "show-docs-history",
                                "show-figma-history", "show-best-practices", "show-changelog",
@@ -1005,11 +1007,11 @@ def main():
     parser.add_argument("--guide-type", default="comprehensive", help="Guide type")
     parser.add_argument("--system-name", default="BMAD Architecture", help="System name for technical docs")
     parser.add_argument("--doc-type", default="architecture", help="Documentation type")
-    
+
     args = parser.parse_args()
-    
+
     agent = DocumentationAgent()
-    
+
     if args.command == "help":
         agent.show_help()
     elif args.command == "summarize-changelogs":
@@ -1048,4 +1050,4 @@ def main():
         agent.run()
 
 if __name__ == "__main__":
-    main() 
+    main()

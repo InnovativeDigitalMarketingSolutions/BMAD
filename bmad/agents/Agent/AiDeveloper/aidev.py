@@ -6,22 +6,26 @@ Output in prompt templates, code snippets, evaluatierapporten en experiment logs
 """
 
 import argparse
-import sys
 import os
+import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
-import textwrap
-import logging
+import asyncio
 import json
+import logging
+import textwrap
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional
-import asyncio
 
-from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.agent.agent_performance_monitor import (
+    MetricType,
+    get_performance_monitor,
+)
 from bmad.agents.core.agent.test_sprites import get_sprite_library
-from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor, MetricType
+from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
-from bmad.agents.core.data.supabase_context import save_context, get_context
 from integrations.slack.slack_notify import send_slack_message
 
 # Configure logging
@@ -34,7 +38,7 @@ class AiDeveloperAgent:
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
-        
+
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
         self.template_paths = {
@@ -54,7 +58,7 @@ class AiDeveloperAgent:
             "experiment-history": self.resource_base / "data/ai/experiment-history.md",
             "model-history": self.resource_base / "data/ai/model-history.md"
         }
-        
+
         # Initialize histories
         self.experiment_history = []
         self.model_history = []
@@ -64,11 +68,11 @@ class AiDeveloperAgent:
     def _load_experiment_history(self):
         try:
             if self.data_paths["experiment-history"].exists():
-                with open(self.data_paths["experiment-history"], 'r') as f:
+                with open(self.data_paths["experiment-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.experiment_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load experiment history: {e}")
@@ -76,21 +80,20 @@ class AiDeveloperAgent:
     def _save_experiment_history(self):
         try:
             self.data_paths["experiment-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["experiment-history"], 'w') as f:
+            with open(self.data_paths["experiment-history"], "w") as f:
                 f.write("# Experiment History\n\n")
-                for exp in self.experiment_history[-50:]:
-                    f.write(f"- {exp}\n")
+                f.writelines(f"- {exp}\n" for exp in self.experiment_history[-50:])
         except Exception as e:
             logger.error(f"Could not save experiment history: {e}")
 
     def _load_model_history(self):
         try:
             if self.data_paths["model-history"].exists():
-                with open(self.data_paths["model-history"], 'r') as f:
+                with open(self.data_paths["model-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.model_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load model history: {e}")
@@ -98,10 +101,9 @@ class AiDeveloperAgent:
     def _save_model_history(self):
         try:
             self.data_paths["model-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["model-history"], 'w') as f:
+            with open(self.data_paths["model-history"], "w") as f:
                 f.write("# Model History\n\n")
-                for model in self.model_history[-50:]:
-                    f.write(f"- {model}\n")
+                f.writelines(f"- {model}\n" for model in self.model_history[-50:])
         except Exception as e:
             logger.error(f"Could not save model history: {e}")
 
@@ -154,7 +156,7 @@ AiDeveloper Agent Commands:
                 print(f"Unknown resource type: {resource_type}")
                 return
             if path.exists():
-                with open(path, 'r') as f:
+                with open(path) as f:
                     print(f.read())
             else:
                 print(f"Resource file not found: {path}")
@@ -192,7 +194,7 @@ AiDeveloper Agent Commands:
                 "timestamp": datetime.now().isoformat(),
                 "agent": "AiDeveloperAgent"
             }
-        
+
         try:
             if format_type == "md":
                 self._export_markdown(report_data)
@@ -205,7 +207,7 @@ AiDeveloper Agent Commands:
 
     def _export_markdown(self, report_data: Dict):
         output_file = f"ai_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-        
+
         content = f"""# AI Developer Report
 
 ## Summary
@@ -226,31 +228,31 @@ AiDeveloper Agent Commands:
 - Training Time: {report_data.get('training_time', 'N/A')}
 - Inference Latency: {report_data.get('inference_latency', 'N/A')}ms
 """
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             f.write(content)
         print(f"Report export saved to: {output_file}")
 
     def _export_json(self, report_data: Dict):
         output_file = f"ai_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             json.dump(report_data, f, indent=2)
-        
+
         print(f"Report export saved to: {output_file}")
 
     def test_resource_completeness(self):
         print("Testing resource completeness...")
         missing_resources = []
-        
+
         for name, path in self.template_paths.items():
             if not path.exists():
                 missing_resources.append(f"Template: {name} ({path})")
-        
+
         for name, path in self.data_paths.items():
             if not path.exists():
                 missing_resources.append(f"Data: {name} ({path})")
-        
+
         if missing_resources:
             print("Missing resources:")
             for resource in missing_resources:
@@ -261,36 +263,36 @@ AiDeveloper Agent Commands:
     def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         logger.info("Starting AI collaboration example...")
-        
+
         # Publish AI development request
         publish("ai_development_requested", {
             "agent": "AiDeveloperAgent",
             "task": "Sentiment Analysis Model",
             "timestamp": datetime.now().isoformat()
         })
-        
+
         # Build pipeline
         self.build_pipeline()
-        
+
         # Evaluate model
         self.evaluate()
-        
+
         # Publish completion
         publish("ai_development_completed", {
-            "status": "success", 
+            "status": "success",
             "agent": "AiDeveloperAgent",
             "accuracy": 91.0
         })
-        
+
         # Save context
         save_context("AiDeveloper", {"model_status": "deployed"})
-        
+
         # Notify via Slack
         try:
             send_slack_message("AI development completed with 91% accuracy")
         except Exception as e:
             logger.warning(f"Could not send Slack notification: {e}")
-        
+
         print("Event gepubliceerd en context opgeslagen.")
         context = get_context("AiDeveloper")
         print(f"Opgehaalde context: {context}")
@@ -302,7 +304,7 @@ AiDeveloper Agent Commands:
 
     async def handle_ai_development_completed(self, event):
         logger.info(f"AI development completed: {event}")
-        
+
         # Evaluate policy
         try:
             allowed = await self.policy_engine.evaluate_policy("ai_development", event)
@@ -313,10 +315,10 @@ AiDeveloper Agent Commands:
     def run(self):
         def sync_handler(event):
             asyncio.run(self.handle_ai_development_completed(event))
-        
+
         subscribe("ai_development_completed", sync_handler)
         subscribe("ai_development_requested", self.handle_ai_development_requested)
-        
+
         logger.info("AiDeveloperAgent ready and listening for events...")
         self.collaborate_example()
 
@@ -334,10 +336,10 @@ AiDeveloper Agent Commands:
         """
             )
         )
-        
+
         # Log performance metric
         self.monitor._record_metric("AiDeveloper", MetricType.SUCCESS_RATE, 95, "%")
-        
+
         # Add to experiment history
         exp_entry = f"{datetime.now().isoformat()}: Langchain pipeline built with GPT-4"
         self.experiment_history.append(exp_entry)
@@ -395,10 +397,10 @@ AiDeveloper Agent Commands:
         """
             )
         )
-        
+
         # Log performance metric
         self.monitor._record_metric("AiDeveloper", MetricType.SUCCESS_RATE, 91, "%")
-        
+
         # Add to model history
         model_entry = f"{datetime.now().isoformat()}: Sentiment Classifier v2 evaluated with 91% accuracy"
         self.model_history.append(model_entry)
@@ -605,7 +607,7 @@ AiDeveloper Agent Commands:
 
 def main():
     parser = argparse.ArgumentParser(description="AiDeveloper Agent CLI")
-    parser.add_argument("command", nargs="?", default="help", 
+    parser.add_argument("command", nargs="?", default="help",
                        choices=["help", "build-pipeline", "prompt-template", "vector-search", "ai-endpoint",
                                "evaluate", "experiment-log", "monitoring", "doc", "review", "blockers",
                                "build-etl-pipeline", "deploy-model", "version-model", "auto-evaluate",
@@ -613,11 +615,11 @@ def main():
                                "show-experiment-history", "show-model-history", "show-best-practices",
                                "show-changelog", "export-report", "test", "collaborate", "run"])
     parser.add_argument("--format", choices=["md", "json"], default="md", help="Export format")
-    
+
     args = parser.parse_args()
-    
+
     agent = AiDeveloperAgent()
-    
+
     if args.command == "help":
         agent.show_help()
     elif args.command == "build-pipeline":

@@ -1,1 +1,1 @@
-# BMAD Core utilities package 
+# BMAD Core utilities package

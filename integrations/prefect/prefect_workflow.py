@@ -5,19 +5,20 @@ Dit module biedt CI/CD workflow orchestration voor BMAD agents met Prefect.
 Integreert naadloos met LangGraph workflows voor end-to-end development pipelines.
 """
 
+import json
 import logging
 import time
-import json
-from typing import Dict, List, Any, Optional, Callable
 from dataclasses import dataclass, field
-from enum import Enum
 from datetime import datetime
+from enum import Enum
+from typing import Any, Callable, Dict, List, Optional
+
+from bmad.agents.core.ai.confidence_scoring import confidence_scoring
+from bmad.agents.core.communication.message_bus import publish, subscribe
 from prefect import flow, get_run_logger
 from prefect.artifacts import create_markdown_artifact
 from prefect.context import get_run_context
 from prefect.deployments import Deployment
-from bmad.agents.core.communication.message_bus import publish, subscribe
-from bmad.agents.core.ai.confidence_scoring import confidence_scoring
 
 logger = logging.getLogger(__name__)
 
@@ -63,35 +64,35 @@ class PrefectWorkflowOrchestrator:
     """
     Prefect-based workflow orchestrator voor CI/CD pipelines.
     """
-    
+
     def __init__(self):
         self.workflow_configs: Dict[str, PrefectWorkflowConfig] = {}
         self.agent_executors: Dict[str, Callable] = {}
         self.deployments: Dict[str, Deployment] = {}
-        
+
         # Register default agent executors
         self._register_default_executors()
-        
+
         # Register event handlers
         self._register_event_handlers()
-    
+
     def register_workflow_config(self, config: PrefectWorkflowConfig):
         """Register a workflow configuration."""
         self.workflow_configs[config.name] = config
         logger.info(f"Workflow config '{config.name}' geregistreerd")
-    
+
     def register_agent_executor(self, agent_name: str, executor: Callable):
         """Register an agent executor."""
         self.agent_executors[agent_name] = executor
         logger.info(f"Agent executor geregistreerd voor: {agent_name}")
-    
+
     def create_deployment(self, workflow_name: str, agent_tasks: List[AgentTaskConfig]) -> str:
         """Create a Prefect deployment for a workflow."""
         if workflow_name not in self.workflow_configs:
             raise ValueError(f"Workflow config '{workflow_name}' niet gevonden")
-        
+
         config = self.workflow_configs[workflow_name]
-        
+
         # Create the flow function
         @flow(
             name=config.name,
@@ -103,25 +104,25 @@ class PrefectWorkflowOrchestrator:
         def bmad_workflow(**parameters):
             """BMAD workflow executed by Prefect."""
             return self._execute_workflow(workflow_name, agent_tasks, parameters)
-        
+
         # Store the flow for later deployment
         self.deployments[workflow_name] = {
             "flow": bmad_workflow,
             "config": config,
             "agent_tasks": agent_tasks
         }
-        
+
         logger.info(f"Flow '{config.name}' created for workflow '{workflow_name}'")
         return config.name
-    
+
     def _execute_workflow(self, workflow_name: str, agent_tasks: List[AgentTaskConfig], parameters: Dict[str, Any]):
         """Execute a workflow with agent tasks."""
         logger = get_run_logger()
         context = get_run_context()
-        
+
         logger.info(f"Starting BMAD workflow: {workflow_name}")
         logger.info(f"Parameters: {json.dumps(parameters, indent=2)}")
-        
+
         # Create workflow context
         workflow_context = {
             "workflow_name": workflow_name,
@@ -130,14 +131,14 @@ class PrefectWorkflowOrchestrator:
             "parameters": parameters,
             "environment": self.workflow_configs[workflow_name].environment.value
         }
-        
+
         # Execute agent tasks
         results = {}
         for task_config in agent_tasks:
             try:
                 result = self._execute_agent_task(task_config, workflow_context)
                 results[task_config.task_name] = result
-                
+
                 # Create artifact for task result
                 create_markdown_artifact(
                     key=f"{task_config.task_name}-result",
@@ -152,14 +153,14 @@ class PrefectWorkflowOrchestrator:
                     """,
                     description=f"Result from {task_config.agent_name} task"
                 )
-                
+
             except Exception as e:
                 logger.error(f"Task {task_config.task_name} failed: {e}")
                 results[task_config.task_name] = {
                     "error": str(e),
                     "status": "failed"
                 }
-                
+
                 # Create artifact for error
                 create_markdown_artifact(
                     key=f"{task_config.task_name}-error",
@@ -169,11 +170,11 @@ class PrefectWorkflowOrchestrator:
 **Agent**: {task_config.agent_name}
 **Command**: {task_config.command}
 **Status**: ❌ Failed
-**Error**: {str(e)}
+**Error**: {e!s}
                     """,
                     description=f"Error from {task_config.agent_name} task"
                 )
-        
+
         # Create final summary artifact
         create_markdown_artifact(
             key=f"{workflow_name}-summary",
@@ -188,43 +189,43 @@ class PrefectWorkflowOrchestrator:
             """,
             description=f"Summary of {workflow_name} workflow execution"
         )
-        
+
         # Calculate success metrics
         total_count = len(results)
-        success_count = sum(1 for result in results.values() if result.get('status') != 'failed')
-        
+        success_count = sum(1 for result in results.values() if result.get("status") != "failed")
+
         logger.info(f"Workflow {workflow_name} completed. Success: {success_count}/{total_count}")
-        
+
         # Publish workflow completion event
         publish("workflow_completed", {
             "workflow_name": workflow_name,
-            "run_id": workflow_context['run_id'],
+            "run_id": workflow_context["run_id"],
             "results": results,
             "success_count": success_count,
             "total_count": total_count,
             "timestamp": datetime.now().isoformat()
         })
-        
+
         return {
             "workflow_name": workflow_name,
-            "run_id": workflow_context['run_id'],
+            "run_id": workflow_context["run_id"],
             "results": results,
             "success_count": success_count,
             "total_count": total_count,
             "status": "completed" if success_count == total_count else "partial" if success_count > 0 else "failed"
         }
-    
+
     def _execute_agent_task(self, task_config: AgentTaskConfig, workflow_context: Dict[str, Any]):
         """Execute a single agent task."""
         logger = get_run_logger()
-        
+
         logger.info(f"Executing task: {task_config.task_name} with agent: {task_config.agent_name}")
-        
+
         # Find executor for agent
         executor = self.agent_executors.get(task_config.agent_name)
         if not executor:
             raise ValueError(f"Geen executor gevonden voor agent: {task_config.agent_name}")
-        
+
         # Execute task
         result = executor(
             task_name=task_config.task_name,
@@ -232,7 +233,7 @@ class PrefectWorkflowOrchestrator:
             parameters=task_config.parameters,
             context=workflow_context
         )
-        
+
         # Enhance result with confidence scoring
         if isinstance(result, dict) and "output" in result:
             enhanced_result = confidence_scoring.enhance_agent_output(
@@ -242,14 +243,14 @@ class PrefectWorkflowOrchestrator:
                 context=workflow_context
             )
             result.update(enhanced_result)
-        
+
         result["status"] = "success"
         result["task_name"] = task_config.task_name
         result["agent_name"] = task_config.agent_name
-        
+
         logger.info(f"Task {task_config.task_name} completed successfully")
         return result
-    
+
     def _register_default_executors(self):
         """Register default agent executors."""
         self.register_agent_executor("ProductOwner", self._execute_product_owner_task)
@@ -258,15 +259,15 @@ class PrefectWorkflowOrchestrator:
         self.register_agent_executor("TestEngineer", self._execute_test_task)
         self.register_agent_executor("DevOpsInfra", self._execute_devops_task)
         self.register_agent_executor("SecurityDeveloper", self._execute_security_task)
-    
+
     def _execute_product_owner_task(self, task_name: str, command: str, parameters: Dict[str, Any], context: Dict[str, Any]):
         """Execute ProductOwner task."""
         logger = get_run_logger()
         logger.info(f"ProductOwner executing: {command}")
-        
+
         # Simulate task execution
         time.sleep(2)
-        
+
         return {
             "output": f"ProductOwner completed: {command}",
             "agent": "ProductOwner",
@@ -274,15 +275,15 @@ class PrefectWorkflowOrchestrator:
             "command": command,
             "parameters": parameters
         }
-    
+
     def _execute_architect_task(self, task_name: str, command: str, parameters: Dict[str, Any], context: Dict[str, Any]):
         """Execute Architect task."""
         logger = get_run_logger()
         logger.info(f"Architect executing: {command}")
-        
+
         # Simulate task execution
         time.sleep(3)
-        
+
         return {
             "output": f"Architect completed: {command}",
             "agent": "Architect",
@@ -290,15 +291,15 @@ class PrefectWorkflowOrchestrator:
             "command": command,
             "parameters": parameters
         }
-    
+
     def _execute_fullstack_task(self, task_name: str, command: str, parameters: Dict[str, Any], context: Dict[str, Any]):
         """Execute FullstackDeveloper task."""
         logger = get_run_logger()
         logger.info(f"FullstackDeveloper executing: {command}")
-        
+
         # Simulate task execution
         time.sleep(4)
-        
+
         return {
             "output": f"FullstackDeveloper completed: {command}",
             "agent": "FullstackDeveloper",
@@ -306,15 +307,15 @@ class PrefectWorkflowOrchestrator:
             "command": command,
             "parameters": parameters
         }
-    
+
     def _execute_test_task(self, task_name: str, command: str, parameters: Dict[str, Any], context: Dict[str, Any]):
         """Execute TestEngineer task."""
         logger = get_run_logger()
         logger.info(f"TestEngineer executing: {command}")
-        
+
         # Simulate task execution
         time.sleep(3)
-        
+
         return {
             "output": f"TestEngineer completed: {command}",
             "agent": "TestEngineer",
@@ -322,15 +323,15 @@ class PrefectWorkflowOrchestrator:
             "command": command,
             "parameters": parameters
         }
-    
+
     def _execute_devops_task(self, task_name: str, command: str, parameters: Dict[str, Any], context: Dict[str, Any]):
         """Execute DevOpsInfra task."""
         logger = get_run_logger()
         logger.info(f"DevOpsInfra executing: {command}")
-        
+
         # Simulate task execution
         time.sleep(5)
-        
+
         return {
             "output": f"DevOpsInfra completed: {command}",
             "agent": "DevOpsInfra",
@@ -338,15 +339,15 @@ class PrefectWorkflowOrchestrator:
             "command": command,
             "parameters": parameters
         }
-    
+
     def _execute_security_task(self, task_name: str, command: str, parameters: Dict[str, Any], context: Dict[str, Any]):
         """Execute SecurityDeveloper task."""
         logger = get_run_logger()
         logger.info(f"SecurityDeveloper executing: {command}")
-        
+
         # Simulate task execution
         time.sleep(4)
-        
+
         return {
             "output": f"SecurityDeveloper completed: {command}",
             "agent": "SecurityDeveloper",
@@ -354,21 +355,21 @@ class PrefectWorkflowOrchestrator:
             "command": command,
             "parameters": parameters
         }
-    
+
     def _register_event_handlers(self):
         """Register event handlers."""
         subscribe("workflow_completed", self._handle_workflow_completion)
         subscribe("deployment_requested", self._handle_deployment_request)
-    
+
     def _handle_workflow_completion(self, event: Dict[str, Any]):
         """Handle workflow completion event."""
         workflow_name = event.get("workflow_name")
         run_id = event.get("run_id")
         success_count = event.get("success_count", 0)
         total_count = event.get("total_count", 0)
-        
+
         logger.info(f"Workflow {workflow_name} (run: {run_id}) completed: {success_count}/{total_count} tasks successful")
-        
+
         # Send notification based on success rate
         if success_count == total_count:
             publish("workflow_success", event)
@@ -376,14 +377,14 @@ class PrefectWorkflowOrchestrator:
             publish("workflow_partial_success", event)
         else:
             publish("workflow_failure", event)
-    
+
     def _handle_deployment_request(self, event: Dict[str, Any]):
         """Handle deployment request event."""
         workflow_name = event.get("workflow_name")
         environment = event.get("environment", "development")
-        
+
         logger.info(f"Deployment requested for workflow {workflow_name} to {environment}")
-        
+
         # Trigger deployment workflow
         publish("deployment_triggered", {
             "workflow_name": workflow_name,
@@ -496,4 +497,4 @@ def get_deployment_tasks() -> List[AgentTaskConfig]:
             dependencies=["deploy_application"],
             parameters={"test_scope": "critical_paths"}
         )
-    ] 
+    ]

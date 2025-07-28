@@ -1,20 +1,24 @@
-import sys
 import os
+import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import argparse
-import logging
+import asyncio
 import json
+import logging
+import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, Any
-import asyncio
-import time
+from typing import Any, Dict, Optional
 
-from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.agent.agent_performance_monitor import (
+    MetricType,
+    get_performance_monitor,
+)
 from bmad.agents.core.agent.test_sprites import get_sprite_library
-from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor, MetricType
-from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from bmad.agents.core.ai.llm_client import ask_openai
+from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.slack.slack_notify import send_slack_message
 
 # Configure logging
@@ -26,7 +30,7 @@ class TestEngineerAgent:
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
-        
+
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
         self.template_paths = {
@@ -46,7 +50,7 @@ class TestEngineerAgent:
             "test-history": self.resource_base / "data/testengineer/test-history.md",
             "coverage-history": self.resource_base / "data/testengineer/coverage-history.md"
         }
-        
+
         # Initialize test history
         self.test_history = []
         self.coverage_history = []
@@ -56,11 +60,11 @@ class TestEngineerAgent:
     def _load_test_history(self):
         try:
             if self.data_paths["test-history"].exists():
-                with open(self.data_paths["test-history"], 'r') as f:
+                with open(self.data_paths["test-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.test_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load test history: {e}")
@@ -68,21 +72,20 @@ class TestEngineerAgent:
     def _save_test_history(self):
         try:
             self.data_paths["test-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["test-history"], 'w') as f:
+            with open(self.data_paths["test-history"], "w") as f:
                 f.write("# Test History\n\n")
-                for test in self.test_history[-50:]:
-                    f.write(f"- {test}\n")
+                f.writelines(f"- {test}\n" for test in self.test_history[-50:])
         except Exception as e:
             logger.error(f"Could not save test history: {e}")
 
     def _load_coverage_history(self):
         try:
             if self.data_paths["coverage-history"].exists():
-                with open(self.data_paths["coverage-history"], 'r') as f:
+                with open(self.data_paths["coverage-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.coverage_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load coverage history: {e}")
@@ -90,10 +93,9 @@ class TestEngineerAgent:
     def _save_coverage_history(self):
         try:
             self.data_paths["coverage-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["coverage-history"], 'w') as f:
+            with open(self.data_paths["coverage-history"], "w") as f:
                 f.write("# Coverage History\n\n")
-                for cov in self.coverage_history[-50:]:
-                    f.write(f"- {cov}\n")
+                f.writelines(f"- {cov}\n" for cov in self.coverage_history[-50:])
         except Exception as e:
             logger.error(f"Could not save coverage history: {e}")
 
@@ -124,7 +126,7 @@ TestEngineer Agent Commands:
                 print(f"Unknown resource type: {resource_type}")
                 return
             if path.exists():
-                with open(path, 'r') as f:
+                with open(path) as f:
                     print(f.read())
             else:
                 print(f"Resource file not found: {path}")
@@ -155,7 +157,7 @@ TestEngineer Agent Commands:
         time.sleep(1)
         result = {
             "redis_cache": "✅ Basic operations werken",
-            "monitoring": "⚠️ Async issues gedetecteerd", 
+            "monitoring": "⚠️ Async issues gedetecteerd",
             "connection_pool": "⚠️ Initialization problemen",
             "llm_caching": "✅ Decorator werkt"
         }
@@ -164,7 +166,7 @@ TestEngineer Agent Commands:
         self.test_history.append(test_entry)
         self._save_test_history()
         # Log performance metric
-        self.monitor._record_metric("TestEngineer", MetricType.SUCCESS_RATE, sum('✅' in v for v in result.values())/len(result)*100, "%")
+        self.monitor._record_metric("TestEngineer", MetricType.SUCCESS_RATE, sum("✅" in v for v in result.values())/len(result)*100, "%")
         logger.info(f"Test results: {result}")
         return result
 
@@ -187,7 +189,7 @@ TestEngineer Agent Commands:
     def _export_markdown(self, test_data: Dict):
         template_path = self.template_paths["test-report-md"]
         if template_path.exists():
-            with open(template_path, 'r') as f:
+            with open(template_path) as f:
                 template = f.read()
             # Vul template
             content = template.replace("{{date}}", datetime.now().strftime("%Y-%m-%d"))
@@ -196,13 +198,13 @@ TestEngineer Agent Commands:
                 results_text += f"- **{test}**: {result}\n"
             content = content.replace("{{results}}", results_text)
             output_file = f"test_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-            with open(output_file, 'w') as f:
+            with open(output_file, "w") as f:
                 f.write(content)
             print(f"Test report exported to: {output_file}")
 
     def _export_json(self, test_data: Dict):
         output_file = f"test_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(test_data, f, indent=2)
         print(f"Test report exported to: {output_file}")
 
@@ -264,9 +266,9 @@ TestEngineer Agent Commands:
 
 def main():
     parser = argparse.ArgumentParser(description="TestEngineer Agent CLI")
-    parser.add_argument("command", nargs="?", default="help", 
-                       choices=["help", "run-tests", "show-coverage", "show-test-history", 
-                               "show-best-practices", "show-changelog", "export-report", 
+    parser.add_argument("command", nargs="?", default="help",
+                       choices=["help", "run-tests", "show-coverage", "show-test-history",
+                               "show-best-practices", "show-changelog", "export-report",
                                "test", "collaborate", "run"])
     parser.add_argument("--format", choices=["md", "json"], default="md", help="Export format")
     args = parser.parse_args()

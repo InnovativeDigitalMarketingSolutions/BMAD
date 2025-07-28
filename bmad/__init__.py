@@ -1,2 +1,2 @@
 # BMAD - Business Multi-Agent DevOps
-# Main package initialization 
+# Main package initialization

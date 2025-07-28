@@ -1,7 +1,8 @@
 import glob
 import os
-import yaml
 from datetime import datetime
+
+import yaml
 
 AGENT_YAMLS = glob.glob("bmad/agents/Agent/*/*.yaml")
 REPORT = []
@@ -14,12 +15,12 @@ for yaml_path in AGENT_YAMLS:
             REPORT.append(f"[ERROR] {yaml_path}: YAML parse error: {e}")
             continue
     agent = os.path.basename(os.path.dirname(yaml_path))
-    if not data or 'dependencies' not in data:
+    if not data or "dependencies" not in data:
         REPORT.append(f"[WARN] {agent}: geen dependencies-sectie gevonden in {yaml_path}.")
         continue
-    for dtype in ('templates', 'data'):
-        for dep in data['dependencies'].get(dtype, []):
-            dep_path = os.path.join('bmad', dep) if not dep.startswith('bmad/') else dep
+    for dtype in ("templates", "data"):
+        for dep in data["dependencies"].get(dtype, []):
+            dep_path = os.path.join("bmad", dep) if not dep.startswith("bmad/") else dep
             if not os.path.exists(dep_path):
                 REPORT.append(f"[MISSING] {agent}: {dep_path} bestaat niet.")
             elif os.path.getsize(dep_path) < 32:
@@ -36,4 +37,4 @@ if not REPORT:
 else:
     print("Health check rapport:")
     for line in REPORT:
-        print(line) 
+        print(line)

@@ -35,4 +35,4 @@ Automatisch dagelijks mergen? Voeg deze regel toe aan je crontab (via `crontab -
 0 2 * * * cd /Users/yannickmacgillavry/Projects/BMAD && /usr/bin/python3 merge_agent_changelogs.py
 
 Dit draait het script elke dag om 02:00 uur. Pas het pad aan indien nodig.
-""" 
+"""

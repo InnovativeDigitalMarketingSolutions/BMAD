@@ -8,16 +8,26 @@ __version__ = "1.0.0"
 __author__ = "BMAD Team"
 
 # Import main workflow components
-from .advanced_workflow import AdvancedWorkflowOrchestrator, WorkflowDefinition, WorkflowTask, WorkflowStatus, TaskStatus
-from .integrated_workflow_orchestrator import IntegratedWorkflowOrchestrator, IntegrationLevel, AgentWorkflowConfig
+from .advanced_workflow import (
+    AdvancedWorkflowOrchestrator,
+    TaskStatus,
+    WorkflowDefinition,
+    WorkflowStatus,
+    WorkflowTask,
+)
+from .integrated_workflow_orchestrator import (
+    AgentWorkflowConfig,
+    IntegratedWorkflowOrchestrator,
+    IntegrationLevel,
+)
 
 __all__ = [
     "AdvancedWorkflowOrchestrator",
-    "WorkflowDefinition",
-    "WorkflowTask",
-    "WorkflowStatus",
-    "TaskStatus",
+    "AgentWorkflowConfig",
     "IntegratedWorkflowOrchestrator",
     "IntegrationLevel",
-    "AgentWorkflowConfig"
-] 
+    "TaskStatus",
+    "WorkflowDefinition",
+    "WorkflowStatus",
+    "WorkflowTask"
+]

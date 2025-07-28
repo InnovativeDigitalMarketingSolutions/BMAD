@@ -1,13 +1,14 @@
 import logging
+import os
+import sys
 import time
 from pathlib import Path
-import sys
-import os
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 
-from bmad.agents.core.communication.message_bus import publish, subscribe
-from bmad.agents.core.data.supabase_context import save_context, get_context
 from bmad.agents.core.ai.llm_client import ask_openai
+from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.data.supabase_context import get_context, save_context
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
@@ -146,22 +147,22 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
         """Ontwerp de BMAD frontend architectuur."""
         print("🏗️ Architect Agent - Frontend Design")
         print("=" * 50)
-        
+
         # Haal de user stories op van de ProductOwner
         context = get_context("ProductOwner", "frontend_stories")
-        
+
         # Handle context data properly
         if isinstance(context, list) and len(context) > 0:
-            stories = context[0].get('stories', 'Geen user stories gevonden')
+            stories = context[0].get("stories", "Geen user stories gevonden")
         elif isinstance(context, dict):
-            stories = context.get('stories', 'Geen user stories gevonden')
+            stories = context.get("stories", "Geen user stories gevonden")
         else:
-            stories = 'Geen user stories gevonden'
-        
+            stories = "Geen user stories gevonden"
+
         print("📋 Beschikbare user stories:")
         print(stories[:500] + "..." if len(stories) > 500 else stories)
         print()
-        
+
         # Vraag gebruiker om input
         print("🤔 Wat wil je dat ik ontwerp?")
         print("1. Complete frontend architectuur")
@@ -169,9 +170,9 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
         print("3. State management strategie")
         print("4. API integratie patronen")
         print("5. Custom opdracht")
-        
+
         choice = input("\nKies een optie (1-5) of beschrijf je eigen opdracht: ").strip()
-        
+
         if choice == "1":
             prompt = f"""
             Ontwerp een complete frontend architectuur voor de BMAD dashboard op basis van deze user stories:
@@ -202,15 +203,15 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
         else:
             # Gebruiker heeft direct een opdracht ingevoerd
             prompt = f"Opdracht: {choice}\n\nContext: {stories}"
-        
+
         print("\n🔄 Architect aan het werk...")
         result = ask_openai(prompt)
-        
+
         print("\n🏗️ BMAD Frontend Architectuur:")
         print("=" * 60)
         print(result)
         print("=" * 60)
-        
+
         # Sla het ontwerp op
         save_context("Architect", "frontend_architecture", {
             "timestamp": time.time(),
@@ -218,7 +219,7 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
             "status": "designed",
             "prompt": prompt
         })
-        
+
         # Publiceer event
         publish("frontend_architecture_created", {
             "agent": "Architect",
@@ -255,7 +256,7 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
         
         Geef een visueel diagram in ASCII art en gedetailleerde beschrijvingen.
         """
-        
+
         result = ask_openai(prompt)
         print("🏗️ BMAD Component Diagram & API Koppeling:")
         print("=" * 60)
@@ -284,7 +285,7 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
         
         Geef een gedetailleerde vergelijking en aanbeveling met motivatie.
         """
-        
+
         result = ask_openai(prompt)
         print("🏗️ Frontend Tech Stack Evaluatie:")
         print("=" * 60)
@@ -304,25 +305,25 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
         print()
         print("Type 'help' voor commando's, 'quit' om te stoppen.")
         print()
-        
+
         while True:
             try:
                 user_input = input("🏗️ Architect > ").strip()
-                
-                if user_input.lower() in ['quit', 'exit', 'q']:
+
+                if user_input.lower() in ["quit", "exit", "q"]:
                     print("Tot ziens! 👋")
                     break
-                elif user_input.lower() == 'help':
+                if user_input.lower() == "help":
                     self.show_help()
-                elif user_input.lower() == 'clear':
+                elif user_input.lower() == "clear":
                     import os
-                    os.system('clear' if os.name == 'posix' else 'cls')
+                    os.system("clear" if os.name == "posix" else "cls")
                 elif user_input:
                     # Probeer het als commando uit te voeren
                     self.run(user_input)
                 else:
                     continue
-                    
+
             except KeyboardInterrupt:
                 print("\nTot ziens! 👋")
                 break
@@ -377,9 +378,9 @@ def main():
     )
     parser.add_argument("--interactive", "-i", action="store_true", help="Start interactieve modus")
     args = parser.parse_args()
-    
+
     agent = ArchitectAgent()
-    
+
     if args.interactive:
         agent.start_conversation()
     else:

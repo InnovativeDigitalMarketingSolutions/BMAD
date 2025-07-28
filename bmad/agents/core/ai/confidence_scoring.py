@@ -6,8 +6,9 @@ en review requirements te bepalen voor hun output.
 """
 
 import logging
-from typing import Dict, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, Optional
+
 from .llm_client import calculate_confidence
 
 logger = logging.getLogger(__name__)
@@ -16,18 +17,18 @@ class ConfidenceScoring:
     """
     Utility class voor confidence scoring en review management.
     """
-    
+
     def __init__(self):
         self.review_thresholds = {
             "low": 0.5,      # Vereist volledige review
             "medium": 0.8,   # Notificeer maar ga door
             "high": 1.0      # Auto-approve
         }
-    
+
     def enhance_agent_output(
-        self, 
-        output: str, 
-        agent_name: str, 
+        self,
+        output: str,
+        agent_name: str,
         task_type: str,
         context: Optional[Dict[str, Any]] = None
     ) -> Dict[str, Any]:
@@ -42,23 +43,23 @@ class ConfidenceScoring:
         """
         if context is None:
             context = {}
-        
+
         # Voeg agent en task info toe aan context
         context.update({
             "agent": agent_name,
             "task": task_type,
             "timestamp": datetime.now().isoformat()
         })
-        
+
         # Bereken confidence score
         confidence = calculate_confidence(output, context)
-        
+
         # Bepaal review requirement
         review_required = self._determine_review_requirement(confidence, context)
-        
+
         # Bepaal review level
         review_level = self._get_review_level(confidence)
-        
+
         # Maak enhanced output
         enhanced_output = {
             "output": output,
@@ -72,12 +73,12 @@ class ConfidenceScoring:
                 "context": context
             }
         }
-        
+
         # Log confidence info
         logger.info(f"[CONFIDENCE] {agent_name} - {task_type}: {confidence:.2f} ({review_level})")
-        
+
         return enhanced_output
-    
+
     def _determine_review_requirement(self, confidence: float, context: Dict[str, Any]) -> bool:
         """
         Bepaal of menselijke review vereist is.
@@ -89,21 +90,21 @@ class ConfidenceScoring:
         # Low confidence = altijd review
         if confidence < self.review_thresholds["low"]:
             return True
-        
+
         # Security-critical changes = altijd review
         if self._is_security_critical(context):
             return True
-        
+
         # High complexity tasks = review bij medium confidence
         if self._is_high_complexity(context) and confidence < self.review_thresholds["medium"]:
             return True
-        
+
         # Production deployments = altijd review
         if self._is_production_deployment(context):
             return True
-        
+
         return False
-    
+
     def _get_review_level(self, confidence: float) -> str:
         """
         Bepaal review level op basis van confidence score.
@@ -113,11 +114,10 @@ class ConfidenceScoring:
         """
         if confidence < self.review_thresholds["low"]:
             return "low"
-        elif confidence < self.review_thresholds["medium"]:
+        if confidence < self.review_thresholds["medium"]:
             return "medium"
-        else:
-            return "high"
-    
+        return "high"
+
     def _is_security_critical(self, context: Dict[str, Any]) -> bool:
         """
         Check of de taak security-critical is.
@@ -127,22 +127,22 @@ class ConfidenceScoring:
         """
         task_type = context.get("task", "").lower()
         agent_name = context.get("agent", "").lower()
-        
+
         security_keywords = [
-            "auth", "authentication", "security", "encryption", "password", 
+            "auth", "authentication", "security", "encryption", "password",
             "token", "key", "secret", "admin", "root", "permission"
         ]
-        
+
         # Check task type
         if any(keyword in task_type for keyword in security_keywords):
             return True
-        
+
         # Check agent type
         if "security" in agent_name:
             return True
-        
+
         return False
-    
+
     def _is_high_complexity(self, context: Dict[str, Any]) -> bool:
         """
         Check of de taak high complexity is.
@@ -151,14 +151,14 @@ class ConfidenceScoring:
         :return: True als high complexity
         """
         task_type = context.get("task", "").lower()
-        
+
         complexity_keywords = [
-            "architect", "design", "infrastructure", "deployment", 
+            "architect", "design", "infrastructure", "deployment",
             "database", "api", "integration", "migration"
         ]
-        
+
         return any(keyword in task_type for keyword in complexity_keywords)
-    
+
     def _is_production_deployment(self, context: Dict[str, Any]) -> bool:
         """
         Check of het een production deployment is.
@@ -168,9 +168,9 @@ class ConfidenceScoring:
         """
         task_type = context.get("task", "").lower()
         output = context.get("output", "").lower()
-        
+
         deployment_keywords = ["deploy", "production", "live", "release"]
-        
+
         return any(keyword in task_type or keyword in output for keyword in deployment_keywords)
 
 def create_review_request(enhanced_output: Dict[str, Any]) -> Dict[str, Any]:
@@ -181,7 +181,7 @@ def create_review_request(enhanced_output: Dict[str, Any]) -> Dict[str, Any]:
     :return: Review request dict
     """
     metadata = enhanced_output["metadata"]
-    
+
     review_request = {
         "type": "review_request",
         "agent": metadata["agent"],
@@ -196,7 +196,7 @@ def create_review_request(enhanced_output: Dict[str, Any]) -> Dict[str, Any]:
             {"name": "modify", "text": "✏️ Modify", "type": "button", "style": "default"}
         ]
     }
-    
+
     return review_request
 
 def format_confidence_message(enhanced_output: Dict[str, Any]) -> str:
@@ -209,7 +209,7 @@ def format_confidence_message(enhanced_output: Dict[str, Any]) -> str:
     metadata = enhanced_output["metadata"]
     confidence = enhanced_output["confidence"]
     review_level = enhanced_output["review_level"]
-    
+
     # Emoji voor confidence level
     if confidence >= 0.8:
         confidence_emoji = "🟢"
@@ -217,7 +217,7 @@ def format_confidence_message(enhanced_output: Dict[str, Any]) -> str:
         confidence_emoji = "🟡"
     else:
         confidence_emoji = "🔴"
-    
+
     # Emoji voor review level
     if review_level == "high":
         review_emoji = "✅"
@@ -225,7 +225,7 @@ def format_confidence_message(enhanced_output: Dict[str, Any]) -> str:
         review_emoji = "⚠️"
     else:
         review_emoji = "🔍"
-    
+
     message = f"""
 {confidence_emoji} **Confidence Score: {confidence:.2f}**
 {review_emoji} **Review Level: {review_level.upper()}**
@@ -239,8 +239,8 @@ def format_confidence_message(enhanced_output: Dict[str, Any]) -> str:
 {enhanced_output['output_preview']}
 ```
 """
-    
+
     return message.strip()
 
 # Global instance voor easy access
-confidence_scoring = ConfidenceScoring() 
+confidence_scoring = ConfidenceScoring()

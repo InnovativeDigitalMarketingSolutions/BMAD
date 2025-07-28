@@ -1,10 +1,11 @@
 # API Template voor FullstackDeveloper
 
+from datetime import datetime, timedelta
+from typing import List
+
+import jwt
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from typing import List
-import jwt
-from datetime import datetime, timedelta
 
 app = FastAPI(title="BMAD API", version="1.0.0")
 
@@ -28,13 +29,13 @@ class AuthService:
     def __init__(self):
         self.secret_key = "your-secret-key"
         self.algorithm = "HS256"
-    
+
     def authenticate(self, email: str, password: str) -> str:
         # Simulate authentication
         if email == "test@test.com" and password == "secret":
             return self.create_token({"sub": email})
         raise HTTPException(status_code=401, detail="Invalid credentials")
-    
+
     def create_token(self, data: dict) -> str:
         to_encode = data.copy()
         expire = datetime.utcnow() + timedelta(minutes=30)
@@ -79,4 +80,4 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000) 
+    uvicorn.run(app, host="0.0.0.0", port=8000)

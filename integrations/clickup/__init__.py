@@ -8,10 +8,10 @@ __version__ = "1.0.0"
 __author__ = "BMAD Team"
 
 # Import main integration components
-from .clickup_integration import ClickUpIntegration
 from .bmad_clickup_workflow import BMADClickUpWorkflow
+from .clickup_integration import ClickUpIntegration
 
 __all__ = [
-    "ClickUpIntegration",
-    "BMADClickUpWorkflow"
-] 
+    "BMADClickUpWorkflow",
+    "ClickUpIntegration"
+]

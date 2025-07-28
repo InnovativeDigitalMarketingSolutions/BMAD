@@ -3,25 +3,30 @@ MobileDeveloper Agent - Geoptimaliseerde mobile development agent
 Handles mobile app development, cross-platform development, and mobile-specific features.
 """
 
-import sys
 import os
+import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
-import logging
 import argparse
-import json
 import csv
+import hashlib
+import json
+import logging
+import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, Any
-import time
-import hashlib
+from typing import Any, Dict, Optional
+
 from dotenv import load_dotenv
 
-from bmad.agents.core.communication.message_bus import publish
+from bmad.agents.core.agent.agent_performance_monitor import (
+    MetricType,
+    get_performance_monitor,
+)
 from bmad.agents.core.agent.test_sprites import get_sprite_library
-from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor, MetricType
+from bmad.agents.core.communication.message_bus import publish
+from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
-from bmad.agents.core.data.supabase_context import save_context, get_context
 from integrations.slack.slack_notify import send_slack_message
 
 load_dotenv()
@@ -35,7 +40,7 @@ class MobileDeveloperAgent:
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
-        
+
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
         self.template_paths = {
@@ -53,13 +58,13 @@ class MobileDeveloperAgent:
             "app-history": self.resource_base / "data/mobiledeveloper/app-history.md",
             "performance-history": self.resource_base / "data/mobiledeveloper/performance-history.md"
         }
-        
+
         # Initialize history
         self.app_history = []
         self.performance_history = []
         self._load_app_history()
         self._load_performance_history()
-        
+
         # Original functionality
         self.current_project = None
         self.platform = "react-native"
@@ -68,11 +73,11 @@ class MobileDeveloperAgent:
         """Load app history from data file"""
         try:
             if self.data_paths["app-history"].exists():
-                with open(self.data_paths["app-history"], 'r') as f:
+                with open(self.data_paths["app-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.app_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load app history: {e}")
@@ -81,7 +86,7 @@ class MobileDeveloperAgent:
         """Save app history to data file"""
         try:
             self.data_paths["app-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["app-history"], 'w') as f:
+            with open(self.data_paths["app-history"], "w") as f:
                 f.write("# Mobile App Development History\n\n")
                 for app in self.app_history[-50:]:  # Keep last 50 apps
                     f.write(f"- {app}\n")
@@ -92,11 +97,11 @@ class MobileDeveloperAgent:
         """Load performance history from data file"""
         try:
             if self.data_paths["performance-history"].exists():
-                with open(self.data_paths["performance-history"], 'r') as f:
+                with open(self.data_paths["performance-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.performance_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load performance history: {e}")
@@ -105,7 +110,7 @@ class MobileDeveloperAgent:
         """Save performance history to data file"""
         try:
             self.data_paths["performance-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["performance-history"], 'w') as f:
+            with open(self.data_paths["performance-history"], "w") as f:
                 f.write("# Mobile Performance History\n\n")
                 for performance in self.performance_history[-50:]:  # Keep last 50 entries
                     f.write(f"- {performance}\n")
@@ -158,7 +163,7 @@ MobileDeveloper Agent Commands:
                 print(f"Unknown resource type: {resource_type}")
                 return
             if path.exists():
-                with open(path, 'r') as f:
+                with open(path) as f:
                     print(f.read())
             else:
                 print(f"Resource file not found: {path}")
@@ -188,10 +193,10 @@ MobileDeveloper Agent Commands:
     def create_app(self, app_name: str = "MyMobileApp", platform: str = "react-native", app_type: str = "business") -> Dict[str, Any]:
         """Create a new mobile app with enhanced functionality."""
         logger.info(f"Creating mobile app: {app_name} on {platform}")
-        
+
         # Simulate app creation
         time.sleep(1)
-        
+
         app_result = {
             "app_id": hashlib.sha256(f"{app_name}_{platform}".encode()).hexdigest()[:8],
             "app_name": app_name,
@@ -265,25 +270,25 @@ MobileDeveloper Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "MobileDeveloperAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("MobileDeveloperAgent", MetricType.SUCCESS_RATE, 95, "%")
-        
+
         # Add to app history
         app_entry = f"{datetime.now().isoformat()}: App created - {app_name} ({platform})"
         self.app_history.append(app_entry)
         self._save_app_history()
-        
+
         logger.info(f"Mobile app created: {app_result}")
         return app_result
 
     def build_component(self, component_name: str = "CustomButton", platform: str = "react-native", component_type: str = "ui") -> Dict[str, Any]:
         """Build a mobile component with enhanced functionality."""
         logger.info(f"Building mobile component: {component_name} for {platform}")
-        
+
         # Simulate component building
         time.sleep(1)
-        
+
         component_result = {
             "component_id": hashlib.sha256(f"{component_name}_{platform}".encode()).hexdigest()[:8],
             "component_name": component_name,
@@ -353,20 +358,20 @@ MobileDeveloper Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "MobileDeveloperAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("MobileDeveloperAgent", MetricType.SUCCESS_RATE, 92, "%")
-        
+
         logger.info(f"Mobile component built: {component_result}")
         return component_result
 
     def optimize_performance(self, app_name: str = "MyMobileApp", optimization_type: str = "general") -> Dict[str, Any]:
         """Optimize mobile app performance with enhanced functionality."""
         logger.info(f"Optimizing performance for app: {app_name}")
-        
+
         # Simulate performance optimization
         time.sleep(1)
-        
+
         optimization_result = {
             "optimization_id": hashlib.sha256(f"{app_name}_{optimization_type}".encode()).hexdigest()[:8],
             "app_name": app_name,
@@ -452,25 +457,25 @@ MobileDeveloper Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "MobileDeveloperAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("MobileDeveloperAgent", MetricType.SUCCESS_RATE, 88, "%")
-        
+
         # Add to performance history
         performance_entry = f"{datetime.now().isoformat()}: Performance optimized - {app_name} ({optimization_type})"
         self.performance_history.append(performance_entry)
         self._save_performance_history()
-        
+
         logger.info(f"Performance optimization completed: {optimization_result}")
         return optimization_result
 
     def test_app(self, app_name: str = "MyMobileApp", test_type: str = "comprehensive") -> Dict[str, Any]:
         """Test mobile app functionality with enhanced testing."""
         logger.info(f"Testing mobile app: {app_name}")
-        
+
         # Simulate app testing
         time.sleep(1)
-        
+
         test_result = {
             "test_id": hashlib.sha256(f"{app_name}_{test_type}".encode()).hexdigest()[:8],
             "app_name": app_name,
@@ -556,20 +561,20 @@ MobileDeveloper Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "MobileDeveloperAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("MobileDeveloperAgent", MetricType.SUCCESS_RATE, 92, "%")
-        
+
         logger.info(f"App testing completed: {test_result}")
         return test_result
 
     def deploy_app(self, app_name: str = "MyMobileApp", deployment_target: str = "app-store") -> Dict[str, Any]:
         """Deploy mobile app with enhanced deployment process."""
         logger.info(f"Deploying mobile app: {app_name} to {deployment_target}")
-        
+
         # Simulate app deployment
         time.sleep(1)
-        
+
         deployment_result = {
             "deployment_id": hashlib.sha256(f"{app_name}_{deployment_target}".encode()).hexdigest()[:8],
             "app_name": app_name,
@@ -633,20 +638,20 @@ MobileDeveloper Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "MobileDeveloperAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("MobileDeveloperAgent", MetricType.SUCCESS_RATE, 90, "%")
-        
+
         logger.info(f"App deployment completed: {deployment_result}")
         return deployment_result
 
     def analyze_performance(self, app_name: str = "MyMobileApp", analysis_type: str = "comprehensive") -> Dict[str, Any]:
         """Analyze mobile app performance with enhanced analytics."""
         logger.info(f"Analyzing performance for app: {app_name}")
-        
+
         # Simulate performance analysis
         time.sleep(1)
-        
+
         analysis_result = {
             "analysis_id": hashlib.sha256(f"{app_name}_{analysis_type}".encode()).hexdigest()[:8],
             "app_name": app_name,
@@ -763,10 +768,10 @@ MobileDeveloper Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "MobileDeveloperAgent"
         }
-        
+
         # Log performance metrics
         self.monitor._record_metric("MobileDeveloperAgent", MetricType.SUCCESS_RATE, 94, "%")
-        
+
         logger.info(f"Performance analysis completed: {analysis_result}")
         return analysis_result
 
@@ -784,7 +789,7 @@ MobileDeveloper Agent Commands:
                 "timestamp": datetime.now().isoformat(),
                 "agent": "MobileDeveloperAgent"
             }
-        
+
         try:
             if format_type == "md":
                 self._export_markdown(report_data)
@@ -800,7 +805,7 @@ MobileDeveloper Agent Commands:
     def _export_markdown(self, report_data: Dict):
         """Export report data as markdown."""
         output_file = f"mobile_development_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-        
+
         content = f"""# Mobile Development Report
 
 ## Summary
@@ -820,49 +825,49 @@ MobileDeveloper Agent Commands:
 ## Recent Performance Optimizations
 {chr(10).join([f"- {performance}" for performance in self.performance_history[-5:]])}
 """
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             f.write(content)
         print(f"Report export saved to: {output_file}")
 
     def _export_csv(self, report_data: Dict):
         """Export report data as CSV."""
         output_file = f"mobile_development_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-        
-        with open(output_file, 'w', newline='') as f:
+
+        with open(output_file, "w", newline="") as f:
             writer = csv.writer(f)
-            writer.writerow(['Metric', 'Value'])
-            writer.writerow(['Timeframe', report_data.get('timeframe', 'N/A')])
-            writer.writerow(['Status', report_data.get('status', 'N/A')])
-            writer.writerow(['Apps Created', report_data.get('apps_created', 0)])
-            writer.writerow(['Components Built', report_data.get('components_built', 0)])
-            writer.writerow(['Performance Optimizations', report_data.get('performance_optimizations', 0)])
-            writer.writerow(['Success Rate', report_data.get('success_rate', 'N/A')])
-        
+            writer.writerow(["Metric", "Value"])
+            writer.writerow(["Timeframe", report_data.get("timeframe", "N/A")])
+            writer.writerow(["Status", report_data.get("status", "N/A")])
+            writer.writerow(["Apps Created", report_data.get("apps_created", 0)])
+            writer.writerow(["Components Built", report_data.get("components_built", 0)])
+            writer.writerow(["Performance Optimizations", report_data.get("performance_optimizations", 0)])
+            writer.writerow(["Success Rate", report_data.get("success_rate", "N/A")])
+
         print(f"Report export saved to: {output_file}")
 
     def _export_json(self, report_data: Dict):
         """Export report data as JSON."""
         output_file = f"mobile_development_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             json.dump(report_data, f, indent=2)
-        
+
         print(f"Report export saved to: {output_file}")
 
     def test_resource_completeness(self):
         """Test if all required resources are available."""
         print("Testing resource completeness...")
         missing_resources = []
-        
+
         for name, path in self.template_paths.items():
             if not path.exists():
                 missing_resources.append(f"Template: {name} ({path})")
-        
+
         for name, path in self.data_paths.items():
             if not path.exists():
                 missing_resources.append(f"Data: {name} ({path})")
-        
+
         if missing_resources:
             print("Missing resources:")
             for resource in missing_resources:
@@ -873,7 +878,7 @@ MobileDeveloper Agent Commands:
     def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         logger.info("Starting mobile developer collaboration example...")
-        
+
         # Publish app creation
         publish("mobile_app_created", {
             "agent": "MobileDeveloperAgent",
@@ -881,16 +886,16 @@ MobileDeveloper Agent Commands:
             "platform": "react-native",
             "timestamp": datetime.now().isoformat()
         })
-        
+
         # Create app
         app_result = self.create_app("MyMobileApp", "react-native", "business")
-        
+
         # Build component
         self.build_component("CustomButton", "react-native", "ui")
-        
+
         # Optimize performance
         self.optimize_performance("MyMobileApp", "general")
-        
+
         # Publish completion
         publish("mobile_development_completed", {
             "status": "success",
@@ -899,16 +904,16 @@ MobileDeveloper Agent Commands:
             "components_built": 1,
             "optimizations_completed": 1
         })
-        
+
         # Save context
         save_context("MobileDeveloperAgent", {"development_status": "completed"})
-        
+
         # Notify via Slack
         try:
             send_slack_message(f"Mobile development completed with {app_result['status']} status")
         except Exception as e:
             logger.warning(f"Could not send Slack notification: {e}")
-        
+
         print("Event gepubliceerd en context opgeslagen.")
         context = get_context("MobileDeveloperAgent")
         print(f"Opgehaalde context: {context}")
@@ -967,9 +972,9 @@ MobileDeveloper Agent Commands:
                 }
             }
         }
-        
+
         output_file = f"{app_name}_config_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        with open(output_file, 'w') as f:
+        with open(output_file, "w") as f:
             json.dump(app_config, f, indent=2)
         print(f"App configuration exported to: {output_file}")
 
@@ -981,7 +986,7 @@ MobileDeveloper Agent Commands:
 
 def main():
     parser = argparse.ArgumentParser(description="MobileDeveloper Agent CLI")
-    parser.add_argument("command", nargs="?", default="help", 
+    parser.add_argument("command", nargs="?", default="help",
                        choices=["help", "create-app", "build-component", "optimize-performance",
                                "test-app", "deploy-app", "analyze-performance", "show-app-history",
                                "show-performance-history", "show-best-practices", "show-changelog",
@@ -997,11 +1002,11 @@ def main():
     parser.add_argument("--test-type", default="comprehensive", help="Test type")
     parser.add_argument("--deployment-target", default="app-store", help="Deployment target")
     parser.add_argument("--analysis-type", default="comprehensive", help="Analysis type")
-    
+
     args = parser.parse_args()
-    
+
     agent = MobileDeveloperAgent()
-    
+
     if args.command == "help":
         agent.show_help()
     elif args.command == "create-app":
@@ -1049,4 +1054,4 @@ def main():
         agent.export_app(args.app_name)
 
 if __name__ == "__main__":
-    main() 
+    main()

@@ -1,22 +1,26 @@
-import sys
 import os
+import sys
+
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import argparse
-import logging
+import asyncio
 import json
+import logging
+import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, Any
-import asyncio
-import time
+from typing import Any, Dict, Optional
 
-from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.agents.core.agent.agent_performance_monitor import (
+    MetricType,
+    get_performance_monitor,
+)
 from bmad.agents.core.agent.test_sprites import get_sprite_library
-from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor, MetricType
+from bmad.agents.core.communication.message_bus import publish, subscribe
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
-from integrations.slack.slack_notify import send_slack_message
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 from integrations.prefect.prefect_workflow import PrefectWorkflowOrchestrator
+from integrations.slack.slack_notify import send_slack_message
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
@@ -27,15 +31,15 @@ class BackendDeveloperAgent:
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
-        self.tracer = BMADTracer(config=type('Config', (), {
-            'service_name': 'BackendDeveloperAgent',
-            'service_version': '1.0.0',
-            'environment': 'development',
-            'sample_rate': 1.0,
-            'exporters': []
+        self.tracer = BMADTracer(config=type("Config", (), {
+            "service_name": "BackendDeveloperAgent",
+            "service_version": "1.0.0",
+            "environment": "development",
+            "sample_rate": 1.0,
+            "exporters": []
         })())
         self.workflow = PrefectWorkflowOrchestrator()
-        
+
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
         self.template_paths = {
@@ -51,7 +55,7 @@ class BackendDeveloperAgent:
             "api-history": self.resource_base / "data/backenddeveloper/api-history.md",
             "performance-history": self.resource_base / "data/backenddeveloper/performance-history.md"
         }
-        
+
         # Initialize histories
         self.api_history = []
         self.performance_history = []
@@ -61,11 +65,11 @@ class BackendDeveloperAgent:
     def _load_api_history(self):
         try:
             if self.data_paths["api-history"].exists():
-                with open(self.data_paths["api-history"], 'r') as f:
+                with open(self.data_paths["api-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.api_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load API history: {e}")
@@ -73,21 +77,20 @@ class BackendDeveloperAgent:
     def _save_api_history(self):
         try:
             self.data_paths["api-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["api-history"], 'w') as f:
+            with open(self.data_paths["api-history"], "w") as f:
                 f.write("# API History\n\n")
-                for api in self.api_history[-50:]:
-                    f.write(f"- {api}\n")
+                f.writelines(f"- {api}\n" for api in self.api_history[-50:])
         except Exception as e:
             logger.error(f"Could not save API history: {e}")
 
     def _load_performance_history(self):
         try:
             if self.data_paths["performance-history"].exists():
-                with open(self.data_paths["performance-history"], 'r') as f:
+                with open(self.data_paths["performance-history"]) as f:
                     content = f.read()
-                    lines = content.split('\n')
+                    lines = content.split("\n")
                     for line in lines:
-                        if line.strip().startswith('- '):
+                        if line.strip().startswith("- "):
                             self.performance_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load performance history: {e}")
@@ -95,10 +98,9 @@ class BackendDeveloperAgent:
     def _save_performance_history(self):
         try:
             self.data_paths["performance-history"].parent.mkdir(parents=True, exist_ok=True)
-            with open(self.data_paths["performance-history"], 'w') as f:
+            with open(self.data_paths["performance-history"], "w") as f:
                 f.write("# Performance History\n\n")
-                for perf in self.performance_history[-50:]:
-                    f.write(f"- {perf}\n")
+                f.writelines(f"- {perf}\n" for perf in self.performance_history[-50:])
         except Exception as e:
             logger.error(f"Could not save performance history: {e}")
 
@@ -129,7 +131,7 @@ BackendDeveloper Agent Commands:
                 print(f"Unknown resource type: {resource_type}")
                 return
             if path.exists():
-                with open(path, 'r') as f:
+                with open(path) as f:
                     print(f.read())
             else:
                 print(f"Resource file not found: {path}")
@@ -156,7 +158,7 @@ BackendDeveloper Agent Commands:
 
     def build_api(self, endpoint: str = "/api/v1/users") -> Dict[str, Any]:
         logger.info(f"Building API endpoint: {endpoint}")
-        
+
         # Simuleer API bouw
         time.sleep(1)
         result = {
@@ -168,15 +170,15 @@ BackendDeveloper Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "BackendDeveloperAgent"
         }
-        
+
         # Voeg aan historie toe
         api_entry = f"{result['timestamp']}: {result['method']} {endpoint} - Status: {result['status']}"
         self.api_history.append(api_entry)
         self._save_api_history()
-        
+
         # Log performance metric
         self.monitor._record_metric("BackendDeveloper", MetricType.SUCCESS_RATE, 95, "%")
-        
+
         logger.info(f"API build result: {result}")
         return result
 
@@ -187,7 +189,7 @@ BackendDeveloper Agent Commands:
                 api_data = self.build_api(endpoint)
             else:
                 api_data = self.build_api()
-        
+
         try:
             if format_type == "md":
                 self._export_markdown(api_data)
@@ -201,42 +203,42 @@ BackendDeveloper Agent Commands:
     def _export_markdown(self, api_data: Dict):
         template_path = self.template_paths["api-export-md"]
         if template_path.exists():
-            with open(template_path, 'r') as f:
+            with open(template_path) as f:
                 template = f.read()
-            
+
             # Vul template
             content = template.replace("{{date}}", datetime.now().strftime("%Y-%m-%d"))
             content = content.replace("{{endpoints}}", f"- {api_data['method']} {api_data['endpoint']}")
             content = content.replace("{{performance_metrics}}", f"- Response time: {api_data['response_time']}\n- Throughput: {api_data['throughput']}")
             content = content.replace("{{security_status}}", "- Authentication: enabled\n- Rate limiting: enabled")
             content = content.replace("{{database_status}}", "- Connection pool: healthy\n- Query performance: optimal")
-            
+
             # Save to file
             output_file = f"api_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-            with open(output_file, 'w') as f:
+            with open(output_file, "w") as f:
                 f.write(content)
             print(f"API export saved to: {output_file}")
 
     def _export_json(self, api_data: Dict):
         output_file = f"api_export_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-        
-        with open(output_file, 'w') as f:
+
+        with open(output_file, "w") as f:
             json.dump(api_data, f, indent=2)
-        
+
         print(f"API export saved to: {output_file}")
 
     def test_resource_completeness(self):
         print("Testing resource completeness...")
         missing_resources = []
-        
+
         for name, path in self.template_paths.items():
             if not path.exists():
                 missing_resources.append(f"Template: {name} ({path})")
-        
+
         for name, path in self.data_paths.items():
             if not path.exists():
                 missing_resources.append(f"Data: {name} ({path})")
-        
+
         if missing_resources:
             print("Missing resources:")
             for resource in missing_resources:
@@ -246,20 +248,20 @@ BackendDeveloper Agent Commands:
 
     def collaborate_example(self):
         logger.info("Starting collaboration example...")
-        
+
         # Publish API change request
         publish("api_change_requested", {
             "agent": "BackendDeveloperAgent",
             "endpoint": "/api/v1/users",
             "timestamp": datetime.now().isoformat()
         })
-        
+
         # Build API
         api_result = self.build_api("/api/v1/users")
-        
+
         # Publish completion
         publish("api_change_completed", api_result)
-        
+
         # Notify via Slack
         try:
             send_slack_message(f"API endpoint {api_result['endpoint']} created successfully")
@@ -273,10 +275,10 @@ BackendDeveloper Agent Commands:
 
     async def handle_api_change_completed(self, event):
         logger.info(f"API change completed: {event}")
-        
+
         # Record event in tracing
         self.tracer.record_event("api_change_completed", event)
-        
+
         # Evaluate policy
         try:
             allowed = await self.policy_engine.evaluate_policy("api_change", event)
@@ -287,26 +289,26 @@ BackendDeveloper Agent Commands:
     def run(self):
         def sync_handler(event):
             asyncio.run(self.handle_api_change_completed(event))
-        
+
         subscribe("api_change_completed", sync_handler)
         subscribe("api_change_requested", self.handle_api_change_requested)
-        
+
         logger.info("BackendDeveloperAgent ready and listening for events...")
         self.collaborate_example()
 
 def main():
     parser = argparse.ArgumentParser(description="BackendDeveloper Agent CLI")
-    parser.add_argument("command", nargs="?", default="help", 
-                       choices=["help", "build-api", "show-api-history", "show-performance", 
-                               "show-best-practices", "show-changelog", "export-api", 
+    parser.add_argument("command", nargs="?", default="help",
+                       choices=["help", "build-api", "show-api-history", "show-performance",
+                               "show-best-practices", "show-changelog", "export-api",
                                "test", "collaborate", "run"])
     parser.add_argument("--endpoint", default="/api/v1/users", help="API endpoint")
     parser.add_argument("--format", choices=["md", "json"], default="md", help="Export format")
-    
+
     args = parser.parse_args()
-    
+
     agent = BackendDeveloperAgent()
-    
+
     if args.command == "help":
         agent.show_help()
     elif args.command == "build-api":

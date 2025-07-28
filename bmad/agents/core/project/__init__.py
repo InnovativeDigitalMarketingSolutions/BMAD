@@ -8,9 +8,9 @@ __version__ = "1.0.0"
 __author__ = "BMAD Team"
 
 # Import main project components
-from .project_manager import project_manager, ProjectManager
+from .project_manager import ProjectManager, project_manager
 
 __all__ = [
-    "project_manager",
-    "ProjectManager"
-] 
+    "ProjectManager",
+    "project_manager"
+]

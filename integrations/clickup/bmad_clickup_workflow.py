@@ -12,16 +12,19 @@ Gebruik: python bmad_clickup_workflow.py
 
 import os
 import sys
-import requests
 from datetime import datetime
-from typing import Dict, List, Any
+from typing import Any, Dict, List
+
+import requests
 
 # BMAD imports
-sys.path.append('.')
+sys.path.append(".")
 from bmad.agents.core.clickup_integration import ClickUpIntegration
-from bmad.agents.core.project_manager import ProjectManager
+
 # Import ProductOwner functions instead of class
 from bmad.agents.core.llm_client import ask_openai_with_confidence
+from bmad.agents.core.project_manager import ProjectManager
+
 
 class BMADClickUpWorkflow:
     def __init__(self, project_id: str = "bmad-frontend"):
@@ -30,16 +33,16 @@ class BMADClickUpWorkflow:
         self.project_manager = ProjectManager()
         self.clickup = ClickUpIntegration(project_id=project_id)
         # ProductOwner is function-based, not class-based
-        
+
         # Get ClickUp configuration
         self.config = self.project_manager.get_clickup_config(project_id)
         print(f"🚀 BMAD ClickUp Workflow gestart voor project: {project_id}")
         print(f"📋 ClickUp Space ID: {self.config.get('space_id', 'Niet geconfigureerd')}")
-        
+
     def adapt_clickup_template_to_bmad(self) -> Dict[str, Any]:
         """Pas het ClickUp template aan aan de BMAD workflow."""
         print("\n🔧 Stap 1: ClickUp template aanpassen aan BMAD workflow...")
-        
+
         # BMAD workflow template definitie
         bmad_template = {
             "space_name": "BMAD Frontend Project",
@@ -146,14 +149,14 @@ class BMADClickUpWorkflow:
                 }
             ]
         }
-        
+
         print("✅ BMAD template gegenereerd")
         return bmad_template
-    
+
     def generate_frontend_planning(self) -> Dict[str, Any]:
         """Genereer een frontend planning met user stories en sprints."""
         print("\n📋 Stap 2: Frontend planning genereren...")
-        
+
         # Frontend project requirements
         frontend_requirements = """
         BMAD Frontend Project Requirements:
@@ -182,14 +185,14 @@ class BMADClickUpWorkflow:
         - CI/CD pipeline
         - Docker containerization
         """
-        
+
         # Generate user stories using ProductOwner agent
         context = {
             "task": "generate_frontend_user_stories",
             "agent": "ProductOwner",
             "requirements": frontend_requirements
         }
-        
+
         prompt = f"""
         Als ProductOwner, genereer user stories voor een BMAD frontend project.
         
@@ -210,7 +213,7 @@ class BMADClickUpWorkflow:
         4. Performance en scalability
         5. Security en compliance
         """
-        
+
         try:
             result = ask_openai_with_confidence(prompt, context)
             user_stories = result.get("answer", "")
@@ -218,13 +221,13 @@ class BMADClickUpWorkflow:
         except Exception as e:
             print(f"⚠️ LLM error, gebruik fallback user stories: {e}")
             user_stories = self._get_fallback_user_stories()
-        
+
         # Structure the planning
         planning = self._structure_planning(user_stories)
-        
+
         print("✅ Frontend planning gegenereerd")
         return planning
-    
+
     def _get_fallback_user_stories(self) -> str:
         """Fallback user stories als LLM niet beschikbaar is."""
         return """
@@ -246,7 +249,7 @@ class BMADClickUpWorkflow:
         - Story Points: 8
         - Priority: High
         """
-    
+
     def _structure_planning(self, user_stories: str) -> Dict[str, Any]:
         """Structuur de user stories om een volledige planning te genereren."""
         planning = {
@@ -442,20 +445,20 @@ class BMADClickUpWorkflow:
             ]
         }
         return planning
-    
+
     def create_clickup_structure(self, template: Dict[str, Any]) -> bool:
         """Creëer de ClickUp structuur volgens het BMAD template."""
         print("\n🏗️ Stap 3: ClickUp structuur aanmaken...")
-        
+
         try:
-            space_id = self.config.get('space_id')
+            space_id = self.config.get("space_id")
             if not space_id:
                 print("❌ Space ID niet geconfigureerd")
                 return False
-            
+
             # Update space name
             self._update_space_name(space_id, template["space_name"])
-            
+
             # Create folders and lists
             for folder in template["folders"]:
                 folder_id = self._create_folder(space_id, folder["name"])
@@ -464,14 +467,14 @@ class BMADClickUpWorkflow:
                         list_id = self._create_list(folder_id, list_config)
                         if list_id:
                             self._create_custom_fields(list_id, list_config.get("custom_fields", []))
-            
+
             print("✅ ClickUp structuur aangemaakt")
             return True
-            
+
         except Exception as e:
             print(f"❌ Fout bij aanmaken ClickUp structuur: {e}")
             return False
-    
+
     def _update_space_name(self, space_id: str, name: str) -> bool:
         """Update de naam van de ClickUp space."""
         try:
@@ -481,18 +484,17 @@ class BMADClickUpWorkflow:
                 "Content-Type": "application/json"
             }
             data = {"name": name}
-            
+
             response = requests.put(url, headers=headers, json=data)
             if response.status_code == 200:
                 print(f"✅ Space naam geüpdatet naar: {name}")
                 return True
-            else:
-                print(f"⚠️ Kon space naam niet updaten: {response.status_code}")
-                return False
+            print(f"⚠️ Kon space naam niet updaten: {response.status_code}")
+            return False
         except Exception as e:
             print(f"⚠️ Fout bij updaten space naam: {e}")
             return False
-    
+
     def _create_folder(self, space_id: str, folder_name: str) -> str:
         """Creëer een folder in de ClickUp space."""
         try:
@@ -502,19 +504,18 @@ class BMADClickUpWorkflow:
                 "Content-Type": "application/json"
             }
             data = {"name": folder_name}
-            
+
             response = requests.post(url, headers=headers, json=data)
             if response.status_code == 200:
                 folder_id = response.json()["id"]
                 print(f"✅ Folder aangemaakt: {folder_name} (ID: {folder_id})")
                 return folder_id
-            else:
-                print(f"⚠️ Kon folder niet aanmaken: {response.status_code}")
-                return None
+            print(f"⚠️ Kon folder niet aanmaken: {response.status_code}")
+            return None
         except Exception as e:
             print(f"⚠️ Fout bij aanmaken folder: {e}")
             return None
-    
+
     def _create_list(self, folder_id: str, list_config: Dict[str, Any]) -> str:
         """Creëer een list in de ClickUp folder."""
         try:
@@ -527,19 +528,18 @@ class BMADClickUpWorkflow:
                 "name": list_config["name"],
                 "content": list_config.get("content", "")
             }
-            
+
             response = requests.post(url, headers=headers, json=data)
             if response.status_code == 200:
                 list_id = response.json()["id"]
                 print(f"✅ List aangemaakt: {list_config['name']} (ID: {list_id})")
                 return list_id
-            else:
-                print(f"⚠️ Kon list niet aanmaken: {response.status_code}")
-                return None
+            print(f"⚠️ Kon list niet aanmaken: {response.status_code}")
+            return None
         except Exception as e:
             print(f"⚠️ Fout bij aanmaken list: {e}")
             return None
-    
+
     def _create_custom_fields(self, list_id: str, custom_fields: List[Dict[str, Any]]) -> bool:
         """Creëer custom fields voor een list."""
         for field in custom_fields:
@@ -549,81 +549,81 @@ class BMADClickUpWorkflow:
                     "Authorization": self.clickup.api_key,
                     "Content-Type": "application/json"
                 }
-                
+
                 field_data = {
                     "name": field["name"],
                     "type": field["type"]
                 }
-                
+
                 if field["type"] == "dropdown" and "options" in field:
                     field_data["type_config"] = {
                         "options": [{"name": opt} for opt in field["options"]]
                     }
-                
+
                 response = requests.post(url, headers=headers, json=field_data)
                 if response.status_code == 200:
                     print(f"✅ Custom field aangemaakt: {field['name']}")
                 else:
                     print(f"⚠️ Kon custom field niet aanmaken: {field['name']}")
-                    
+
             except Exception as e:
                 print(f"⚠️ Fout bij aanmaken custom field {field['name']}: {e}")
-        
+
         return True
-    
+
     def create_sprint_tasks(self, planning: Dict[str, Any]) -> bool:
         """Creëer taken in ClickUp voor de sprint planning."""
         print("\n📝 Stap 4: Sprint taken aanmaken in ClickUp...")
-        
+
         try:
             # Find the Sprint Backlog list
             sprint_backlog_list_id = self._find_sprint_backlog_list()
             if not sprint_backlog_list_id:
                 print("❌ Sprint Backlog list niet gevonden")
                 return False
-            
+
             # Create tasks for each sprint
             for sprint in planning["sprints"]:
                 print(f"\n📅 Sprint aanmaken: {sprint['name']}")
-                
+
                 for story in sprint["user_stories"]:
                     task_data = {
                         "name": story["title"],
                         "description": story["description"],
                         "status": "to do"
                     }
-                    
+
                     # Add custom field values
                     custom_fields = []
-                    
+
                     # Story Points
                     if "story_points" in story:
                         custom_fields.append({
                             "id": "story_points_field_id",  # This would need to be retrieved
                             "value": story["story_points"]
                         })
-                    
+
                     # Priority
                     if "priority" in story:
                         custom_fields.append({
                             "id": "priority_field_id",  # This would need to be retrieved
                             "value": story["priority"]
                         })
-                    
+
                     # Sprint
                     custom_fields.append({
                         "id": "sprint_field_id",  # This would need to be retrieved
                         "value": sprint["name"]
                     })
-                    
+
                     if custom_fields:
                         task_data["custom_fields"] = custom_fields
-                    
+
                     # Create task
                     task_id = self._create_task(sprint_backlog_list_id, task_data)
                     if task_id:
                         print(f"✅ Taak aangemaakt: {story['title']}")
-                    
+
                     # Add acceptance criteria as subtasks
                     if "acceptance_criteria" in story:
                         for i, criteria in enumerate(story["acceptance_criteria"], 1):
@@ -632,33 +632,33 @@ class BMADClickUpWorkflow:
                                 "status": "to do"
                             }
                             self._create_subtask(task_id, subtask_data)
-            
+
             print("✅ Sprint taken aangemaakt")
             return True
-            
+
         except Exception as e:
             print(f"❌ Fout bij aanmaken sprint taken: {e}")
             return False
-    
+
     def _find_sprint_backlog_list(self) -> str:
         """Zoek de Sprint Backlog list ID."""
         try:
-            space_id = self.config.get('space_id')
+            space_id = self.config.get("space_id")
             url = f"https://api.clickup.com/api/v2/space/{space_id}/list"
             headers = {"Authorization": self.clickup.api_key}
-            
+
             response = requests.get(url, headers=headers)
             if response.status_code == 200:
                 lists = response.json()["lists"]
                 for list_item in lists:
                     if "Sprint Backlog" in list_item["name"]:
                         return list_item["id"]
-            
+
             return None
         except Exception as e:
             print(f"⚠️ Fout bij zoeken Sprint Backlog list: {e}")
             return None
-    
+
     def _create_task(self, list_id: str, task_data: Dict[str, Any]) -> str:
         """Creëer een taak in een ClickUp list."""
         try:
@@ -667,17 +667,16 @@ class BMADClickUpWorkflow:
                 "Authorization": self.clickup.api_key,
                 "Content-Type": "application/json"
             }
-            
+
             response = requests.post(url, headers=headers, json=task_data)
             if response.status_code == 200:
                 return response.json()["id"]
-            else:
-                print(f"⚠️ Kon taak niet aanmaken: {response.status_code}")
-                return None
+            print(f"⚠️ Kon taak niet aanmaken: {response.status_code}")
+            return None
         except Exception as e:
             print(f"⚠️ Fout bij aanmaken taak: {e}")
             return None
-    
+
     def _create_subtask(self, task_id: str, subtask_data: Dict[str, Any]) -> str:
         """Creëer een subtask voor een taak."""
         try:
@@ -686,21 +685,20 @@ class BMADClickUpWorkflow:
                 "Authorization": self.clickup.api_key,
                 "Content-Type": "application/json"
             }
-            
+
             response = requests.post(url, headers=headers, json=subtask_data)
             if response.status_code == 200:
                 return response.json()["id"]
-            else:
-                print(f"⚠️ Kon subtask niet aanmaken: {response.status_code}")
-                return None
+            print(f"⚠️ Kon subtask niet aanmaken: {response.status_code}")
+            return None
         except Exception as e:
             print(f"⚠️ Fout bij aanmaken subtask: {e}")
             return None
-    
+
     def generate_planning_report(self, planning: Dict[str, Any]) -> str:
         """Genereer een planning rapport."""
         print("\n📊 Stap 5: Planning rapport genereren...")
-        
+
         report = f"""
 # BMAD Frontend Project Planning Rapport
 *Gegenereerd op: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}*
@@ -714,12 +712,12 @@ class BMADClickUpWorkflow:
 ## Sprint Breakdown
 
 """
-        
+
         total_story_points = 0
-        for i, sprint in enumerate(planning['sprints'], 1):
-            sprint_points = sum(story.get('story_points', 0) for story in sprint['user_stories'])
+        for i, sprint in enumerate(planning["sprints"], 1):
+            sprint_points = sum(story.get("story_points", 0) for story in sprint["user_stories"])
             total_story_points += sprint_points
-            
+
             report += f"""
 ### Sprint {i}: {sprint['name']}
 - **Duur**: {sprint['duration']}
@@ -729,16 +727,16 @@ class BMADClickUpWorkflow:
 
 #### User Stories:
 """
-            
-            for story in sprint['user_stories']:
+
+            for story in sprint["user_stories"]:
                 report += f"""
 **{story['title']}** (SP: {story.get('story_points', 'N/A')}, Priority: {story.get('priority', 'N/A')})
 - {story['description']}
 - **Acceptance Criteria:**
 """
-                for ac in story.get('acceptance_criteria', []):
+                for ac in story.get("acceptance_criteria", []):
                     report += f"  - {ac}\n"
-        
+
         report += f"""
 ## Samenvatting
 - **Totaal Story Points**: {total_story_points}
@@ -752,38 +750,38 @@ class BMADClickUpWorkflow:
 3. Technische architectuur sessie
 4. Sprint 1 kickoff
 """
-        
+
         # Save report
         report_filename = f"bmad_frontend_planning_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
-        with open(report_filename, 'w', encoding='utf-8') as f:
+        with open(report_filename, "w", encoding="utf-8") as f:
             f.write(report)
-        
+
         print(f"✅ Planning rapport opgeslagen: {report_filename}")
         return report_filename
-    
+
     def run_complete_workflow(self) -> bool:
         """Voer het complete workflow uit."""
         print("🚀 BMAD ClickUp Workflow gestart!")
         print("=" * 50)
-        
+
         try:
             # Step 1: Adapt ClickUp template
             template = self.adapt_clickup_template_to_bmad()
-            
+
             # Step 2: Generate frontend planning
             planning = self.generate_frontend_planning()
-            
+
             # Step 3: Create ClickUp structure
             structure_created = self.create_clickup_structure(template)
-            
+
             # Step 4: Create sprint tasks
             tasks_created = False
             if structure_created:
                 tasks_created = self.create_sprint_tasks(planning)
-            
+
             # Step 5: Generate planning report
             report_file = self.generate_planning_report(planning)
-            
+
             # Summary
             print("\n" + "=" * 50)
             print("🎉 WORKFLOW VOLTOOID!")
@@ -793,12 +791,12 @@ class BMADClickUpWorkflow:
             print(f"✅ ClickUp structuur: {'Ja' if structure_created else 'Nee'}")
             print(f"✅ Sprint taken: {'Ja' if tasks_created else 'Nee'}")
             print(f"✅ Rapport: {report_file}")
-            
+
             if structure_created and tasks_created:
                 print(f"\n🌐 Bekijk je ClickUp space: https://app.clickup.com/90151351375/v/s/{self.config.get('space_id', '')}")
-            
+
             return True
-            
+
         except Exception as e:
             print(f"\n❌ Workflow gefaald: {e}")
             return False
@@ -808,20 +806,20 @@ def main():
     """Main function to run the workflow."""
     print("BMAD ClickUp Workflow Script")
     print("============================")
-    
+
     # Check environment
-    if not os.getenv('CLICKUP_API_KEY'):
+    if not os.getenv("CLICKUP_API_KEY"):
         print("❌ CLICKUP_API_KEY niet gevonden in environment")
         print("Zorg dat je .env file geladen is: source .env")
         return False
-    
-    if not os.getenv('OPENAI_API_KEY'):
+
+    if not os.getenv("OPENAI_API_KEY"):
         print("⚠️ OPENAI_API_KEY niet gevonden - LLM features zullen beperkt zijn")
-    
+
     # Run workflow
     workflow = BMADClickUpWorkflow()
     success = workflow.run_complete_workflow()
-    
+
     if success:
         print("\n🎯 Volgende stappen:")
         print("1. Review de gegenereerde planning in ClickUp")
@@ -830,9 +828,9 @@ def main():
         print("4. Start met Sprint 1!")
     else:
         print("\n❌ Er zijn problemen opgetreden. Check de logs hierboven.")
-    
+
     return success
 
 
 if __name__ == "__main__":
-    main() 
+    main()

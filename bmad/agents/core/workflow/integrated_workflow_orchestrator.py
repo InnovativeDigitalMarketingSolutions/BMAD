@@ -7,27 +7,36 @@ complete enterprise-ready multi-agent orchestration systeem.
 """
 
 import asyncio
-import logging
-import time
 import json
+import logging
 import os
-from typing import Dict, List, Any, Optional
+import time
 from dataclasses import dataclass, field
 from enum import Enum
+from typing import Any, Dict, List, Optional
+
 from dotenv import load_dotenv
 
-# Import existing BMAD core modules
-from .advanced_workflow import WorkflowTask, WorkflowDefinition, WorkflowStatus
+from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor
+from bmad.agents.core.agent.test_sprites import get_sprite_library
+from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 
 # Import new repository integrations
 from integrations.langgraph.langgraph_workflow import LangGraphWorkflowOrchestrator
-from integrations.openrouter.openrouter_client import OpenRouterClient, LLMConfig
-from integrations.opentelemetry.opentelemetry_tracing import BMADTracer, TracingConfig, TraceLevel
 from integrations.opa.opa_policy_engine import OPAPolicyEngine, PolicyRequest
-from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
-from integrations.prefect.prefect_workflow import PrefectWorkflowOrchestrator, PrefectWorkflowConfig
-from bmad.agents.core.agent.test_sprites import get_sprite_library
-from bmad.agents.core.agent.agent_performance_monitor import get_performance_monitor
+from integrations.openrouter.openrouter_client import LLMConfig, OpenRouterClient
+from integrations.opentelemetry.opentelemetry_tracing import (
+    BMADTracer,
+    TraceLevel,
+    TracingConfig,
+)
+from integrations.prefect.prefect_workflow import (
+    PrefectWorkflowConfig,
+    PrefectWorkflowOrchestrator,
+)
+
+# Import existing BMAD core modules
+from .advanced_workflow import WorkflowDefinition, WorkflowStatus, WorkflowTask
 
 # Load environment variables
 load_dotenv()
@@ -72,30 +81,30 @@ class IntegratedWorkflowOrchestrator:
     Integrated workflow orchestrator that combines all repository integrations
     with existing BMAD agent workflows.
     """
-    
+
     def __init__(self):
         # Initialize all integration components
         self._initialize_integrations()
-        
+
         # Workflow state
         self.active_workflows: Dict[str, Dict[str, Any]] = {}
         self.workflow_definitions: Dict[str, WorkflowDefinition] = {}
         self.agent_configs: Dict[str, AgentWorkflowConfig] = {}
-        
+
         # Initialize test sprites library
         self.sprite_library = get_sprite_library()
-        
+
         # Initialize performance monitor
         self.performance_monitor = get_performance_monitor()
-        
+
         # Register default agent configurations
         self._register_default_agent_configs()
-        
+
         # Register default workflows
         self._register_default_workflows()
-        
+
         logger.info("Integrated Workflow Orchestrator geïnitialiseerd")
-    
+
     def _initialize_integrations(self):
         """Initialize all repository integrations."""
         try:
@@ -110,7 +119,7 @@ class IntegratedWorkflowOrchestrator:
             else:
                 self.openrouter_client = None
                 logger.warning("OpenRouter API key niet gevonden, LLM routing uitgeschakeld")
-            
+
             # Initialize OpenTelemetry tracer
             tracing_config = TracingConfig(
                 service_name=os.getenv("OTEL_SERVICE_NAME", "bmad-agents"),
@@ -118,28 +127,28 @@ class IntegratedWorkflowOrchestrator:
             )
             self.tracer = BMADTracer(config=tracing_config)
             logger.info("OpenTelemetry tracer geïnitialiseerd")
-            
+
             # Initialize OPA policy engine
             opa_url = os.getenv("OPA_URL", "http://localhost:8181")
             self.policy_engine = OPAPolicyEngine(opa_url=opa_url)
             logger.info("OPA policy engine geïnitialiseerd")
-            
+
             # Initialize Advanced Policy Engine
             self.advanced_policy_engine = get_advanced_policy_engine()
             logger.info("Advanced Policy Engine geïnitialiseerd")
-            
+
             # Initialize LangGraph workflow orchestrator
             self.langgraph_orchestrator = LangGraphWorkflowOrchestrator()
             logger.info("LangGraph workflow orchestrator geïnitialiseerd")
-            
+
             # Initialize Prefect workflow orchestrator
             self.prefect_orchestrator = PrefectWorkflowOrchestrator()
             logger.info("Prefect workflow orchestrator geïnitialiseerd")
-            
+
         except Exception as e:
             logger.error(f"Fout bij initialiseren van integraties: {e}")
             raise
-    
+
     def _register_default_agent_configs(self):
         """Register default configurations for all BMAD agents."""
         default_configs = {
@@ -194,12 +203,12 @@ class IntegratedWorkflowOrchestrator:
                 policy_rules=["access_control", "infrastructure_policies", "deployment_policies"]
             )
         }
-        
+
         for agent_name, config in default_configs.items():
             self.agent_configs[agent_name] = config
-        
+
         logger.info(f"Default agent configuraties geregistreerd voor {len(default_configs)} agents")
-    
+
     def _register_default_workflows(self):
         """Register default BMAD workflows."""
         # Product Development Workflow
@@ -267,9 +276,9 @@ class IntegratedWorkflowOrchestrator:
             max_parallel=3,
             timeout=3600
         )
-        
+
         self.register_workflow(product_dev_workflow)
-        
+
         # AI Development Workflow
         ai_dev_workflow = WorkflowDefinition(
             name="ai-development",
@@ -319,24 +328,24 @@ class IntegratedWorkflowOrchestrator:
             max_parallel=2,
             timeout=7200
         )
-        
+
         self.register_workflow(ai_dev_workflow)
-        
+
         logger.info("Default workflows geregistreerd")
-    
+
     def register_workflow(self, workflow_def: WorkflowDefinition):
         """Register a workflow definition."""
         self.workflow_definitions[workflow_def.name] = workflow_def
         logger.info(f"Workflow '{workflow_def.name}' geregistreerd met {len(workflow_def.tasks)} taken")
-    
+
     def register_agent_config(self, agent_name: str, config: AgentWorkflowConfig):
         """Register configuration for a specific agent."""
         self.agent_configs[agent_name] = config
         logger.info(f"Configuratie geregistreerd voor agent: {agent_name}")
-    
+
     async def execute_integrated_workflow(
-        self, 
-        workflow_name: str, 
+        self,
+        workflow_name: str,
         context: Dict[str, Any] = None,
         integration_level: IntegrationLevel = IntegrationLevel.ENHANCED
     ) -> IntegratedWorkflowResult:
@@ -345,10 +354,10 @@ class IntegratedWorkflowOrchestrator:
         """
         if workflow_name not in self.workflow_definitions:
             raise ValueError(f"Workflow '{workflow_name}' niet gevonden")
-        
+
         workflow_def = self.workflow_definitions[workflow_name]
         workflow_id = f"{workflow_name}_{int(time.time())}"
-        
+
         # Initialize result tracking
         result = IntegratedWorkflowResult(
             workflow_id=workflow_id,
@@ -359,9 +368,9 @@ class IntegratedWorkflowOrchestrator:
             cost_analysis={},
             performance_metrics={}
         )
-        
+
         start_time = time.time()
-        
+
         try:
             # Start tracing
             if integration_level in [IntegrationLevel.ENHANCED, IntegrationLevel.FULL]:
@@ -369,7 +378,7 @@ class IntegratedWorkflowOrchestrator:
                     span.set_attribute("workflow.id", workflow_id)
                     span.set_attribute("workflow.name", workflow_name)
                     span.set_attribute("integration.level", integration_level.value)
-                    
+
                     # Execute workflow with tracing
                     result = await self._execute_workflow_with_integrations(
                         workflow_def, workflow_id, context, integration_level, span
@@ -381,9 +390,9 @@ class IntegratedWorkflowOrchestrator:
         finally:
             result.execution_time = time.time() - start_time
             logger.info(f"Workflow '{workflow_name}' voltooid in {result.execution_time:.2f}s")
-        
+
         return result
-    
+
     async def _execute_workflow_with_integrations(
         self,
         workflow_def: WorkflowDefinition,
@@ -393,7 +402,7 @@ class IntegratedWorkflowOrchestrator:
         span
     ) -> IntegratedWorkflowResult:
         """Execute workflow with all integrations enabled."""
-        
+
         # Initialize result
         result = IntegratedWorkflowResult(
             workflow_id=workflow_id,
@@ -404,35 +413,35 @@ class IntegratedWorkflowOrchestrator:
             cost_analysis={},
             performance_metrics={}
         )
-        
+
         # Policy enforcement
         if integration_level in [IntegrationLevel.ENHANCED, IntegrationLevel.FULL]:
             policy_result = await self._enforce_workflow_policies(workflow_def, context)
             result.policy_decisions.append(policy_result)
-            
+
             if not policy_result.get("allow", True):
                 result.status = WorkflowStatus.FAILED
                 result.error_details = f"Policy violation: {policy_result.get('reason', 'Unknown')}"
                 return result
-        
+
         # Execute tasks with integrations
         for task in workflow_def.tasks:
             task_result = await self._execute_task_with_integrations(
                 task, workflow_id, context, integration_level, span
             )
-            
+
             result.agent_results[task.id] = task_result
-            
+
             if task_result.get("status") == "failed":
                 result.status = WorkflowStatus.FAILED
                 result.error_details = task_result.get("error", "Task execution failed")
                 break
-        
+
         if result.status == WorkflowStatus.RUNNING:
             result.status = WorkflowStatus.COMPLETED
-        
+
         return result
-    
+
     async def _execute_task_with_integrations(
         self,
         task: WorkflowTask,
@@ -441,19 +450,19 @@ class IntegratedWorkflowOrchestrator:
         integration_level: IntegrationLevel,
         parent_span
     ) -> Dict[str, Any]:
-        
+
         # Start performance tracking
         task_id = f"{workflow_id}_{task.id}"
         self.performance_monitor.start_task_tracking(task.agent, task_id)
         """Execute a single task with all integrations enabled."""
-        
+
         agent_config = self.agent_configs.get(task.agent, AgentWorkflowConfig(agent_name=task.agent))
-        
+
         with self.tracer.start_span(f"task.{task.id}", parent=parent_span) as span:
             span.set_attribute("task.id", task.id)
             span.set_attribute("task.agent", task.agent)
             span.set_attribute("task.command", task.command)
-            
+
             task_result = {
                 "task_id": task.id,
                 "agent": task.agent,
@@ -462,34 +471,34 @@ class IntegratedWorkflowOrchestrator:
                 "start_time": time.time(),
                 "integrations": {}
             }
-            
+
             try:
                 # Policy enforcement for task
                 if agent_config.enable_policy_enforcement:
                     policy_result = await self._enforce_task_policies(task, context)
                     task_result["integrations"]["policy"] = policy_result
-                    
+
                     if not policy_result.get("allow", True):
                         task_result["status"] = "failed"
                         task_result["error"] = f"Policy violation: {policy_result.get('reason', 'Unknown')}"
                         return task_result
-                
+
                 # Execute task with LLM integration if available
                 if self.openrouter_client and agent_config.integration_level in [IntegrationLevel.ENHANCED, IntegrationLevel.FULL]:
                     llm_result = await self._execute_task_with_llm(task, context, span)
                     task_result["integrations"]["llm"] = llm_result
-                
+
                 # Execute actual task
                 execution_result = await self._execute_agent_task(task, context)
                 task_result.update(execution_result)
-                
+
                 # Cost tracking
                 if agent_config.enable_cost_tracking and self.openrouter_client:
                     cost_result = await self._track_task_costs(task, task_result)
                     task_result["integrations"]["cost"] = cost_result
-                
+
                 task_result["status"] = "completed"
-                
+
             except Exception as e:
                 logger.error(f"Task execution failed: {e}")
                 task_result["status"] = "failed"
@@ -497,19 +506,19 @@ class IntegratedWorkflowOrchestrator:
                 span.record_exception(e)
                 # End performance tracking with failure
                 self.performance_monitor.end_task_tracking(task.agent, task_id, success=False)
-            
+
             task_result["end_time"] = time.time()
             task_result["duration"] = task_result["end_time"] - task_result["start_time"]
-            
+
             # End performance tracking with success if not already ended
             if task_result["status"] != "failed":
                 self.performance_monitor.end_task_tracking(task.agent, task_id, success=True)
-            
+
             return task_result
-    
+
     async def _enforce_workflow_policies(
-        self, 
-        workflow_def: WorkflowDefinition, 
+        self,
+        workflow_def: WorkflowDefinition,
         context: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Enforce policies for workflow execution."""
@@ -526,9 +535,9 @@ class IntegratedWorkflowOrchestrator:
                 **context
             }
         )
-        
+
         basic_result = await self.policy_engine.evaluate_policy(policy_request)
-        
+
         # Advanced policy evaluation
         advanced_results = []
         for policy_id in ["advanced_access_control", "advanced_resource_management"]:
@@ -544,16 +553,16 @@ class IntegratedWorkflowOrchestrator:
                 })
             except Exception as e:
                 logger.warning(f"Advanced policy evaluation failed for {policy_id}: {e}")
-        
+
         return {
             "basic_policy": basic_result,
             "advanced_policies": advanced_results,
             "overall_allowed": basic_result.allowed and all(r["allowed"] for r in advanced_results)
         }
-    
+
     async def _enforce_task_policies(
-        self, 
-        task: WorkflowTask, 
+        self,
+        task: WorkflowTask,
         context: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Enforce policies for task execution."""
@@ -570,13 +579,13 @@ class IntegratedWorkflowOrchestrator:
                 **context
             }
         )
-        
+
         basic_result = await self.policy_engine.evaluate_policy(policy_request)
-        
+
         # Advanced policy evaluation based on agent type
         advanced_results = []
         agent_config = self.agent_configs.get(task.agent)
-        
+
         if agent_config and agent_config.policy_rules:
             for policy_rule in agent_config.policy_rules:
                 try:
@@ -588,7 +597,7 @@ class IntegratedWorkflowOrchestrator:
                         advanced_result = await self.advanced_policy_engine.evaluate_policy("composite_security_policy", policy_request)
                     else:
                         continue
-                    
+
                     advanced_results.append({
                         "policy_id": advanced_result.policy_id,
                         "rule_id": advanced_result.rule_id,
@@ -600,16 +609,16 @@ class IntegratedWorkflowOrchestrator:
                     })
                 except Exception as e:
                     logger.warning(f"Advanced policy evaluation failed for {policy_rule}: {e}")
-        
+
         return {
             "basic_policy": basic_result,
             "advanced_policies": advanced_results,
             "overall_allowed": basic_result.allowed and all(r["allowed"] for r in advanced_results)
         }
-    
+
     async def _execute_task_with_llm(
-        self, 
-        task: WorkflowTask, 
+        self,
+        task: WorkflowTask,
         context: Dict[str, Any],
         span
     ) -> Dict[str, Any]:
@@ -622,22 +631,22 @@ class IntegratedWorkflowOrchestrator:
                 max_tokens=1000,
                 temperature=0.1
             )
-            
+
             # Generate task prompt
             prompt = self._generate_task_prompt(task, context)
-            
+
             # Call LLM
             response = await self.openrouter_client.call_llm(
                 config=llm_config,
                 prompt=prompt,
                 context=context
             )
-            
+
             span.set_attribute("llm.provider", response.provider)
             span.set_attribute("llm.model", response.model)
             span.set_attribute("llm.tokens_used", response.tokens_used)
             span.set_attribute("llm.cost", response.cost)
-            
+
             return {
                 "provider": response.provider,
                 "model": response.model,
@@ -646,11 +655,11 @@ class IntegratedWorkflowOrchestrator:
                 "latency": response.latency,
                 "response": response.content
             }
-            
+
         except Exception as e:
             logger.error(f"LLM execution failed: {e}")
             return {"error": str(e)}
-    
+
     def _generate_task_prompt(self, task: WorkflowTask, context: Dict[str, Any]) -> str:
         """Generate a prompt for task execution."""
         return f"""
@@ -666,19 +675,19 @@ class IntegratedWorkflowOrchestrator:
         
         Voer deze taak uit en geef een gestructureerd antwoord terug.
         """
-    
+
     async def _execute_agent_task(
-        self, 
-        task: WorkflowTask, 
+        self,
+        task: WorkflowTask,
         context: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Execute the actual agent task."""
         # This would integrate with the existing BMAD agent system
         # For now, we'll simulate the execution
-        
+
         # Simulate task execution
         await asyncio.sleep(1)  # Simulate work
-        
+
         return {
             "output": f"Task {task.id} executed successfully",
             "data": {
@@ -687,63 +696,63 @@ class IntegratedWorkflowOrchestrator:
                 "command": task.command
             }
         }
-    
+
     async def _track_task_costs(
-        self, 
-        task: WorkflowTask, 
+        self,
+        task: WorkflowTask,
         task_result: Dict[str, Any]
     ) -> Dict[str, Any]:
         """Track costs for task execution."""
         llm_data = task_result.get("integrations", {}).get("llm", {})
-        
+
         return {
             "llm_cost": llm_data.get("cost", 0),
             "total_cost": llm_data.get("cost", 0),
             "currency": "USD",
             "task_id": task.id
         }
-    
+
     def get_workflow_status(self, workflow_id: str) -> Optional[Dict[str, Any]]:
         """Get status of a workflow."""
         return self.active_workflows.get(workflow_id)
-    
+
     def list_workflows(self) -> List[str]:
         """List all available workflows."""
         return list(self.workflow_definitions.keys())
-    
+
     def get_agent_config(self, agent_name: str) -> Optional[AgentWorkflowConfig]:
         """Get configuration for a specific agent."""
         return self.agent_configs.get(agent_name)
-    
+
     async def start_langgraph_workflow(self, workflow_name: str, context: Dict[str, Any] = None):
         """Start a LangGraph workflow."""
         return await self.langgraph_orchestrator.start_workflow(workflow_name, context)
-    
+
     async def start_prefect_workflow(self, config: PrefectWorkflowConfig):
         """Start a Prefect workflow."""
         return await self.prefect_orchestrator.create_deployment(config)
-    
+
     def get_tracing_data(self, workflow_id: str) -> Optional[Dict[str, Any]]:
         """Get tracing data for a workflow."""
         # This would return actual tracing data from OpenTelemetry
         return {"workflow_id": workflow_id, "traces": []}
-    
+
     def get_cost_analysis(self, workflow_id: str) -> Optional[Dict[str, Any]]:
         """Get cost analysis for a workflow."""
         # This would aggregate costs from all tasks
         return {"workflow_id": workflow_id, "total_cost": 0, "breakdown": {}}
-    
+
     def get_performance_metrics(self, workflow_id: str) -> Optional[Dict[str, Any]]:
         """Get performance metrics for a workflow."""
         # This would return performance metrics
         return {"workflow_id": workflow_id, "metrics": {}}
-    
+
     async def run_component_tests(self, component_name: str, test_type: str = "all") -> Dict[str, Any]:
         """Run component tests using test sprites."""
         try:
             sprite_name = f"{component_name}_sprite"
             result = await self.sprite_library.run_sprite_test(sprite_name, test_type)
-            
+
             return {
                 "component_name": component_name,
                 "sprite_name": sprite_name,
@@ -761,14 +770,14 @@ class IntegratedWorkflowOrchestrator:
                 "status": "failed",
                 "error": str(e)
             }
-    
+
     def get_component_sprites(self, component_name: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get available component sprites."""
         sprites = self.sprite_library.list_sprites()
-        
+
         if component_name:
             sprites = [s for s in sprites if s.component_name == component_name]
-        
+
         return [
             {
                 "name": sprite.name,
@@ -781,39 +790,39 @@ class IntegratedWorkflowOrchestrator:
             }
             for sprite in sprites
         ]
-    
+
     def export_sprite_test_report(self, format: str = "json") -> str:
         """Export sprite test results as a report."""
         return self.sprite_library.export_test_report(format)
-    
+
     # Performance Monitoring Methods
-    
+
     def start_performance_monitoring(self, interval: float = 5.0):
         """Start performance monitoring."""
         self.performance_monitor.start_monitoring(interval)
         logger.info(f"Performance monitoring started with {interval}s interval")
-    
+
     def stop_performance_monitoring(self):
         """Stop performance monitoring."""
         self.performance_monitor.stop_monitoring()
         logger.info("Performance monitoring stopped")
-    
+
     def get_agent_performance_summary(self, agent_name: str) -> Dict[str, Any]:
         """Get performance summary for an agent."""
         return self.performance_monitor.get_agent_performance_summary(agent_name)
-    
+
     def get_system_performance_summary(self) -> Dict[str, Any]:
         """Get system-wide performance summary."""
         return self.performance_monitor.get_system_performance_summary()
-    
-    def get_performance_alerts(self, agent_name: Optional[str] = None, 
+
+    def get_performance_alerts(self, agent_name: Optional[str] = None,
                              level: Optional[str] = None) -> List[Dict[str, Any]]:
         """Get performance alerts."""
         alerts = self.performance_monitor.alerts
-        
+
         if agent_name:
             alerts = [a for a in alerts if a.agent_name == agent_name]
-        
+
         if level:
             from .agent_performance_monitor import AlertLevel
             try:
@@ -821,7 +830,7 @@ class IntegratedWorkflowOrchestrator:
                 alerts = [a for a in alerts if a.level == alert_level]
             except ValueError:
                 logger.warning(f"Invalid alert level: {level}")
-        
+
         return [
             {
                 "alert_id": alert.alert_id,
@@ -836,7 +845,7 @@ class IntegratedWorkflowOrchestrator:
             }
             for alert in alerts
         ]
-    
+
     def export_performance_data(self, format: str = "json") -> str:
         """Export performance data."""
         return self.performance_monitor.export_performance_data(format)
@@ -849,4 +858,4 @@ def get_orchestrator() -> IntegratedWorkflowOrchestrator:
     global _orchestrator
     if _orchestrator is None:
         _orchestrator = IntegratedWorkflowOrchestrator()
-    return _orchestrator 
+    return _orchestrator

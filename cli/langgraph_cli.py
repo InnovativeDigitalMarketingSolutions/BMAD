@@ -12,12 +12,12 @@ import sys
 import time
 
 # Add the project root to Python path
-sys.path.insert(0, '.')
+sys.path.insert(0, ".")
 
 from bmad.agents.core.langgraph_workflow import (
     WorkflowDefinition,
     WorkflowTask,
-    create_workflow_orchestrator
+    create_workflow_orchestrator,
 )
 
 
@@ -52,7 +52,7 @@ def create_demo_workflow() -> WorkflowDefinition:
             dependencies=["developer_task"]
         )
     ]
-    
+
     return WorkflowDefinition(
         name="demo_workflow",
         description="Complete development workflow from user story to testing",
@@ -75,7 +75,7 @@ def create_simple_workflow() -> WorkflowDefinition:
             command="simple_command"
         )
     ]
-    
+
     return WorkflowDefinition(
         name="simple_workflow",
         description="Simple workflow for basic testing",
@@ -92,10 +92,10 @@ async def run_workflow_demo(workflow_name: str = "demo_workflow"):
     """Run a workflow demonstration."""
     print(f"🚀 Starting LangGraph Workflow Demo: {workflow_name}")
     print("=" * 60)
-    
+
     # Create orchestrator
     orchestrator = create_workflow_orchestrator()
-    
+
     # Create and register workflow
     if workflow_name == "demo_workflow":
         workflow_def = create_demo_workflow()
@@ -104,15 +104,15 @@ async def run_workflow_demo(workflow_name: str = "demo_workflow"):
     else:
         print(f"❌ Unknown workflow: {workflow_name}")
         return
-    
+
     orchestrator.register_workflow(workflow_def)
-    
+
     print(f"📋 Workflow registered: {workflow_def.name}")
     print(f"   Description: {workflow_def.description}")
     print(f"   Tasks: {len(workflow_def.tasks)}")
     print(f"   Max Parallel: {workflow_def.max_parallel}")
     print(f"   Timeout: {workflow_def.timeout}s")
-    
+
     # Print task details
     print("\n📝 Task Details:")
     for task in workflow_def.tasks:
@@ -121,24 +121,24 @@ async def run_workflow_demo(workflow_name: str = "demo_workflow"):
         if task.dependencies:
             print(f"     Dependencies: {', '.join(task.dependencies)}")
         print()
-    
+
     # Start workflow
     context = {
         "project": "BMAD Demo",
         "feature": "User Authentication",
         "priority": "high"
     }
-    
+
     print(f"🎯 Starting workflow with context: {json.dumps(context, indent=2)}")
-    
+
     workflow_id = orchestrator.start_workflow(workflow_name, context)
     print(f"✅ Workflow started with ID: {workflow_id}")
-    
+
     # Monitor workflow
     print("\n📊 Monitoring workflow execution...")
     max_wait_time = 30  # seconds
     start_time = time.time()
-    
+
     while time.time() - start_time < max_wait_time:
         status = orchestrator.get_workflow_status(workflow_id)
         if status:
@@ -146,9 +146,9 @@ async def run_workflow_demo(workflow_name: str = "demo_workflow"):
             print(f"   Active workflows: {status.get('active_workflows', 0)}")
         else:
             print("   Status: Not available")
-        
+
         await asyncio.sleep(2)
-    
+
     print("\n⏰ Demo completed (timeout reached)")
     print("=" * 60)
 
@@ -157,10 +157,10 @@ def show_workflow_status(workflow_id: str):
     """Show status of a specific workflow."""
     print(f"📊 Workflow Status: {workflow_id}")
     print("=" * 40)
-    
+
     orchestrator = create_workflow_orchestrator()
     status = orchestrator.get_workflow_status(workflow_id)
-    
+
     if status:
         print(f"Status: {status.get('status', 'unknown')}")
         print(f"Active workflows: {status.get('active_workflows', 0)}")
@@ -173,16 +173,16 @@ def list_workflows():
     """List all available workflows."""
     print("📋 Available Workflows")
     print("=" * 30)
-    
+
     orchestrator = create_workflow_orchestrator()
-    
+
     # Register demo workflows
     demo_workflow = create_demo_workflow()
     simple_workflow = create_simple_workflow()
-    
+
     orchestrator.register_workflow(demo_workflow)
     orchestrator.register_workflow(simple_workflow)
-    
+
     for name, workflow in orchestrator.workflow_definitions.items():
         print(f"• {name}")
         print(f"  Description: {workflow.description}")
@@ -195,17 +195,17 @@ def test_langgraph_integration():
     """Test basic LangGraph integration."""
     print("🧪 Testing LangGraph Integration")
     print("=" * 40)
-    
+
     try:
         # Test basic functionality
         orchestrator = create_workflow_orchestrator()
         print("✅ Orchestrator created successfully")
-        
+
         # Test workflow creation
         workflow_def = create_simple_workflow()
         orchestrator.register_workflow(workflow_def)
         print("✅ Workflow registered successfully")
-        
+
         # Test task execution
         task = WorkflowTask(
             id="test_task",
@@ -213,22 +213,22 @@ def test_langgraph_integration():
             agent="ProductOwner",
             command="test_command"
         )
-        
+
         context = {"test": "context"}
         result = asyncio.run(orchestrator._execute_product_owner_task(task, context))
-        
+
         if result and "output" in result:
             print("✅ Task execution successful")
             print(f"   Output: {result['output']}")
         else:
             print("❌ Task execution failed")
-        
+
         print("\n🎉 LangGraph integration test completed successfully!")
-        
+
     except Exception as e:
         print(f"❌ LangGraph integration test failed: {e}")
         return False
-    
+
     return True
 
 
@@ -246,21 +246,21 @@ Examples:
   python langgraph_cli.py test                   # Test LangGraph integration
         """
     )
-    
+
     parser.add_argument(
         "command",
         choices=["demo", "simple", "status", "list", "test"],
         help="Command to execute"
     )
-    
+
     parser.add_argument(
         "workflow_id",
         nargs="?",
         help="Workflow ID for status command"
     )
-    
+
     args = parser.parse_args()
-    
+
     try:
         if args.command == "demo":
             asyncio.run(run_workflow_demo("demo_workflow"))
@@ -279,7 +279,7 @@ Examples:
         else:
             print(f"❌ Unknown command: {args.command}")
             sys.exit(1)
-            
+
     except KeyboardInterrupt:
         print("\n⏹️  Demo interrupted by user")
         sys.exit(0)
@@ -289,4 +289,4 @@ Examples:
 
 
 if __name__ == "__main__":
-    main() 
+    main()

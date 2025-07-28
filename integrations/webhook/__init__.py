@@ -12,4 +12,4 @@ from .webhook_notify import WebhookNotifier
 
 __all__ = [
     "WebhookNotifier"
-] 
+]

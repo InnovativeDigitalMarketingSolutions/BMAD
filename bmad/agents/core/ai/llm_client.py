@@ -1,15 +1,13 @@
-import os
-import requests
 import hashlib
 import json
 import logging
+import os
 import time
-from typing import Dict, Any, Optional
 from copy import deepcopy
-import logging
-import time
-from typing import Dict, Any, Optional
-from copy import deepcopy
+from typing import Any, Dict, Optional
+
+import requests
+
 from bmad.agents.core.data.redis_cache import cache_llm_response
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
@@ -24,7 +22,7 @@ def _file_cache_get(key: str) -> Optional[dict]:
     path = os.path.join(CACHE_DIR, f"{key}.json")
     if os.path.exists(path):
         try:
-            with open(path, "r", encoding="utf-8") as f:
+            with open(path, encoding="utf-8") as f:
                 return json.load(f)
         except Exception as e:
             logging.warning(f"[LLM][FILECACHE] Fout bij lezen: {e}")
@@ -42,9 +40,9 @@ def _file_cache_set(key: str, value: dict):
 
 def _cache_key(prompt: str, model: str, temperature: float, max_tokens: int, logprobs: bool) -> str:
     key = json.dumps({
-        "prompt": prompt, 
-        "model": model, 
-        "temperature": temperature, 
+        "prompt": prompt,
+        "model": model,
+        "temperature": temperature,
         "max_tokens": max_tokens,
         "logprobs": logprobs
     }, sort_keys=True)
@@ -144,99 +142,166 @@ def ask_openai_with_confidence(
     temperature: float = 0.7, 
     max_tokens: int = 512, 
     structured_output: Optional[str] = None,
-    include_logprobs: bool = True
+    include_logprobs: bool = True,
+    stream: bool = False
 ) -> Dict[str, Any]:
     """
-    Stuur een prompt naar OpenAI en ontvang antwoord met confidence scoring.
-    Probeert Redis cache, valt terug op file-cache als Redis niet beschikbaar is.
+    Ask OpenAI with confidence scoring en memory optimization.
+    
+    Args:
+        prompt: The prompt to send
+        context: Optional context data
+        model: Model to use (defaults to OPENAI_MODEL)
+        temperature: Temperature for generation
+        max_tokens: Maximum tokens to generate
+        structured_output: Optional structured output format
+        include_logprobs: Whether to include logprobs for confidence
+        stream: Whether to stream the response (memory efficient)
+        
+    Returns:
+        Dict with response and metadata
     """
-    # --- Extra validatie ---
-    if not OPENAI_API_KEY:
-        raise RuntimeError("OPENAI_API_KEY niet gezet in environment!")
-    if not isinstance(prompt, str) or not prompt:
-        raise ValueError("Prompt moet een niet-lege string zijn.")
-    if context is None:
-        context = {}
-    else:
-        context = deepcopy(context)
-    # --- Einde validatie ---
-    if structured_output:
-        prompt += f"\nGeef het antwoord als geldige JSON volgens dit voorbeeld:\n{structured_output}"
+    if not prompt or not isinstance(prompt, str):
+        raise ValueError("Prompt must be a non-empty string")
+    
+    # Deep copy context to avoid mutations
+    context = deepcopy(context) if context else {}
+    
+    # Use environment model if not specified
     model = model or OPENAI_MODEL
+    
+    # Generate cache key
     cache_key = _cache_key(prompt, model, temperature, max_tokens, include_logprobs)
-    # --- Redis cache proberen ---
-    try:
-        # De decorator cache_llm_response regelt Redis cache
-        # Maar we checken ook handmatig voor fallback
-        pass  # Decorator doet het werk
-    except Exception as e:
-        logging.warning(f"[LLM][REDIS] Redis cache niet beschikbaar: {e}")
-    # --- File-cache fallback ---
-    cached = _file_cache_get(cache_key)
-    if cached:
-        logging.info(f"[LLM][FILECACHE] Cache hit: {cache_key}")
-        confidence = calculate_confidence(cached["answer"], context)
-        return {
-            "answer": cached["answer"],
-            "confidence": confidence,
-            "cached": True,
-            "model": model,
-            "timestamp": time.time(),
-            "llm_confidence": cached.get("llm_confidence", 0.5)
-        }
-    # --- LLM call ---
-    url = "https://api.openai.com/v1/chat/completions"
-    headers = {"Authorization": f"Bearer {OPENAI_API_KEY}"}
-    data = {
+    
+    # Check cache first (non-streaming only)
+    if not stream:
+        cached_response = _file_cache_get(cache_key)
+        if cached_response:
+            logging.debug(f"LLM response from cache: {cache_key}")
+            return cached_response
+    
+    # Prepare request
+    headers = {
+        "Authorization": f"Bearer {OPENAI_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    
+    # Build messages
+    messages = []
+    if context.get("system_prompt"):
+        messages.append({"role": "system", "content": context["system_prompt"]})
+    
+    if context.get("conversation_history"):
+        messages.extend(context["conversation_history"])
+    
+    messages.append({"role": "user", "content": prompt})
+    
+    # Prepare request payload
+    payload = {
         "model": model,
-        "messages": [{"role": "user", "content": prompt}],
+        "messages": messages,
         "temperature": temperature,
         "max_tokens": max_tokens,
+        "stream": stream
     }
-    if include_logprobs and model in ["gpt-4", "gpt-4-turbo", "gpt-3.5-turbo"]:
-        data["logprobs"] = True
-        data["top_logprobs"] = 1
-    logging.info(f"[LLM][REQUEST] {prompt[:60]}... [model={model}]")
+    
+    if include_logprobs:
+        payload["logprobs"] = True
+        payload["top_logprobs"] = 5
+    
+    if structured_output:
+        payload["response_format"] = {"type": "json_object"}
+    
     try:
-        response = requests.post(url, headers=headers, json=data, timeout=30)
+        # Make request
+        response = requests.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers=headers,
+            json=payload,
+            timeout=30,
+            stream=stream
+        )
         response.raise_for_status()
-        response_data = response.json()
-        answer = response_data["choices"][0]["message"]["content"]
-        llm_confidence = 0.5
-        if include_logprobs and "logprobs" in response_data:
-            llm_confidence = calculate_confidence_from_logprobs(response_data)
-        context["llm_confidence"] = llm_confidence
-        confidence = calculate_confidence(answer, context)
-        logging.info(f"[LLM][RESPONSE] {answer[:60]}... [confidence={confidence:.2f}]")
-        # --- Cache in file fallback ---
-        _file_cache_set(cache_key, {
-            "answer": answer,
-            "llm_confidence": llm_confidence
-        })
-        if structured_output:
-            try:
-                parsed_answer = json.loads(answer)
-                return {
-                    "answer": parsed_answer,
-                    "confidence": confidence,
-                    "cached": False,
-                    "model": model,
-                    "timestamp": time.time(),
-                    "llm_confidence": llm_confidence
-                }
-            except Exception:
-                pass
+        
+        if stream:
+            # Handle streaming response (memory efficient)
+            return _handle_streaming_response(response, cache_key, context)
+        else:
+            # Handle regular response
+            data = response.json()
+            return _process_response(data, cache_key, context)
+            
+    except requests.exceptions.RequestException as e:
+        logging.error(f"OpenAI API request failed: {e}")
         return {
-            "answer": answer,
-            "confidence": confidence,
-            "cached": False,
+            "content": f"Error: {str(e)}",
+            "confidence": 0.0,
             "model": model,
-            "timestamp": time.time(),
-            "llm_confidence": llm_confidence
+            "usage": {"total_tokens": 0},
+            "cached": False,
+            "error": str(e)
         }
+    except json.JSONDecodeError as e:
+        logging.error(f"Failed to parse OpenAI response: {e}")
+        return {
+            "content": "Error: Invalid response format",
+            "confidence": 0.0,
+            "model": model,
+            "usage": {"total_tokens": 0},
+            "cached": False,
+            "error": "Invalid response format"
+        }
+
+def _handle_streaming_response(response, cache_key: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    """Handle streaming response for memory efficiency."""
+    content = ""
+    model = ""
+    
+    try:
+        for line in response.iter_lines():
+            if line:
+                line = line.decode('utf-8')
+                if line.startswith('data: '):
+                    data = line[6:]
+                    if data == '[DONE]':
+                        break
+                    
+                    try:
+                        chunk = json.loads(data)
+                        if 'choices' in chunk and chunk['choices']:
+                            delta = chunk['choices'][0].get('delta', {})
+                            if 'content' in delta:
+                                content += delta['content']
+                            if 'model' in chunk:
+                                model = chunk['model']
+                    except json.JSONDecodeError:
+                        continue
+        
+        # Process final result
+        result = {
+            "content": content,
+            "confidence": calculate_confidence(content, context),
+            "model": model,
+            "usage": {"total_tokens": len(content.split())},  # Approximate
+            "cached": False,
+            "streamed": True
+        }
+        
+        # Cache the final result
+        _file_cache_set(cache_key, result)
+        
+        return result
+        
     except Exception as e:
-        logging.error(f"[LLM][ERROR] {e}")
-        raise
+        logging.error(f"Streaming response error: {e}")
+        return {
+            "content": f"Error: {str(e)}",
+            "confidence": 0.0,
+            "model": model,
+            "usage": {"total_tokens": 0},
+            "cached": False,
+            "error": str(e)
+        }
 
 def ask_openai(prompt: str, context: Optional[Dict[str, Any]] = None, model: Optional[str] = None, temperature: float = 0.7, max_tokens: int = 512, structured_output: Optional[str] = None) -> Any:
     """
@@ -245,4 +310,4 @@ def ask_openai(prompt: str, context: Optional[Dict[str, Any]] = None, model: Opt
     if context is None:
         context = {"task": "general", "agent": "unknown"}
     result = ask_openai_with_confidence(prompt, context, model, temperature, max_tokens, structured_output)
-    return result["answer"] 
+    return result["answer"]
