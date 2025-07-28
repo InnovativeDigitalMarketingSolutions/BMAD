@@ -12,9 +12,9 @@ from typing import Any, Dict, List, Optional
 
 import requests
 
-from bmad.agents.core.message_bus import publish
-from bmad.agents.core.project_manager import project_manager
-from bmad.agents.core.supabase_context import get_context, save_context
+from bmad.agents.core.communication.message_bus import publish
+from bmad.agents.core.project.project_manager import project_manager
+from bmad.agents.core.data.supabase_context import get_context, save_context
 
 logger = logging.getLogger(__name__)
 

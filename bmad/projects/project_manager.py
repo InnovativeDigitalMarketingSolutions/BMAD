@@ -11,7 +11,7 @@ from typing import Any, Dict, List, Optional
 
 from dotenv import load_dotenv
 
-from bmad.agents.core.message_bus import publish
+from bmad.agents.core.communication.message_bus import publish
 
 load_dotenv()
 
