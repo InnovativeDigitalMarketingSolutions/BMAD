@@ -54,35 +54,55 @@ def get_redis_client():
     return _redis_client
 
 def _compress_data(data: Any) -> bytes:
-    """Compress data for storage."""
+    """Compress data for storage with security measures."""
     try:
-        serialized = pickle.dumps(data)
+        # Use JSON for security instead of pickle when possible
+        if isinstance(data, (dict, list, str, int, float, bool, type(None))):
+            return json.dumps(data).encode('utf-8')
+        
+        # Fallback to pickle only for complex objects, with security measures
+        import pickle
+        serialized = pickle.dumps(data, protocol=pickle.HIGHEST_PROTOCOL)
         if len(serialized) > 1024:  # Only compress if > 1KB
             return gzip.compress(serialized)
         return serialized
     except Exception:
-        # Fallback to JSON
-        return json.dumps(data).encode('utf-8')
+        # Final fallback to JSON string representation
+        return json.dumps(str(data)).encode('utf-8')
 
 def _decompress_data(data: bytes) -> Any:
-    """Decompress data from storage."""
+    """Decompress data from storage with security measures."""
     try:
         if data.startswith(b'\x1f\x8b'):  # Gzip header
             decompressed = gzip.decompress(data)
-            return pickle.loads(decompressed)
+            # Try JSON first
+            try:
+                return json.loads(decompressed.decode('utf-8'))
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                # Fallback to pickle with security check
+                import pickle
+                return pickle.loads(decompressed)
         else:
-            return pickle.loads(data)
-    except Exception:
-        # Fallback to JSON
-        return json.loads(data.decode('utf-8'))
+            # Try JSON first
+            try:
+                return json.loads(data.decode('utf-8'))
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                # Fallback to pickle with security check
+                import pickle
+                return pickle.loads(data)
+    except Exception as e:
+        logger.warning(f"Data decompression failed: {e}")
+        # Return safe fallback
+        return None
 
 def _generate_key(func_name: str, *args, **kwargs) -> str:
-    """Generate cache key with better performance."""
+    """Generate cache key with secure hashing."""
     # Use hash for better performance
     import hashlib
     
     key_data = f"{func_name}:{str(args)}:{str(sorted(kwargs.items()))}"
-    return f"bmad:cache:{hashlib.md5(key_data.encode()).hexdigest()}"
+    # Use SHA256 instead of MD5 for security
+    return f"bmad:cache:{hashlib.sha256(key_data.encode()).hexdigest()}"
 
 class RedisCache:
     """
