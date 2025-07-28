@@ -351,7 +351,16 @@ class ClickUpIntegration:
         try:
             # Haal project mapping op
             project_scope = project_manager.get_project_scope(self.project_id)
-            project_mapping = get_context("clickup_projects", project_name, scope=project_scope)
+            project_mapping_result = get_context("clickup_projects", project_name, scope=project_scope)
+            
+            # Handle both list and dict return types from get_context
+            if isinstance(project_mapping_result, list) and project_mapping_result:
+                project_mapping = project_mapping_result[0]  # Take first item from list
+            elif isinstance(project_mapping_result, dict):
+                project_mapping = project_mapping_result
+            else:
+                project_mapping = None
+                
             if not project_mapping:
                 logger.error(f"Project mapping niet gevonden voor: {project_name}")
                 return []
@@ -478,9 +487,21 @@ class ClickUpIntegration:
         :param project_name: Naam van het project
         :return: Project metrics
         """
+        # Default metrics structure
+        default_metrics = {
+            "project_name": project_name,
+            "total_tasks": 0,
+            "completed_tasks": 0,
+            "in_progress_tasks": 0,
+            "pending_tasks": 0,
+            "total_estimated_hours": 0,
+            "completion_rate": 0,
+            "last_updated": datetime.now().isoformat()
+        }
+        
         if not self.enabled:
             logger.warning("ClickUp integratie uitgeschakeld")
-            return {}
+            return default_metrics
 
         try:
             tasks = self.get_project_tasks(project_name)
@@ -490,6 +511,13 @@ class ClickUpIntegration:
             completed_tasks = len([t for t in tasks if t["status"] == "done"])
             in_progress_tasks = len([t for t in tasks if t["status"] == "in progress"])
             pending_tasks = len([t for t in tasks if t["status"] == "to do"])
+            
+            # Bereken total estimated hours (convert from milliseconds to hours)
+            total_estimated_hours = sum(
+                t.get("time_estimate", 0) / (1000 * 60 * 60) 
+                for t in tasks 
+                if t.get("time_estimate")
+            )
 
             completion_rate = (completed_tasks / total_tasks * 100) if total_tasks > 0 else 0
 
@@ -499,6 +527,7 @@ class ClickUpIntegration:
                 "completed_tasks": completed_tasks,
                 "in_progress_tasks": in_progress_tasks,
                 "pending_tasks": pending_tasks,
+                "total_estimated_hours": round(total_estimated_hours, 2),
                 "completion_rate": round(completion_rate, 2),
                 "last_updated": datetime.now().isoformat()
             }
@@ -508,7 +537,7 @@ class ClickUpIntegration:
 
         except Exception as e:
             logger.error(f"Fout bij ophalen project metrics: {e}")
-            return {}
+            return default_metrics
 
 # Global instance
 clickup_integration = ClickUpIntegration()
