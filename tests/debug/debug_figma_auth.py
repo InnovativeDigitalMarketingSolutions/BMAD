@@ -8,7 +8,6 @@ Dit script helpt bij het identificeren en oplossen van Figma API authenticatie p
 
 import os
 import requests
-import json
 from dotenv import load_dotenv
 
 load_dotenv()

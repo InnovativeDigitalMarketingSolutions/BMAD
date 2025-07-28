@@ -2,15 +2,12 @@ import pytest
 import os
 import tempfile
 import yaml
-from unittest.mock import patch, mock_open, MagicMock
-from pathlib import Path
+from unittest.mock import patch
 
 # Import the module to test
-import bmad.agents.core.validate_agent_resources as var
 
 def reimport_module_with_mock_yamls(yaml_files, capsys, mock_exists=None, mock_getsize=None, mock_open_side_effect=None, mock_exists_side_effect=None, mock_getsize_side_effect=None):
     """Helper function to re-import the module with mocked YAML files."""
-    import importlib
     import sys
     
     # Remove the module from sys.modules to force re-import

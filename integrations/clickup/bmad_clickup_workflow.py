@@ -12,9 +12,8 @@ Gebruik: python bmad_clickup_workflow.py
 
 import os
 import sys
-import json
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, List, Any
 
 # BMAD imports
@@ -22,7 +21,6 @@ sys.path.append('.')
 from bmad.agents.core.clickup_integration import ClickUpIntegration
 from bmad.agents.core.project_manager import ProjectManager
 # Import ProductOwner functions instead of class
-from bmad.agents.Agent.ProductOwner.product_owner import create_user_story, ask_llm_user_story
 from bmad.agents.core.llm_client import ask_openai_with_confidence
 
 class BMADClickUpWorkflow:
@@ -222,7 +220,36 @@ class BMADClickUpWorkflow:
             user_stories = self._get_fallback_user_stories()
         
         # Structure the planning
-        frontend_planning = {
+        planning = self._structure_planning(user_stories)
+        
+        print("✅ Frontend planning gegenereerd")
+        return planning
+    
+    def _get_fallback_user_stories(self) -> str:
+        """Fallback user stories als LLM niet beschikbaar is."""
+        return """
+        Epic: BMAD Frontend Foundation
+        - User Story: Als DevOps engineer wil ik een dashboard hebben om projecten te monitoren
+        - Acceptance Criteria: Dashboard toont project status, metrics, en recente activiteit
+        - Story Points: 8
+        - Priority: Critical
+        
+        Epic: Agent Management
+        - User Story: Als team lead wil ik agents kunnen beheren via een interface
+        - Acceptance Criteria: Start/stop agents, status monitoring, configuratie
+        - Story Points: 13
+        - Priority: Critical
+        
+        Epic: ClickUp Integration
+        - User Story: Als product owner wil ik ClickUp projecten synchroniseren
+        - Acceptance Criteria: Bidirectionele sync, status updates, webhook management
+        - Story Points: 8
+        - Priority: High
+        """
+    
+    def _structure_planning(self, user_stories: str) -> Dict[str, Any]:
+        """Structuur de user stories om een volledige planning te genereren."""
+        planning = {
             "project_name": "BMAD Frontend",
             "description": "Moderne frontend voor BMAD DevOps team",
             "sprints": [
@@ -414,31 +441,7 @@ class BMADClickUpWorkflow:
                 }
             ]
         }
-        
-        print("✅ Frontend planning gegenereerd")
-        return frontend_planning
-    
-    def _get_fallback_user_stories(self) -> str:
-        """Fallback user stories als LLM niet beschikbaar is."""
-        return """
-        Epic: BMAD Frontend Foundation
-        - User Story: Als DevOps engineer wil ik een dashboard hebben om projecten te monitoren
-        - Acceptance Criteria: Dashboard toont project status, metrics, en recente activiteit
-        - Story Points: 8
-        - Priority: Critical
-        
-        Epic: Agent Management
-        - User Story: Als team lead wil ik agents kunnen beheren via een interface
-        - Acceptance Criteria: Start/stop agents, status monitoring, configuratie
-        - Story Points: 13
-        - Priority: Critical
-        
-        Epic: ClickUp Integration
-        - User Story: Als product owner wil ik ClickUp projecten synchroniseren
-        - Acceptance Criteria: Bidirectionele sync, status updates, webhook management
-        - Story Points: 8
-        - Priority: High
-        """
+        return planning
     
     def create_clickup_structure(self, template: Dict[str, Any]) -> bool:
         """Creëer de ClickUp structuur volgens het BMAD template."""

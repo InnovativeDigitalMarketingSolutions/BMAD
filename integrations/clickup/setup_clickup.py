@@ -6,7 +6,6 @@ Dit script helpt je met het configureren van de ClickUp integratie.
 """
 
 import os
-import sys
 from pathlib import Path
 
 def check_env_file():

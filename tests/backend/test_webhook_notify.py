@@ -3,7 +3,6 @@ Tests for webhook notification system.
 """
 
 import os
-import pytest
 from unittest.mock import patch, MagicMock
 from bmad.agents.core.webhook_notify import (
     WebhookNotifier, 

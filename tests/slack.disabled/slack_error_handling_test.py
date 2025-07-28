@@ -1,6 +1,3 @@
-import os
-import sys
-import pytest
 from bmad.agents.core.slack_notify import send_slack_message
 
 def test_slack_error_handling():

@@ -1,6 +1,5 @@
 import requests
 import os
-import pytest
 
 def test_slack_unknown_event():
     url = os.getenv("SLACK_EVENT_URL", "http://localhost:5000/slack/events")

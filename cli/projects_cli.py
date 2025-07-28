@@ -18,37 +18,43 @@ def main():
     subparsers = parser.add_subparsers(dest="command", help="Beschikbare commando's")
     
     # List projects
-    list_parser = subparsers.add_parser("list", help="Toon alle projecten")
+    subparsers.add_parser("list", help="Toon alle projecten")
     
     # Create project
-    create_parser = subparsers.add_parser("create", help="Maak een nieuw project")
+    create_parser = subparsers.add_parser("create", help="Maak nieuw project aan")
+    create_parser.add_argument("project_id", help="Unieke project identifier")
     create_parser.add_argument("name", help="Project naam")
-    create_parser.add_argument("--type", choices=["web_app", "mobile_app", "api_service"], 
-                              default="web_app", help="Project type")
-    
-    # Load project
-    load_parser = subparsers.add_parser("load", help="Laad een project")
-    load_parser.add_argument("name", help="Project naam")
-    
-    # Show project info
-    info_parser = subparsers.add_parser("info", help="Toon project informatie")
+    create_parser.add_argument("--description", "-d", default="", help="Project beschrijving")
     
     # Add requirement
-    req_parser = subparsers.add_parser("add-requirement", help="Voeg requirement toe")
-    req_parser.add_argument("requirement", help="Requirement beschrijving")
-    req_parser.add_argument("--category", default="general", 
-                           choices=["functional", "non_functional", "technical", "general"],
-                           help="Requirement categorie")
+    req_parser = subparsers.add_parser("requirement", help="Voeg requirement toe")
+    req_parser.add_argument("project_id", help="Project ID")
+    req_parser.add_argument("requirement", help="Requirement tekst")
+    req_parser.add_argument("--category", "-c", default="general", help="Requirement categorie")
     
     # Add user story
-    story_parser = subparsers.add_parser("add-story", help="Voeg user story toe")
-    story_parser.add_argument("story", help="User story beschrijving")
-    story_parser.add_argument("--priority", default="medium",
-                             choices=["low", "medium", "high"],
-                             help="Prioriteit")
+    story_parser = subparsers.add_parser("story", help="Voeg user story toe")
+    story_parser.add_argument("project_id", help="Project ID")
+    story_parser.add_argument("story", help="User story tekst")
+    story_parser.add_argument("--priority", "-p", default="medium", help="Prioriteit (low/medium/high)")
+    
+    # Show project info
+    subparsers.add_parser("info", help="Toon project informatie")
+    
+    # Add requirement
+    req_parser = subparsers.add_parser("requirement", help="Voeg requirement toe")
+    req_parser.add_argument("project_id", help="Project ID")
+    req_parser.add_argument("requirement", help="Requirement tekst")
+    req_parser.add_argument("--category", "-c", default="general", help="Requirement categorie")
+    
+    # Add user story
+    story_parser = subparsers.add_parser("story", help="Voeg user story toe")
+    story_parser.add_argument("project_id", help="Project ID")
+    story_parser.add_argument("story", help="User story tekst")
+    story_parser.add_argument("--priority", "-p", default="medium", help="Prioriteit (low/medium/high)")
     
     # Interactive mode
-    interactive_parser = subparsers.add_parser("interactive", help="Start interactieve modus")
+    subparsers.add_parser("interactive", help="Start interactieve modus")
     
     args = parser.parse_args()
     

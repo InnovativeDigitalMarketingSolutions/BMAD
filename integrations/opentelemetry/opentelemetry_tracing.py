@@ -8,12 +8,10 @@ Integreert met OpenTelemetry voor end-to-end tracing van agent workflows en perf
 import asyncio
 import logging
 import time
-import json
-from typing import Dict, List, Any, Optional, Callable
+from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
 from enum import Enum
 from contextlib import contextmanager
-from datetime import datetime
 import opentelemetry
 from opentelemetry import trace
 from opentelemetry.trace import Status, StatusCode

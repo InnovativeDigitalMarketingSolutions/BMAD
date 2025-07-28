@@ -3,12 +3,8 @@ Comprehensive tests for LLM Client module.
 Tests all functions and edge cases to ensure quality and reliability.
 """
 import pytest
-import json
 import os
-import tempfile
-import shutil
-from unittest.mock import patch, MagicMock, mock_open
-from unittest.mock import Mock
+from unittest.mock import patch, MagicMock
 import requests
 
 from bmad.agents.core.llm_client import (

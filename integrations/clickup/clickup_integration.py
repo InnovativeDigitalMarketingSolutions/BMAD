@@ -7,7 +7,6 @@ inclusief task synchronization en bidirectional updates.
 
 import os
 import requests
-import json
 import logging
 from typing import Dict, List, Any, Optional
 from datetime import datetime

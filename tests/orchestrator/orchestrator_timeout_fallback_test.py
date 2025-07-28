@@ -1,4 +1,3 @@
-import pytest
 from test_helpers import run_orchestrator_command
 
 def test_orchestrator_hitl_timeout():

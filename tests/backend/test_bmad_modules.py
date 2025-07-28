@@ -3,9 +3,7 @@ Tests for bmad-run.py and figma_cli.py modules.
 """
 
 import os
-import sys
 import pytest
-import subprocess
 from unittest.mock import patch, MagicMock
 import tempfile
 

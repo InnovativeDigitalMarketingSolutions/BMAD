@@ -14,7 +14,7 @@ import sys
 import logging
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Optional
 from dotenv import load_dotenv
 
 # Add BMAD to path
@@ -23,7 +23,6 @@ sys.path.append(str(Path(__file__).parent.parent))
 # Import BMAD modules
 from bmad.agents.core.integrated_workflow_orchestrator import (
     IntegratedWorkflowOrchestrator,
-    AgentWorkflowConfig,
     IntegrationLevel
 )
 
@@ -232,7 +231,8 @@ class IntegratedWorkflowCLI:
                 response = await self.orchestrator.openrouter_client.generate_response(
                     prompt="Say 'Hello from BMAD!'",
                     strategy_name="development",
-                    context={}
+                    context={},
+                    config=config
                 )
                 
                 print(f"   ✅ OpenRouter: {response.content}")

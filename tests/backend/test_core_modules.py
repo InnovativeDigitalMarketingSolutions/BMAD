@@ -2,11 +2,8 @@
 Tests for core modules to improve test coverage.
 """
 
-import os
 import pytest
-from unittest.mock import patch, MagicMock
-import tempfile
-import yaml
+from unittest.mock import patch
 
 class TestContextTest:
     """Test context_test module."""

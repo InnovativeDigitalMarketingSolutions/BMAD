@@ -2,11 +2,8 @@
 Tests for bmad.agents.core.clickup_integration module.
 """
 
-import pytest
 import os
-import json
-from unittest.mock import patch, MagicMock, mock_open
-from datetime import datetime
+from unittest.mock import patch, MagicMock
 
 from bmad.agents.core.clickup_integration import ClickUpIntegration
 
