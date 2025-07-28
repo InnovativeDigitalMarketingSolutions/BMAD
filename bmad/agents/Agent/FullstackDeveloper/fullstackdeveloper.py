@@ -11,13 +11,14 @@ import textwrap
 import logging
 import time
 import json
+import os
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, Optional, Any
 import asyncio
 from dotenv import load_dotenv
-load_dotenv()
-import os
+
+# Add path for imports
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 
 from bmad.agents.core.communication.message_bus import publish, subscribe
@@ -26,6 +27,8 @@ from bmad.agents.core.agent.agent_performance_monitor import get_performance_mon
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from bmad.agents.core.data.supabase_context import save_context, get_context
 from integrations.slack.slack_notify import send_slack_message
+
+load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
