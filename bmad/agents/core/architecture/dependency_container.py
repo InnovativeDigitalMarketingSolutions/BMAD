@@ -171,19 +171,19 @@ def inject(*dependencies: str):
 
 def register_default_services():
     """Register default BMAD services."""
-    from bmad.agents.core.monitoring.monitoring import get_performance_monitor
-    from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
-    from bmad.agents.core.agent.test_sprites import get_sprite_library
+    from bmad.agents.core.monitoring.monitoring import PerformanceMonitor
+    from bmad.agents.core.policy.advanced_policy_engine import AdvancedPolicyEngine
+    from bmad.agents.core.agent.test_sprites import TestSpriteLibrary
     from bmad.agents.core.security.input_validator import InputValidator
-    from bmad.agents.core.security.rate_limiter import rate_limiter
-    from bmad.agents.core.security.secrets_manager import secrets_manager
+    from bmad.agents.core.security.rate_limiter import RateLimiter
+    from bmad.agents.core.security.secrets_manager import SecretsManager
     
     # Register core services
-    container.register_singleton("performance_monitor", get_performance_monitor())
-    container.register_singleton("policy_engine", get_advanced_policy_engine())
-    container.register_singleton("sprite_library", get_sprite_library())
+    container.register_singleton("performance_monitor", PerformanceMonitor())
+    container.register_singleton("policy_engine", AdvancedPolicyEngine())
+    container.register_singleton("sprite_library", TestSpriteLibrary())
     container.register_singleton("input_validator", InputValidator())
-    container.register_singleton("rate_limiter", rate_limiter)
-    container.register_singleton("secrets_manager", secrets_manager)
+    container.register_singleton("rate_limiter", RateLimiter())
+    container.register_singleton("secrets_manager", SecretsManager())
     
     logger.info("Default services registered in dependency container") 

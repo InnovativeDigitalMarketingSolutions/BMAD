@@ -145,29 +145,29 @@ service_locator = ServiceLocator()
 
 def register_default_services():
     """Register default BMAD services in service locator."""
-    from bmad.agents.core.monitoring.monitoring import get_performance_monitor
-    from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
-    from bmad.agents.core.agent.test_sprites import get_sprite_library
+    from bmad.agents.core.monitoring.monitoring import PerformanceMonitor
+    from bmad.agents.core.policy.advanced_policy_engine import AdvancedPolicyEngine
+    from bmad.agents.core.agent.test_sprites import TestSpriteLibrary
     from bmad.agents.core.security.input_validator import InputValidator
-    from bmad.agents.core.security.rate_limiter import rate_limiter
-    from bmad.agents.core.security.secrets_manager import secrets_manager
+    from bmad.agents.core.security.rate_limiter import RateLimiter
+    from bmad.agents.core.security.secrets_manager import SecretsManager
     
     # Register core services
     service_locator.register_service(
         "performance_monitor",
-        get_performance_monitor(),
+        PerformanceMonitor(),
         config={"type": "monitoring", "version": "1.0"}
     )
     
     service_locator.register_service(
         "policy_engine",
-        get_advanced_policy_engine(),
+        AdvancedPolicyEngine(),
         config={"type": "policy", "version": "1.0"}
     )
     
     service_locator.register_service(
         "sprite_library",
-        get_sprite_library(),
+        TestSpriteLibrary(),
         config={"type": "testing", "version": "1.0"}
     )
     
@@ -179,13 +179,13 @@ def register_default_services():
     
     service_locator.register_service(
         "rate_limiter",
-        rate_limiter,
+        RateLimiter(),
         config={"type": "security", "version": "1.0"}
     )
     
     service_locator.register_service(
         "secrets_manager",
-        secrets_manager,
+        SecretsManager(),
         config={"type": "security", "version": "1.0"}
     )
     
