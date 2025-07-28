@@ -1,8 +1,6 @@
 import pytest
 import asyncio
 from unittest.mock import patch, MagicMock, AsyncMock
-import sys
-import types
 
 import bmad.agents.core.connection_pool as cp
 

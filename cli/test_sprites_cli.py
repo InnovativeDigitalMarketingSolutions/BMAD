@@ -8,11 +8,10 @@ Integreert met de BMAD TestEngineer agent voor geautomatiseerde component testin
 
 import asyncio
 import argparse
-import json
 import sys
 import logging
 from pathlib import Path
-from typing import Dict, Any, Optional
+from typing import Optional
 from datetime import datetime
 
 # Add BMAD to path
@@ -20,8 +19,6 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 # Import BMAD modules
 from bmad.agents.core.test_sprites import (
-    TestSpriteLibrary,
-    TestSprite,
     SpriteType,
     SpriteState,
     get_sprite_library

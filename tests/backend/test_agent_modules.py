@@ -3,10 +3,8 @@ Tests for agent modules to improve test coverage.
 """
 
 import os
-import sys
 import pytest
 from unittest.mock import patch, MagicMock
-import tempfile
 
 class TestArchitectAgent:
     """Test Architect agent module."""

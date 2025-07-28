@@ -12,20 +12,17 @@ Dit CLI tool demonstreert en test alle nieuwe repository integraties:
 import asyncio
 import argparse
 import logging
-import json
-import time
-from typing import Dict, Any, Optional
-from pathlib import Path
+from typing import Dict, Any
 
 # Import BMAD modules
 from bmad.agents.core.openrouter_client import (
-    OpenRouterClient, LLMConfig, LLMProvider, ModelTier, RoutingStrategy
+    OpenRouterClient
 )
 from bmad.agents.core.opentelemetry_tracing import (
     initialize_tracing, TracingConfig, TraceLevel, ExporterType
 )
 from bmad.agents.core.opa_policy_engine import (
-    initialize_policy_engine, PolicyRequest, PolicyType
+    initialize_policy_engine, PolicyRequest
 )
 from bmad.agents.core.prefect_workflow import (
     create_prefect_orchestrator, PrefectWorkflowConfig, WorkflowType, DeploymentEnvironment

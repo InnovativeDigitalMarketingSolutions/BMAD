@@ -4,8 +4,6 @@ Uitgebreide tests voor Redis cache module om coverage te verhogen.
 """
 
 import pytest
-import time
-import json
 import redis
 from unittest.mock import patch, MagicMock
 from bmad.agents.core.redis_cache import RedisCache, cached, cache

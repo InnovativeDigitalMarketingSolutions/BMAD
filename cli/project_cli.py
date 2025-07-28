@@ -22,7 +22,7 @@ def main():
     subparsers = parser.add_subparsers(dest="command", help="Beschikbare commando's")
     
     # List projects command
-    list_parser = subparsers.add_parser("list", help="Toon alle projecten")
+    subparsers.add_parser("list", help="Toon alle projecten")
     
     # Create project command
     create_parser = subparsers.add_parser("create", help="Maak nieuw project aan")

@@ -9,7 +9,7 @@ import pytest
 import time
 import sys
 import os
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 # Voeg BMAD modules toe aan path
 sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
@@ -155,7 +155,6 @@ class TestConnectionPooling:
     @patch('bmad.agents.core.connection_pool.pool_manager')
     def test_pool_initialization(self, mock_pool_manager):
         """Test pool initialization."""
-        from bmad.agents.core.connection_pool import pool_manager
         
         # Mock initialization
         mock_pool_manager.initialize_pools.return_value = None
@@ -251,7 +250,7 @@ class TestPerformance:
     
     def test_cache_performance(self):
         """Test cache performance."""
-        from bmad.agents.core.redis_cache import cache, cached
+        from bmad.agents.core.redis_cache import cached
         import time
         
         @cached(ttl=60, cache_type="perf_test")

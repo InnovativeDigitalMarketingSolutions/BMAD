@@ -1,6 +1,5 @@
 import os
 import requests
-import pytest
 
 SLACK_BOT_TOKEN = os.getenv("SLACK_BOT_TOKEN")
 channel = os.getenv("SLACK_DEFAULT_CHANNEL", "C097FTDU1A5")

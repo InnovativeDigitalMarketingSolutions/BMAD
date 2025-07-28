@@ -9,11 +9,9 @@ Gebaseerd op LangGraph voor betrouwbare async workflows.
 import asyncio
 import logging
 import time
-import json
-from typing import Dict, List, Any, Optional, Callable, TypedDict, Annotated
+from typing import Dict, List, Any, Optional, Callable, TypedDict
 from dataclasses import dataclass, field
 from enum import Enum
-from datetime import datetime
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.memory import MemorySaver
 from bmad.agents.core.communication.message_bus import publish, subscribe
@@ -227,8 +225,6 @@ class LangGraphWorkflowOrchestrator:
                 return state
             
             # Execute task
-            task_start_time = time.time()
-            
             try:
                 # Find executor for task type
                 executor = self.task_executors.get(task.agent)
@@ -379,7 +375,6 @@ class LangGraphWorkflowOrchestrator:
             return None
         
         # Get state from LangGraph checkpoint
-        app = self.active_workflows[workflow_id]
         try:
             # This is a simplified version - in practice you'd get the actual state
             return {

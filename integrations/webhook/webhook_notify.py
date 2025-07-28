@@ -4,7 +4,6 @@ Supports multiple webhook endpoints and provides similar functionality.
 """
 
 import os
-import json
 import logging
 import requests
 from typing import Optional, Dict, Any, List

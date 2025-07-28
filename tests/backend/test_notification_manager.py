@@ -3,8 +3,7 @@ Tests for notification manager.
 """
 
 import os
-import pytest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 from bmad.agents.core.notification_manager import (
     NotificationManager,
     NotificationType,

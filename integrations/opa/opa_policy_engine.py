@@ -9,12 +9,12 @@ import asyncio
 import logging
 import time
 import json
-from typing import Dict, List, Any, Optional, Union
+from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
 from enum import Enum
 import aiohttp
 import yaml
-from integrations.opentelemetry.opentelemetry_tracing import get_tracer, trace_agent
+from integrations.opentelemetry.opentelemetry_tracing import get_tracer
 
 logger = logging.getLogger(__name__)
 
@@ -411,7 +411,6 @@ allow = false {
         # Simple fallback logic based on policy type
         subject = opa_input.get("subject", "")
         action = opa_input.get("action", "")
-        resource = opa_input.get("resource", "")
         
         # Default allow for most actions in test mode
         if "test" in subject.lower() or "test" in action.lower():

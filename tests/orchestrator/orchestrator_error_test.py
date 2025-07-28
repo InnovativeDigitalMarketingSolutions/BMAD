@@ -1,6 +1,5 @@
 import subprocess
 import sys
-import pytest
 
 def test_error_workflow():
     result = subprocess.run(

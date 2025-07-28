@@ -1,6 +1,5 @@
 import subprocess
 import sys
-import pytest
 
 def test_show_metrics():
     result = subprocess.run(

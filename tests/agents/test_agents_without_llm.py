@@ -5,10 +5,7 @@ Test Script voor Agents zonder LLM
 Dit script test de agents voor template aanpassing zonder LLM functionaliteit.
 """
 
-import os
 import sys
-import json
-from pathlib import Path
 
 # Add bmad to path
 sys.path.append('.')
@@ -19,7 +16,6 @@ def test_architect_agent():
     print("=" * 40)
     
     try:
-        from bmad.agents.Agent.Architect.architect import ArchitectAgent
         
         # Simuleer architect agent functionaliteit
         architect_capabilities = {

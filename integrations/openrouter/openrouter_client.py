@@ -5,15 +5,12 @@ Dit module biedt multi-LLM routing en provider integratie via OpenRouter.
 Ondersteunt GPT, Claude, Gemini en andere LLM providers met automatische fallback en load balancing.
 """
 
-import asyncio
 import logging
 import time
 import json
-from typing import Dict, List, Any, Optional, Union
+from typing import Dict, List, Any, Optional
 from dataclasses import dataclass, field
 from enum import Enum
-import aiohttp
-import openai
 from openai import AsyncOpenAI
 from bmad.agents.core.ai.confidence_scoring import confidence_scoring
 

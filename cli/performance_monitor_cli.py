@@ -8,12 +8,11 @@ Integreert met de BMAD Performance Monitor voor real-time agent monitoring.
 
 import asyncio
 import argparse
-import json
 import sys
 import logging
 from pathlib import Path
-from typing import Dict, Any, Optional
-from datetime import datetime, timedelta
+from typing import Optional
+from datetime import datetime
 import time
 
 # Add BMAD to path
@@ -21,7 +20,6 @@ sys.path.append(str(Path(__file__).parent.parent))
 
 # Import BMAD modules
 from bmad.agents.core.agent_performance_monitor import (
-    PerformanceMonitor,
     AgentPerformanceProfile,
     MetricType,
     AlertLevel,

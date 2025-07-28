@@ -9,7 +9,6 @@ import os
 import sys
 import json
 import requests
-from pathlib import Path
 
 # Add bmad to path
 sys.path.append('.')

@@ -24,7 +24,6 @@ from bmad.agents.core.webhook_notify import (
 )
 
 from bmad.agents.core.notification_manager import (
-    get_notification_manager,
     send_notification,
     send_hitl_notification,
     send_workflow_notification,
@@ -32,8 +31,7 @@ from bmad.agents.core.notification_manager import (
     send_success_notification,
     send_deployment_notification,
     test_notification_connection,
-    get_notification_status,
-    NotificationType
+    get_notification_status
 )
 
 def test_webhook():

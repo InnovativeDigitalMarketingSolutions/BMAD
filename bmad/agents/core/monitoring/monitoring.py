@@ -444,7 +444,6 @@ class HealthChecker:
             
             # Try to import OpenAI
             try:
-                import openai
                 # Simple API test (this could be async, but we'll keep it simple for now)
                 return HealthCheck(
                     name="llm_api",
