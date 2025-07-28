@@ -15,7 +15,7 @@ def test_clickup_api():
     api_key = os.getenv("CLICKUP_API_KEY")
     space_id = os.getenv("CLICKUP_SPACE_ID")
     
-    print(f"🔍 Testing ClickUp API directly")
+    print("🔍 Testing ClickUp API directly")
     print(f"API Key: {api_key[:8]}...{api_key[-4:] if api_key else 'None'}")
     print(f"Space ID: {space_id}")
     

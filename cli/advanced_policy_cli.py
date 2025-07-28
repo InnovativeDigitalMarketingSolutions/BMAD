@@ -18,7 +18,7 @@ from typing import Optional
 sys.path.append(str(Path(__file__).parent.parent))
 
 # Import BMAD modules
-from bmad.agents.core.advanced_policy_engine import (
+from bmad.agents.core.policy.advanced_policy_engine import (
     PolicyRequest,
     get_advanced_policy_engine
 )

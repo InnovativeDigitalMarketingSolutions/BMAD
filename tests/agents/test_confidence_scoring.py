@@ -51,7 +51,7 @@ def test_confidence_scoring_security_critical():
     )
     
     # Security-critical taken zouden review moeten vereisen
-    assert enhanced_output["review_required"] == True
+    assert enhanced_output["review_required"]
     assert enhanced_output["review_level"] in ["low", "medium", "high"]
 
 def test_confidence_scoring_high_complexity():
@@ -68,7 +68,7 @@ def test_confidence_scoring_high_complexity():
     
     # High complexity taken zouden review moeten vereisen bij medium confidence
     if enhanced_output["confidence"] < 0.8:
-        assert enhanced_output["review_required"] == True
+        assert enhanced_output["review_required"]
 
 def test_review_request_creation():
     """Test review request creatie."""

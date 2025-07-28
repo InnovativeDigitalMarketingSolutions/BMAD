@@ -829,7 +829,645 @@ class AdvancedPolicyEngine:
         self.create_policy(resource_policy)
         self.create_policy(composite_security_policy)
         
+        # Agent-specific policies
+        self._create_agent_policies()
+        
         logger.info("Default advanced policies created")
+    
+    def _create_agent_policies(self):
+        """Create agent-specific policies."""
+        
+        # Security Developer Policy
+        security_approval_policy = {
+            "policy_id": "security_approval",
+            "policy_name": "Security Approval Policy",
+            "policy_type": "security_policies",
+            "version": "1.0.0",
+            "rules": [
+                {
+                    "rule_id": "security_scan_required",
+                    "rule_name": "Security Scan Required",
+                    "policy_type": "security_policies",
+                    "priority": 200,
+                    "conditions": [
+                        {
+                            "condition_id": "vulnerability_scan",
+                            "condition_type": "context_based",
+                            "parameters": {
+                                "required_scans": ["owasp", "dependency_check", "sast"]
+                            },
+                            "description": "Require security scans",
+                            "severity": "high",
+                            "enabled": True
+                        }
+                    ],
+                    "actions": ["allow", "audit"],
+                    "description": "Security approval for code changes"
+                }
+            ],
+            "status": "active",
+            "metadata": {"category": "security", "tags": ["security", "approval", "scan"]}
+        }
+        
+        # Fullstack Developer Policy
+        fullstack_development_policy = {
+            "policy_id": "fullstack_development",
+            "policy_name": "Fullstack Development Policy",
+            "policy_type": "workflow_policies",
+            "version": "1.0.0",
+            "rules": [
+                {
+                    "rule_id": "fullstack_coverage",
+                    "rule_name": "Fullstack Coverage Required",
+                    "policy_type": "workflow_policies",
+                    "priority": 150,
+                    "conditions": [
+                        {
+                            "condition_id": "test_coverage",
+                            "condition_type": "context_based",
+                            "parameters": {
+                                "min_coverage": 80,
+                                "frontend_tests": True,
+                                "backend_tests": True
+                            },
+                            "description": "Require test coverage",
+                            "severity": "medium",
+                            "enabled": True
+                        }
+                    ],
+                    "actions": ["allow"],
+                    "description": "Fullstack development requirements"
+                }
+            ],
+            "status": "active",
+            "metadata": {"category": "development", "tags": ["fullstack", "testing", "coverage"]}
+        }
+        
+        # Frontend Developer Policy
+        component_build_policy = {
+            "policy_id": "component_build",
+            "policy_name": "Component Build Policy",
+            "policy_type": "workflow_policies",
+            "version": "1.0.0",
+            "rules": [
+                {
+                    "rule_id": "component_standards",
+                    "rule_name": "Component Standards Check",
+                    "policy_type": "workflow_policies",
+                    "priority": 150,
+                    "conditions": [
+                        {
+                            "condition_id": "accessibility_check",
+                            "condition_type": "context_based",
+                            "parameters": {
+                                "wcag_level": "AA",
+                                "responsive_design": True
+                            },
+                            "description": "Accessibility requirements",
+                            "severity": "medium",
+                            "enabled": True
+                        }
+                    ],
+                    "actions": ["allow"],
+                    "description": "Component build requirements"
+                }
+            ],
+            "status": "active",
+            "metadata": {"category": "frontend", "tags": ["component", "accessibility", "responsive"]}
+        }
+        
+        # Backend Developer Policy
+        api_change_policy = {
+            "policy_id": "api_change",
+            "policy_name": "API Change Policy",
+            "policy_type": "workflow_policies",
+            "version": "1.0.0",
+            "rules": [
+                {
+                    "rule_id": "api_versioning",
+                    "rule_name": "API Versioning Required",
+                    "policy_type": "workflow_policies",
+                    "priority": 200,
+                    "conditions": [
+                        {
+                            "condition_id": "backward_compatibility",
+                            "condition_type": "context_based",
+                            "parameters": {
+                                "version_semantic": True,
+                                "deprecation_notice": True
+                            },
+                            "description": "API versioning requirements",
+                            "severity": "high",
+                            "enabled": True
+                        }
+                    ],
+                    "actions": ["allow"],
+                    "description": "API change requirements"
+                }
+            ],
+            "status": "active",
+            "metadata": {"category": "backend", "tags": ["api", "versioning", "compatibility"]}
+        }
+        
+        # AI Developer Policy
+        ai_development_policy = {
+            "policy_id": "ai_development",
+            "policy_name": "AI Development Policy",
+            "policy_type": "security_policies",
+            "version": "1.0.0",
+            "rules": [
+                {
+                    "rule_id": "ai_safety_check",
+                    "rule_name": "AI Safety Check",
+                    "policy_type": "security_policies",
+                    "priority": 250,
+                    "conditions": [
+                        {
+                            "condition_id": "bias_check",
+                            "condition_type": "context_based",
+                            "parameters": {
+                                "bias_detection": True,
+                                "explainability": True,
+                                "data_privacy": True
+                            },
+                            "description": "AI safety requirements",
+                            "severity": "critical",
+                            "enabled": True
+                        }
+                    ],
+                    "actions": ["allow", "audit"],
+                    "description": "AI development safety requirements"
+                }
+            ],
+            "status": "active",
+            "metadata": {"category": "ai", "tags": ["ai", "safety", "bias", "privacy"]}
+        }
+        
+        # Accessibility Agent Policy
+        accessibility_approval_policy = {
+            "policy_id": "accessibility_approval",
+            "policy_name": "Accessibility Approval Policy",
+            "policy_type": "workflow_policies",
+            "version": "1.0.0",
+            "rules": [
+                {
+                    "rule_id": "wcag_compliance",
+                    "rule_name": "WCAG Compliance Check",
+                    "policy_type": "workflow_policies",
+                    "priority": 200,
+                    "conditions": [
+                        {
+                            "condition_id": "accessibility_standards",
+                            "condition_type": "context_based",
+                            "parameters": {
+                                "wcag_level": "AA",
+                                "screen_reader": True,
+                                "keyboard_navigation": True
+                            },
+                            "description": "Accessibility standards",
+                            "severity": "high",
+                            "enabled": True
+                        }
+                    ],
+                    "actions": ["allow"],
+                    "description": "Accessibility approval requirements"
+                }
+            ],
+            "status": "active",
+            "metadata": {"category": "accessibility", "tags": ["wcag", "accessibility", "compliance"]}
+        }
+        
+        # UX/UI Designer Policy
+        design_approval_policy = {
+            "policy_id": "design_approval",
+            "policy_name": "Design Approval Policy",
+            "policy_type": "workflow_policies",
+            "version": "1.0.0",
+            "rules": [
+                {
+                    "rule_id": "design_standards",
+                    "rule_name": "Design Standards Check",
+                    "policy_type": "workflow_policies",
+                    "priority": 150,
+                    "conditions": [
+                        {
+                            "condition_id": "design_system",
+                            "condition_type": "context_based",
+                            "parameters": {
+                                "design_system": True,
+                                "brand_guidelines": True,
+                                "user_research": True
+                            },
+                            "description": "Design standards",
+                            "severity": "medium",
+                            "enabled": True
+                        }
+                    ],
+                    "actions": ["allow"],
+                    "description": "Design approval requirements"
+                }
+            ],
+            "status": "active",
+            "metadata": {"category": "design", "tags": ["design", "ux", "ui", "standards"]}
+        }
+        
+        # Scrum Master Policy
+        sprint_review_policy = {
+            "policy_id": "sprint_review",
+            "policy_name": "Sprint Review Policy",
+            "policy_type": "workflow_policies",
+            "version": "1.0.0",
+            "rules": [
+                {
+                    "rule_id": "sprint_criteria",
+                    "rule_name": "Sprint Completion Criteria",
+                    "policy_type": "workflow_policies",
+                    "priority": 150,
+                    "conditions": [
+                        {
+                            "condition_id": "definition_of_done",
+                            "condition_type": "context_based",
+                            "parameters": {
+                                "code_review": True,
+                                "testing": True,
+                                "documentation": True
+                            },
+                            "description": "Definition of Done",
+                            "severity": "medium",
+                            "enabled": True
+                        }
+                    ],
+                    "actions": ["allow"],
+                    "description": "Sprint review requirements"
+                }
+            ],
+            "status": "active",
+            "metadata": {"category": "agile", "tags": ["sprint", "review", "agile"]}
+        }
+        
+        # Strategy Partner Policy
+        alignment_policy = {
+            "policy_id": "alignment",
+            "policy_name": "Strategic Alignment Policy",
+            "policy_type": "behavior_rules",
+            "version": "1.0.0",
+            "rules": [
+                {
+                    "rule_id": "strategic_check",
+                    "rule_name": "Strategic Alignment Check",
+                    "policy_type": "behavior_rules",
+                    "priority": 100,
+                    "conditions": [
+                        {
+                            "condition_id": "business_objectives",
+                            "condition_type": "context_based",
+                            "parameters": {
+                                "business_value": True,
+                                "market_fit": True,
+                                "resource_allocation": True
+                            },
+                            "description": "Strategic alignment",
+                            "severity": "medium",
+                            "enabled": True
+                        }
+                    ],
+                    "actions": ["allow"],
+                    "description": "Strategic alignment requirements"
+                }
+            ],
+            "status": "active",
+            "metadata": {"category": "strategy", "tags": ["strategy", "alignment", "business"]}
+        }
+        
+        # R&D Policy
+        experiment_policy = {
+            "policy_id": "experiment",
+            "policy_name": "Research & Development Policy",
+            "policy_type": "workflow_policies",
+            "version": "1.0.0",
+            "rules": [
+                {
+                    "rule_id": "experiment_approval",
+                    "rule_name": "Experiment Approval",
+                    "policy_type": "workflow_policies",
+                    "priority": 150,
+                    "conditions": [
+                        {
+                            "condition_id": "experiment_criteria",
+                            "condition_type": "context_based",
+                            "parameters": {
+                                "hypothesis": True,
+                                "success_metrics": True,
+                                "risk_assessment": True
+                            },
+                            "description": "Experiment criteria",
+                            "severity": "medium",
+                            "enabled": True
+                        }
+                    ],
+                    "actions": ["allow"],
+                    "description": "R&D experiment requirements"
+                }
+            ],
+            "status": "active",
+            "metadata": {"category": "rnd", "tags": ["experiment", "research", "innovation"]}
+        }
+        
+        # Create all agent policies
+        policies = [
+            security_approval_policy,
+            fullstack_development_policy,
+            component_build_policy,
+            api_change_policy,
+            ai_development_policy,
+            accessibility_approval_policy,
+            design_approval_policy,
+            sprint_review_policy,
+            alignment_policy,
+            experiment_policy
+        ]
+        
+        # Additional policies for agents that have policy engine but don't use it yet
+        additional_policies = [
+            # DevOps Infrastructure Policy
+            {
+                "policy_id": "deployment_approval",
+                "policy_name": "Deployment Approval Policy",
+                "policy_type": "workflow_policies",
+                "version": "1.0.0",
+                "rules": [
+                    {
+                        "rule_id": "infrastructure_deployment",
+                        "rule_name": "Infrastructure Deployment Check",
+                        "policy_type": "workflow_policies",
+                        "priority": 200,
+                        "conditions": [
+                            {
+                                "condition_id": "deployment_criteria",
+                                "condition_type": "context_based",
+                                "parameters": {
+                                    "environment": "production",
+                                    "backup_required": True,
+                                    "rollback_plan": True
+                                },
+                                "description": "Deployment approval criteria",
+                                "severity": "high",
+                                "enabled": True
+                            }
+                        ],
+                        "actions": ["allow"],
+                        "description": "Infrastructure deployment requirements"
+                    }
+                ],
+                "status": "active",
+                "metadata": {"category": "devops", "tags": ["deployment", "infrastructure", "approval"]}
+            },
+            
+            # Release Manager Policy
+            {
+                "policy_id": "release_approval",
+                "policy_name": "Release Approval Policy",
+                "policy_type": "workflow_policies",
+                "version": "1.0.0",
+                "rules": [
+                    {
+                        "rule_id": "release_criteria",
+                        "rule_name": "Release Criteria Check",
+                        "policy_type": "workflow_policies",
+                        "priority": 250,
+                        "conditions": [
+                            {
+                                "condition_id": "release_requirements",
+                                "condition_type": "context_based",
+                                "parameters": {
+                                    "tests_passed": True,
+                                    "code_review": True,
+                                    "security_scan": True
+                                },
+                                "description": "Release approval requirements",
+                                "severity": "critical",
+                                "enabled": True
+                            }
+                        ],
+                        "actions": ["allow"],
+                        "description": "Release approval requirements"
+                    }
+                ],
+                "status": "active",
+                "metadata": {"category": "release", "tags": ["release", "approval", "deployment"]}
+            },
+            
+            # Test Engineer Policy
+            {
+                "policy_id": "test_approval",
+                "policy_name": "Test Approval Policy",
+                "policy_type": "workflow_policies",
+                "version": "1.0.0",
+                "rules": [
+                    {
+                        "rule_id": "test_coverage",
+                        "rule_name": "Test Coverage Requirements",
+                        "policy_type": "workflow_policies",
+                        "priority": 150,
+                        "conditions": [
+                            {
+                                "condition_id": "coverage_requirements",
+                                "condition_type": "context_based",
+                                "parameters": {
+                                    "min_coverage": 80,
+                                    "unit_tests": True,
+                                    "integration_tests": True
+                                },
+                                "description": "Test coverage requirements",
+                                "severity": "medium",
+                                "enabled": True
+                            }
+                        ],
+                        "actions": ["allow"],
+                        "description": "Test approval requirements"
+                    }
+                ],
+                "status": "active",
+                "metadata": {"category": "testing", "tags": ["test", "coverage", "approval"]}
+            },
+            
+            # Data Engineer Policy
+            {
+                "policy_id": "data_access",
+                "policy_name": "Data Access Policy",
+                "policy_type": "security_policies",
+                "version": "1.0.0",
+                "rules": [
+                    {
+                        "rule_id": "data_protection",
+                        "rule_name": "Data Protection Check",
+                        "policy_type": "security_policies",
+                        "priority": 200,
+                        "conditions": [
+                            {
+                                "condition_id": "data_security",
+                                "condition_type": "context_based",
+                                "parameters": {
+                                    "encryption": True,
+                                    "access_control": True,
+                                    "audit_logging": True
+                                },
+                                "description": "Data security requirements",
+                                "severity": "high",
+                                "enabled": True
+                            }
+                        ],
+                        "actions": ["allow"],
+                        "description": "Data access requirements"
+                    }
+                ],
+                "status": "active",
+                "metadata": {"category": "data", "tags": ["data", "security", "access"]}
+            },
+            
+            # Feedback Agent Policy
+            {
+                "policy_id": "feedback_processing",
+                "policy_name": "Feedback Processing Policy",
+                "policy_type": "behavior_rules",
+                "version": "1.0.0",
+                "rules": [
+                    {
+                        "rule_id": "feedback_analysis",
+                        "rule_name": "Feedback Analysis Requirements",
+                        "policy_type": "behavior_rules",
+                        "priority": 100,
+                        "conditions": [
+                            {
+                                "condition_id": "sentiment_analysis",
+                                "condition_type": "context_based",
+                                "parameters": {
+                                    "sentiment_detection": True,
+                                    "priority_classification": True,
+                                    "response_time": "24h"
+                                },
+                                "description": "Feedback processing requirements",
+                                "severity": "medium",
+                                "enabled": True
+                            }
+                        ],
+                        "actions": ["allow"],
+                        "description": "Feedback processing requirements"
+                    }
+                ],
+                "status": "active",
+                "metadata": {"category": "feedback", "tags": ["feedback", "analysis", "sentiment"]}
+            },
+            
+            # Mobile Developer Policy
+            {
+                "policy_id": "mobile_approval",
+                "policy_name": "Mobile App Approval Policy",
+                "policy_type": "workflow_policies",
+                "version": "1.0.0",
+                "rules": [
+                    {
+                        "rule_id": "app_store_requirements",
+                        "rule_name": "App Store Requirements Check",
+                        "policy_type": "workflow_policies",
+                        "priority": 200,
+                        "conditions": [
+                            {
+                                "condition_id": "store_guidelines",
+                                "condition_type": "context_based",
+                                "parameters": {
+                                    "app_store_guidelines": True,
+                                    "performance_optimization": True,
+                                    "accessibility": True
+                                },
+                                "description": "App store requirements",
+                                "severity": "high",
+                                "enabled": True
+                            }
+                        ],
+                        "actions": ["allow"],
+                        "description": "Mobile app approval requirements"
+                    }
+                ],
+                "status": "active",
+                "metadata": {"category": "mobile", "tags": ["mobile", "app", "approval"]}
+            },
+            
+            # Documentation Agent Policy
+            {
+                "policy_id": "doc_approval",
+                "policy_name": "Documentation Approval Policy",
+                "policy_type": "workflow_policies",
+                "version": "1.0.0",
+                "rules": [
+                    {
+                        "rule_id": "documentation_standards",
+                        "rule_name": "Documentation Standards Check",
+                        "policy_type": "workflow_policies",
+                        "priority": 150,
+                        "conditions": [
+                            {
+                                "condition_id": "doc_requirements",
+                                "condition_type": "context_based",
+                                "parameters": {
+                                    "completeness": True,
+                                    "accuracy": True,
+                                    "readability": True
+                                },
+                                "description": "Documentation requirements",
+                                "severity": "medium",
+                                "enabled": True
+                            }
+                        ],
+                        "actions": ["allow"],
+                        "description": "Documentation approval requirements"
+                    }
+                ],
+                "status": "active",
+                "metadata": {"category": "documentation", "tags": ["documentation", "approval", "standards"]}
+            },
+            
+            # Retrospective Agent Policy
+            {
+                "policy_id": "retro_approval",
+                "policy_name": "Retrospective Approval Policy",
+                "policy_type": "behavior_rules",
+                "version": "1.0.0",
+                "rules": [
+                    {
+                        "rule_id": "retrospective_criteria",
+                        "rule_name": "Retrospective Criteria Check",
+                        "policy_type": "behavior_rules",
+                        "priority": 100,
+                        "conditions": [
+                            {
+                                "condition_id": "retro_requirements",
+                                "condition_type": "context_based",
+                                "parameters": {
+                                    "team_participation": True,
+                                    "action_items": True,
+                                    "follow_up": True
+                                },
+                                "description": "Retrospective requirements",
+                                "severity": "medium",
+                                "enabled": True
+                            }
+                        ],
+                        "actions": ["allow"],
+                        "description": "Retrospective approval requirements"
+                    }
+                ],
+                "status": "active",
+                "metadata": {"category": "retrospective", "tags": ["retrospective", "approval", "improvement"]}
+            }
+        ]
+        
+        all_policies = policies + additional_policies
+        
+        for policy in all_policies:
+            self.create_policy(policy)
+        
+        logger.info(f"Created {len(all_policies)} agent-specific policies")
 
 # Global advanced policy engine instance
 _advanced_policy_engine: Optional[AdvancedPolicyEngine] = None

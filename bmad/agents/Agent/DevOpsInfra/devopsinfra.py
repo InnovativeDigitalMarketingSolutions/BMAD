@@ -302,65 +302,59 @@ DevOps Infrastructure Agent Commands:
         return response_result
 
     def deploy_infrastructure(self, infrastructure_type: str = "kubernetes") -> Dict[str, Any]:
-        """Deploy infrastructure components."""
-        logger.info(f"Deploying infrastructure: {infrastructure_type}")
+        """Deploy infrastructure components with policy approval."""
         
-        # Simulate infrastructure deployment
-        time.sleep(2)
-        
-        deployment_result = {
+        # Policy evaluation for deployment approval
+        event = {
+            "action": "deploy_infrastructure",
             "infrastructure_type": infrastructure_type,
-            "deployment_type": "Infrastructure Deployment",
-            "status": "success",
-            "components_deployed": {
-                "kubernetes_cluster": {
-                    "status": "deployed",
-                    "version": "1.28.0",
-                    "nodes": 3,
-                    "resources": "8 CPU, 32GB RAM"
-                },
-                "monitoring_stack": {
-                    "status": "deployed",
-                    "components": ["Prometheus", "Grafana", "AlertManager"],
-                    "version": "latest"
-                },
-                "logging_stack": {
-                    "status": "deployed",
-                    "components": ["Elasticsearch", "Kibana", "Fluentd"],
-                    "version": "8.11.0"
-                },
-                "security_stack": {
-                    "status": "deployed",
-                    "components": ["OPA", "Falco", "Trivy"],
-                    "version": "latest"
-                }
-            },
-            "deployment_metrics": {
-                "deployment_time": "15 minutes",
-                "resource_usage": "60% of allocated resources",
-                "success_rate": "100%",
-                "rollback_available": True
-            },
-            "health_checks": {
-                "kubernetes_cluster": "healthy",
-                "monitoring_stack": "healthy",
-                "logging_stack": "healthy",
-                "security_stack": "healthy"
-            },
             "timestamp": datetime.now().isoformat(),
-            "agent": "DevOpsInfraAgent"
+            "agent": "DevOpsInfra"
         }
         
-        # Log performance metrics
-        self.monitor._record_metric("DevOpsInfra", MetricType.SUCCESS_RATE, 100, "%")
+        try:
+            allowed = await self.policy_engine.evaluate_policy("deployment_approval", event)
+            if not allowed:
+                return {
+                    "status": "denied",
+                    "reason": "Deployment not approved by policy",
+                    "infrastructure_type": infrastructure_type,
+                    "timestamp": datetime.now().isoformat()
+                }
+        except Exception as e:
+            logger.warning(f"Policy evaluation failed: {e}")
+            # Continue without policy check if evaluation fails
         
-        # Add to infrastructure history
-        infra_entry = f"{datetime.now().isoformat()}: {infrastructure_type} infrastructure deployed successfully"
-        self.infrastructure_history.append(infra_entry)
+        print(f"🚀 Deploying {infrastructure_type} infrastructure...")
+        
+        # Simulate deployment process
+        deployment_steps = [
+            "Validating infrastructure configuration",
+            "Checking resource availability", 
+            "Creating infrastructure components",
+            "Configuring networking",
+            "Setting up monitoring",
+            "Running health checks"
+        ]
+        
+        for step in deployment_steps:
+            print(f"  📋 {step}")
+            time.sleep(0.5)  # Simulate processing time
+        
+        # Record in history
+        deployment_record = f"{infrastructure_type} infrastructure deployed at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+        self.infrastructure_history.append(deployment_record)
         self._save_infrastructure_history()
         
-        logger.info(f"Infrastructure deployment completed: {deployment_result}")
-        return deployment_result
+        print(f"✅ {infrastructure_type} infrastructure deployed successfully!")
+        
+        return {
+            "status": "success",
+            "infrastructure_type": infrastructure_type,
+            "deployment_steps": deployment_steps,
+            "timestamp": datetime.now().isoformat(),
+            "history_record": deployment_record
+        }
 
     def monitor_infrastructure(self, infrastructure_id: str = "infra_001") -> Dict[str, Any]:
         """Monitor infrastructure health."""

@@ -21,7 +21,7 @@ from dotenv import load_dotenv
 sys.path.append(str(Path(__file__).parent.parent))
 
 # Import BMAD modules
-from bmad.agents.core.integrated_workflow_orchestrator import (
+from bmad.agents.core.workflow.integrated_workflow_orchestrator import (
     IntegratedWorkflowOrchestrator,
     IntegrationLevel
 )
@@ -171,13 +171,17 @@ class IntegratedWorkflowCLI:
         
         # Cost analysis
         if result.cost_analysis:
-            print(f"\n💰 Cost Analysis:")
+            print("\n💰 Cost Analysis:")
             total_cost = result.cost_analysis.get("total_cost", 0)
             print(f"   💵 Total Cost: ${total_cost:.4f}")
+            
+            # Provider breakdown
+            for provider, cost in result.cost_analysis.get("provider_breakdown", {}).items():
+                print(f"   📊 {provider}: ${cost:.4f}")
         
         # Performance metrics
         if result.performance_metrics:
-            print(f"\n📈 Performance Metrics:")
+            print("\n📈 Performance Metrics:")
             for metric, value in result.performance_metrics.items():
                 print(f"   📊 {metric}: {value}")
     
@@ -190,7 +194,7 @@ class IntegratedWorkflowCLI:
         print("📊 Testing Performance Monitor...")
         try:
             system_summary = self.orchestrator.get_system_performance_summary()
-            print(f"   ✅ Performance Monitor: System monitoring active")
+            print("   ✅ Performance Monitor: System monitoring active")
             print(f"   💻 CPU Usage: {system_summary.get('cpu_usage', 'N/A')}")
             print(f"   🧠 Memory Usage: {system_summary.get('memory_usage', 'N/A')}")
         except Exception as e:
@@ -267,7 +271,7 @@ class IntegratedWorkflowCLI:
             )
             
             result = await self.orchestrator.policy_engine.evaluate_policy(request)
-            print(f"   ✅ OPA: Policy evaluation working")
+            print("   ✅ OPA: Policy evaluation working")
             print(f"   🔒 Result: {result.allowed}")
             
         except Exception as e:

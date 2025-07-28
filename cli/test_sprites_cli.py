@@ -218,17 +218,17 @@ class TestSpritesCLI:
             print(f"📝 Attributes: {sprite.attributes}")
         
         if sprite.accessibility_checks:
-            print(f"\n♿ Accessibility Checks:")
+            print("\n♿ Accessibility Checks:")
             for check in sprite.accessibility_checks:
                 print(f"   • {check}")
         
         if sprite.visual_checks:
-            print(f"\n🎨 Visual Checks:")
+            print("\n🎨 Visual Checks:")
             for check in sprite.visual_checks:
                 print(f"   • {check}")
         
         if sprite.interaction_tests:
-            print(f"\n🖱️  Interaction Tests:")
+            print("\n🖱️  Interaction Tests:")
             for test in sprite.interaction_tests:
                 print(f"   • {test}")
         

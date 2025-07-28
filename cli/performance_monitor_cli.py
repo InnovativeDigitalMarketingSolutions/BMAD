@@ -245,7 +245,7 @@ class PerformanceMonitorCLI:
             print(f"   📊 CPU Critical: {cpu_critical}%")
             print(f"   ⏱️  Response Warning: {response_warning}s")
             print(f"   ⏱️  Response Critical: {response_critical}s")
-            print(f"   ⚡ Auto-scaling: Enabled")
+            print("   ⚡ Auto-scaling: Enabled")
             
         except Exception as e:
             print(f"❌ Failed to create agent profile: {e}")

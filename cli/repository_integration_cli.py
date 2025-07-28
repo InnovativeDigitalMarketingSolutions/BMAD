@@ -364,7 +364,7 @@ class RepositoryIntegrationCLI:
             logger.info("Cost Analysis (last 24 hours):")
             logger.info(f"  Total cost: ${cost_analysis['total_cost']:.4f}")
             logger.info(f"  Total tokens: {cost_analysis['total_tokens']}")
-            logger.info(f"  Provider breakdown:")
+            logger.info("  Provider breakdown:")
             for provider, breakdown in cost_analysis['provider_breakdown'].items():
                 logger.info(f"    {provider}: ${breakdown['cost']:.4f} ({breakdown['calls']} calls)")
                 
