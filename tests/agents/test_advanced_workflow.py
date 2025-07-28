@@ -123,11 +123,11 @@ def test_dependency_checking():
     }
     
     # Test dependency check
-    assert orchestrator._check_dependencies(workflow_id, "task_2") == True
+    assert orchestrator._check_dependencies(workflow_id, "task_2")
     
     # Test failed dependency
     orchestrator.active_workflows[workflow_id]["tasks"]["task_1"].status = TaskStatus.FAILED
-    assert orchestrator._check_dependencies(workflow_id, "task_2") == False
+    assert not orchestrator._check_dependencies(workflow_id, "task_2")
 
 @pytest.mark.asyncio
 async def test_workflow_execution():

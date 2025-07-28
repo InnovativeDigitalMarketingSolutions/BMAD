@@ -12,17 +12,14 @@ Gebruik: python bmad_clickup_workflow.py
 
 import os
 import sys
-import json
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime
 from typing import Dict, List, Any
 
 # BMAD imports
 sys.path.append('.')
 from bmad.agents.core.clickup_integration import ClickUpIntegration
 from bmad.agents.core.project_manager import ProjectManager
-# Import ProductOwner functions instead of class
-from bmad.agents.Agent.ProductOwner.product_owner import create_user_story, ask_llm_user_story
 from bmad.agents.core.llm_client import ask_openai_with_confidence
 
 class BMADClickUpWorkflow:
@@ -219,7 +216,7 @@ class BMADClickUpWorkflow:
             print("✅ User stories gegenereerd met LLM")
         except Exception as e:
             print(f"⚠️ LLM error, gebruik fallback user stories: {e}")
-            user_stories = self._get_fallback_user_stories()
+            # Use fallback user stories directly in the planning structure
         
         # Structure the planning
         frontend_planning = {

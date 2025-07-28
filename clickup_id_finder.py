@@ -5,9 +5,7 @@ ClickUp ID Finder
 Dit script helpt je automatisch ClickUp IDs te vinden en te configureren.
 """
 
-import os
 import requests
-import json
 from typing import Dict, List, Optional
 
 class ClickUpIDFinder:

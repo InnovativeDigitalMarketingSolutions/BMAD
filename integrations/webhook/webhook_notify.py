@@ -121,7 +121,7 @@ class WebhookNotifier:
         Returns:
             bool: True if successful
         """
-        message = f"🚨 **Human-in-the-Loop Alert**\n"
+        message = "🚨 **Human-in-the-Loop Alert**\n"
         message += f"**Reason:** {reason}\n"
         if user_mention:
             message += f"**User:** {user_mention}\n"
@@ -202,7 +202,7 @@ class WebhookNotifier:
         Returns:
             bool: True if successful
         """
-        message = f"❌ **Error Notification**\n"
+        message = "❌ **Error Notification**\n"
         message += f"**Error:** {error_message}\n"
         if context:
             message += f"**Context:** {context}\n"
@@ -229,7 +229,7 @@ class WebhookNotifier:
         Returns:
             bool: True if successful
         """
-        message = f"✅ **Success Notification**\n"
+        message = "✅ **Success Notification**\n"
         message += f"**Message:** {success_message}\n"
         if context:
             message += f"**Context:** {context}\n"

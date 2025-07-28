@@ -256,7 +256,7 @@ def test_clickup(args):
         config = project_manager.get_project_config(project_id)
         clickup_config = config.get("clickup", {})
         
-        print(f"\n📋 Project ClickUp Configuratie:")
+        print("\n📋 Project ClickUp Configuratie:")
         print(f"  Folder ID: {clickup_config.get('folder_id', 'Niet ingesteld')}")
         print(f"  List ID: {clickup_config.get('list_id', 'Niet ingesteld')}")
         

@@ -84,7 +84,7 @@ def test_clickup_simple():
             delete_response = requests.delete(f"https://api.clickup.com/api/v2/task/{task_id}", 
                                             headers=headers)
             if delete_response.status_code == 200:
-                print(f"✅ Test task cleaned up")
+                print("✅ Test task cleaned up")
             else:
                 print(f"⚠️  Could not clean up test task: {delete_response.status_code}")
                 

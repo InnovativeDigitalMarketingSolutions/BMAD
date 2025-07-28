@@ -305,8 +305,6 @@ DevOps Infrastructure Agent Commands:
         """Deploy infrastructure components with policy approval."""
         
         # Policy evaluation for deployment approval
-        from integrations.opa.opa_policy_engine import PolicyRequest
-        
         event = {
             "action": "deploy_infrastructure",
             "infrastructure_type": infrastructure_type,

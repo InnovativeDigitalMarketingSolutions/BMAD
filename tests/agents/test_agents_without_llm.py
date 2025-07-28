@@ -325,7 +325,7 @@ def main():
         print(f"{agent.capitalize()} Agent: {status}")
     
     print(f"\n🤝 Agent Samenwerking: ✅ SUCCESS ({len(collaboration_workflow)} stappen)")
-    print(f"🔄 Template Aanpassing: ✅ SUCCESS")
+    print("🔄 Template Aanpassing: ✅ SUCCESS")
     
     print("\n🎉 Agent template aanpassing test voltooid!")
     print("\n🚀 Volgende stappen:")

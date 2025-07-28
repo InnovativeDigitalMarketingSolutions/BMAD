@@ -211,6 +211,6 @@ if __name__ == "__main__":
         if task_id:
             print(f"\n🎉 SUCCESS! Created real task in ClickUp: {task_id}")
         else:
-            print(f"\n⚠️  Basic integration works, but real ClickUp integration failed")
+            print("\n⚠️  Basic integration works, but real ClickUp integration failed")
     else:
-        print(f"\n❌ Basic integration failed") 
+        print("\n❌ Basic integration failed") 

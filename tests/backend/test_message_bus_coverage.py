@@ -27,7 +27,7 @@ def temp_context_file():
     # Cleanup
     try:
         os.unlink(temp_path)
-    except:
+    except OSError:
         pass
     
     # Restore original path
