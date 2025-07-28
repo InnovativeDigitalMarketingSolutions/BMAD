@@ -316,8 +316,14 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
                 if user_input.lower() == "help":
                     self.show_help()
                 elif user_input.lower() == "clear":
-                    import os
-                    os.system("clear" if os.name == "posix" else "cls")
+                    # Clear screen securely
+                    import subprocess
+                    import platform
+                    
+                    if platform.system() == "Windows":
+                        subprocess.run(["cls"], shell=False, check=False)
+                    else:
+                        subprocess.run(["clear"], shell=False, check=False)
                 elif user_input:
                     # Probeer het als commando uit te voeren
                     self.run(user_input)
