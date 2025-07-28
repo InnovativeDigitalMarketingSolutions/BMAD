@@ -21,7 +21,7 @@ from dotenv import load_dotenv
 sys.path.append(str(Path(__file__).parent.parent))
 
 # Import BMAD modules
-from bmad.agents.core.integrated_workflow_orchestrator import (
+from bmad.agents.core.workflow.integrated_workflow_orchestrator import (
     IntegratedWorkflowOrchestrator,
     IntegrationLevel
 )
