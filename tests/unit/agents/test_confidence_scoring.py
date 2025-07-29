@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 import pytest
 from bmad.agents.core.ai.confidence_scoring import confidence_scoring, create_review_request, format_confidence_message
-from bmad.agents.core.llm_client import ask_openai_with_confidence
+from bmad.agents.core.ai.llm_client import ask_openai_with_confidence
 
 def test_confidence_scoring_basic():
     """Test basis confidence scoring functionaliteit."""
