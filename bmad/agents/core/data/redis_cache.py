@@ -297,8 +297,8 @@ def cached(ttl: Optional[int] = None, cache_type: str = "default",
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            # Genereer cache key
-            cache_key = cache._generate_key(key_prefix, func.__name__, *args, **kwargs)
+            # Genereer cache key using the standalone function
+            cache_key = _generate_key(f"{key_prefix}_{func.__name__}", *args, **kwargs)
 
             # Probeer cache hit
             cached_result = cache.get(cache_key)

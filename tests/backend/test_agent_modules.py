@@ -6,6 +6,10 @@ import os
 import pytest
 from unittest.mock import patch, MagicMock
 
+# Fix import paths for moved modules
+from integrations.slack.slack_notify import send_slack_message, send_hitl_alert
+from integrations.figma.figma_client import FigmaClient
+
 class TestArchitectAgent:
     """Test Architect agent module."""
     
