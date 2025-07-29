@@ -17,11 +17,11 @@ from .interfaces.project_cli import ProjectCLI
 from .interfaces.projects_cli import ProjectsCLI
 from .interfaces.langgraph_cli import LangGraphCLI
 from .interfaces.performance_monitor_cli import PerformanceMonitorCLI
+from .interfaces.test_sprites_cli import TestSpritesCLI
 
 # Import other CLI tools (keeping existing structure for now)
 from .bmad_cli_clickup import ClickUpCLI
 # from .repository_integration_cli import RepositoryIntegrationCLI  # Temporarily disabled due to Prefect compatibility
-from .test_sprites_cli import TestSpritesCLI
 
 __all__ = [
     "BaseCLI",
@@ -32,7 +32,7 @@ __all__ = [
     "ProjectsCLI",
     "LangGraphCLI",
     "PerformanceMonitorCLI",
+    "TestSpritesCLI",
     "ClickUpCLI",
     # "RepositoryIntegrationCLI",  # Temporarily disabled due to Prefect compatibility
-    "TestSpritesCLI",
 ]
