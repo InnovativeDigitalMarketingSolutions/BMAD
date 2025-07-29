@@ -9,7 +9,13 @@ import requests
 
 from bmad.agents.core.ai.llm_client import (
     ask_openai,
-    ask_openai_with_confidence
+    ask_openai_with_confidence,
+    assess_complexity,
+    assess_security_risk,
+    calculate_confidence,
+    calculate_confidence_from_logprobs,
+    get_agent_success_rate,
+    _cache_key,
 )
 
 
@@ -340,7 +346,7 @@ class TestAskOpenAIWithConfidence:
     def test_missing_api_key_raises_error(self):
         """Test that missing API key raises error."""
         # Test that missing API key is handled properly
-        with patch('bmad.agents.core.redis_cache.cache.get') as mock_cache_get:
+        with patch('bmad.agents.core.data.redis_cache.cache.get') as mock_cache_get:
             mock_cache_get.return_value = None
             
             with patch.dict(os.environ, {}, clear=True):
@@ -351,7 +357,7 @@ class TestAskOpenAIWithConfidence:
     
     @patch.dict(os.environ, {'OPENAI_API_KEY': 'test-key'})
     @patch('requests.post')
-    @patch('bmad.agents.core.redis_cache.cache.get')
+    @patch('bmad.agents.core.data.redis_cache.cache.get')
     def test_successful_api_call(self, mock_cache_get, mock_post):
         """Test successful API call."""
         # Mock cache miss
@@ -366,7 +372,7 @@ class TestAskOpenAIWithConfidence:
         mock_post.return_value = mock_response
         
         # Mock cache set
-        with patch('bmad.agents.core.redis_cache.cache.set'):
+        with patch('bmad.agents.core.data.redis_cache.cache.set'):
             result = ask_openai_with_confidence(
                 "test prompt",
                 {"task": "test", "agent": "TestEngineer"}
@@ -379,7 +385,7 @@ class TestAskOpenAIWithConfidence:
         assert result["cached"] is True
     
     @patch.dict(os.environ, {'OPENAI_API_KEY': 'test-key'})
-    @patch('bmad.agents.core.redis_cache.cache.get')
+    @patch('bmad.agents.core.data.redis_cache.cache.get')
     def test_cache_hit(self, mock_cache_get):
         """Test cache hit scenario."""
         cached_data = {
@@ -402,7 +408,7 @@ class TestAskOpenAIWithConfidence:
     
     @patch.dict(os.environ, {'OPENAI_API_KEY': 'test-key'})
     @patch('requests.post')
-    @patch('bmad.agents.core.redis_cache.cache.get')
+    @patch('bmad.agents.core.data.redis_cache.cache.get')
     def test_structured_output_parsing(self, mock_cache_get, mock_post):
         """Test structured output parsing."""
         # Mock cache miss
@@ -460,7 +466,7 @@ class TestAskOpenAIWithConfidence:
         """Test API error handling."""
         # Test that the function handles API errors gracefully
         # Since the decorator handles caching, we test the overall behavior
-        with patch('bmad.agents.core.redis_cache.cache.get') as mock_cache_get:
+        with patch('bmad.agents.core.data.redis_cache.cache.get') as mock_cache_get:
             mock_cache_get.return_value = None
             
             with patch('requests.post') as mock_post:
@@ -519,7 +525,7 @@ class TestAskOpenAI:
     """Test the legacy ask_openai function."""
     
     @patch.dict(os.environ, {'OPENAI_API_KEY': 'test-key'})
-    @patch('bmad.agents.core.llm_client.ask_openai_with_confidence')
+    @patch('bmad.agents.core.ai.llm_client.ask_openai_with_confidence')
     def test_legacy_function_calls_main(self, mock_main):
         """Test that legacy function calls main function."""
         mock_main.return_value = {"answer": "test response"}
@@ -530,7 +536,7 @@ class TestAskOpenAI:
         assert result == "test response"
     
     @patch.dict(os.environ, {'OPENAI_API_KEY': 'test-key'})
-    @patch('bmad.agents.core.llm_client.ask_openai_with_confidence')
+    @patch('bmad.agents.core.ai.llm_client.ask_openai_with_confidence')
     def test_legacy_function_with_context(self, mock_main):
         """Test legacy function with context parameter."""
         mock_main.return_value = {"answer": "test response"}
@@ -543,7 +549,7 @@ class TestAskOpenAI:
         assert call_args[0][1] == context  # Second argument should be context
     
     @patch.dict(os.environ, {'OPENAI_API_KEY': 'test-key'})
-    @patch('bmad.agents.core.llm_client.ask_openai_with_confidence')
+    @patch('bmad.agents.core.ai.llm_client.ask_openai_with_confidence')
     def test_legacy_function_default_context(self, mock_main):
         """Test legacy function creates default context when none provided."""
         mock_main.return_value = {"answer": "test response"}
