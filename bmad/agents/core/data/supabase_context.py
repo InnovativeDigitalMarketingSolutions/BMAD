@@ -103,3 +103,4 @@ def archive_old_context(days: int = 90):
                         raise e
     except Exception as e:
         print(f"Error during context archiving: {e}")
+        raise  # Re-raise the exception for proper error handling
