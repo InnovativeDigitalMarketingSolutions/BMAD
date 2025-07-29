@@ -24,6 +24,32 @@ from bmad.projects.project_manager import project_manager
 load_dotenv()
 
 
+class ProductOwnerAgent:
+    def __init__(self):
+        pass
+
+    def show_help(self):
+        print("""
+🎯 ProductOwner Agent - Beschikbare commando's:
+
+  create-story [--input "requirement"]  - Maak een user story
+  show-vision                           - Toon BMAD visie
+  help                                  - Toon deze help
+
+Voorbeelden:
+  python -m bmad.agents.Agent.ProductOwner.product_owner create-story
+  python -m bmad.agents.Agent.ProductOwner.product_owner create-story --input "Dashboard voor agent monitoring"
+""")
+
+    def create_user_story(self, requirement):
+        """Create a user story based on the requirement."""
+        return create_user_story(requirement)
+
+    def show_vision(self):
+        """Show the BMAD vision."""
+        return show_bmad_vision()
+
+
 def main():
     parser = argparse.ArgumentParser(description="Product Owner Agent")
     parser.add_argument(
