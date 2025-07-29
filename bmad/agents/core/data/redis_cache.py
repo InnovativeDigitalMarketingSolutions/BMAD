@@ -95,30 +95,20 @@ def _decompress_data(data: bytes) -> Any:
         # Return safe fallback
         return None
 
-def _generate_key(func_name: str, *args, **kwargs) -> str:
-    """Generate cache key with secure hashing."""
-    # Use hash for better performance
-    import hashlib
-    
-    key_data = f"{func_name}:{str(args)}:{str(sorted(kwargs.items()))}"
-    # Use SHA256 instead of MD5 for security
-    return f"bmad:cache:{hashlib.sha256(key_data.encode()).hexdigest()}"
-
 class RedisCache:
-    """
-    Geavanceerde Redis caching laag voor BMAD agents.
-    """
-
+    """Advanced Redis caching layer with intelligent fallback strategies."""
+    
     def __init__(self, redis_url: Optional[str] = None):
-        """
-        Initialiseer Redis cache.
-        
-        :param redis_url: Redis connection URL (optioneel)
-        """
         self.redis_url = redis_url or os.getenv("REDIS_URL", "redis://localhost:6379")
-        self.client = None
+        self.redis_client = None
         self.enabled = True
-
+        self.stats = {
+            "hits": 0,
+            "misses": 0,
+            "sets": 0,
+            "deletes": 0,
+            "errors": 0
+        }
         # Default TTL settings (in seconds)
         self.default_ttls = {
             "llm_response": 3600,      # 1 uur
@@ -129,20 +119,39 @@ class RedisCache:
             "workflow_state": 7200,    # 2 uur
             "metrics": 60,             # 1 minuut
         }
-
         self._connect()
+
+    def cache(self, *args, **kwargs):
+        """Make the RedisCache instance callable for backward compatibility."""
+        return self.get(*args, **kwargs)
+
+    def __call__(self, *args, **kwargs):
+        """Make RedisCache callable like a function."""
+        return self.get(*args, **kwargs)
+
+    @property
+    def client(self):
+        """Backward compatibility property for tests."""
+        return self.redis_client
+
+    def _generate_key(self, func_name: str, *args, **kwargs) -> str:
+        """Generate cache key with secure hashing."""
+        # Use hash for better performance
+        import hashlib
+        key_data = f"{func_name}:{str(args)}:{str(sorted(kwargs.items()))}"
+        return hashlib.md5(key_data.encode()).hexdigest()
 
     def _connect(self):
         """Maak verbinding met Redis."""
         try:
-            self.client = redis.from_url(self.redis_url, decode_responses=True)
+            self.redis_client = redis.from_url(self.redis_url, decode_responses=True)
             # Test connection
-            self.client.ping()
+            self.redis_client.ping()
             logger.info("✅ Redis cache verbonden")
         except (redis.RedisError, redis.ConnectionError) as e:
             logger.warning(f"⚠️ Redis niet beschikbaar: {e}")
             self.enabled = False
-            self.client = None
+            self.redis_client = None
 
     def get(self, key: str, default: Any = None) -> Any:
         """
@@ -152,11 +161,11 @@ class RedisCache:
         :param default: Default waarde als key niet bestaat
         :return: Gecachte waarde of default
         """
-        if not self.enabled or not self.client:
+        if not self.enabled or not self.redis_client:
             return default
 
         try:
-            value = self.client.get(key)
+            value = self.redis_client.get(key)
             if value is None:
                 return default
 
@@ -181,7 +190,7 @@ class RedisCache:
         :param cache_type: Type cache voor default TTL
         :return: True bij succes
         """
-        if not self.enabled or not self.client:
+        if not self.enabled or not self.redis_client:
             return False
 
         try:
@@ -196,7 +205,7 @@ class RedisCache:
                 serialized_value = str(value)
 
             # Sla op in Redis
-            self.client.setex(key, ttl, serialized_value)
+            self.redis_client.setex(key, ttl, serialized_value)
             logger.debug(f"Cache set: {key} (TTL: {ttl}s)")
             return True
 
@@ -211,11 +220,11 @@ class RedisCache:
         :param key: Cache key
         :return: True bij succes
         """
-        if not self.enabled or not self.client:
+        if not self.enabled or not self.redis_client:
             return False
 
         try:
-            result = self.client.delete(key)
+            result = self.redis_client.delete(key)
             logger.debug(f"Cache delete: {key}")
             return result > 0
         except redis.RedisError as e:
@@ -229,11 +238,11 @@ class RedisCache:
         :param key: Cache key
         :return: True als key bestaat
         """
-        if not self.enabled or not self.client:
+        if not self.enabled or not self.redis_client:
             return False
 
         try:
-            return bool(self.client.exists(key))
+            return bool(self.redis_client.exists(key))
         except redis.RedisError as e:
             logger.warning(f"Redis exists error: {e}")
             return False
@@ -245,13 +254,13 @@ class RedisCache:
         :param pattern: Redis pattern (bijv. "bmad:llm:*")
         :return: Aantal verwijderde keys
         """
-        if not self.enabled or not self.client:
+        if not self.enabled or not self.redis_client:
             return 0
 
         try:
-            keys = self.client.keys(pattern)
+            keys = self.redis_client.keys(pattern)
             if keys:
-                deleted = self.client.delete(*keys)
+                deleted = self.redis_client.delete(*keys)
                 logger.info(f"Cache clear pattern '{pattern}': {deleted} keys verwijderd")
                 return deleted
             return 0
@@ -265,11 +274,11 @@ class RedisCache:
         
         :return: Cache statistieken
         """
-        if not self.enabled or not self.client:
+        if not self.enabled or not self.redis_client:
             return {"enabled": False}
 
         try:
-            info = self.client.info()
+            info = self.redis_client.info()
             return {
                 "enabled": True,
                 "connected_clients": info.get("connected_clients", 0),
@@ -285,6 +294,13 @@ class RedisCache:
 # Global cache instance
 cache = RedisCache()
 
+def _generate_key(func_name: str, *args, **kwargs) -> str:
+    """Generate cache key with secure hashing."""
+    # Use hash for better performance
+    import hashlib
+    key_data = f"{func_name}:{str(args)}:{str(sorted(kwargs.items()))}"
+    return hashlib.md5(key_data.encode()).hexdigest()
+
 def cached(ttl: Optional[int] = None, cache_type: str = "default",
            key_prefix: str = "function"):
     """
@@ -297,6 +313,9 @@ def cached(ttl: Optional[int] = None, cache_type: str = "default",
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
+            # Import here to get the current cache instance (allows for patching)
+            from .redis_cache import cache
+            
             # Genereer cache key using the standalone function
             cache_key = _generate_key(f"{key_prefix}_{func.__name__}", *args, **kwargs)
 
