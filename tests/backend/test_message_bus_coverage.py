@@ -7,7 +7,7 @@ from unittest.mock import patch
 import threading
 import time
 
-import bmad.agents.core.message_bus as mb
+import bmad.agents.core.communication.message_bus as mb
 
 @pytest.fixture
 def temp_context_file():

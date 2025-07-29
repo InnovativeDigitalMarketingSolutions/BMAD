@@ -7,15 +7,9 @@ import os
 from unittest.mock import patch, MagicMock
 import requests
 
-from bmad.agents.core.llm_client import (
-    _cache_key,
-    calculate_confidence_from_logprobs,
-    assess_complexity,
-    assess_security_risk,
-    get_agent_success_rate,
-    calculate_confidence,
-    ask_openai_with_confidence,
-    ask_openai
+from bmad.agents.core.ai.llm_client import (
+    ask_openai,
+    ask_openai_with_confidence
 )
 
 

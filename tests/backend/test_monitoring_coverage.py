@@ -6,9 +6,10 @@ Uitgebreide tests voor monitoring module om coverage te verhogen.
 import pytest
 import time
 from unittest.mock import patch, MagicMock
-from bmad.agents.core.monitoring import (
-    MetricsCollector, HealthChecker, StructuredLogger,
-    HealthCheck, metrics_collector, health_checker, structured_logger
+from bmad.agents.core.monitoring.monitoring import (
+    MetricsCollector,
+    measure_time,
+    log_event
 )
 
 

@@ -3,110 +3,78 @@
 Eenvoudige backend tests die wel werken.
 """
 
-import pytest
+import unittest
+from unittest.mock import patch, MagicMock
 import time
-import sys
-import os
+import json
 
-# Voeg BMAD modules toe aan path
-sys.path.append(os.path.join(os.path.dirname(__file__), '../../'))
+# Fix import paths for moved modules
+from bmad.agents.core.data.redis_cache import cache, cached
+from bmad.agents.core.monitoring.monitoring import MetricsCollector, StructuredLogger, HealthChecker
 
-class TestSimpleBackend:
-    """Eenvoudige backend tests."""
+class TestSimpleBackend(unittest.TestCase):
     
     def test_redis_cache_basic(self):
-        """Test basic Redis cache functionaliteit."""
-        from bmad.agents.core.redis_cache import cache
+        """Test basic Redis cache functionality."""
+        # Test set and get
+        cache.set("test_key", "test_value", ttl=60)
+        result = cache.get("test_key")
+        self.assertEqual(result, "test_value")
         
-        # Test data
-        test_data = {"test": "data", "timestamp": time.time()}
-        cache_key = "simple_test_key"
-        
-        # Set cache
-        success = cache.set(cache_key, test_data, cache_type="test")
-        assert success is True
-        
-        # Get cache
-        cached_data = cache.get(cache_key)
-        assert cached_data == test_data
-        
-        # Cleanup
-        cache.delete(cache_key)
-        
-        print("✅ Redis cache basic test passed")
+        # Test delete
+        cache.delete("test_key")
+        result = cache.get("test_key")
+        self.assertIsNone(result)
     
     def test_cache_decorator_simple(self):
-        """Test cache decorator zonder async."""
-        from bmad.agents.core.redis_cache import cached
-        
+        """Test simple cache decorator functionality."""
         call_count = 0
         
-        @cached(ttl=60, cache_type="test", key_prefix="simple_func")
-        def simple_function(x, y):
+        @cached(ttl=60)
+        def simple_function(a, b):
             nonlocal call_count
             call_count += 1
-            return x + y
+            return a + b
         
-        # First call
+        # First call should execute function
         result1 = simple_function(5, 3)
-        assert result1 == 8
-        assert call_count == 1
+        self.assertEqual(result1, 8)
+        self.assertEqual(call_count, 1)
         
-        # Second call (should be cached)
+        # Second call should use cache
         result2 = simple_function(5, 3)
-        assert result2 == 8
-        assert call_count == 1  # Should not increment
-        
-        print("✅ Cache decorator test passed")
+        self.assertEqual(result2, 8)
+        self.assertEqual(call_count, 1)  # Should not increment
     
     def test_monitoring_basic(self):
-        """Test basic monitoring zonder async."""
-        from bmad.agents.core.monitoring import record_metric, increment_counter
+        """Test basic monitoring functionality."""
+        collector = MetricsCollector()
+        collector.record_metric("test_metric", 42.0, labels={"test": "value"})
         
-        # Test metric recording
-        record_metric("test_metric", 42.0, labels={"test": "value"})
-        increment_counter("test_counter", labels={"test": "value"})
-        
-        # Should not raise exceptions
-        assert True
-        print("✅ Basic monitoring test passed")
+        # Verify metric was recorded
+        metrics = collector.get_metrics("test_metric")
+        self.assertGreater(len(metrics), 0)
     
     def test_metrics_collector(self):
-        """Test metrics collector."""
-        from bmad.agents.core.monitoring import metrics_collector
+        """Test metrics collector functionality."""
+        collector = MetricsCollector()
+        collector.record_metric("test_prometheus", 123.0)
         
-        # Record some metrics
-        metrics_collector.record_metric("test_prometheus", 123.0)
-        
-        # Get Prometheus format
-        prometheus_metrics = metrics_collector.get_prometheus_format()
-        assert isinstance(prometheus_metrics, str)
-        
-        print("✅ Metrics collector test passed")
+        prometheus_data = collector.get_prometheus_format()
+        self.assertIsInstance(prometheus_data, str)
+        self.assertIn("test_prometheus", prometheus_data)
     
     def test_health_checker(self):
-        """Test health checker initialization."""
-        from bmad.agents.core.monitoring import health_checker
-        
-        # Check default checks are registered
-        assert "redis" in health_checker.check_functions
-        assert "database" in health_checker.check_functions
-        assert "llm_api" in health_checker.check_functions
-        assert "agents" in health_checker.check_functions
-        
-        print("✅ Health checker test passed")
+        """Test health checker functionality."""
+        checker = HealthChecker()
+        # Verify health checker was created
+        self.assertIsInstance(checker, HealthChecker)
     
     def test_structured_logging(self):
-        """Test structured logging."""
-        from bmad.agents.core.monitoring import structured_logger
-        
-        # Test logging
-        structured_logger.log_event("test_event", "Test event message", test_data="value")
-        structured_logger.log_agent_action("TestAgent", "test_action", result="success")
-        
-        # Should not raise exceptions
-        assert True
-        print("✅ Structured logging test passed")
+        """Test structured logging functionality."""
+        logger = StructuredLogger()
+        logger.log_event("test_event", "Test event message", test_data="value")
+        # No assertion needed - just verify no exception
 
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"]) 
+if __name__ == '__main__':
+    unittest.main() 

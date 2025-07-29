@@ -262,12 +262,13 @@ class TestProjectCLI:
     def test_project_cli_main_function(self):
         """Test main function of project_cli."""
         try:
-            from bmad.project_cli import main
+            # Fix import path for moved module
+            from bmad.projects.cli import main as project_cli_main
             
             # Test with help argument
             with patch('sys.argv', ['project_cli.py', '--help']):
                 try:
-                    main()
+                    project_cli_main()
                     assert True
                 except SystemExit:
                     # Expected for help

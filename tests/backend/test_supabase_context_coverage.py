@@ -4,7 +4,7 @@ from unittest.mock import patch, MagicMock
 from datetime import datetime, timedelta
 import os
 
-import bmad.agents.core.supabase_context as sc
+import bmad.agents.core.data.supabase_context as sc
 
 @pytest.fixture
 def mock_supabase():
