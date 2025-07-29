@@ -7,7 +7,7 @@ from flask import Flask, jsonify, redirect, request, send_from_directory
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from bmad.agents.Agent.Orchestrator.orchestrator import METRICS, OrchestratorAgent
-from bmad.agents.core.supabase_context import get_context, save_context
+from bmad.agents.core.data.supabase_context import get_context, save_context
 
 app = Flask(__name__)
 
@@ -83,3 +83,6 @@ def swagger_redirect():
 
 if __name__ == "__main__":
     app.run(port=5001, debug=False)
+
+# Export the Flask app for testing
+__all__ = ['app']

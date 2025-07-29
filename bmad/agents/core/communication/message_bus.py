@@ -43,6 +43,12 @@ def subscribe(event_type: str, callback: Callable):
     _subscribers[event_type].append(callback)
     logging.info(f"[MessageBus] Subscriber toegevoegd voor event: {event_type}")
 
+def unsubscribe(event_type: str, callback: Callable):
+    """Verwijder een callback van een specifiek event_type."""
+    if event_type in _subscribers and callback in _subscribers[event_type]:
+        _subscribers[event_type].remove(callback)
+        logging.info(f"[MessageBus] Subscriber verwijderd voor event: {event_type}")
+
 def get_events(event_type=None, since=None):
     """Haal events op, optioneel gefilterd op type en tijd."""
     if not SHARED_CONTEXT_PATH.exists():

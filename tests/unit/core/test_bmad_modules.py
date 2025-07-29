@@ -236,17 +236,12 @@ class TestMergeAgentChangelogs:
         try:
             from bmad.merge_agent_changelogs import find_changelog_files
             
-            # Test with mock directory
-            with tempfile.TemporaryDirectory() as temp_dir:
-                # Create a mock changelog file
-                changelog_file = os.path.join(temp_dir, "test-changelog.md")
-                with open(changelog_file, 'w') as f:
-                    f.write("# Test Changelog\n")
-                
-                # Test finding changelog files
-                files = find_changelog_files(temp_dir)
-                assert isinstance(files, list)
-                
+            # Test finding changelog files (function doesn't take parameters)
+            files = find_changelog_files()
+            
+            # Should return a list of changelog files
+            assert isinstance(files, list)
+            
         except ImportError as e:
             pytest.skip(f"merge_agent_changelogs module not available: {e}")
 

@@ -449,13 +449,22 @@ class TestSlackEventServer:
     def test_slack_event_server_app_creation(self):
         """Test Flask app creation in slack_event_server."""
         try:
-            from integrations.slack.slack_event_server import app
-            
-            # Test that app exists
-            assert app is not None
+            # Mock the environment variable before importing
+            with patch.dict('os.environ', {'SLACK_BOT_TOKEN': 'test_token'}):
+                import integrations.slack.slack_event_server
+                from integrations.slack.slack_event_server import app
+                
+                # Test that app exists and is a Flask app
+                assert app is not None
+                assert hasattr(app, 'route')
             
         except ImportError as e:
             pytest.skip(f"slack_event_server module not available: {e}")
+        except RuntimeError as e:
+            if "SLACK_BOT_TOKEN" in str(e):
+                pytest.skip(f"SLACK_BOT_TOKEN not configured: {e}")
+            else:
+                raise
 
 class TestFigmaClient:
     """Test figma_client module."""

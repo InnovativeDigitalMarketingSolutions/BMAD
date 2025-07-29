@@ -11,7 +11,7 @@ class TestContextTest:
     def test_context_test_import(self):
         """Test that context_test module can be imported."""
         try:
-            import bmad.agents.core.context_test
+            import bmad.agents.core.utils.context_test
             assert True
         except ImportError as e:
             pytest.skip(f"context_test module not available: {e}")
@@ -22,7 +22,7 @@ class TestFigmaClient:
     def test_figma_client_import(self):
         """Test that figma_client module can be imported."""
         try:
-            import bmad.agents.core.figma_client
+            import integrations.figma.figma_client
             assert True
         except ImportError as e:
             pytest.skip(f"figma_client module not available: {e}")
@@ -33,7 +33,7 @@ class TestFigmaSlackNotifier:
     def test_figma_slack_notifier_import(self):
         """Test that figma_slack_notifier module can be imported."""
         try:
-            import bmad.agents.core.figma_slack_notifier
+            import integrations.figma.figma_slack_notifier
             assert True
         except ImportError as e:
             pytest.skip(f"figma_slack_notifier module not available: {e}")
@@ -88,7 +88,7 @@ class TestFigmaCLI:
     def test_figma_cli_import(self):
         """Test that figma_cli module can be imported."""
         try:
-            import bmad.figma_cli
+            import cli.figma_cli
             assert True
         except ImportError as e:
             pytest.skip(f"figma_cli module not available: {e}")
@@ -110,7 +110,7 @@ class TestProjectCLI:
     def test_project_cli_import(self):
         """Test that project_cli module can be imported."""
         try:
-            import bmad.project_cli
+            import cli.project_cli
             assert True
         except ImportError as e:
             pytest.skip(f"project_cli module not available: {e}")
@@ -121,7 +121,7 @@ class TestOrchestratorWorkflow:
     def test_orchestrator_workflow_import(self):
         """Test that orchestrator_workflow module can be imported."""
         try:
-            import bmad.agents.core.orchestrator_workflow
+            import bmad.agents.core.workflow.integrated_workflow_orchestrator
             assert True
         except ImportError as e:
             pytest.skip(f"orchestrator_workflow module not available: {e}")
@@ -132,7 +132,7 @@ class TestValidateAgentResources:
     def test_validate_agent_resources_import(self):
         """Test that validate_agent_resources module can be imported."""
         try:
-            from bmad.agents.core.validate_agent_resources import validate_agent_resources
+            from bmad.agents.core.utils.validate_agent_resources import validate_agent_resources
             assert True
         except ImportError as e:
             pytest.skip(f"validate_agent_resources module not available: {e}")
@@ -140,7 +140,7 @@ class TestValidateAgentResources:
     def test_validate_agent_resources_basic_functionality(self):
         """Test basic functionality of validate_agent_resources."""
         try:
-            from bmad.agents.core.validate_agent_resources import validate_agent_resources
+            from bmad.agents.core.utils.validate_agent_resources import validate_agent_resources
             
             # Test with a valid agent name
             result = validate_agent_resources("ProductOwner")
@@ -178,7 +178,7 @@ class TestSupabaseContext:
                 mock_supabase.table.return_value.select.return_value.eq.return_value.execute.return_value.data = [{"key": "value"}]
                 
                 result = get_context("test_project")
-                assert isinstance(result, dict)
+                assert isinstance(result, list)
                 
         except ImportError:
             pytest.skip("supabase_context module not available")
@@ -283,7 +283,7 @@ class TestConfidenceScoring:
     def test_confidence_scoring_import(self):
         """Test that confidence_scoring module can be imported."""
         try:
-            from bmad.agents.core.confidence_scoring import calculate_confidence_score
+            from bmad.agents.core.ai.confidence_scoring import calculate_confidence_score
             assert True
         except ImportError as e:
             pytest.skip(f"confidence_scoring module not available: {e}")
@@ -291,7 +291,7 @@ class TestConfidenceScoring:
     def test_confidence_scoring_functions(self):
         """Test confidence_scoring functions."""
         try:
-            from bmad.agents.core.confidence_scoring import calculate_confidence_score
+            from bmad.agents.core.ai.confidence_scoring import calculate_confidence_score
             
             # Test that function is callable
             assert callable(calculate_confidence_score)
