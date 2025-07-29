@@ -166,6 +166,11 @@ class AdvancedPolicyEngine:
             self.evaluation_cache: Dict[str, Any] = {}
             self.audit_log: List[Dict[str, Any]] = []
             self.performance_metrics: Dict[str, List[float]] = defaultdict(list)
+            self.policy_versions: Dict[str, List[PolicyVersion]] = {}  # Add missing attribute
+            
+            # Initialize policies directory
+            self.policies_dir = Path("policies")
+            self.policies_dir.mkdir(exist_ok=True)
             
             # Lazy loading flags
             self._policies_loaded = False

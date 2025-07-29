@@ -7,7 +7,7 @@ import pytest
 from unittest.mock import patch, MagicMock
 
 # Fix import paths for moved modules
-from integrations.slack.slack_notify import send_slack_message, send_hitl_alert
+from integrations.slack.slack_notify import send_slack_message, send_human_in_loop_alert
 from integrations.figma.figma_client import FigmaClient
 
 class TestArchitectAgent:
@@ -404,48 +404,35 @@ class TestSlackNotify:
         except ImportError as e:
             pytest.skip(f"slack_notify module not available: {e}")
     
-    @patch('bmad.agents.core.slack_notify.requests.post')
+    @patch('integrations.slack.slack_notify.requests.post')
     def test_slack_notify_send_message(self, mock_post):
-        """Test send_slack_message function."""
-        try:
-            from bmad.agents.core.slack_notify import send_slack_message
-            
-            # Mock successful response
-            mock_response = MagicMock()
-            mock_response.status_code = 200
-            mock_response.text = "ok"
-            mock_post.return_value = mock_response
-            
-            # Test with use_api=False
-            result = send_slack_message("Test message", use_api=False)
-            # Slack functions return None (no return statement), which is acceptable
-            assert result is None
-            
-        except ImportError as e:
-            pytest.skip(f"slack_notify module not available: {e}")
-    
-    @patch('bmad.agents.core.slack_notify.requests.post')
-    def test_slack_notify_send_hitl_alert(self, mock_post):
-        """Test send_human_in_loop_alert function."""
-        try:
-            from bmad.agents.core.slack_notify import send_human_in_loop_alert
-            
-            # Mock successful response
-            mock_response = MagicMock()
-            mock_response.status_code = 200
-            mock_response.text = "ok"
-            mock_post.return_value = mock_response
-            
-            # Test with use_api=False
-            result = send_human_in_loop_alert(
-                "Test reason",
-                use_api=False
-            )
-            # Slack functions return None (no return statement), which is acceptable
-            assert result is None
-            
-        except ImportError as e:
-            pytest.skip(f"slack_notify module not available: {e}")
+        """Test Slack message sending functionality."""
+        # Mock successful response
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"ok": True}
+        mock_post.return_value = mock_response
+        
+        # Test the function
+        send_slack_message("Test message", channel="#test-channel")
+        
+        # Verify the API was called
+        mock_post.assert_called_once()
+
+    @patch('integrations.slack.slack_notify.requests.post')
+    def test_slack_notify_send_human_in_loop_alert(self, mock_post):
+        """Test Slack human-in-the-loop alert functionality."""
+        # Mock successful response
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"ok": True}
+        mock_post.return_value = mock_response
+        
+        # Test the function
+        send_human_in_loop_alert("Test HITL reason", channel="#test-channel")
+        
+        # Verify the API was called
+        mock_post.assert_called_once()
 
 class TestSlackEventServer:
     """Test slack_event_server module."""
@@ -492,27 +479,18 @@ class TestFigmaClient:
         except ImportError as e:
             pytest.skip(f"figma_client module not available: {e}")
     
-    @patch('bmad.agents.core.figma_client.requests.get')
-    def test_figma_client_get_components(self, mock_get):
-        """Test get_components method."""
-        try:
-            from bmad.agents.core.figma_client import FigmaClient
-            
-            # Mock response
-            mock_response = MagicMock()
-            mock_response.json.return_value = {"components": []}
-            mock_response.raise_for_status.return_value = None
-            mock_get.return_value = mock_response
-            
-            client = FigmaClient()
-            
-            # Test with mocked environment
-            with patch.dict(os.environ, {'FIGMA_ACCESS_TOKEN': 'test-token'}):
-                result = client.get_components("test_file")
-                assert result is not None
-                
-        except ImportError as e:
-            pytest.skip(f"figma_client module not available: {e}")
+    @patch('integrations.figma.figma_client.FigmaClient._request')
+    def test_figma_client_get_components(self, mock_request):
+        """Test Figma client component retrieval."""
+        # Mock successful response
+        mock_request.return_value = {"components": []}
+        
+        # Test the function
+        client = FigmaClient("test_token")
+        components = client.get_components("test_file_key")
+        
+        # Verify the method was called
+        mock_request.assert_called_once_with("GET", "/files/test_file_key/components")
 
 class TestFigmaSlackNotifier:
     """Test figma_slack_notifier module."""
