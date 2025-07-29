@@ -254,7 +254,7 @@ class TestProjectCLI:
     def test_project_cli_import(self):
         """Test that project_cli module can be imported."""
         try:
-            import bmad.project_cli
+            import cli.project_cli
             assert True
         except ImportError as e:
             pytest.skip(f"project_cli module not available: {e}")
@@ -263,7 +263,7 @@ class TestProjectCLI:
         """Test main function of project_cli."""
         try:
             # Fix import path for moved module
-            from bmad.projects.cli import main as project_cli_main
+            from cli.project_cli import main as project_cli_main
             
             # Test with help argument
             with patch('sys.argv', ['project_cli.py', '--help']):
@@ -277,11 +277,11 @@ class TestProjectCLI:
         except ImportError as e:
             pytest.skip(f"project_cli module not available: {e}")
     
-    @patch('bmad.project_cli.project_manager')
+    @patch('cli.project_cli.project_manager')
     def test_project_cli_create_command(self, mock_project_manager):
         """Test project_cli create command."""
         try:
-            from bmad.project_cli import main
+            from cli.project_cli import main
             
             # Mock project_manager
             mock_pm = MagicMock()
@@ -298,11 +298,11 @@ class TestProjectCLI:
         except ImportError as e:
             pytest.skip(f"project_cli module not available: {e}")
     
-    @patch('bmad.project_cli.project_manager')
+    @patch('cli.project_cli.project_manager')
     def test_project_cli_load_command(self, mock_project_manager):
         """Test project_cli load command."""
         try:
-            from bmad.project_cli import main
+            from cli.project_cli import main
             
             # Mock project_manager
             mock_pm = MagicMock()

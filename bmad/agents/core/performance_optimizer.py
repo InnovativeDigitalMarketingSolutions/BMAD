@@ -219,6 +219,52 @@ class PerformanceProfiler:
         with self.lock:
             return dict(self.profiles)
 
+class PerformanceOptimizer:
+    """
+    Main performance optimizer that combines caching, connection pooling, and profiling.
+    """
+    
+    def __init__(self, max_cache_size: int = 1000, max_connections: int = 10):
+        self.cache = IntelligentCache(max_size=max_cache_size)
+        self.connection_pool = ConnectionPool(max_connections=max_connections)
+        self.profiler = PerformanceProfiler()
+        
+    def get_connection(self, factory: Callable[[], T]) -> T:
+        """Get a connection from the pool."""
+        return self.connection_pool.get_connection(factory)
+    
+    def return_connection(self, connection: T) -> None:
+        """Return a connection to the pool."""
+        self.connection_pool.return_connection(connection)
+    
+    def cache_get(self, key: str) -> Optional[Any]:
+        """Get item from cache."""
+        return self.cache.get(key)
+    
+    def cache_set(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
+        """Set item in cache."""
+        self.cache.set(key, value, ttl)
+    
+    def start_profile(self, name: str) -> None:
+        """Start profiling a section."""
+        self.profiler.start_profile(name)
+    
+    def end_profile(self, name: str) -> float:
+        """End profiling a section."""
+        return self.profiler.end_profile(name)
+    
+    def get_stats(self) -> Dict[str, Any]:
+        """Get comprehensive performance statistics."""
+        return {
+            "cache": self.cache.get_stats(),
+            "connection_pool": {
+                "active_connections": len(self.connection_pool.active_connections),
+                "idle_connections": len(self.connection_pool.idle_connections),
+                "max_connections": self.connection_pool.max_connections
+            },
+            "profiles": self.profiler.get_all_profiles()
+        }
+
 # Global instances
 intelligent_cache = IntelligentCache()
 performance_profiler = PerformanceProfiler()

@@ -199,6 +199,292 @@
         "timestamp": "2025-07-27T18:29:35.829815",
         "agent": "FrontendDeveloperAgent"
       }
+    },
+    {
+      "timestamp": "2025-07-28T23:00:57.034113",
+      "event": "clickup_task_updated",
+      "data": {
+        "task_id": "task123",
+        "status": "in progress",
+        "updated_at": "2025-07-28T23:00:57.033619"
+      }
+    },
+    {
+      "timestamp": "2025-07-28T23:00:58.115545",
+      "event": "clickup_task_updated",
+      "data": {
+        "task_id": "task123",
+        "status": "done",
+        "updated_at": "2025-07-28T23:00:58.115391"
+      }
+    },
+    {
+      "timestamp": "2025-07-28T23:00:58.603706",
+      "event": "clickup_project_created",
+      "data": {
+        "project_name": "Test Project",
+        "clickup_task_id": "task123",
+        "project_type": "web_app"
+      }
+    },
+    {
+      "timestamp": "2025-07-28T23:00:58.865040",
+      "event": "clickup_task_created",
+      "data": {
+        "project_name": "Test Project",
+        "task_name": "Test Task",
+        "clickup_task_id": "task456",
+        "priority": "medium"
+      }
+    },
+    {
+      "timestamp": "2025-07-28T23:20:05.839356",
+      "event": "clickup_task_updated",
+      "data": {
+        "task_id": "task123",
+        "status": "done",
+        "updated_at": "2025-07-28T23:20:05.838799"
+      }
+    },
+    {
+      "timestamp": "2025-07-28T23:20:30.876295",
+      "event": "clickup_task_updated",
+      "data": {
+        "task_id": "task123",
+        "status": "done",
+        "updated_at": "2025-07-28T23:20:30.875106"
+      }
+    },
+    {
+      "timestamp": "2025-07-28T23:21:44.641851",
+      "event": "clickup_task_updated",
+      "data": {
+        "task_id": "task123",
+        "status": "in progress",
+        "updated_at": "2025-07-28T23:21:44.641412"
+      }
+    },
+    {
+      "timestamp": "2025-07-28T23:21:44.648503",
+      "event": "clickup_task_created",
+      "data": {
+        "project_name": "Test Project",
+        "task_name": "Requirement: First requirement",
+        "clickup_task_id": "task789",
+        "priority": "medium"
+      }
+    },
+    {
+      "timestamp": "2025-07-28T23:21:44.649229",
+      "event": "clickup_task_created",
+      "data": {
+        "project_name": "Test Project",
+        "task_name": "Requirement: Second requirement",
+        "clickup_task_id": "task789",
+        "priority": "medium"
+      }
+    },
+    {
+      "timestamp": "2025-07-28T23:21:44.655120",
+      "event": "clickup_task_created",
+      "data": {
+        "project_name": "Test Project",
+        "task_name": "User Story: Story 1",
+        "clickup_task_id": "story123",
+        "priority": "high"
+      }
+    },
+    {
+      "timestamp": "2025-07-28T23:21:44.656835",
+      "event": "clickup_task_created",
+      "data": {
+        "project_name": "Test Project",
+        "task_name": "User Story: Story 2",
+        "clickup_task_id": "story123",
+        "priority": "medium"
+      }
+    },
+    {
+      "timestamp": "2025-07-28T23:21:44.915034",
+      "event": "clickup_task_updated",
+      "data": {
+        "task_id": "task123",
+        "status": "done",
+        "updated_at": "2025-07-28T23:21:44.914877"
+      }
+    },
+    {
+      "timestamp": "2025-07-28T23:21:45.372490",
+      "event": "clickup_project_created",
+      "data": {
+        "project_name": "Test Project",
+        "clickup_task_id": "task123",
+        "project_type": "web_app"
+      }
+    },
+    {
+      "timestamp": "2025-07-28T23:21:45.711006",
+      "event": "clickup_task_created",
+      "data": {
+        "project_name": "Test Project",
+        "task_name": "Test Task",
+        "clickup_task_id": "task456",
+        "priority": "medium"
+      }
+    },
+    {
+      "timestamp": "2025-07-28T23:24:36.377981",
+      "event": "clickup_task_updated",
+      "data": {
+        "task_id": "task123",
+        "status": "in progress",
+        "updated_at": "2025-07-28T23:24:36.368582"
+      }
+    },
+    {
+      "timestamp": "2025-07-28T23:24:37.184389",
+      "event": "clickup_task_created",
+      "data": {
+        "project_name": "Test Project",
+        "task_name": "Requirement: First requirement",
+        "clickup_task_id": "task789",
+        "priority": "medium"
+      }
+    },
+    {
+      "timestamp": "2025-07-28T23:24:37.185875",
+      "event": "clickup_task_created",
+      "data": {
+        "project_name": "Test Project",
+        "task_name": "Requirement: Second requirement",
+        "clickup_task_id": "task789",
+        "priority": "medium"
+      }
+    },
+    {
+      "timestamp": "2025-07-28T23:24:37.190450",
+      "event": "clickup_task_created",
+      "data": {
+        "project_name": "Test Project",
+        "task_name": "User Story: Story 1",
+        "clickup_task_id": "story123",
+        "priority": "high"
+      }
+    },
+    {
+      "timestamp": "2025-07-28T23:24:37.191146",
+      "event": "clickup_task_created",
+      "data": {
+        "project_name": "Test Project",
+        "task_name": "User Story: Story 2",
+        "clickup_task_id": "story123",
+        "priority": "medium"
+      }
+    },
+    {
+      "timestamp": "2025-07-28T23:24:37.408600",
+      "event": "clickup_task_updated",
+      "data": {
+        "task_id": "task123",
+        "status": "done",
+        "updated_at": "2025-07-28T23:24:37.406736"
+      }
+    },
+    {
+      "timestamp": "2025-07-28T23:24:38.956169",
+      "event": "clickup_project_created",
+      "data": {
+        "project_name": "Test Project",
+        "clickup_task_id": "task123",
+        "project_type": "web_app"
+      }
+    },
+    {
+      "timestamp": "2025-07-28T23:24:39.233591",
+      "event": "clickup_task_created",
+      "data": {
+        "project_name": "Test Project",
+        "task_name": "Test Task",
+        "clickup_task_id": "task456",
+        "priority": "medium"
+      }
+    },
+    {
+      "timestamp": "2025-07-29T07:28:35.052020",
+      "event": "clickup_task_updated",
+      "data": {
+        "task_id": "task123",
+        "status": "in progress",
+        "updated_at": "2025-07-29T07:28:35.049653"
+      }
+    },
+    {
+      "timestamp": "2025-07-29T07:28:35.062523",
+      "event": "clickup_task_created",
+      "data": {
+        "project_name": "Test Project",
+        "task_name": "Requirement: First requirement",
+        "clickup_task_id": "task789",
+        "priority": "medium"
+      }
+    },
+    {
+      "timestamp": "2025-07-29T07:28:35.063425",
+      "event": "clickup_task_created",
+      "data": {
+        "project_name": "Test Project",
+        "task_name": "Requirement: Second requirement",
+        "clickup_task_id": "task789",
+        "priority": "medium"
+      }
+    },
+    {
+      "timestamp": "2025-07-29T07:28:35.068252",
+      "event": "clickup_task_created",
+      "data": {
+        "project_name": "Test Project",
+        "task_name": "User Story: Story 1",
+        "clickup_task_id": "story123",
+        "priority": "high"
+      }
+    },
+    {
+      "timestamp": "2025-07-29T07:28:35.068925",
+      "event": "clickup_task_created",
+      "data": {
+        "project_name": "Test Project",
+        "task_name": "User Story: Story 2",
+        "clickup_task_id": "story123",
+        "priority": "medium"
+      }
+    },
+    {
+      "timestamp": "2025-07-29T07:28:35.222407",
+      "event": "clickup_task_updated",
+      "data": {
+        "task_id": "task123",
+        "status": "done",
+        "updated_at": "2025-07-29T07:28:35.222225"
+      }
+    },
+    {
+      "timestamp": "2025-07-29T07:28:35.549021",
+      "event": "clickup_project_created",
+      "data": {
+        "project_name": "Test Project",
+        "clickup_task_id": "task123",
+        "project_type": "web_app"
+      }
+    },
+    {
+      "timestamp": "2025-07-29T07:28:35.826915",
+      "event": "clickup_task_created",
+      "data": {
+        "project_name": "Test Project",
+        "task_name": "Test Task",
+        "clickup_task_id": "task456",
+        "priority": "medium"
+      }
     }
   ]
 }

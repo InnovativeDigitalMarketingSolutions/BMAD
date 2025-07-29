@@ -170,6 +170,121 @@ TestEngineer Agent Commands:
         logger.info(f"Test results: {result}")
         return result
 
+    def generate_tests(self, component_name: str = "TestComponent", test_type: str = "unit") -> Dict[str, Any]:
+        """
+        Generate tests for a component or feature.
+        
+        Args:
+            component_name: Name of the component to test
+            test_type: Type of test to generate (unit, integration, e2e)
+            
+        Returns:
+            Dict containing test generation results
+        """
+        try:
+            logger.info(f"Generating {test_type} tests for component: {component_name}")
+            
+            # Record start time for performance monitoring
+            start_time = time.time()
+            
+            # Generate test content based on type
+            if test_type == "unit":
+                test_content = self._generate_unit_test(component_name)
+            elif test_type == "integration":
+                test_content = self._generate_integration_test(component_name)
+            elif test_type == "e2e":
+                test_content = self._generate_e2e_test(component_name)
+            else:
+                raise ValueError(f"Unsupported test type: {test_type}")
+            
+            # Create test result
+            test_result = {
+                "component_name": component_name,
+                "test_type": test_type,
+                "test_content": test_content,
+                "generated_at": datetime.now().isoformat(),
+                "status": "generated"
+            }
+            
+            # Record performance
+            end_time = time.time()
+            generation_time = end_time - start_time
+            
+            # Log performance metric
+            self.monitor.record_metric(
+                MetricType.RESPONSE_TIME,
+                "test_generation",
+                generation_time,
+                {"component_name": component_name, "test_type": test_type}
+            )
+            
+            # Save to test history
+            self.test_history.append(f"Generated {test_type} tests for {component_name} in {generation_time:.2f}s")
+            self._save_test_history()
+            
+            logger.info(f"Test generation completed: {component_name}")
+            
+            return {
+                "success": True,
+                "component_name": component_name,
+                "test_type": test_type,
+                "generation_time": generation_time,
+                "test_result": test_result
+            }
+            
+        except Exception as e:
+            logger.error(f"Error generating tests for {component_name}: {e}")
+            return {
+                "success": False,
+                "component_name": component_name,
+                "test_type": test_type,
+                "error": str(e)
+            }
+    
+    def _generate_unit_test(self, component_name: str) -> str:
+        """Generate unit test content."""
+        return f"""
+import pytest
+from {component_name} import {component_name}
+
+def test_{component_name.lower()}_creation():
+    component = {component_name}()
+    assert component is not None
+
+def test_{component_name.lower()}_basic_functionality():
+    component = {component_name}()
+    # Add specific test cases here
+    assert True
+"""
+    
+    def _generate_integration_test(self, component_name: str) -> str:
+        """Generate integration test content."""
+        return f"""
+import pytest
+from {component_name} import {component_name}
+
+def test_{component_name.lower()}_integration():
+    component = {component_name}()
+    # Test integration with other components
+    assert True
+"""
+    
+    def _generate_e2e_test(self, component_name: str) -> str:
+        """Generate end-to-end test content."""
+        return f"""
+import pytest
+from selenium import webdriver
+from {component_name} import {component_name}
+
+def test_{component_name.lower()}_e2e():
+    driver = webdriver.Chrome()
+    try:
+        # Test complete user workflow
+        assert True
+    finally:
+        driver.quit()
+"""
+
     def export_report(self, format_type: str = "md", test_data: Optional[Dict] = None):
         if not test_data:
             if self.test_history:

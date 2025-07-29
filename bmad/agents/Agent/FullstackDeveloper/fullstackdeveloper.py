@@ -1107,6 +1107,81 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
             )
         )
 
+    def develop_feature(self, feature_name: str, feature_description: str = "") -> Dict[str, Any]:
+        """
+        Develop a complete feature from frontend to backend.
+        
+        Args:
+            feature_name: Name of the feature to develop
+            feature_description: Description of the feature
+            
+        Returns:
+            Dict containing development results
+        """
+        try:
+            logger.info(f"Starting development of feature: {feature_name}")
+            
+            # Record start time for performance monitoring
+            start_time = time.time()
+            
+            # Create feature development plan
+            plan = {
+                "feature_name": feature_name,
+                "description": feature_description,
+                "components": [],
+                "apis": [],
+                "tests": [],
+                "status": "in_progress"
+            }
+            
+            # Build frontend component
+            component_result = self.build_shadcn_component(feature_name)
+            plan["components"].append(component_result)
+            
+            # Build API endpoint
+            api_result = self.build_api()
+            plan["apis"].append(api_result)
+            
+            # Write tests
+            test_result = self.write_tests()
+            plan["tests"].append(test_result)
+            
+            # Update status
+            plan["status"] = "completed"
+            
+            # Record performance
+            end_time = time.time()
+            development_time = end_time - start_time
+            
+            # Log performance metric
+            self.monitor.record_metric(
+                MetricType.RESPONSE_TIME,
+                "feature_development",
+                development_time,
+                {"feature_name": feature_name}
+            )
+            
+            # Save to development history
+            self.development_history.append(f"Developed feature: {feature_name} in {development_time:.2f}s")
+            self._save_development_history()
+            
+            logger.info(f"Feature development completed: {feature_name}")
+            
+            return {
+                "success": True,
+                "feature_name": feature_name,
+                "development_time": development_time,
+                "plan": plan
+            }
+            
+        except Exception as e:
+            logger.error(f"Error developing feature {feature_name}: {e}")
+            return {
+                "success": False,
+                "feature_name": feature_name,
+                "error": str(e)
+            }
+
     def handle_tasks_assigned(self, event):
         logging.info("[FullstackDeveloper] Taken ontvangen, ontwikkeling wordt gestart...")
         time.sleep(1)
