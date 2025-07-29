@@ -694,19 +694,23 @@ structured_logger = StructuredLogger()
 # Convenience functions
 def record_metric(name: str, value: float, **kwargs):
     """Convenience functie voor metric recording."""
-    metrics_collector.record_metric(name, value, **kwargs)
+    from . import get_metrics_collector
+    get_metrics_collector().record_metric(name, value, **kwargs)
 
 def increment_counter(name: str, **kwargs):
     """Convenience functie voor counter increment."""
-    metrics_collector.increment_counter(name, **kwargs)
+    from . import get_metrics_collector
+    get_metrics_collector().increment_counter(name, **kwargs)
 
 def measure_time(name: str, **kwargs):
     """Convenience functie voor timing measurements."""
-    return metrics_collector.measure_time(name, **kwargs)
+    from . import get_metrics_collector
+    return get_metrics_collector().measure_time(name, **kwargs)
 
 def log_event(event_type: str, message: str, **kwargs):
     """Convenience functie voor event logging."""
-    structured_logger.log_event(event_type, message, **kwargs)
+    from . import get_structured_logger
+    get_structured_logger().log_event(event_type, message, **kwargs)
 
 class PerformanceMonitor:
     """

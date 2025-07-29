@@ -285,3 +285,64 @@ def get_notification_status() -> Dict[str, Any]:
     """Get notification system status using the global manager."""
     manager = get_notification_manager()
     return manager.get_status()
+
+# Add missing functions that tests expect
+def send_webhook_message(text: str, channel: Optional[str] = None, **kwargs) -> bool:
+    """Send a webhook message directly."""
+    try:
+        if WEBHOOK_AVAILABLE:
+            from .webhook_notify import send_webhook_message as _send_webhook_message
+            return _send_webhook_message(text, channel=channel, **kwargs)
+        logger.error("Webhook notifications not available")
+        return False
+    except Exception as e:
+        logger.error(f"Failed to send webhook message: {e}")
+        return False
+
+def send_slack_message(text: str, channel: Optional[str] = None, use_api: bool = False, **kwargs) -> bool:
+    """Send a Slack message directly."""
+    try:
+        if SLACK_AVAILABLE:
+            from .slack_notify import send_slack_message as _send_slack_message
+            return _send_slack_message(text, channel=channel, use_api=use_api, **kwargs)
+        logger.error("Slack notifications not available")
+        return False
+    except Exception as e:
+        logger.error(f"Failed to send Slack message: {e}")
+        return False
+
+def send_webhook_hitl_alert(reason: str, channel: Optional[str] = None, **kwargs) -> bool:
+    """Send a webhook HITL alert directly."""
+    try:
+        if WEBHOOK_AVAILABLE:
+            from .webhook_notify import send_webhook_hitl_alert as _send_webhook_hitl_alert
+            return _send_webhook_hitl_alert(reason, channel=channel, **kwargs)
+        logger.error("Webhook notifications not available")
+        return False
+    except Exception as e:
+        logger.error(f"Failed to send webhook HITL alert: {e}")
+        return False
+
+def send_human_in_loop_alert(reason: str, channel: Optional[str] = None, use_api: bool = False, **kwargs) -> bool:
+    """Send a human-in-the-loop alert directly."""
+    try:
+        if SLACK_AVAILABLE:
+            from .slack_notify import send_human_in_loop_alert as _send_human_in_loop_alert
+            return _send_human_in_loop_alert(reason, channel=channel, use_api=use_api, **kwargs)
+        logger.error("Slack notifications not available")
+        return False
+    except Exception as e:
+        logger.error(f"Failed to send human-in-loop alert: {e}")
+        return False
+
+def send_webhook_workflow_notification(workflow_name: str, status: str, channel: Optional[str] = None, **kwargs) -> bool:
+    """Send a webhook workflow notification directly."""
+    try:
+        if WEBHOOK_AVAILABLE:
+            from .webhook_notify import send_webhook_workflow_notification as _send_webhook_workflow_notification
+            return _send_webhook_workflow_notification(workflow_name, status, channel, **kwargs)
+        logger.error("Webhook notifications not available")
+        return False
+    except Exception as e:
+        logger.error(f"Failed to send webhook workflow notification: {e}")
+        return False
