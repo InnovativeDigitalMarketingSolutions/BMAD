@@ -34,8 +34,8 @@
   "parent_policy": null,
   "inheritance_rules": {},
   "status": "active",
-  "created_at": "2025-07-29T16:08:11.135035",
-  "updated_at": "2025-07-29T16:08:11.135046",
+  "created_at": "2025-07-29T16:40:41.216104",
+  "updated_at": "2025-07-29T16:40:41.216105",
   "expires_at": null,
   "metadata": {
     "category": "devops",

@@ -2,7 +2,7 @@ import pytest
 import asyncio
 from unittest.mock import patch, MagicMock, AsyncMock
 
-import bmad.agents.core.connection_pool as cp
+import bmad.agents.core.data.connection_pool as cp
 
 @pytest.fixture(autouse=True)
 def reset_pool_manager():
@@ -14,8 +14,8 @@ def reset_pool_manager():
 class TestConnectionPoolManagerUnit:
     """Unit tests voor ConnectionPoolManager met mocks."""
 
-    @patch('bmad.agents.core.connection_pool.RedisConnectionPool.from_url')
-    @patch('bmad.agents.core.connection_pool.Redis')
+    @patch('bmad.agents.core.data.connection_pool.RedisConnectionPool.from_url')
+    @patch('bmad.agents.core.data.connection_pool.Redis')
     def test_init_redis_pool_success(self, mock_redis, mock_pool):
         mock_client = MagicMock()
         mock_redis.return_value = mock_client
@@ -27,13 +27,13 @@ class TestConnectionPoolManagerUnit:
         assert 'redis' in manager.pools
         assert manager.health_checks['redis'] is True
 
-    @patch('bmad.agents.core.connection_pool.RedisConnectionPool.from_url', side_effect=Exception("fail"))
+    @patch('bmad.agents.core.data.connection_pool.RedisConnectionPool.from_url', side_effect=Exception("fail"))
     def test_init_redis_pool_fail(self, mock_pool):
         manager = cp.ConnectionPoolManager()
         asyncio.run(manager._init_redis_pool())
         assert manager.health_checks['redis'] is False
 
-    @patch('bmad.agents.core.connection_pool.asyncpg.create_pool', new_callable=AsyncMock)
+    @patch('bmad.agents.core.data.connection_pool.asyncpg.create_pool', new_callable=AsyncMock)
     def test_init_postgres_pool_success(self, mock_create_pool):
         # Mock the pool and connection
         pool = MagicMock()
@@ -53,7 +53,7 @@ class TestConnectionPoolManagerUnit:
             assert 'postgres' in manager.pools
             assert manager.health_checks['postgres'] is True
 
-    @patch('bmad.agents.core.connection_pool.asyncpg.create_pool', side_effect=Exception("fail"))
+    @patch('bmad.agents.core.data.connection_pool.asyncpg.create_pool', side_effect=Exception("fail"))
     def test_init_postgres_pool_fail(self, mock_create_pool):
         with patch.dict('os.environ', {'DATABASE_URL': 'postgres://user:pass@localhost/db'}):
             manager = cp.ConnectionPoolManager()
@@ -66,8 +66,8 @@ class TestConnectionPoolManagerUnit:
             asyncio.run(manager._init_postgres_pool())
             assert manager.health_checks['postgres'] is False
 
-    @patch('bmad.agents.core.connection_pool.aiohttp.ClientSession')
-    @patch('bmad.agents.core.connection_pool.aiohttp.TCPConnector')
+    @patch('bmad.agents.core.data.connection_pool.aiohttp.ClientSession')
+    @patch('bmad.agents.core.data.connection_pool.aiohttp.TCPConnector')
     def test_init_http_pool_success(self, mock_connector, mock_session):
         mock_session.return_value = MagicMock()
         mock_connector.return_value = MagicMock()
@@ -76,14 +76,14 @@ class TestConnectionPoolManagerUnit:
         assert 'http' in manager.pools
         assert manager.health_checks['http'] is True
 
-    @patch('bmad.agents.core.connection_pool.aiohttp.ClientSession', side_effect=Exception("fail"))
-    @patch('bmad.agents.core.connection_pool.aiohttp.TCPConnector')
+    @patch('bmad.agents.core.data.connection_pool.aiohttp.ClientSession', side_effect=Exception("fail"))
+    @patch('bmad.agents.core.data.connection_pool.aiohttp.TCPConnector')
     def test_init_http_pool_fail(self, mock_connector, mock_session):
         manager = cp.ConnectionPoolManager()
         asyncio.run(manager._init_http_pool())
         assert manager.health_checks['http'] is False
 
-    @patch('bmad.agents.core.connection_pool.Redis')
+    @patch('bmad.agents.core.data.connection_pool.Redis')
     def test_get_redis_connection_success(self, mock_redis):
         manager = cp.ConnectionPoolManager()
         manager.pools['redis'] = MagicMock()
@@ -145,7 +145,7 @@ class TestConnectionPoolManagerUnit:
                     pass
             asyncio.run(test())
 
-    @patch('bmad.agents.core.connection_pool.Redis')
+    @patch('bmad.agents.core.data.connection_pool.Redis')
     def test_get_pool_stats_redis(self, mock_redis):
         manager = cp.ConnectionPoolManager()
         pool = MagicMock()
