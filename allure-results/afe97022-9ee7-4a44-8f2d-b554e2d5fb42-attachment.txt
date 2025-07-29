@@ -1,1 +1,0 @@
-❌ Retrospective agent test failed: 'RetrospectiveAgent' object has no attribute 'agent_name'

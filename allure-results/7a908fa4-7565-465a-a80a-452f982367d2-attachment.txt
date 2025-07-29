@@ -1,1 +1,0 @@
-{"timestamp": "2025-07-29 22:03:48,943", "level": "WARNING", "module": "bmad.agents.core.data.connection_pool", "message": "⚠️ HTTP pool initialisatie gefaald: fail"}

@@ -1,1 +1,0 @@
-{"timestamp": "2025-07-29 22:03:52,436", "level": "ERROR", "module": "bmad.agents.core.communication.notification_manager", "message": "Failed to send workflow notification: Test error"}

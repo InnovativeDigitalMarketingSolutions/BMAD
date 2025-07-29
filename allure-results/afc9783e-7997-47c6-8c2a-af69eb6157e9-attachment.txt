@@ -1,7 +1,0 @@
-{"timestamp": "2025-07-29 22:03:49,187", "level": "INFO", "module": "bmad.agents.core.monitoring.monitoring", "message": "Health check geregistreerd: system"}
-{"timestamp": "2025-07-29 22:03:49,187", "level": "INFO", "module": "bmad.agents.core.monitoring.monitoring", "message": "Health check geregistreerd: python_modules"}
-{"timestamp": "2025-07-29 22:03:49,187", "level": "INFO", "module": "bmad.agents.core.monitoring.monitoring", "message": "Health check geregistreerd: redis"}
-{"timestamp": "2025-07-29 22:03:49,187", "level": "INFO", "module": "bmad.agents.core.monitoring.monitoring", "message": "Health check geregistreerd: database"}
-{"timestamp": "2025-07-29 22:03:49,187", "level": "INFO", "module": "bmad.agents.core.monitoring.monitoring", "message": "Health check geregistreerd: llm_api"}
-{"timestamp": "2025-07-29 22:03:49,187", "level": "INFO", "module": "bmad.agents.core.monitoring.monitoring", "message": "Health check geregistreerd: agents"}
-{"timestamp": "2025-07-29 22:03:49,187", "level": "INFO", "module": "bmad.agents.core.monitoring.monitoring", "message": "Health check geregistreerd: test_check"}

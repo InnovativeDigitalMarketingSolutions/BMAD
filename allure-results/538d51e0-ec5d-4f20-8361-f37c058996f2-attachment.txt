@@ -1,1 +1,0 @@
-❌ FullstackDeveloper agent test failed: 'FullstackDeveloperAgent' object has no attribute 'agent_name'

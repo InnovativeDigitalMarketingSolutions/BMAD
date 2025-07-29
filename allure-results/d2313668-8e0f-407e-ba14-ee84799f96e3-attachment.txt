@@ -1,1 +1,0 @@
-❌ MobileDeveloper agent test failed: 'MobileDeveloperAgent' object has no attribute 'agent_name'

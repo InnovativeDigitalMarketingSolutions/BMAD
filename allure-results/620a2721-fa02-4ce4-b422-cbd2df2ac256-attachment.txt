@@ -1,5 +1,0 @@
-{"timestamp": "2025-07-29 22:03:43,195", "level": "INFO", "module": "bmad.agents.core.workflow.advanced_workflow", "message": "Task executor geregistreerd voor type: ProductOwner"}
-{"timestamp": "2025-07-29 22:03:43,195", "level": "INFO", "module": "bmad.agents.core.workflow.advanced_workflow", "message": "Task executor geregistreerd voor type: Architect"}
-{"timestamp": "2025-07-29 22:03:43,195", "level": "INFO", "module": "bmad.agents.core.workflow.advanced_workflow", "message": "Task executor geregistreerd voor type: FullstackDeveloper"}
-{"timestamp": "2025-07-29 22:03:43,195", "level": "INFO", "module": "bmad.agents.core.workflow.advanced_workflow", "message": "Task executor geregistreerd voor type: TestEngineer"}
-{"timestamp": "2025-07-29 22:03:43,195", "level": "INFO", "module": "bmad.agents.core.workflow.advanced_workflow", "message": "Workflow test_workflow geannuleerd"}

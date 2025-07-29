@@ -1,8 +1,0 @@
-DEBUG: ask_openai_with_confidence called with prompt: 
-DEBUG: context: {'task': 'general', 'agent': 'unknown'}
-DEBUG: model: None
-DEBUG: OPENAI_API_KEY: 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
-DEBUG: ask_openai_with_confidence called with prompt: 
-DEBUG: context: {'task': 'general', 'agent': 'unknown'}
-DEBUG: model: None
-DEBUG: OPENAI_API_KEY: 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

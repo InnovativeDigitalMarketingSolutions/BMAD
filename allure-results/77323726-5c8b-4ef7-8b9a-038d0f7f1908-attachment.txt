@@ -1,1 +1,0 @@
-[32mINFO    [0m bmad:monitoring.py:654 {"event_type": "performance", "message": "Operation test_operation took 1.500s", "timestamp": "2025-07-29T22:03:50.200178", "operation": "test_operation", "duration": 1.5, "details": "test"}

@@ -1,3 +1,0 @@
-[32mINFO    [0m bmad.agents.core.data.connection_pool:connection_pool.py:269 Pool http gesloten
-[32mINFO    [0m bmad.agents.core.data.connection_pool:connection_pool.py:269 Pool postgres gesloten
-[32mINFO    [0m bmad.agents.core.data.connection_pool:connection_pool.py:269 Pool redis gesloten

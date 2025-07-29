@@ -1,1 +1,0 @@
-[33mWARNING [0m bmad.agents.core.data.redis_cache:redis_cache.py:176 ⚠️ Redis niet beschikbaar: Connection failed

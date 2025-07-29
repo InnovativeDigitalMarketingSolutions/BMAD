@@ -1,1 +1,0 @@
-[33mWARNING [0m bmad.agents.core.data.redis_cache:redis_cache.py:105 Data decompression failed: startswith first arg must be str or a tuple of str, not bytes

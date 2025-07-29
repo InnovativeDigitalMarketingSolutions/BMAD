@@ -1,1 +1,0 @@
-{"timestamp": "2025-07-29 22:03:50,201", "level": "INFO", "module": "bmad", "message": "{"event_type": "test_conv_event", "message": "Test convenience function", "timestamp": "2025-07-29T22:03:50.201892"}"}

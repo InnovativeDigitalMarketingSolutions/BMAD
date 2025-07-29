@@ -1,1 +1,0 @@
-Samengevoegd changelog geschreven naar bmad/resources/data/general/changelog.md

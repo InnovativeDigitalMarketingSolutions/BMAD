@@ -1,4 +1,0 @@
-
-🚀 Testing ClickUp Integration...
-==================================================
-❌ Import error: No module named 'agents.core.clickup_integration'
