@@ -6,7 +6,7 @@ import pytest
 import asyncio
 import time
 
-from bmad.agents.core.langgraph_workflow import (
+from integrations.langgraph.langgraph_workflow import (
     LangGraphWorkflowOrchestrator,
     WorkflowDefinition,
     WorkflowTask,

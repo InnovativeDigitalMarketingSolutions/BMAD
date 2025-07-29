@@ -1,7 +1,7 @@
 import pytest
 import threading
 import time
-from bmad.agents.core.message_bus import subscribe, publish
+from bmad.agents.core.communication.message_bus import subscribe, publish
 from test_helpers import run_orchestrator_command
 import os
 

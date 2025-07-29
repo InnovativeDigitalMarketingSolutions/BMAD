@@ -209,6 +209,10 @@ def format_confidence_message(enhanced_output: Dict[str, Any]) -> str:
     metadata = enhanced_output["metadata"]
     confidence = enhanced_output["confidence"]
     review_level = enhanced_output["review_level"]
+    
+    # Generate output preview
+    output = enhanced_output.get("output", "")
+    output_preview = output[:200] + "..." if len(output) > 200 else output
 
     # Emoji voor confidence level
     if confidence >= 0.8:
@@ -236,7 +240,7 @@ def format_confidence_message(enhanced_output: Dict[str, Any]) -> str:
 
 **Output Preview:**
 ```
-{enhanced_output['output_preview']}
+{output_preview}
 ```
 """
 

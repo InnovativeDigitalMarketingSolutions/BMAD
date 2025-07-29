@@ -1,4 +1,4 @@
-from bmad.agents.core.slack_notify import send_slack_message
+from integrations.slack.slack_notify import send_slack_message
 from dotenv import load_dotenv
 load_dotenv()
 

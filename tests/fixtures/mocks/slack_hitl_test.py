@@ -1,8 +1,8 @@
 import os
 import pytest
-from bmad.agents.core.slack_notify import send_human_in_loop_alert
+from integrations.slack.slack_notify import send_human_in_loop_alert
 
-@pytest.mark.skipif(os.getenv("CI") == "true", reason="Handmatige test, niet geschikt voor CI")
+@pytest.mark.skipif(os.getenv("CI") == "true" or not os.getenv("SLACK_BOT_TOKEN"), reason="Handmatige test, niet geschikt voor CI of zonder Slack token")
 def test_slack_hitl():
     channel = os.getenv("SLACK_DEFAULT_CHANNEL", "C097FTDU1A5")
     send_human_in_loop_alert(

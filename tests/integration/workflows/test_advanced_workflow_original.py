@@ -7,8 +7,19 @@ import os
 import asyncio
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
+# Mock Prefect to avoid Pydantic compatibility issues - MUST BE FIRST
+import unittest.mock
+sys.modules['prefect'] = unittest.mock.MagicMock()
+sys.modules['prefect.flow'] = unittest.mock.MagicMock()
+sys.modules['prefect.deployments'] = unittest.mock.MagicMock()
+sys.modules['prefect.artifacts'] = unittest.mock.MagicMock()
+sys.modules['prefect.tasks'] = unittest.mock.MagicMock()
+sys.modules['prefect.context'] = unittest.mock.MagicMock()
+sys.modules['prefect.utilities'] = unittest.mock.MagicMock()
+sys.modules['prefect.utilities.logging'] = unittest.mock.MagicMock()
+
 import pytest
-from bmad.agents.core.advanced_workflow import (
+from bmad.agents.core.workflow.advanced_workflow import (
     AdvancedWorkflowOrchestrator, 
     WorkflowDefinition, 
     WorkflowTask, 
