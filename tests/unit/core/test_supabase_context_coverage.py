@@ -9,7 +9,7 @@ import bmad.agents.core.data.supabase_context as sc
 @pytest.fixture
 def mock_supabase():
     """Mock Supabase client."""
-    with patch('bmad.agents.core.supabase_context.supabase') as mock_client:
+    with patch('bmad.agents.core.data.supabase_context.supabase') as mock_client:
         # Mock table operations
         mock_table = MagicMock()
         mock_client.table.return_value = mock_table

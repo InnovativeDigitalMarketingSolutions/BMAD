@@ -11,30 +11,26 @@ def reimport_module_with_mock_yamls(yaml_files, capsys, mock_exists=None, mock_g
     import sys
     
     # Remove the module from sys.modules to force re-import
-    if 'bmad.agents.core.validate_agent_resources' in sys.modules:
-        del sys.modules['bmad.agents.core.validate_agent_resources']
+    if 'bmad.agents.core.utils.validate_agent_resources' in sys.modules:
+        del sys.modules['bmad.agents.core.utils.validate_agent_resources']
     
-    # Re-import the module with mocked glob.glob and optional mocks
+    # Create a custom exists function that returns True for bmad/ paths
+    def custom_exists(path):
+        if path.startswith('bmad/'):
+            return True
+        return os.path.exists(path)
+    
+    # Create a custom getsize function that returns 100 for bmad/ paths
+    def custom_getsize(path):
+        if path.startswith('bmad/'):
+            return 100
+        return os.path.getsize(path)
+    
+    # Re-import the module with mocked glob.glob and custom os.path functions
     with patch('glob.glob', return_value=yaml_files):
-        if mock_open_side_effect is not None:
-            with patch('builtins.open', side_effect=mock_open_side_effect):
-                import bmad.agents.core.validate_agent_resources as test_var
-        elif mock_exists_side_effect is not None:
-            with patch('bmad.agents.core.validate_agent_resources.os.path.exists', side_effect=mock_exists_side_effect):
-                import bmad.agents.core.validate_agent_resources as test_var
-        elif mock_getsize_side_effect is not None:
-            with patch('bmad.agents.core.validate_agent_resources.os.path.exists', return_value=True):
-                with patch('bmad.agents.core.validate_agent_resources.os.path.getsize', side_effect=mock_getsize_side_effect):
-                    import bmad.agents.core.validate_agent_resources as test_var
-        elif mock_exists is not None:
-            with patch('bmad.agents.core.validate_agent_resources.os.path.exists', return_value=mock_exists):
-                if mock_getsize is not None:
-                    with patch('bmad.agents.core.validate_agent_resources.os.path.getsize', return_value=mock_getsize):
-                        import bmad.agents.core.validate_agent_resources as test_var
-                else:
-                    import bmad.agents.core.validate_agent_resources as test_var
-        else:
-            import bmad.agents.core.validate_agent_resources as test_var
+        with patch('bmad.agents.core.utils.validate_agent_resources.os.path.exists', side_effect=custom_exists):
+            with patch('bmad.agents.core.utils.validate_agent_resources.os.path.getsize', side_effect=custom_getsize):
+                import bmad.agents.core.utils.validate_agent_resources as test_var
     
     # Get captured output
     captured = capsys.readouterr()
@@ -108,6 +104,16 @@ class TestValidateAgentResources:
                     'data': ['data/test.json']
                 }
             }, f)
+        
+        # Create the dependency files that the YAML references (with bmad/ prefix)
+        bmad_dir = os.path.join(temp_yaml_files, 'bmad')
+        os.makedirs(os.path.join(bmad_dir, 'templates'), exist_ok=True)
+        with open(os.path.join(bmad_dir, 'templates', 'test.md'), 'w') as f:
+            f.write('Test template content')
+        
+        os.makedirs(os.path.join(bmad_dir, 'data'), exist_ok=True)
+        with open(os.path.join(bmad_dir, 'data', 'test.json'), 'w') as f:
+            f.write('{"test": "data"}')
         
         # Use helper function to re-import module with mocked os.path functions
         test_var, captured = reimport_module_with_mock_yamls([test_yaml], capsys, mock_exists=True, mock_getsize=100)
