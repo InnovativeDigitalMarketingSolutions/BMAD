@@ -103,3 +103,10 @@ def archive_old_context(days: int = 90):
                         raise e
     except Exception as e:
         print(f"Error during context archiving: {e}")
+        raise  # Re-raise the exception for proper error handling
+
+def update_context(agent_name: str, context_type: str, payload: Dict[str, Any], updated_by: Optional[str] = None, scope: Optional[str] = None) -> None:
+    """
+    Update context voor een agent in Supabase (alias voor save_context).
+    """
+    save_context(agent_name, context_type, payload, updated_by, scope)

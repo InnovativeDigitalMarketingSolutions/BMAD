@@ -56,9 +56,20 @@ def get_redis_client():
 def _compress_data(data: Any) -> bytes:
     """Compress data for storage with security measures."""
     try:
+        # Handle function objects and other non-serializable types
+        if callable(data):
+            return json.dumps({"error": "Cannot serialize function object"}).encode('utf-8')
+        
         # Use JSON for security instead of pickle when possible
         if isinstance(data, (dict, list, str, int, float, bool, type(None))):
             return json.dumps(data).encode('utf-8')
+        
+        # For other objects, try to convert to dict first
+        if hasattr(data, '__dict__'):
+            try:
+                return json.dumps(data.__dict__).encode('utf-8')
+            except (TypeError, ValueError):
+                pass
         
         # Fallback to pickle only for complex objects, with security measures
         import pickle
@@ -66,9 +77,9 @@ def _compress_data(data: Any) -> bytes:
         if len(serialized) > 1024:  # Only compress if > 1KB
             return gzip.compress(serialized)
         return serialized
-    except Exception:
+    except Exception as e:
         # Final fallback to JSON string representation
-        return json.dumps(str(data)).encode('utf-8')
+        return json.dumps({"error": f"Serialization failed: {str(e)}"}).encode('utf-8')
 
 def _decompress_data(data: bytes) -> Any:
     """Decompress data from storage with security measures."""
@@ -136,9 +147,22 @@ class RedisCache:
 
     def _generate_key(self, func_name: str, *args, **kwargs) -> str:
         """Generate cache key with secure hashing."""
-        # Use hash for better performance
         import hashlib
-        key_data = f"{func_name}:{str(args)}:{str(sorted(kwargs.items()))}"
+        
+        # Filter out non-serializable objects (like functions)
+        def filter_serializable(obj):
+            if callable(obj):
+                return f"<function:{getattr(obj, '__name__', 'unknown')}>"
+            elif hasattr(obj, '__dict__'):
+                return f"<object:{type(obj).__name__}>"
+            else:
+                return str(obj)
+        
+        # Filter args and kwargs
+        filtered_args = [filter_serializable(arg) for arg in args]
+        filtered_kwargs = {k: filter_serializable(v) for k, v in kwargs.items()}
+        
+        key_data = f"{func_name}:{str(filtered_args)}:{str(sorted(filtered_kwargs.items()))}"
         return hashlib.md5(key_data.encode()).hexdigest()
 
     def _connect(self):
@@ -296,20 +320,37 @@ cache = RedisCache()
 
 def _generate_key(func_name: str, *args, **kwargs) -> str:
     """Generate cache key with secure hashing."""
-    # Use hash for better performance
     import hashlib
-    key_data = f"{func_name}:{str(args)}:{str(sorted(kwargs.items()))}"
+    
+    # Filter out non-serializable objects (like functions)
+    def filter_serializable(obj):
+        if callable(obj):
+            return f"<function:{getattr(obj, '__name__', 'unknown')}>"
+        elif hasattr(obj, '__dict__'):
+            return f"<object:{type(obj).__name__}>"
+        else:
+            return str(obj)
+    
+    # Filter args and kwargs
+    filtered_args = [filter_serializable(arg) for arg in args]
+    filtered_kwargs = {k: filter_serializable(v) for k, v in kwargs.items()}
+    
+    key_data = f"{func_name}:{str(filtered_args)}:{str(sorted(filtered_kwargs.items()))}"
     return hashlib.md5(key_data.encode()).hexdigest()
 
 def cached(ttl: Optional[int] = None, cache_type: str = "default",
-           key_prefix: str = "function"):
+           key_prefix: str = "function", expire: Optional[int] = None):
     """
     Decorator voor function caching.
     
     :param ttl: Time-to-live in seconden
     :param cache_type: Type cache voor default TTL
     :param key_prefix: Prefix voor cache key
+    :param expire: Alias for ttl (backward compatibility)
     """
+    # Use expire if provided, otherwise use ttl
+    actual_ttl = expire if expire is not None else ttl
+    
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
@@ -330,7 +371,7 @@ def cached(ttl: Optional[int] = None, cache_type: str = "default",
             result = func(*args, **kwargs)
 
             # Cache resultaat
-            cache.set(cache_key, result, ttl, cache_type)
+            cache.set(cache_key, result, actual_ttl, cache_type)
 
             return result
         return wrapper
@@ -379,12 +420,19 @@ def cache_llm_response(ttl: int = 3600):
                 return result
                 
             except Exception as e:
-                logger.warning(f"Cache operation failed: {e}")
+                logger.warning(f"Cache error for {func.__name__}: {e}")
                 # Fallback to function execution
                 return func(*args, **kwargs)
-        
+                
         return wrapper
-    return decorator
+    
+    # Handle both @cache_llm_response and @cache_llm_response(ttl=3600) usage
+    if callable(ttl):
+        # Called without parameters: @cache_llm_response
+        return decorator(ttl)
+    else:
+        # Called with parameters: @cache_llm_response(ttl=3600)
+        return decorator
 
 def cache_agent_confidence(func):
     """Decorator specifiek voor agent confidence caching."""

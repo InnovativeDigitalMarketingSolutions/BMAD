@@ -5,6 +5,10 @@ from datetime import datetime
 CENTRAL_CHANGELOG = "bmad/resources/data/general/changelog.md"
 AGENT_CHANGELOGS = glob.glob("bmad/agents/Agent/*/changelog.md")
 
+def find_changelog_files():
+    """Find all changelog files in agent directories."""
+    return glob.glob("bmad/agents/Agent/*/changelog.md")
+
 def read_changelog(path):
     with open(path, encoding="utf-8") as f:
         return f.read().strip()

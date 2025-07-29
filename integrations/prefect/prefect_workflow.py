@@ -18,7 +18,6 @@ from bmad.agents.core.communication.message_bus import publish, subscribe
 from prefect import flow, get_run_logger
 from prefect.artifacts import create_markdown_artifact
 from prefect.context import get_run_context
-from prefect.deployments import Deployment
 
 logger = logging.getLogger(__name__)
 
@@ -68,7 +67,7 @@ class PrefectWorkflowOrchestrator:
     def __init__(self):
         self.workflow_configs: Dict[str, PrefectWorkflowConfig] = {}
         self.agent_executors: Dict[str, Callable] = {}
-        self.deployments: Dict[str, Deployment] = {}
+        self.flows: Dict[str, Any] = {}  # Store flow functions instead of deployments
 
         # Register default agent executors
         self._register_default_executors()
@@ -106,11 +105,7 @@ class PrefectWorkflowOrchestrator:
             return self._execute_workflow(workflow_name, agent_tasks, parameters)
 
         # Store the flow for later deployment
-        self.deployments[workflow_name] = {
-            "flow": bmad_workflow,
-            "config": config,
-            "agent_tasks": agent_tasks
-        }
+        self.flows[workflow_name] = bmad_workflow
 
         logger.info(f"Flow '{config.name}' created for workflow '{workflow_name}'")
         return config.name

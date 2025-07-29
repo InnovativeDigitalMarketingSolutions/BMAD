@@ -248,3 +248,21 @@ def format_confidence_message(enhanced_output: Dict[str, Any]) -> str:
 
 # Global instance voor easy access
 confidence_scoring = ConfidenceScoring()
+
+def calculate_confidence_score(agent_name: str, task_type: str, context: Dict[str, Any]) -> float:
+    """
+    Calculate confidence score for an agent task.
+    
+    :param agent_name: Name of the agent
+    :param task_type: Type of task
+    :param context: Context information
+    :return: Confidence score between 0.0 and 1.0
+    """
+    # Use the global confidence_scoring instance
+    enhanced_output = confidence_scoring.enhance_agent_output(
+        output="",  # Empty output for score calculation
+        agent_name=agent_name,
+        task_type=task_type,
+        context=context
+    )
+    return enhanced_output["confidence"]
