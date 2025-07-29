@@ -71,16 +71,18 @@ class TestFigmaCLI:
         """Test that figma_cli module can be imported."""
         try:
             # Test actual import functionality
-            import bmad.figma_cli
-            assert hasattr(bmad.figma_cli, 'main'), "figma_cli should have main function"
-            assert callable(bmad.figma_cli.main), "main should be callable"
+            from cli import FigmaCLI
+            assert FigmaCLI is not None, "FigmaCLI should be importable"
+            cli = FigmaCLI()
+            assert hasattr(cli, 'test_connection'), "FigmaCLI should have test_connection method"
+            assert callable(cli.test_connection), "test_connection should be callable"
         except ImportError as e:
             pytest.skip(f"figma_cli module not available: {e}")
     
     def test_figma_cli_main_function(self):
         """Test main function of figma_cli."""
         try:
-            from bmad.figma_cli import main
+            from cli.figma_cli import main
             
             # Test with help argument
             with patch('sys.argv', ['figma_cli.py', '--help']):
@@ -97,7 +99,7 @@ class TestFigmaCLI:
     def test_figma_cli_components_command(self):
         """Test figma_cli components command."""
         try:
-            from bmad.figma_cli import generate_components
+            from cli.commands.figma.handlers import generate_components
             assert callable(generate_components), "generate_components should be callable"
             
             # Test function signature
@@ -110,7 +112,7 @@ class TestFigmaCLI:
     def test_figma_cli_analyze_command(self):
         """Test figma_cli analyze command."""
         try:
-            from bmad.figma_cli import analyze_design
+            from cli.commands.figma.handlers import analyze_design
             assert callable(analyze_design), "analyze_design should be callable"
             
             # Test function signature
@@ -123,7 +125,7 @@ class TestFigmaCLI:
     def test_figma_cli_document_command(self):
         """Test figma_cli document command."""
         try:
-            from bmad.figma_cli import generate_documentation
+            from cli.commands.figma.handlers import generate_documentation
             assert callable(generate_documentation), "generate_documentation should be callable"
             
             # Test function signature
@@ -136,7 +138,7 @@ class TestFigmaCLI:
     def test_figma_cli_argument_parsing(self):
         """Test figma_cli argument parsing."""
         try:
-            from bmad.figma_cli import main
+            from cli.figma_cli import main
             
             # Test argument parsing with help
             with patch('sys.argv', ['figma_cli.py', '--help']):
@@ -152,7 +154,7 @@ class TestFigmaCLI:
     def test_figma_cli_error_handling(self):
         """Test figma_cli error handling."""
         try:
-            from bmad.figma_cli import main
+            from cli.figma_cli import main
             
             # Test with invalid arguments
             with patch('sys.argv', ['figma_cli.py', 'invalid_command']):
