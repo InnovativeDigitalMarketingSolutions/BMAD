@@ -99,25 +99,23 @@ interface ''' + component_name + '''Props {
   // Add your props here
 }
 
-export const ''' + component_name + ''': React.FC<''' + component_name + '''Props> = ({ }) => {
+export default function ''' + component_name + '''(props: ''' + component_name + '''Props) {
   return (
-    <div className="''' + component_name.lower() + '''-component">
-      {/* Component */}
+    <div className="''' + component_name.lower() + '''">
+      {/* ''' + component_name + ''' component */}
       <p>Generated from Figma component: ''' + component_name + '''</p>
     </div>
   );
-};
-
-export default ''' + component_name + ''';
+}
 '''
                 
                 with open(component_file, "w", encoding="utf-8") as f:
                     f.write(component_code)
                 
                 generated_count += 1
-                print(f"✅ Generated: {component_file.name}")
+                print(f"   ✅ Generated: {component_file.name}")
             
-            print(f"🎉 Successfully generated {generated_count} components!")
+            print(f"\n🎉 Successfully generated {generated_count} components!")
             return True
 
         except Exception as e:
@@ -125,9 +123,9 @@ export default ''' + component_name + ''';
             return False
 
     def analyze_design(self, file_id: str) -> bool:
-        """Analyze Figma design for UX/UI insights."""
+        """Analyze Figma design file."""
         try:
-            print(f"🔍 Analyzing Figma design: {file_id}")
+            print(f"🔍 Analyzing Figma design file: {file_id}")
 
             client = self._get_client()
             
@@ -148,18 +146,25 @@ export default ''' + component_name + ''';
             print(f"💬 Comments: {len(comments)}")
             
             # Analyze components
-            print("\n📊 Component Analysis:")
-            component_types = {}
-            for component_id, component_info in components.items():
-                component_name = component_info.get("name", "Unknown")
-                component_type = component_info.get("componentSetId", "Individual")
+            if components:
+                print("\n🧩 Component Analysis:")
+                component_types = {}
+                for component_id, component_info in components.items():
+                    component_name = component_info.get("name", "Unknown")
+                    component_type = component_name.split("/")[0] if "/" in component_name else "General"
+                    component_types[component_type] = component_types.get(component_type, 0) + 1
                 
-                if component_type not in component_types:
-                    component_types[component_type] = []
-                component_types[component_type].append(component_name)
-            
-            for component_type, names in component_types.items():
-                print(f"   {component_type}: {len(names)} components")
+                for component_type, count in component_types.items():
+                    print(f"   {component_type}: {count} components")
+                
+                # Show component names
+                print("\n📋 Component Names:")
+                names = [info.get("name", "Unknown") for info in components.values()]
+                names.sort()
+                for name in names[:10]:  # Show first 10
+                    print(f"   • {name}")
+                if len(names) > 10:
+                    print(f"   ... and {len(names) - 10} more")
             
             # Analyze comments
             if comments:
@@ -258,4 +263,30 @@ export default ''' + component_name + ''';
 
         except Exception as e:
             print(f"❌ Error starting monitoring: {e}")
-            return False 
+            return False
+
+# Legacy function exports for backward compatibility
+def test_connection(file_id: str) -> bool:
+    """Test Figma API connection."""
+    handlers = FigmaHandlers()
+    return handlers.test_connection(file_id)
+
+def generate_components(file_id: str, output_dir: str = "components") -> bool:
+    """Generate Next.js components from Figma file."""
+    handlers = FigmaHandlers()
+    return handlers.generate_components(file_id, output_dir)
+
+def analyze_design(file_id: str) -> bool:
+    """Analyze Figma design file."""
+    handlers = FigmaHandlers()
+    return handlers.analyze_design(file_id)
+
+def generate_documentation(file_id: str, output_file=None) -> bool:
+    """Generate documentation for Figma file."""
+    handlers = FigmaHandlers()
+    return handlers.generate_documentation(file_id, output_file)
+
+def start_monitoring(file_id: str) -> bool:
+    """Start monitoring Figma file for changes."""
+    handlers = FigmaHandlers()
+    return handlers.start_monitoring(file_id) 
