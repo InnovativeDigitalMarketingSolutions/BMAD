@@ -16,10 +16,10 @@ from .interfaces.webhook_cli import WebhookCLI
 from .interfaces.project_cli import ProjectCLI
 from .interfaces.projects_cli import ProjectsCLI
 from .interfaces.langgraph_cli import LangGraphCLI
+from .interfaces.performance_monitor_cli import PerformanceMonitorCLI
 
 # Import other CLI tools (keeping existing structure for now)
 from .bmad_cli_clickup import ClickUpCLI
-from .performance_monitor_cli import PerformanceMonitorCLI
 # from .repository_integration_cli import RepositoryIntegrationCLI  # Temporarily disabled due to Prefect compatibility
 from .test_sprites_cli import TestSpritesCLI
 
@@ -31,8 +31,8 @@ __all__ = [
     "ProjectCLI",
     "ProjectsCLI",
     "LangGraphCLI",
-    "ClickUpCLI",
     "PerformanceMonitorCLI",
+    "ClickUpCLI",
     # "RepositoryIntegrationCLI",  # Temporarily disabled due to Prefect compatibility
     "TestSpritesCLI",
 ]
