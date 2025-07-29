@@ -69,6 +69,10 @@ htmlcov/
 nosetests.xml
 coverage/
 
+# Allure test reports
+allure-results/
+allure-report/
+
 # Documentation builds
 docs/_build/
 site/

@@ -1,1 +1,0 @@
-{"timestamp": "2025-07-29 22:03:56,219", "level": "INFO", "module": "bmad.agents.core.data.redis_cache", "message": "✅ Redis cache verbonden"}

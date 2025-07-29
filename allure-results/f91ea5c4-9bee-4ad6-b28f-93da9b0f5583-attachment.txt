@@ -1,1 +1,0 @@
-{"timestamp": "2025-07-29 22:03:48,809", "level": "WARNING", "module": "bmad.agents.core.data.redis_cache", "message": "Cache error for ask_openai_with_confidence: Prompt must be a non-empty string"}

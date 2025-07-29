@@ -1,5 +1,0 @@
-DEBUG SLACK_BOT_TOKEN: xoxb-...
-DEBUG channel: INVALID_CHANNEL_ID
-DEBUG type(channel): <class 'str'>
-DEBUG repr(channel): 'INVALID_CHANNEL_ID'
-[Slack API] Response: 200 {"ok":false,"error":"invalid_auth"}

@@ -1,1 +1,0 @@
-❌ Performance monitoring test failed: RedisCache.get() got an unexpected keyword argument 'ttl'

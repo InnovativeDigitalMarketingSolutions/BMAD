@@ -1,1 +1,0 @@
-❌ RnD agent test failed: 'RnDAgent' object has no attribute 'agent_name'

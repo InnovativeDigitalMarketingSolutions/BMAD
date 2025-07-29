@@ -1,6 +1,0 @@
-
-🔗 Testing Webhook Configuration...
-==================================================
-Webhook URL: https://n8n.innovative-digitalmarketing.com/webhook/copilot_clickup_agent
-✅ Webhook configuration found
-✅ Webhook payload structure validated

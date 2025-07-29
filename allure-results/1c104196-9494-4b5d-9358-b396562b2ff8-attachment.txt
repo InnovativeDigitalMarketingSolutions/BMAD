@@ -1,1 +1,0 @@
-{"timestamp": "2025-07-29 22:03:49,038", "level": "INFO", "module": "bmad.agents.core.ai.confidence_scoring", "message": "[CONFIDENCE] test_agent - test_task: 0.66 (medium)"}

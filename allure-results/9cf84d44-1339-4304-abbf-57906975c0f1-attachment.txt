@@ -1,1 +1,0 @@
-[32mINFO    [0m bmad.agents.core.ai.confidence_scoring:confidence_scoring.py:78 [CONFIDENCE] Architect - design_architecture: 0.57 (medium)

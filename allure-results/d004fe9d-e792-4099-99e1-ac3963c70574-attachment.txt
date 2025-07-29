@@ -1,1 +1,0 @@
-[33mWARNING [0m bmad.agents.core.data.connection_pool:connection_pool.py:107 ⚠️ PostgreSQL pool initialisatie gefaald: fail

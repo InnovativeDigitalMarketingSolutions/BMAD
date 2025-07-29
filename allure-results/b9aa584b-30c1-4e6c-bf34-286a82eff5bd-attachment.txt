@@ -1,6 +1,0 @@
-[32mINFO    [0m bmad.agents.core.workflow.advanced_workflow:advanced_workflow.py:91 Task executor geregistreerd voor type: ProductOwner
-[32mINFO    [0m bmad.agents.core.workflow.advanced_workflow:advanced_workflow.py:91 Task executor geregistreerd voor type: Architect
-[32mINFO    [0m bmad.agents.core.workflow.advanced_workflow:advanced_workflow.py:91 Task executor geregistreerd voor type: FullstackDeveloper
-[32mINFO    [0m bmad.agents.core.workflow.advanced_workflow:advanced_workflow.py:91 Task executor geregistreerd voor type: TestEngineer
-[32mINFO    [0m bmad.agents.core.workflow.advanced_workflow:advanced_workflow.py:86 Workflow 'simple_workflow' geregistreerd met 2 taken
-[32mINFO    [0m bmad.agents.core.workflow.advanced_workflow:advanced_workflow.py:126 Workflow 'simple_workflow' gestart met ID: simple_workflow_1753819422

@@ -1,6 +1,0 @@
-🚀 Creating project: test-project
-   Name: Test Project
-   Description: 
-   Folder ID: None
-   List ID: None
-🚧 This function is a placeholder. Actual project creation would go here.

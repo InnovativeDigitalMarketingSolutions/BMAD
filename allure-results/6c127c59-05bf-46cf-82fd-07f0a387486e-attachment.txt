@@ -1,1 +1,0 @@
-❌ DevOpsInfra agent test failed: 'DevOpsInfraAgent' object has no attribute 'agent_name'

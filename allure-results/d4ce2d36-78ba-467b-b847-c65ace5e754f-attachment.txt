@@ -1,3 +1,0 @@
-[32mINFO    [0m bmad.agents.core.data.connection_pool:connection_pool.py:127 ✅ HTTP connection pool geïnitialiseerd
-[1m[31mERROR   [0m asyncio:base_events.py:1871 Unclosed client session
-client_session: <aiohttp.client.ClientSession object at 0x11c471940>

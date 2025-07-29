@@ -1,1 +1,0 @@
-[1m[31mERROR   [0m bmad.agents.core.communication.notification_manager:notification_manager.py:100 Failed to send workflow notification: Test error

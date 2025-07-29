@@ -1,1 +1,0 @@
-[32mINFO    [0m bmad:monitoring.py:654 {"event_type": "workflow_event", "message": "Workflow test_workflow: test_event", "timestamp": "2025-07-29T22:03:50.199159", "workflow_id": "test_workflow", "event": "test_event", "data": "value"}

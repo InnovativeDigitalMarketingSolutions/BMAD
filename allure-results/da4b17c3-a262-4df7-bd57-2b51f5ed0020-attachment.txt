@@ -1,5 +1,0 @@
-DEBUG SLACK_BOT_TOKEN: xoxb-...
-DEBUG channel: #test-channel
-DEBUG type(channel): <class 'str'>
-DEBUG repr(channel): '#test-channel'
-[Slack API] Response: 200 <MagicMock name='post().text' id='4759325056'>
