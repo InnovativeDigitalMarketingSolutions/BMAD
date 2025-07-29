@@ -161,6 +161,11 @@ def ask_openai_with_confidence(
     Returns:
         Dict with response and metadata
     """
+    print(f"DEBUG: ask_openai_with_confidence called with prompt: {prompt}")
+    print(f"DEBUG: context: {context}")
+    print(f"DEBUG: model: {model}")
+    print(f"DEBUG: OPENAI_API_KEY: {OPENAI_API_KEY}")
+    
     if not prompt or not isinstance(prompt, str):
         raise ValueError("Prompt must be a non-empty string")
     
@@ -170,21 +175,30 @@ def ask_openai_with_confidence(
     # Use environment model if not specified
     model = model or OPENAI_MODEL
     
+    print(f"DEBUG: Using model: {model}")
+    
     # Generate cache key
     cache_key = _cache_key(prompt, model, temperature, max_tokens, include_logprobs)
+    
+    print(f"DEBUG: Generated cache key: {cache_key}")
     
     # Check cache first (non-streaming only)
     if not stream:
         cached_response = _file_cache_get(cache_key)
         if cached_response:
             logging.debug(f"LLM response from cache: {cache_key}")
+            print(f"DEBUG: Found cached response: {cached_response}")
             return cached_response
+    
+    print(f"DEBUG: No cache hit, proceeding with API call")
     
     # Prepare request
     headers = {
         "Authorization": f"Bearer {OPENAI_API_KEY}",
         "Content-Type": "application/json"
     }
+    
+    print(f"DEBUG: Prepared headers: {headers}")
     
     # Build messages
     messages = []
@@ -195,6 +209,8 @@ def ask_openai_with_confidence(
         messages.extend(context["conversation_history"])
     
     messages.append({"role": "user", "content": prompt})
+    
+    print(f"DEBUG: Built messages: {messages}")
     
     # Prepare request payload
     payload = {
@@ -212,7 +228,10 @@ def ask_openai_with_confidence(
     if structured_output:
         payload["response_format"] = {"type": "json_object"}
     
+    print(f"DEBUG: Making API request with payload: {payload}")
+    
     try:
+        print(f"DEBUG: About to make requests.post call")
         # Make request
         response = requests.post(
             "https://api.openai.com/v1/chat/completions",
@@ -221,7 +240,10 @@ def ask_openai_with_confidence(
             timeout=30,
             stream=stream
         )
+        print(f"DEBUG: requests.post call completed")
         response.raise_for_status()
+        
+        print(f"DEBUG: API request successful")
         
         if stream:
             # Handle streaming response (memory efficient)
@@ -229,13 +251,15 @@ def ask_openai_with_confidence(
         else:
             # Handle regular response
             data = response.json()
+            print(f"DEBUG: API response data: {data}")
             return _process_response(data, cache_key, context)
             
     except requests.exceptions.RequestException as e:
         logging.error(f"OpenAI API request failed: {e}")
+        print(f"DEBUG: API request failed: {e}")
         return {
-            "content": f"Error: {str(e)}",
-            "confidence": 0.0,
+            "answer": f"Error: {str(e)}",
+            "llm_confidence": 0.0,
             "model": model,
             "usage": {"total_tokens": 0},
             "cached": False,
@@ -243,9 +267,10 @@ def ask_openai_with_confidence(
         }
     except json.JSONDecodeError as e:
         logging.error(f"Failed to parse OpenAI response: {e}")
+        print(f"DEBUG: JSON decode error: {e}")
         return {
-            "content": "Error: Invalid response format",
-            "confidence": 0.0,
+            "answer": "Error: Invalid response format",
+            "llm_confidence": 0.0,
             "model": model,
             "usage": {"total_tokens": 0},
             "cached": False,
@@ -298,6 +323,45 @@ def _handle_streaming_response(response, cache_key: str, context: Dict[str, Any]
             "content": f"Error: {str(e)}",
             "confidence": 0.0,
             "model": model,
+            "usage": {"total_tokens": 0},
+            "cached": False,
+            "error": str(e)
+        }
+
+def _process_response(data: dict, cache_key: str, context: Dict[str, Any]) -> Dict[str, Any]:
+    """Process OpenAI API response and add confidence scoring."""
+    try:
+        # Extract content from response
+        content = data["choices"][0]["message"]["content"]
+        
+        # Calculate confidence
+        confidence = calculate_confidence(content, context)
+        
+        # Add logprobs confidence if available
+        if "logprobs" in data["choices"][0]:
+            logprobs_confidence = calculate_confidence_from_logprobs(data["choices"][0]["logprobs"])
+            confidence = (confidence + logprobs_confidence) / 2
+        
+        # Build result
+        result = {
+            "answer": content,
+            "llm_confidence": confidence,
+            "model": data.get("model", "unknown"),
+            "usage": data.get("usage", {"total_tokens": 0}),
+            "cached": False
+        }
+        
+        # Cache the result
+        _file_cache_set(cache_key, result)
+        
+        return result
+        
+    except Exception as e:
+        logging.error(f"Response processing error: {e}")
+        return {
+            "answer": "Error: Failed to process response",
+            "llm_confidence": 0.0,
+            "model": "unknown",
             "usage": {"total_tokens": 0},
             "cached": False,
             "error": str(e)

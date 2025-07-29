@@ -393,6 +393,42 @@ class IntegratedWorkflowOrchestrator:
 
         return result
 
+    def execute_workflow(self, workflow_name: str, context: Dict[str, Any] = None):
+        """
+        Alias for execute_integrated_workflow for backward compatibility.
+        
+        Args:
+            workflow_name: Name of the workflow to execute
+            context: Context data for the workflow
+            
+        Returns:
+            IntegratedWorkflowResult with execution details
+        """
+        # Use asyncio to run the async method
+        import asyncio
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # If we're already in an async context, create a new task
+                return asyncio.create_task(
+                    self.execute_integrated_workflow(workflow_name, context)
+                )
+            else:
+                # Run in the current loop
+                return loop.run_until_complete(
+                    self.execute_integrated_workflow(workflow_name, context)
+                )
+        except RuntimeError:
+            # No event loop, create a new one
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                return loop.run_until_complete(
+                    self.execute_integrated_workflow(workflow_name, context)
+                )
+            finally:
+                loop.close()
+
     async def _execute_workflow_with_integrations(
         self,
         workflow_def: WorkflowDefinition,
