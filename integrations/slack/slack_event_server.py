@@ -9,8 +9,8 @@ import requests
 from dotenv import load_dotenv
 from flask import Flask, abort, jsonify, make_response, request
 
-from bmad.agents.core.message_bus import publish
-from bmad.agents.core.slack_notify import send_slack_message
+from bmad.agents.core.communication.message_bus import publish
+from integrations.slack.slack_notify import send_slack_message
 
 load_dotenv()
 
