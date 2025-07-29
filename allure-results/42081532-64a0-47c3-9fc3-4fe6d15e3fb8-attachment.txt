@@ -1,0 +1,1 @@
+[33mWARNING [0m bmad.agents.core.data.redis_cache:redis_cache.py:423 Cache error for ask_openai_with_confidence: Invalid input of type: 'function'. Convert to a bytes, string, int or float first.

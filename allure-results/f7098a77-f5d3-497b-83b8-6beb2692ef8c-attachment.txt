@@ -1,0 +1,34 @@
+Resource validatie rapport:
+[MISSING] bmad/agents/Agent/FullstackDeveloper/fullstackdeveloper.yaml: bmad/resources/templates/fullstackdeveloper/pr-template.md bestaat niet.
+[MISSING] bmad/agents/Agent/FullstackDeveloper/fullstackdeveloper.yaml: bmad/resources/templates/fullstackdeveloper/api-snippet.py bestaat niet.
+[MISSING] bmad/agents/Agent/FullstackDeveloper/fullstackdeveloper.yaml: bmad/resources/templates/fullstackdeveloper/openapi-snippet.yaml bestaat niet.
+[MISSING] bmad/agents/Agent/FullstackDeveloper/fullstackdeveloper.yaml: bmad/resources/templates/fullstackdeveloper/frontend-snippet.tsx bestaat niet.
+[MISSING] bmad/agents/Agent/FullstackDeveloper/fullstackdeveloper.yaml: bmad/resources/templates/fullstackdeveloper/storybook-mdx-template.mdx bestaat niet.
+[MISSING] bmad/agents/Agent/FullstackDeveloper/fullstackdeveloper.yaml: bmad/resources/templates/fullstackdeveloper/test-snippet.py bestaat niet.
+[MISSING] bmad/agents/Agent/FullstackDeveloper/fullstackdeveloper.yaml: bmad/resources/templates/fullstackdeveloper/dev-log-template.md bestaat niet.
+[MISSING] bmad/agents/Agent/FullstackDeveloper/fullstackdeveloper.yaml: bmad/resources/templates/fullstackdeveloper/changelog-template.md bestaat niet.
+[MISSING] bmad/agents/Agent/FullstackDeveloper/fullstackdeveloper.yaml: bmad/resources/templates/fullstackdeveloper/integration-snippet.md bestaat niet.
+[MISSING] bmad/agents/Agent/FullstackDeveloper/fullstackdeveloper.yaml: bmad/resources/templates/fullstackdeveloper/security-checklist.md bestaat niet.
+[MISSING] bmad/agents/Agent/FullstackDeveloper/fullstackdeveloper.yaml: bmad/resources/templates/fullstackdeveloper/release-notes-template.md bestaat niet.
+[MISSING] bmad/agents/Agent/FullstackDeveloper/fullstackdeveloper.yaml: bmad/resources/templates/fullstackdeveloper/feature-toggle-config.yaml bestaat niet.
+[MISSING] bmad/agents/Agent/FullstackDeveloper/fullstackdeveloper.yaml: bmad/resources/templates/fullstackdeveloper/monitoring-config-snippet.yaml bestaat niet.
+[MISSING] bmad/agents/Agent/FullstackDeveloper/fullstackdeveloper.yaml: bmad/resources/templates/fullstackdeveloper/devops-handover-checklist.md bestaat niet.
+[MISSING] bmad/agents/Agent/FullstackDeveloper/fullstackdeveloper.yaml: bmad/resources/data/fullstackdeveloper/performance-examples.md bestaat niet.
+[MISSING] bmad/agents/Agent/FullstackDeveloper/fullstackdeveloper.yaml: bmad/resources/data/fullstackdeveloper/release-notes-examples.md bestaat niet.
+[MISSING] bmad/agents/Agent/FullstackDeveloper/fullstackdeveloper.yaml: bmad/resources/data/fullstackdeveloper/feature-toggle-examples.md bestaat niet.
+[MISSING] bmad/agents/Agent/FullstackDeveloper/fullstackdeveloper.yaml: bmad/resources/data/fullstackdeveloper/monitoring-examples.md bestaat niet.
+[MISSING] bmad/agents/Agent/FullstackDeveloper/fullstackdeveloper.yaml: bmad/resources/data/fullstackdeveloper/devops-handover-examples.md bestaat niet.
+[WARN] bmad/agents/Agent/ReleaseManager/releasemanager.yaml: geen dependencies-sectie gevonden.
+[WARN] bmad/agents/Agent/Architect/architect_openapi.yaml: geen dependencies-sectie gevonden.
+[ERROR] bmad/agents/Agent/AiDeveloper/aidev.yaml: YAML parse error: sequence entries are not allowed here
+  in "bmad/agents/Agent/AiDeveloper/aidev.yaml", line 23, column 13
+[WARN] bmad/agents/Agent/StrategiePartner/strategiepartner.yaml: geen dependencies-sectie gevonden.
+[WARN] bmad/agents/Agent/DevOpsInfra/devopsinfra.yaml: geen dependencies-sectie gevonden.
+[MISSING] bmad/agents/Agent/Scrummaster/scrummaster.yaml: bmad/resources/templates/general/epic-breakdown-template.md bestaat niet.
+[MISSING] bmad/agents/Agent/Scrummaster/scrummaster.yaml: bmad/resources/templates/general/story-point-estimation-guide.md bestaat niet.
+[MISSING] bmad/agents/Agent/Scrummaster/scrummaster.yaml: bmad/resources/templates/general/dependency-matrix-template.md bestaat niet.
+[MISSING] bmad/agents/Agent/Scrummaster/scrummaster.yaml: bmad/resources/data/general/scrum-guide.md bestaat niet.
+[MISSING] bmad/agents/Agent/Scrummaster/scrummaster.yaml: bmad/resources/data/general/clickup-csv-format.md bestaat niet.
+[MISSING] bmad/agents/Agent/Scrummaster/scrummaster.yaml: bmad/resources/data/general/team-capacity-config.md bestaat niet.
+[MISSING] bmad/agents/Agent/Orchestrator/orchestrator.yaml: bmad/resources/templates/general/bmad-method.md bestaat niet.
+[MISSING] bmad/agents/Agent/Orchestrator/orchestrator.yaml: bmad/resources/templates/general/orchestrator-config.md bestaat niet.

@@ -1,0 +1,1 @@
+[32mINFO    [0m bmad.agents.core.ai.confidence_scoring:confidence_scoring.py:78 [CONFIDENCE] SecurityDeveloper - implement_authentication: 0.50 (medium)

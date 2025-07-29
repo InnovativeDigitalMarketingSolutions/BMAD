@@ -1,0 +1,1 @@
+{"timestamp": "2025-07-29 22:03:48,940", "level": "INFO", "module": "bmad.agents.core.data.connection_pool", "message": "✅ HTTP connection pool geïnitialiseerd"}

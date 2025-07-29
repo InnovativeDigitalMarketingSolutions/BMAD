@@ -1,0 +1,5 @@
+DEBUG SLACK_BOT_TOKEN: xoxb-...
+DEBUG channel: C097FTDU1A5
+DEBUG type(channel): <class 'str'>
+DEBUG repr(channel): 'C097FTDU1A5'
+[Slack API] Response: 200 {"ok":false,"error":"invalid_auth"}

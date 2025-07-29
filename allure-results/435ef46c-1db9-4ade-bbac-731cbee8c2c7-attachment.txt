@@ -1,0 +1,28 @@
+DEBUG: ask_openai_with_confidence called with prompt: test prompt
+DEBUG: context: {'task': 'test', 'agent': 'TestEngineer'}
+DEBUG: model: None
+DEBUG: OPENAI_API_KEY: test-key
+DEBUG: Using model: gpt-4.1-nano
+DEBUG: Generated cache key: d9b44cca60b81156face1207bbf6e31fc660653ea1787f9668cad1374c218012
+DEBUG: No cache hit, proceeding with API call
+DEBUG: Prepared headers: {'Authorization': 'Bearer test-key', 'Content-Type': 'application/json'}
+DEBUG: Built messages: [{'role': 'user', 'content': 'test prompt'}]
+DEBUG: Making API request with payload: {'model': 'gpt-4.1-nano', 'messages': [{'role': 'user', 'content': 'test prompt'}], 'temperature': 0.7, 'max_tokens': 512, 'stream': False, 'logprobs': True, 'top_logprobs': 5}
+DEBUG: About to make requests.post call
+DEBUG: requests.post call completed
+DEBUG: API request successful
+DEBUG: API response data: {'choices': [{'message': {'content': 'Test response'}}]}
+DEBUG: ask_openai_with_confidence called with prompt: test prompt
+DEBUG: context: {'task': 'test', 'agent': 'TestEngineer'}
+DEBUG: model: None
+DEBUG: OPENAI_API_KEY: test-key
+DEBUG: Using model: gpt-4.1-nano
+DEBUG: Generated cache key: d9b44cca60b81156face1207bbf6e31fc660653ea1787f9668cad1374c218012
+DEBUG: No cache hit, proceeding with API call
+DEBUG: Prepared headers: {'Authorization': 'Bearer test-key', 'Content-Type': 'application/json'}
+DEBUG: Built messages: [{'role': 'user', 'content': 'test prompt'}]
+DEBUG: Making API request with payload: {'model': 'gpt-4.1-nano', 'messages': [{'role': 'user', 'content': 'test prompt'}], 'temperature': 0.7, 'max_tokens': 512, 'stream': False, 'logprobs': True, 'top_logprobs': 5}
+DEBUG: About to make requests.post call
+DEBUG: requests.post call completed
+DEBUG: API request successful
+DEBUG: API response data: {'choices': [{'message': {'content': 'Test response'}}]}

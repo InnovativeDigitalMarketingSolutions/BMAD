@@ -1,0 +1,1 @@
+{"timestamp": "2025-07-29 22:03:48,739", "level": "INFO", "module": "bmad.agents.core.ai.confidence_scoring", "message": "[CONFIDENCE] Architect - design_architecture: 0.57 (medium)"}

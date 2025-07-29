@@ -1,0 +1,1 @@
+[32mINFO    [0m bmad:monitoring.py:654 {"event_type": "agent_action", "message": "Agent TestAgent executed test_action", "timestamp": "2025-07-29T22:03:50.198029", "agent": "TestAgent", "action": "test_action", "result": "success"}

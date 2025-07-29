@@ -103,39 +103,91 @@ class TestMonitoring(unittest.TestCase):
 
 class TestLLMCaching(unittest.TestCase):
     
-    @patch('bmad.agents.core.ai.llm_client.requests.post')
-    def test_llm_caching_decorator(self, mock_post):
-        """Test LLM caching decorator."""
-        # Skip this test for now due to decorator issues
-        self.skipTest("LLM caching decorator needs to be fixed separately")
-        # Mock successful response
-        mock_response = MagicMock()
-        mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "choices": [{"message": {"content": "Test response"}}]
-        }
-        mock_post.return_value = mock_response
+    def test_llm_caching_decorator(self):
+        """Test LLM caching decorator: cache miss (API call) en cache hit (uit Redis)."""
+        from bmad.agents.core.ai.llm_client import ask_openai_with_confidence
+        import json
         
-        # Test the function - it should return a function due to decorator
-        # We need to call the actual function to test the caching
-        from bmad.agents.core.ai.llm_client import ask_openai
-        
-        result1 = ask_openai("Test prompt")
-        
-        # The result should be a string (the response content)
-        self.assertIsInstance(result1, str)
+        with patch('bmad.agents.core.ai.llm_client.requests.post') as mock_post, \
+             patch('bmad.agents.core.ai.llm_client.OPENAI_API_KEY', 'test_key'), \
+             patch('bmad.agents.core.ai.llm_client._file_cache_get', return_value=None), \
+             patch('bmad.agents.core.data.redis_cache.get_redis_client') as mock_get_redis_client:
+            # Mock OpenAI API response
+            mock_response = MagicMock()
+            mock_response.status_code = 200
+            mock_response.json.return_value = {
+                "choices": [{"message": {"content": "Test response"}}],
+                "usage": {"total_tokens": 10}
+            }
+            mock_post.return_value = mock_response
+
+            # Mock Redis client
+            mock_redis_client = MagicMock()
+            # First call: cache miss
+            mock_redis_client.get.return_value = None
+            mock_redis_client.setex.return_value = True
+            mock_get_redis_client.return_value = mock_redis_client
+
+            # Eerste call: cache miss, API wordt aangeroepen
+            result1 = ask_openai_with_confidence("Test prompt")
+            self.assertIsInstance(result1, dict)
+            self.assertIn("answer", result1)
+            self.assertIn("llm_confidence", result1)
+            self.assertEqual(result1["answer"], "Test response")
+            self.assertTrue(mock_redis_client.setex.called)
+            self.assertEqual(mock_post.call_count, 1)
+
+            # Tweede call: cache hit, API wordt NIET opnieuw aangeroepen
+            cached_data = json.dumps({
+                "answer": "Test response",
+                "llm_confidence": 0.85
+            })
+            mock_redis_client.get.return_value = cached_data
+            result2 = ask_openai_with_confidence("Test prompt")
+            self.assertIsInstance(result2, dict)
+            self.assertIn("answer", result2)
+            self.assertIn("llm_confidence", result2)
+            self.assertEqual(result2["answer"], "Test response")
+            self.assertEqual(mock_post.call_count, 1)  # Nog steeds maar 1 API call
+            self.assertTrue(mock_redis_client.get.called)
+            # Output van cache en API moeten gelijk zijn qua antwoord
+            self.assertEqual(result1["answer"], result2["answer"])
 
 class TestConnectionPooling(unittest.TestCase):
     
     def test_pool_initialization(self):
         """Test connection pool initialization."""
-        # This test is skipped since connection_pool module doesn't exist
-        self.skipTest("Connection pool module not implemented")
+        from bmad.agents.core.data.connection_pool import ConnectionPoolManager
+        
+        # Test that the manager can be instantiated
+        manager = ConnectionPoolManager()
+        self.assertIsInstance(manager, ConnectionPoolManager)
+        
+        # Test that pool configs are available
+        self.assertIn("redis", manager.pool_configs)
+        self.assertIn("postgres", manager.pool_configs)
+        self.assertIn("http", manager.pool_configs)
     
     def test_pool_configs(self):
         """Test connection pool configurations."""
-        # This test is skipped since connection_pool module doesn't exist
-        self.skipTest("Connection pool module not implemented")
+        from bmad.agents.core.data.connection_pool import ConnectionPoolManager
+        
+        manager = ConnectionPoolManager()
+        
+        # Test Redis config
+        redis_config = manager.pool_configs["redis"]
+        self.assertIn("max_connections", redis_config)
+        self.assertIn("retry_on_timeout", redis_config)
+        
+        # Test PostgreSQL config
+        postgres_config = manager.pool_configs["postgres"]
+        self.assertIn("min_size", postgres_config)
+        self.assertIn("max_size", postgres_config)
+        
+        # Test HTTP config
+        http_config = manager.pool_configs["http"]
+        self.assertIn("limit", http_config)
+        self.assertIn("limit_per_host", http_config)
 
 class TestHealthChecks(unittest.TestCase):
     

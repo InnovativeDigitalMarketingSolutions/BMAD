@@ -1,0 +1,1 @@
+❌ SecurityDeveloper agent test failed: 'SecurityDeveloperAgent' object has no attribute 'agent_name'

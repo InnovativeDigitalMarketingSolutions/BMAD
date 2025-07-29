@@ -1,0 +1,7 @@
+[32mINFO    [0m bmad.agents.core.monitoring.monitoring:monitoring.py:261 Health check geregistreerd: system
+[32mINFO    [0m bmad.agents.core.monitoring.monitoring:monitoring.py:261 Health check geregistreerd: python_modules
+[32mINFO    [0m bmad.agents.core.monitoring.monitoring:monitoring.py:261 Health check geregistreerd: redis
+[32mINFO    [0m bmad.agents.core.monitoring.monitoring:monitoring.py:261 Health check geregistreerd: database
+[32mINFO    [0m bmad.agents.core.monitoring.monitoring:monitoring.py:261 Health check geregistreerd: llm_api
+[32mINFO    [0m bmad.agents.core.monitoring.monitoring:monitoring.py:261 Health check geregistreerd: agents
+[32mINFO    [0m bmad.agents.core.monitoring.monitoring:monitoring.py:261 Health check geregistreerd: test_check

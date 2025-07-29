@@ -1,0 +1,1 @@
+❌ ReleaseManager agent test failed: 'ReleaseManagerAgent' object has no attribute 'agent_name'

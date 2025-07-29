@@ -1,0 +1,2 @@
+[32mINFO    [0m bmad.agents.core.data.redis_cache:redis_cache.py:174 ✅ Redis cache verbonden
+[33mWARNING [0m bmad.agents.core.data.redis_cache:redis_cache.py:315 Redis stats error: Redis error

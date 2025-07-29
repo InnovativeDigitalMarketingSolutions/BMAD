@@ -1,0 +1,14 @@
+DEBUG: ask_openai_with_confidence called with prompt: test prompt
+DEBUG: context: {'task': 'test', 'agent': 'TestEngineer'}
+DEBUG: model: None
+DEBUG: OPENAI_API_KEY: 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
+DEBUG: Using model: gpt-4.1-nano
+DEBUG: Generated cache key: d9b44cca60b81156face1207bbf6e31fc660653ea1787f9668cad1374c218012
+DEBUG: Found cached response: {'answer': 'Test response', 'llm_confidence': 0.675, 'model': 'unknown', 'usage': {'total_tokens': 0}, 'cached': False}
+DEBUG: ask_openai_with_confidence called with prompt: test prompt
+DEBUG: context: {'task': 'test', 'agent': 'TestEngineer'}
+DEBUG: model: None
+DEBUG: OPENAI_API_KEY: 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
+DEBUG: Using model: gpt-4.1-nano
+DEBUG: Generated cache key: d9b44cca60b81156face1207bbf6e31fc660653ea1787f9668cad1374c218012
+DEBUG: Found cached response: {'answer': 'Test response', 'llm_confidence': 0.675, 'model': 'unknown', 'usage': {'total_tokens': 0}, 'cached': False}
