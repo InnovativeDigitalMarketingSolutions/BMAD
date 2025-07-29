@@ -20,8 +20,8 @@ import requests
 # BMAD imports
 sys.path.append('.')
 from integrations.clickup.clickup_integration import ClickUpIntegration
-from bmad.agents.core.project_manager import ProjectManager
-from bmad.agents.core.llm_client import ask_openai_with_confidence
+from bmad.agents.core.project.project_manager import ProjectManager
+from bmad.agents.core.ai.llm_client import ask_openai_with_confidence
 
 
 class BMADClickUpWorkflow:

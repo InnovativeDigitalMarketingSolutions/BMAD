@@ -18,7 +18,7 @@ from typing import Optional
 sys.path.append(str(Path(__file__).parent.parent))
 
 # Import BMAD modules
-from bmad.agents.core.test_sprites import SpriteState, SpriteType, get_sprite_library
+from bmad.agents.core.agent.test_sprites import SpriteState, SpriteType, get_sprite_library
 
 # Configure logging
 logging.basicConfig(

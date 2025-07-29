@@ -20,8 +20,9 @@ logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
 
 class FigmaSlackNotifier:
-    def __init__(self):
-        self.client = FigmaClient()
+    def __init__(self, figma_token: str = None, slack_channel: str = None):
+        self.client = FigmaClient(figma_token) if figma_token else FigmaClient()
+        self.slack_channel = slack_channel or FIGMA_NOTIFICATION_CHANNEL
         self.last_comment_timestamps = {}
         self.last_file_versions = {}
 
@@ -102,7 +103,7 @@ class FigmaSlackNotifier:
             },
         ]
 
-        send_slack_message(text=text, channel=FIGMA_NOTIFICATION_CHANNEL, use_api=True, blocks=blocks)
+        send_slack_message(text=text, channel=self.slack_channel, use_api=True, blocks=blocks)
 
         logging.info(f"[FigmaSlackNotifier] Sent file update notification for {file_name}")
 
@@ -150,7 +151,7 @@ class FigmaSlackNotifier:
             },
         ]
 
-        send_slack_message(text=text, channel=FIGMA_NOTIFICATION_CHANNEL, use_api=True, blocks=blocks)
+        send_slack_message(text=text, channel=self.slack_channel, use_api=True, blocks=blocks)
 
         logging.info(f"[FigmaSlackNotifier] Sent new comments notification for {file_name}")
 
@@ -179,7 +180,7 @@ class FigmaSlackNotifier:
             },
         ]
 
-        send_slack_message(text=text, channel=FIGMA_NOTIFICATION_CHANNEL, use_api=True, blocks=blocks)
+        send_slack_message(text=text, channel=self.slack_channel, use_api=True, blocks=blocks)
 
         logging.info("[FigmaSlackNotifier] Sent design feedback notification")
 
@@ -212,7 +213,7 @@ class FigmaSlackNotifier:
             },
         ]
 
-        send_slack_message(text=text, channel=FIGMA_NOTIFICATION_CHANNEL, use_api=True, blocks=blocks)
+        send_slack_message(text=text, channel=self.slack_channel, use_api=True, blocks=blocks)
 
         logging.info(f"[FigmaSlackNotifier] Sent component generation notification for {file_name}")
 

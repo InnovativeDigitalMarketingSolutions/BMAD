@@ -14,9 +14,24 @@ from collections import defaultdict, deque
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
 
 logger = logging.getLogger(__name__)
+
+
+class MetricType(Enum):
+    """Enum for different metric types."""
+    SUCCESS_RATE = "success_rate"
+    RESPONSE_TIME = "response_time"
+    ERROR_RATE = "error_rate"
+    THROUGHPUT = "throughput"
+    MEMORY_USAGE = "memory_usage"
+    CPU_USAGE = "cpu_usage"
+    CACHE_HIT_RATE = "cache_hit_rate"
+    API_CALLS = "api_calls"
+    WORKFLOW_DURATION = "workflow_duration"
+    AGENT_ACTIVITY = "agent_activity"
 
 @dataclass
 class Metric:

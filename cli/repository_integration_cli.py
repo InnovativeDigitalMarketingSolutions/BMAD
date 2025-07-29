@@ -14,22 +14,22 @@ import asyncio
 import logging
 from typing import Any, Dict
 
-from bmad.agents.core.langgraph_workflow import (
+from integrations.langgraph.langgraph_workflow import (
     WorkflowDefinition,
     WorkflowTask,
     create_workflow_orchestrator,
 )
-from bmad.agents.core.opa_policy_engine import PolicyRequest, initialize_policy_engine
+from integrations.opa.opa_policy_engine import PolicyRequest, initialize_policy_engine
 
 # Import BMAD modules
-from bmad.agents.core.openrouter_client import OpenRouterClient
-from bmad.agents.core.opentelemetry_tracing import (
+from integrations.openrouter.openrouter_client import OpenRouterClient
+from integrations.opentelemetry.opentelemetry_tracing import (
     ExporterType,
     TraceLevel,
     TracingConfig,
     initialize_tracing,
 )
-from bmad.agents.core.prefect_workflow import (
+from integrations.prefect.prefect_workflow import (
     DeploymentEnvironment,
     PrefectWorkflowConfig,
     WorkflowType,

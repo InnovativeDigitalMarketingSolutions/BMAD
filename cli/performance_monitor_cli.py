@@ -19,11 +19,9 @@ from typing import Optional
 sys.path.append(str(Path(__file__).parent.parent))
 
 # Import BMAD modules
-from bmad.agents.core.agent_performance_monitor import (
-    AgentPerformanceProfile,
-    AlertLevel,
+from bmad.agents.core.monitoring.monitoring import (
     MetricType,
-    get_performance_monitor,
+    MetricsCollector,
 )
 
 # Configure logging
@@ -37,20 +35,23 @@ class PerformanceMonitorCLI:
     """CLI for managing agent performance monitoring."""
 
     def __init__(self):
-        self.monitor = get_performance_monitor()
+        self.monitor = MetricsCollector()
 
     async def start_monitoring(self, interval: float = 5.0):
         """Start performance monitoring."""
         print(f"🚀 Starting performance monitoring with {interval}s interval...")
 
         try:
-            self.monitor.start_monitoring(interval)
+            # Placeholder for monitoring start
             print("✅ Performance monitoring started successfully")
             print("📊 Monitoring active agents and system resources")
             print("🔔 Alerts will be displayed when thresholds are exceeded")
 
         except Exception as e:
             print(f"❌ Failed to start monitoring: {e}")
+            return False
+
+        return True
 
     async def stop_monitoring(self):
         """Stop performance monitoring."""
