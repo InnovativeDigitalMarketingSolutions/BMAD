@@ -84,6 +84,7 @@ class BMADTracer:
         self.tracer_provider = None
         self.tracer = None
         self.metrics = {}
+        self._metrics_initialized = False # Add this line
 
         # Initialize tracing
         self._initialize_tracing()
@@ -138,50 +139,86 @@ class BMADTracer:
 
     def _initialize_metrics(self):
         """Initialize Prometheus metrics."""
+        # Check if metrics are already initialized to prevent duplicates
+        if hasattr(self, '_metrics_initialized') and self._metrics_initialized:
+            return
+            
         # Agent execution metrics
-        self.metrics["agent_executions"] = Counter(
-            "bmad_agent_executions_total",
-            "Total number of agent executions",
-            ["agent_name", "task_name", "status"]
-        )
+        try:
+            self.metrics["agent_executions"] = Counter(
+                "bmad_agent_executions_total",
+                "Total number of agent executions",
+                ["agent_name", "task_name", "status"]
+            )
+        except ValueError:
+            # Metric already exists, get existing one
+            from prometheus_client import REGISTRY
+            self.metrics["agent_executions"] = REGISTRY.get_sample_value("bmad_agent_executions_total")
 
-        self.metrics["agent_duration"] = Histogram(
-            "bmad_agent_duration_seconds",
-            "Agent execution duration in seconds",
-            ["agent_name", "task_name"],
-            buckets=[0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0]
-        )
+        try:
+            self.metrics["agent_duration"] = Histogram(
+                "bmad_agent_duration_seconds",
+                "Agent execution duration in seconds",
+                ["agent_name", "task_name"],
+                buckets=[0.1, 0.5, 1.0, 2.0, 5.0, 10.0, 30.0, 60.0]
+            )
+        except ValueError:
+            from prometheus_client import REGISTRY
+            self.metrics["agent_duration"] = REGISTRY.get_sample_value("bmad_agent_duration_seconds")
 
-        self.metrics["workflow_executions"] = Counter(
-            "bmad_workflow_executions_total",
-            "Total number of workflow executions",
-            ["workflow_name", "status"]
-        )
+        try:
+            self.metrics["workflow_executions"] = Counter(
+                "bmad_workflow_executions_total",
+                "Total number of workflow executions",
+                ["workflow_name", "status"]
+            )
+        except ValueError:
+            from prometheus_client import REGISTRY
+            self.metrics["workflow_executions"] = REGISTRY.get_sample_value("bmad_workflow_executions_total")
 
-        self.metrics["workflow_duration"] = Histogram(
-            "bmad_workflow_duration_seconds",
-            "Workflow execution duration in seconds",
-            ["workflow_name"],
-            buckets=[1.0, 5.0, 10.0, 30.0, 60.0, 300.0, 600.0, 1800.0]
-        )
+        try:
+            self.metrics["workflow_duration"] = Histogram(
+                "bmad_workflow_duration_seconds",
+                "Workflow execution duration in seconds",
+                ["workflow_name"],
+                buckets=[1.0, 5.0, 10.0, 30.0, 60.0, 300.0, 600.0, 1800.0]
+            )
+        except ValueError:
+            from prometheus_client import REGISTRY
+            self.metrics["workflow_duration"] = REGISTRY.get_sample_value("bmad_workflow_duration_seconds")
 
-        self.metrics["active_agents"] = Gauge(
-            "bmad_active_agents",
-            "Number of currently active agents",
-            ["agent_name"]
-        )
+        try:
+            self.metrics["active_agents"] = Gauge(
+                "bmad_active_agents",
+                "Number of currently active agents",
+                ["agent_name"]
+            )
+        except ValueError:
+            from prometheus_client import REGISTRY
+            self.metrics["active_agents"] = REGISTRY.get_sample_value("bmad_active_agents")
 
-        self.metrics["llm_calls"] = Counter(
-            "bmad_llm_calls_total",
-            "Total number of LLM API calls",
-            ["provider", "model", "status"]
-        )
+        try:
+            self.metrics["llm_calls"] = Counter(
+                "bmad_llm_calls_total",
+                "Total number of LLM API calls",
+                ["provider", "model", "status"]
+            )
+        except ValueError:
+            from prometheus_client import REGISTRY
+            self.metrics["llm_calls"] = REGISTRY.get_sample_value("bmad_llm_calls_total")
 
-        self.metrics["llm_tokens"] = Counter(
-            "bmad_llm_tokens_total",
-            "Total number of tokens used",
-            ["provider", "model", "direction"]
-        )
+        try:
+            self.metrics["llm_tokens"] = Counter(
+                "bmad_llm_tokens_total",
+                "Total number of tokens used",
+                ["provider", "model", "direction"]
+            )
+        except ValueError:
+            from prometheus_client import REGISTRY
+            self.metrics["llm_tokens"] = REGISTRY.get_sample_value("bmad_llm_tokens_total")
+
+        # Mark metrics as initialized
+        self._metrics_initialized = True
 
         # Start Prometheus server if configured
         if ExporterType.PROMETHEUS in self.config.exporters:
