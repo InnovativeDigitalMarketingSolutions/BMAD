@@ -1,0 +1,1 @@
+[33mWARNING [0m bmad.agents.core.data.connection_pool:connection_pool.py:130 ⚠️ HTTP pool initialisatie gefaald: fail

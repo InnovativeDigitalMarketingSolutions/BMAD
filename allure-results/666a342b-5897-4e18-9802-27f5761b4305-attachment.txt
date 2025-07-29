@@ -1,0 +1,2 @@
+❌ Architect agent test failed: assert False
+ +  where False = hasattr(<bmad.agents.Agent.Architect.architect.ArchitectAgent object at 0x11b3d6510>, 'design_api')

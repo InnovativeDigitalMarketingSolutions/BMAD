@@ -1,0 +1,4 @@
+Before first call, call_count: 0
+Function called! call_count: 1
+After first call, call_count: 1, result: 1753820434
+After second call, call_count: 1, result: 1753820434

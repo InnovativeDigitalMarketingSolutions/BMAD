@@ -1,0 +1,1 @@
+[1m[31mERROR   [0m bmad.agents.core.communication.notification_manager:notification_manager.py:70 Failed to send message: Test error

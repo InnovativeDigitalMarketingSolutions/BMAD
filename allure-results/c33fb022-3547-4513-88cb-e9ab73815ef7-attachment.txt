@@ -1,0 +1,14 @@
+[32mINFO    [0m bmad.agents.core.workflow.integrated_workflow_orchestrator:integrated_workflow_orchestrator.py:118 OpenRouter client geïnitialiseerd
+[33mWARNING [0m opentelemetry.trace:__init__.py:537 Overriding of current TracerProvider is not allowed
+[33mWARNING [0m opentelemetry.instrumentation.instrumentor:instrumentor.py:103 Attempting to instrument while already instrumented
+[32mINFO    [0m bmad.agents.core.workflow.integrated_workflow_orchestrator:integrated_workflow_orchestrator.py:129 OpenTelemetry tracer geïnitialiseerd
+[32mINFO    [0m bmad.agents.core.workflow.integrated_workflow_orchestrator:integrated_workflow_orchestrator.py:134 OPA policy engine geïnitialiseerd
+[32mINFO    [0m bmad.agents.core.workflow.integrated_workflow_orchestrator:integrated_workflow_orchestrator.py:138 Advanced Policy Engine geïnitialiseerd
+[32mINFO    [0m bmad.agents.core.workflow.integrated_workflow_orchestrator:integrated_workflow_orchestrator.py:142 LangGraph workflow orchestrator geïnitialiseerd
+[32mINFO    [0m bmad.agents.core.workflow.integrated_workflow_orchestrator:integrated_workflow_orchestrator.py:146 Prefect workflow orchestrator geïnitialiseerd
+[32mINFO    [0m bmad.agents.core.workflow.integrated_workflow_orchestrator:integrated_workflow_orchestrator.py:210 Default agent configuraties geregistreerd voor 10 agents
+[32mINFO    [0m bmad.agents.core.workflow.integrated_workflow_orchestrator:integrated_workflow_orchestrator.py:339 Workflow 'product-development' geregistreerd met 7 taken
+[32mINFO    [0m bmad.agents.core.workflow.integrated_workflow_orchestrator:integrated_workflow_orchestrator.py:339 Workflow 'ai-development' geregistreerd met 5 taken
+[32mINFO    [0m bmad.agents.core.workflow.integrated_workflow_orchestrator:integrated_workflow_orchestrator.py:334 Default workflows geregistreerd
+[32mINFO    [0m bmad.agents.core.workflow.integrated_workflow_orchestrator:integrated_workflow_orchestrator.py:106 Integrated Workflow Orchestrator geïnitialiseerd
+[32mINFO    [0m bmad.agents.core.workflow.integrated_workflow_orchestrator:integrated_workflow_orchestrator.py:339 Workflow 'test_workflow' geregistreerd met 1 taken

@@ -1,0 +1,1 @@
+{"timestamp": "2025-07-29 22:03:48,608", "level": "INFO", "module": "bmad.agents.core.ai.confidence_scoring", "message": "[CONFIDENCE] ProductOwner - create_user_story: 0.68 (medium)"}

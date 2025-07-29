@@ -1,0 +1,1 @@
+{"timestamp": "2025-07-29 22:03:48,738", "level": "INFO", "module": "bmad.agents.core.ai.confidence_scoring", "message": "[CONFIDENCE] SecurityDeveloper - implement_authentication: 0.50 (medium)"}

@@ -1,0 +1,1 @@
+[32mINFO    [0m bmad.agents.Agent.FrontendDeveloper.frontenddeveloper:frontenddeveloper.py:47 FrontendDeveloper Agent geïnitialiseerd (lazy loading)

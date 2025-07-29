@@ -1,0 +1,8 @@
+[1m[31mERROR   [0m root:message_bus.py:37 [MessageBus] Fout in subscriber callback: Test error
+Traceback (most recent call last):
+  File "/Users/yannickmacgillavry/Projects/BMAD/bmad/agents/core/communication/message_bus.py", line 35, in publish
+    callback(event_obj)
+    ~~~~~~~~^^^^^^^^^^^
+  File "/Users/yannickmacgillavry/Projects/BMAD/tests/unit/core/test_message_bus_coverage.py", line 119, in error_callback
+    raise ValueError("Test error")
+ValueError: Test error

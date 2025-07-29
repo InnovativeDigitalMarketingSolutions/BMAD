@@ -1,0 +1,1 @@
+{"uuid": "4fb82706-2025-4686-8e5f-bfaf8df40b39", "children": ["801b1b85-c39c-416f-965d-d268ef9be1de"], "befores": [{"name": "mock_supabase", "status": "passed", "start": 1753819436242, "stop": 1753819436243}], "afters": [{"name": "mock_supabase::0", "status": "passed", "start": 1753819436243, "stop": 1753819436243}], "start": 1753819436242, "stop": 1753819436243}

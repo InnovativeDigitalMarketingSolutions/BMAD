@@ -1,0 +1,6 @@
+{"timestamp": "2025-07-29 22:03:42,189", "level": "INFO", "module": "bmad.agents.core.workflow.advanced_workflow", "message": "Task executor geregistreerd voor type: ProductOwner"}
+{"timestamp": "2025-07-29 22:03:42,189", "level": "INFO", "module": "bmad.agents.core.workflow.advanced_workflow", "message": "Task executor geregistreerd voor type: Architect"}
+{"timestamp": "2025-07-29 22:03:42,189", "level": "INFO", "module": "bmad.agents.core.workflow.advanced_workflow", "message": "Task executor geregistreerd voor type: FullstackDeveloper"}
+{"timestamp": "2025-07-29 22:03:42,189", "level": "INFO", "module": "bmad.agents.core.workflow.advanced_workflow", "message": "Task executor geregistreerd voor type: TestEngineer"}
+{"timestamp": "2025-07-29 22:03:42,189", "level": "INFO", "module": "bmad.agents.core.workflow.advanced_workflow", "message": "Workflow 'simple_workflow' geregistreerd met 2 taken"}
+{"timestamp": "2025-07-29 22:03:42,189", "level": "INFO", "module": "bmad.agents.core.workflow.advanced_workflow", "message": "Workflow 'simple_workflow' gestart met ID: simple_workflow_1753819422"}

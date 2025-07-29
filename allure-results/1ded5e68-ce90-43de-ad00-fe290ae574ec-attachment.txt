@@ -1,0 +1,1 @@
+[32mINFO    [0m bmad:monitoring.py:654 {"event_type": "test_event", "message": "Test event message", "timestamp": "2025-07-29T22:03:55.128853", "test_data": "value"}

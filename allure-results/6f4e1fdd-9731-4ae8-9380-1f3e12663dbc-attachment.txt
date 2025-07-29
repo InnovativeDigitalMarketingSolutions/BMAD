@@ -1,0 +1,1 @@
+[32mINFO    [0m bmad:monitoring.py:654 {"event_type": "test_conv_event", "message": "Test convenience function", "timestamp": "2025-07-29T22:03:50.201892"}

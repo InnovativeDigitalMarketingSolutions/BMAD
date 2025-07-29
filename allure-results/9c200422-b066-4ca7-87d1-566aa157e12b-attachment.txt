@@ -1,0 +1,14 @@
+DEBUG: ask_openai_with_confidence called with prompt: Schrijf een korte user story voor een login feature.
+DEBUG: context: {'task': 'create_user_story', 'agent': 'ProductOwner', 'requirement': 'User login'}
+DEBUG: model: None
+DEBUG: OPENAI_API_KEY: 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
+DEBUG: Using model: gpt-4.1-nano
+DEBUG: Generated cache key: caff51965f56d1dd25517ae1d1a0495314ba785106626b4773b80d78b96a2490
+DEBUG: Found cached response: {'prompt': 'Schrijf een korte user story voor een login feature.', 'answer': 'Als gebruiker wil ik mij kunnen aanmelden met mijn gebruikersnaam en wachtwoord, zodat ik toegang krijg tot mijn persoonlijke account en mijn gegevens kan bekijken en beheren.', 'llm_confidence': 0.5}
+DEBUG: ask_openai_with_confidence called with prompt: Schrijf een korte user story voor een login feature.
+DEBUG: context: {'task': 'create_user_story', 'agent': 'ProductOwner', 'requirement': 'User login'}
+DEBUG: model: None
+DEBUG: OPENAI_API_KEY: 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
+DEBUG: Using model: gpt-4.1-nano
+DEBUG: Generated cache key: caff51965f56d1dd25517ae1d1a0495314ba785106626b4773b80d78b96a2490
+DEBUG: Found cached response: {'prompt': 'Schrijf een korte user story voor een login feature.', 'answer': 'Als gebruiker wil ik mij kunnen aanmelden met mijn gebruikersnaam en wachtwoord, zodat ik toegang krijg tot mijn persoonlijke account en mijn gegevens kan bekijken en beheren.', 'llm_confidence': 0.5}

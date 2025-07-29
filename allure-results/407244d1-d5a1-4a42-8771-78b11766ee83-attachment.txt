@@ -1,0 +1,3 @@
+{"timestamp": "2025-07-29 22:03:48,963", "level": "INFO", "module": "bmad.agents.core.data.connection_pool", "message": "Pool http gesloten"}
+{"timestamp": "2025-07-29 22:03:48,963", "level": "INFO", "module": "bmad.agents.core.data.connection_pool", "message": "Pool postgres gesloten"}
+{"timestamp": "2025-07-29 22:03:48,963", "level": "INFO", "module": "bmad.agents.core.data.connection_pool", "message": "Pool redis gesloten"}

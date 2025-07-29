@@ -1,0 +1,77 @@
+[1m[31mERROR   [0m root:context_test.py:23 [AiDeveloper] Fout bij publiceren/saven: {'message': 'JSON could not be generated', 'code': 401, 'hint': 'Refer to full message for details', 'details': 'b\'{"message":"Invalid API key","hint":"Double check your Supabase `anon` or `service_role` API key."}\''}
+Traceback (most recent call last):
+  File "/Users/yannickmacgillavry/Projects/BMAD/path/to/venv/lib/python3.13/site-packages/postgrest/_sync/request_builder.py", line 77, in execute
+    json_obj = model_validate_json(APIErrorFromJSON, r.content)
+  File "/Users/yannickmacgillavry/Projects/BMAD/path/to/venv/lib/python3.13/site-packages/postgrest/utils.py", line 69, in model_validate_json
+    return model.model_validate_json(contents)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/Users/yannickmacgillavry/Projects/BMAD/path/to/venv/lib/python3.13/site-packages/pydantic/main.py", line 746, in model_validate_json
+    return cls.__pydantic_validator__.validate_json(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        json_data, strict=strict, context=context, by_alias=by_alias, by_name=by_name
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+pydantic_core._pydantic_core.ValidationError: 2 validation errors for APIErrorFromJSON
+code
+  Field required [type=missing, input_value={'message': 'Invalid API ...service_role` API key.'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+details
+  Field required [type=missing, input_value={'message': 'Invalid API ...service_role` API key.'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/yannickmacgillavry/Projects/BMAD/bmad/agents/core/utils/context_test.py", line 15, in test_context_sharing
+    save_context(
+    ~~~~~~~~~~~~^
+        agent_name="AiDeveloper",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<2 lines>...
+        updated_by="AiDeveloper"
+        ^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "/Users/yannickmacgillavry/Projects/BMAD/bmad/agents/core/data/supabase_context.py", line 53, in save_context
+    raise e
+  File "/Users/yannickmacgillavry/Projects/BMAD/bmad/agents/core/data/supabase_context.py", line 44, in save_context
+    supabase.table(CONTEXT_TABLE).upsert(data, on_conflict=on_conflict).execute()
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "/Users/yannickmacgillavry/Projects/BMAD/path/to/venv/lib/python3.13/site-packages/postgrest/_sync/request_builder.py", line 80, in execute
+    raise APIError(generate_default_error_message(r))
+postgrest.exceptions.APIError: {'message': 'JSON could not be generated', 'code': 401, 'hint': 'Refer to full message for details', 'details': 'b\'{"message":"Invalid API key","hint":"Double check your Supabase `anon` or `service_role` API key."}\''}
+[1m[31mERROR   [0m root:context_test.py:33 [FullstackDeveloper] Fout bij ophalen context: {'message': 'JSON could not be generated', 'code': 401, 'hint': 'Refer to full message for details', 'details': 'b\'{"message":"Invalid API key","hint":"Double check your Supabase `anon` or `service_role` API key."}\''}
+Traceback (most recent call last):
+  File "/Users/yannickmacgillavry/Projects/BMAD/path/to/venv/lib/python3.13/site-packages/postgrest/_sync/request_builder.py", line 77, in execute
+    json_obj = model_validate_json(APIErrorFromJSON, r.content)
+  File "/Users/yannickmacgillavry/Projects/BMAD/path/to/venv/lib/python3.13/site-packages/postgrest/utils.py", line 69, in model_validate_json
+    return model.model_validate_json(contents)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^
+  File "/Users/yannickmacgillavry/Projects/BMAD/path/to/venv/lib/python3.13/site-packages/pydantic/main.py", line 746, in model_validate_json
+    return cls.__pydantic_validator__.validate_json(
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^
+        json_data, strict=strict, context=context, by_alias=by_alias, by_name=by_name
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+pydantic_core._pydantic_core.ValidationError: 2 validation errors for APIErrorFromJSON
+code
+  Field required [type=missing, input_value={'message': 'Invalid API ...service_role` API key.'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+details
+  Field required [type=missing, input_value={'message': 'Invalid API ...service_role` API key.'}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/missing
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/yannickmacgillavry/Projects/BMAD/bmad/agents/core/utils/context_test.py", line 27, in test_context_sharing
+    context = get_context("AiDeveloper", context_type="pipeline_status")
+  File "/Users/yannickmacgillavry/Projects/BMAD/bmad/agents/core/data/supabase_context.py", line 83, in get_context
+    raise e
+  File "/Users/yannickmacgillavry/Projects/BMAD/bmad/agents/core/data/supabase_context.py", line 71, in get_context
+    result = query.execute()
+  File "/Users/yannickmacgillavry/Projects/BMAD/path/to/venv/lib/python3.13/site-packages/postgrest/_sync/request_builder.py", line 80, in execute
+    raise APIError(generate_default_error_message(r))
+postgrest.exceptions.APIError: {'message': 'JSON could not be generated', 'code': 401, 'hint': 'Refer to full message for details', 'details': 'b\'{"message":"Invalid API key","hint":"Double check your Supabase `anon` or `service_role` API key."}\''}

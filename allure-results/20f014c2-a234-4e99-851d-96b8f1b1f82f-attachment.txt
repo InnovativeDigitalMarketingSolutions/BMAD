@@ -1,0 +1,2 @@
+usage: bmad.py [agent] [command ...]
+bmad.py: error: unrecognized arguments: --help

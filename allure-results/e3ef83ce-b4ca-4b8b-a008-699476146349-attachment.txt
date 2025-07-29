@@ -1,0 +1,1 @@
+{"timestamp": "2025-07-29 22:03:55,128", "level": "INFO", "module": "bmad", "message": "{"event_type": "test_event", "message": "Test event message", "timestamp": "2025-07-29T22:03:55.128853", "test_data": "value"}"}

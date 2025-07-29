@@ -1,0 +1,1 @@
+{"timestamp": "2025-07-29 22:03:48,960", "level": "WARNING", "module": "bmad.agents.core.data.connection_pool", "message": "Stats error voor postgres: fail"}

@@ -1,0 +1,2 @@
+{"timestamp": "2025-07-29 22:03:48,743", "level": "INFO", "module": "bmad.agents.core.data.redis_cache", "message": "✅ Redis cache verbonden met connection pooling"}
+{"timestamp": "2025-07-29 22:03:48,745", "level": "WARNING", "module": "bmad.agents.core.data.redis_cache", "message": "Cache error for ask_openai_with_confidence: Invalid input of type: 'function'. Convert to a bytes, string, int or float first."}

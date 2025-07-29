@@ -1,0 +1,5 @@
+DEBUG SLACK_BOT_TOKEN: xoxb-...
+DEBUG channel: #devops-alerts
+DEBUG type(channel): <class 'str'>
+DEBUG repr(channel): '#devops-alerts'
+[Slack API] Response: 200 {"ok":false,"error":"invalid_auth"}

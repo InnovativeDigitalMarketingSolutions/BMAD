@@ -1,0 +1,2 @@
+usage: bmad-run.py [-h] [--config CONFIG] [--list] [task]
+bmad-run.py: error: unrecognized arguments: test-workflow
