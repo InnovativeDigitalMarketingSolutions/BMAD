@@ -18,9 +18,9 @@ from .interfaces.projects_cli import ProjectsCLI
 from .interfaces.langgraph_cli import LangGraphCLI
 from .interfaces.performance_monitor_cli import PerformanceMonitorCLI
 from .interfaces.test_sprites_cli import TestSpritesCLI
+from .interfaces.clickup_cli import ClickUpCLI
 
 # Import other CLI tools (keeping existing structure for now)
-from .bmad_cli_clickup import ClickUpCLI
 # from .repository_integration_cli import RepositoryIntegrationCLI  # Temporarily disabled due to Prefect compatibility
 
 __all__ = [
