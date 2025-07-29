@@ -4,7 +4,7 @@ Tests for notification manager.
 
 import os
 from unittest.mock import patch
-from bmad.agents.core.notification_manager import (
+from bmad.agents.core.communication.notification_manager import (
     NotificationManager,
     NotificationType,
     get_notification_manager,
@@ -47,7 +47,7 @@ class TestNotificationManager:
         # Should use slack when webhook not available
         assert manager.notification_type in [NotificationType.SLACK, NotificationType.WEBHOOK]
     
-    @patch('bmad.agents.core.notification_manager.send_webhook_message')
+    @patch('bmad.agents.core.communication.notification_manager.send_webhook_message')
     def test_send_message_webhook(self, mock_webhook):
         """Test send_message with webhook."""
         mock_webhook.return_value = True
@@ -58,7 +58,7 @@ class TestNotificationManager:
         assert result is True
         mock_webhook.assert_called_once()
     
-    @patch('bmad.agents.core.notification_manager.send_slack_message')
+    @patch('bmad.agents.core.communication.notification_manager.send_slack_message')
     def test_send_message_slack(self, mock_slack):
         """Test send_message with slack."""
         mock_slack.return_value = True
@@ -69,7 +69,7 @@ class TestNotificationManager:
         assert result is True
         mock_slack.assert_called_once()
     
-    @patch('bmad.agents.core.notification_manager.send_webhook_hitl_alert')
+    @patch('bmad.agents.core.communication.notification_manager.send_webhook_hitl_alert')
     def test_send_hitl_alert_webhook(self, mock_webhook):
         """Test send_hitl_alert with webhook."""
         mock_webhook.return_value = True
@@ -80,7 +80,7 @@ class TestNotificationManager:
         assert result is True
         mock_webhook.assert_called_once()
     
-    @patch('bmad.agents.core.notification_manager.send_human_in_loop_alert')
+    @patch('bmad.agents.core.communication.notification_manager.send_human_in_loop_alert')
     def test_send_hitl_alert_slack(self, mock_slack):
         """Test send_hitl_alert with slack."""
         mock_slack.return_value = True
@@ -91,7 +91,7 @@ class TestNotificationManager:
         assert result is True
         mock_slack.assert_called_once()
     
-    @patch('bmad.agents.core.notification_manager.send_webhook_workflow_notification')
+    @patch('bmad.agents.core.communication.notification_manager.send_webhook_workflow_notification')
     def test_send_workflow_notification_webhook(self, mock_webhook):
         """Test send_workflow_notification with webhook."""
         mock_webhook.return_value = True
@@ -102,7 +102,7 @@ class TestNotificationManager:
         assert result is True
         mock_webhook.assert_called_once()
     
-    @patch('bmad.agents.core.notification_manager.send_slack_message')
+    @patch('bmad.agents.core.communication.notification_manager.send_slack_message')
     def test_send_workflow_notification_slack(self, mock_slack):
         """Test send_workflow_notification with slack."""
         mock_slack.return_value = True
@@ -138,7 +138,7 @@ class TestGlobalFunctions:
         manager2 = get_notification_manager()
         assert manager is manager2
     
-    @patch('bmad.agents.core.notification_manager.send_webhook_message')
+    @patch('bmad.agents.core.communication.notification_manager.send_webhook_message')
     def test_send_notification(self, mock_webhook):
         """Test send_notification function."""
         mock_webhook.return_value = True
@@ -148,7 +148,7 @@ class TestGlobalFunctions:
         assert result is True
         mock_webhook.assert_called_once()
     
-    @patch('bmad.agents.core.notification_manager.send_webhook_hitl_alert')
+    @patch('bmad.agents.core.communication.notification_manager.send_webhook_hitl_alert')
     def test_send_hitl_notification(self, mock_webhook):
         """Test send_hitl_notification function."""
         mock_webhook.return_value = True
@@ -158,7 +158,7 @@ class TestGlobalFunctions:
         assert result is True
         mock_webhook.assert_called_once()
     
-    @patch('bmad.agents.core.notification_manager.send_webhook_workflow_notification')
+    @patch('bmad.agents.core.communication.notification_manager.send_webhook_workflow_notification')
     def test_send_workflow_notification(self, mock_webhook):
         """Test send_workflow_notification function."""
         mock_webhook.return_value = True
@@ -186,7 +186,7 @@ class TestNotificationType:
 class TestErrorHandling:
     """Test error handling in notification manager."""
     
-    @patch('bmad.agents.core.notification_manager.send_webhook_message')
+    @patch('bmad.agents.core.communication.notification_manager.send_webhook_message')
     def test_send_message_error_handling(self, mock_webhook):
         """Test error handling in send_message."""
         mock_webhook.side_effect = Exception("Test error")
@@ -196,7 +196,7 @@ class TestErrorHandling:
         
         assert result is False
     
-    @patch('bmad.agents.core.notification_manager.send_webhook_hitl_alert')
+    @patch('bmad.agents.core.communication.notification_manager.send_webhook_hitl_alert')
     def test_send_hitl_alert_error_handling(self, mock_webhook):
         """Test error handling in send_hitl_alert."""
         mock_webhook.side_effect = Exception("Test error")
@@ -206,7 +206,7 @@ class TestErrorHandling:
         
         assert result is False
     
-    @patch('bmad.agents.core.notification_manager.send_webhook_workflow_notification')
+    @patch('bmad.agents.core.communication.notification_manager.send_webhook_workflow_notification')
     def test_send_workflow_notification_error_handling(self, mock_webhook):
         """Test error handling in send_workflow_notification."""
         mock_webhook.side_effect = Exception("Test error")

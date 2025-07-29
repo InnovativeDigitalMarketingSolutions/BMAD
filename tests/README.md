@@ -1,200 +1,169 @@
-# BMAD Test Suite Documentation
+# BMAD Test Suite
 
-## Huidige Problemen
+## Test Pyramid Structuur
 
-### 1. **Grote Coverage Bestanden**
-- `test_clickup_integration_coverage.py` (38KB, 799 lines)
-- `test_llm_client_coverage.py` (24KB, 635 lines)
-- `test_advanced_workflow_coverage.py` (22KB, 581 lines)
-- `test_prefect_workflow.py` (22KB, 568 lines)
-
-**Probleem**: Deze bestanden zijn te groot, moeilijk te onderhouden en testen te veel functionaliteit in één bestand.
-
-### 2. **Verouderde Imports**
-Veel tests proberen te importeren vanuit modules die niet meer bestaan:
-- `bmad.agents.core.advanced_workflow` (verplaatst naar `integrations/`)
-- `bmad.agents.core.langgraph_workflow` (verplaatst naar `integrations/`)
-- `bmad.agents.core.prefect_workflow` (verplaatst naar `integrations/`)
-- `bmad.agents.core.webhook_notify` (verplaatst naar `integrations/`)
-
-### 3. **Geen Regressie Test Structuur**
-Tests zijn verspreid en niet systematisch georganiseerd voor regressie testing.
-
-## Voorgestelde Modulaire Test Structuur
+De BMAD test suite is georganiseerd volgens de test pyramid principes:
 
 ```
 tests/
-├── unit/                          # Unit tests per module
-│   ├── agents/                    # Agent unit tests
-│   │   ├── test_product_owner.py
-│   │   ├── test_architect.py
-│   │   └── ...
-│   ├── core/                      # Core module unit tests
-│   │   ├── test_monitoring.py
-│   │   ├── test_redis_cache.py
-│   │   ├── test_message_bus.py
-│   │   └── ...
-│   ├── cli/                       # CLI unit tests
-│   │   ├── test_figma_cli.py
-│   │   ├── test_webhook_cli.py
-│   │   └── ...
-│   └── integrations/              # Integration unit tests
-│       ├── test_clickup.py
-│       ├── test_figma.py
-│       └── ...
-├── integration/                   # Integration tests
-│   ├── test_agent_workflows.py
-│   ├── test_cli_integration.py
-│   └── test_system_integration.py
-├── regression/                    # Regressie tests
-│   ├── test_critical_paths.py
-│   ├── test_performance.py
-│   └── test_security.py
-├── e2e/                          # End-to-end tests
-│   ├── test_complete_workflows.py
-│   └── test_user_scenarios.py
-└── fixtures/                     # Test fixtures en helpers
-    ├── conftest.py
-    ├── mock_data.py
-    └── test_utils.py
+├── unit/           # Unit tests (70% van tests) - 15 tests
+│   ├── agents/     # Agent unit tests
+│   ├── core/       # Core module unit tests
+│   ├── cli/        # CLI unit tests
+│   └── utils/      # Utility unit tests
+├── integration/    # Integration tests (20% van tests) - 13 tests
+│   ├── workflows/  # Workflow integration tests
+│   ├── agents/     # Agent integration tests
+│   └── external/   # External service integration
+├── regression/     # Regression tests (5% van tests) - 0 tests
+│   ├── critical/   # Critical path regression
+│   ├── performance/ # Performance regression
+│   └── security/   # Security regression
+├── e2e/           # End-to-end tests (5% van tests) - 0 tests
+│   ├── workflows/  # Complete workflow e2e
+│   └── scenarios/  # Business scenario e2e
+└── fixtures/      # Test fixtures en data
+    ├── data/       # Test data files
+    ├── mocks/      # Mock objects
+    └── configs/    # Test configuraties
 ```
 
 ## Test Categorieën
 
-### 1. **Unit Tests** (per module)
-- **Doel**: Test individuele functies en classes
-- **Scope**: Één module per test bestand
-- **Grootte**: Max 200-300 regels per bestand
-- **Coverage**: 90%+ per module
+### Unit Tests (`tests/unit/`)
+- **Doel**: Testen van individuele functies en klassen in isolatie
+- **Coverage**: 70% van alle tests
+- **Snelheid**: Zeer snel (< 1 seconde per test)
+- **Mocking**: Uitgebreid gebruik van mocks voor externe dependencies
 
-### 2. **Integration Tests**
-- **Doel**: Test interactie tussen modules
-- **Scope**: Meerdere modules samen
-- **Focus**: API contracts, data flow, error handling
+**Voorbeelden:**
+- `test_confidence_scoring.py` - Confidence scoring algoritme
+- `test_redis_cache_coverage.py` - Redis cache functionaliteit
+- `test_llm_client_coverage.py` - LLM client unit tests
 
-### 3. **Regressie Tests**
-- **Doel**: Voorkom dat bestaande functionaliteit breekt
-- **Scope**: Kritieke paden en core functionaliteit
-- **Frequentie**: Elke commit/PR
+### Integration Tests (`tests/integration/`)
+- **Doel**: Testen van interacties tussen modules en externe services
+- **Coverage**: 20% van alle tests
+- **Snelheid**: Medium (1-5 seconden per test)
+- **Mocking**: Beperkt, echte service connecties waar mogelijk
 
-### 4. **E2E Tests**
-- **Doel**: Test complete workflows
-- **Scope**: Volledige user journeys
-- **Realisme**: Productie-achtige scenarios
+**Voorbeelden:**
+- `test_advanced_workflow_coverage.py` - Workflow orchestrator integratie
+- `test_clickup_integration.py` - ClickUp API integratie
+- `test_bmad_agents_cli.py` - Agent CLI integratie
 
-## Migratie Plan
+### Regression Tests (`tests/regression/`)
+- **Doel**: Testen van kritieke paden en performance regressies
+- **Coverage**: 5% van alle tests
+- **Snelheid**: Langzaam (5-30 seconden per test)
+- **Focus**: Kritieke business logic en performance
 
-### Fase 1: Cleanup (Huidige)
-1. ✅ Fix import errors in bestaande tests
-2. ✅ Update CLI test imports
-3. 🔄 Identificeer en repareer verouderde tests
+**Status**: Nog te implementeren
 
-### Fase 2: Modularisatie
-1. 🔄 Split grote coverage bestanden
-2. 🔄 Herorganiseer tests per module
-3. 🔄 Implementeer regressie test structuur
+### End-to-End Tests (`tests/e2e/`)
+- **Doel**: Testen van complete workflows en business scenarios
+- **Coverage**: 5% van alle tests
+- **Snelheid**: Zeer langzaam (30+ seconden per test)
+- **Focus**: Complete user journeys
 
-### Fase 3: Uitbreiding
-1. 🔄 Verhoog test coverage naar 90%+
-2. 🔄 Voeg performance tests toe
-3. 🔄 Implementeer security tests
+**Status**: Nog te implementeren
 
-## Regressie Test Strategie
+## Test Fixtures (`tests/fixtures/`)
 
-### Kritieke Paden
-1. **Agent Initialisatie**: Alle agents kunnen starten
-2. **CLI Functionaliteit**: Alle CLI commands werken
-3. **Data Persistence**: Redis en Supabase operaties
-4. **Workflow Execution**: Basic workflow runs
-5. **Error Handling**: Graceful error recovery
+### Data (`tests/fixtures/data/`)
+- Test data bestanden
+- Mock responses
+- Configuration templates
 
-### Performance Regressie
-1. **Response Times**: API response times binnen limieten
-2. **Memory Usage**: Geen memory leaks
-3. **Concurrent Operations**: Multi-user scenarios
+### Mocks (`tests/fixtures/mocks/`)
+- Mock object definities
+- Debug utilities
+- Disabled test modules
 
-### Security Regressie
-1. **Authentication**: API security
-2. **Input Validation**: XSS, SQL injection prevention
-3. **Secrets Management**: Geen hardcoded secrets
+### Configs (`tests/fixtures/configs/`)
+- Test configuraties
+- Environment setups
+- Test scenario definities
+
+## Test Uitvoering
+
+### Alle Tests Uitvoeren
+```bash
+python -m pytest tests/ -v
+```
+
+### Specifieke Test Categorieën
+```bash
+# Unit tests alleen
+python -m pytest tests/unit/ -v
+
+# Integration tests alleen
+python -m pytest tests/integration/ -v
+
+# Workflow tests alleen
+python -m pytest tests/integration/workflows/ -v
+
+# Agent tests alleen
+python -m pytest tests/unit/agents/ tests/integration/agents/ -v
+```
+
+### Coverage Rapport
+```bash
+python -m pytest tests/ --cov=bmad --cov-report=html
+```
 
 ## Test Best Practices
 
-### 1. **Naming Conventions**
-```python
-# Unit tests
-test_module_function_scenario_expected_result()
-test_agent_initialization_with_valid_config_returns_agent()
+### ISTQB & TMAP Principes
+1. **Test Pyramid**: 70% unit, 20% integration, 5% regression, 5% e2e
+2. **Test Isolation**: Elke test is onafhankelijk
+3. **Test Data Management**: Gebruik fixtures voor herbruikbare data
+4. **Mocking Strategy**: Mock externe dependencies in unit tests
+5. **Assertion Quality**: Gebruik specifieke assertions
 
-# Integration tests
-test_module_a_integrates_with_module_b_successfully()
-test_cli_command_creates_expected_workflow()
+### Code Quality
+- **Naming**: Duidelijke test namen die het scenario beschrijven
+- **Documentation**: Docstrings voor alle test functies
+- **Error Handling**: Test zowel success als failure scenarios
+- **Performance**: Tests moeten snel uitvoerbaar zijn
 
-# Regression tests
-test_critical_path_agent_workflow_completes_successfully()
-test_performance_api_response_time_under_threshold()
-```
+### Maintenance
+- **No Test Removal**: Tests worden niet verwijderd, alleen verbeterd of uitgebreid
+- **Bug Fixing**: Fix bugs in code, niet in tests
+- **Regular Updates**: Update tests bij code wijzigingen
+- **Coverage Monitoring**: Monitor test coverage trends
 
-### 2. **Test Structure**
-```python
-class TestModuleName:
-    """Test module functionality."""
-    
-    def setup_method(self):
-        """Setup test fixtures."""
-        pass
-    
-    def test_specific_functionality(self):
-        """Test specific functionality."""
-        # Arrange
-        # Act
-        # Assert
-        
-    def teardown_method(self):
-        """Cleanup after tests."""
-        pass
-```
+## Test Status
 
-### 3. **Mocking Strategy**
-- **Unit tests**: Mock external dependencies
-- **Integration tests**: Mock only external APIs
-- **E2E tests**: Minimal mocking, real data
+### Huidige Status
+- ✅ **Unit Tests**: 15 tests, allemaal werkend
+- ✅ **Integration Tests**: 13 tests, allemaal werkend
+- ⏳ **Regression Tests**: 0 tests, te implementeren
+- ⏳ **E2E Tests**: 0 tests, te implementeren
 
-## Implementatie Roadmap
+### Volgende Stappen
+1. Implementeer regression tests voor kritieke paden
+2. Implementeer e2e tests voor complete workflows
+3. Verhoog test coverage naar 90%+
+4. Implementeer performance tests
+5. Implementeer security tests
 
-### Week 1: Cleanup
-- [x] Fix CLI test imports
-- [ ] Fix verouderde module imports
-- [ ] Identificeer en repareer broken tests
+## Troubleshooting
 
-### Week 2: Modularisatie
-- [ ] Split `test_clickup_integration_coverage.py`
-- [ ] Split `test_llm_client_coverage.py`
-- [ ] Split `test_advanced_workflow_coverage.py`
+### Import Errors
+Als je import errors tegenkomt:
+1. Controleer of de module bestaat in de juiste directory
+2. Update import paths naar de nieuwe modulaire structuur
+3. Zorg dat `__init__.py` bestanden aanwezig zijn
 
-### Week 3: Regressie Tests
-- [ ] Implementeer kritieke pad tests
-- [ ] Implementeer performance tests
-- [ ] Implementeer security tests
+### Test Failures
+Als tests falen:
+1. Controleer of de onderliggende code correct werkt
+2. Fix bugs in de code, niet in de tests
+3. Update tests alleen als de functionaliteit is gewijzigd
 
-### Week 4: Coverage Verhoging
-- [ ] Verhoog unit test coverage naar 90%+
-- [ ] Voeg missing edge cases toe
-- [ ] Implementeer mutation testing
-
-## Success Metrics
-
-### Kwaliteit
-- **Test Coverage**: 90%+ voor alle modules
-- **Test Execution Time**: < 5 minuten voor volledige suite
-- **False Positives**: < 1% van tests
-
-### Onderhoudbaarheid
-- **Test Bestand Grootte**: Max 300 regels per bestand
-- **Test Duplicatie**: < 5% duplicatie
-- **Documentatie**: 100% van tests gedocumenteerd
-
-### Betrouwbaarheid
-- **Regressie Detection**: 100% van kritieke paden getest
-- **Performance Monitoring**: Automatische performance regressie detection
-- **Security Validation**: Automatische security scanning 
+### Performance Issues
+Als tests te langzaam zijn:
+1. Gebruik meer mocking in unit tests
+2. Paralleliseer test uitvoering
+3. Optimaliseer test data setup 
