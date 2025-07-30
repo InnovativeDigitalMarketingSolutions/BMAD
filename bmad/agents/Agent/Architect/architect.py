@@ -39,7 +39,8 @@ TEMPLATE_PATHS = {
 
 class ArchitectAgent:
     def __init__(self):
-        pass
+        # Set agent name
+        self.agent_name = "Architect"
 
     def show_help(self):
         print(

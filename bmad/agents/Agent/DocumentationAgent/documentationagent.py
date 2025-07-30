@@ -37,6 +37,8 @@ logger = logging.getLogger(__name__)
 
 class DocumentationAgent:
     def __init__(self):
+        # Set agent name
+        self.agent_name = "DocumentationAgent"
         self.monitor = PerformanceOptimizer()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
