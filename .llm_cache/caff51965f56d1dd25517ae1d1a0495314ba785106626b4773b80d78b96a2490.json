@@ -1,1 +1,9 @@
-{"prompt": "Schrijf een korte user story voor een login feature.", "answer": "Als gebruiker wil ik mij kunnen aanmelden met mijn gebruikersnaam en wachtwoord, zodat ik toegang krijg tot mijn persoonlijke account en mijn gegevens kan bekijken en beheren.", "llm_confidence": 0.5}
+{
+  "answer": "Test user story",
+  "llm_confidence": 0.663,
+  "model": "unknown",
+  "usage": {
+    "total_tokens": 10
+  },
+  "cached": false
+}
