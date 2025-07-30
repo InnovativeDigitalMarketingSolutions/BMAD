@@ -177,4 +177,29 @@ docker-compose.override.yml
 # Local development
 local/
 dev/
-development/ 
+development/
+
+# Temporary report files (auto-generated during testing)
+docs/reports/temporary/
+TestApp_config_*.json
+
+# Cache directories
+.ruff_cache/
+.llm_cache/
+.benchmarks/
+
+# Virtual environment path
+path/to/venv/
+
+# Test results
+bandit-report.json
+security-scan-results.json
+security-improved-scan.json
+
+# Temporary files
+event_log.json
+metrics.json
+test_request.json
+
+# Keep improvement reports
+!docs/reports/agent-improvements/*IMPROVEMENT_REPORT.md 
