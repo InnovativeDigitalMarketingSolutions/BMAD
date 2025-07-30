@@ -166,6 +166,12 @@ Release Manager Agent Commands:
 
     def create_release(self, version: str = "1.2.0", description: str = "Feature release") -> Dict[str, Any]:
         """Create new release plan with enhanced functionality."""
+        # Input validation
+        if not isinstance(version, str):
+            raise TypeError("version must be a string")
+        if not isinstance(description, str):
+            raise TypeError("description must be a string")
+            
         logger.info(f"Creating release plan for version {version}")
 
         # Simulate release creation
@@ -201,34 +207,36 @@ Release Manager Agent Commands:
                 "Documentation updated",
                 "Stakeholder approval received"
             ],
-            "deployment_strategy": {
-                "type": "blue-green",
-                "rollback_plan": "Automatic rollback on failure",
-                "monitoring": "Enhanced monitoring during deployment",
-                "approval_required": True
+            "deployment_plan": {
+                "deployment_strategy": "Blue-green deployment",
+                "deployment_window": "2025-07-28 02:00-04:00 UTC",
+                "estimated_downtime": "5 minutes",
+                "rollback_threshold": "5% error rate",
+                "monitoring_plan": "Enhanced monitoring during deployment"
             },
             "risk_assessment": {
-                "risk_level": "medium",
-                "identified_risks": [
-                    "Database migration complexity",
-                    "Third-party service dependencies",
-                    "User experience changes"
-                ],
+                "high_risk_areas": ["Database migrations", "Third-party integrations"],
                 "mitigation_strategies": [
-                    "Comprehensive testing",
-                    "Gradual rollout",
-                    "Monitoring and alerting"
-                ]
+                    "Comprehensive testing in staging",
+                    "Rollback procedures in place",
+                    "Monitoring and alerting configured"
+                ],
+                "risk_level": "medium"
+            },
+            "stakeholder_communication": {
+                "notifications": ["Development team", "Product team", "Operations team"],
+                "communication_channels": ["Slack", "Email", "JIRA"],
+                "escalation_procedures": "Contact release manager immediately"
             },
             "timestamp": datetime.now().isoformat(),
             "agent": "ReleaseManagerAgent"
         }
 
         # Log performance metrics
-        self.monitor._record_metric("ReleaseManager", MetricType.SUCCESS_RATE, 95, "%")
+        self.monitor._record_metric("ReleaseManagerAgent", MetricType.SUCCESS_RATE, 95, "%")
 
         # Add to release history
-        release_entry = f"{datetime.now().isoformat()}: Release {version} plan created successfully"
+        release_entry = f"{datetime.now().isoformat()}: Release created - {version} - {description}"
         self.release_history.append(release_entry)
         self._save_release_history()
 
@@ -236,10 +244,14 @@ Release Manager Agent Commands:
         return release_result
 
     def approve_release(self, version: str = "1.2.0") -> Dict[str, Any]:
-        """Approve release for deployment."""
-        logger.info(f"Approving release {version} for deployment")
+        """Approve release for deployment with enhanced functionality."""
+        # Input validation
+        if not isinstance(version, str):
+            raise TypeError("version must be a string")
+            
+        logger.info(f"Approving release version {version}")
 
-        # Simulate release approval
+        # Simulate approval process
         time.sleep(1)
 
         approval_result = {
@@ -247,14 +259,14 @@ Release Manager Agent Commands:
             "approval_type": "Release Approval",
             "status": "approved",
             "approval_details": {
-                "approved_by": "Product Owner",
-                "approval_date": datetime.now().isoformat(),
                 "approval_criteria": [
                     "All tests passing",
                     "Security review completed",
                     "Performance benchmarks met",
                     "User acceptance testing passed"
                 ],
+                "approved_by": "Product Owner",
+                "approval_date": datetime.now().isoformat(),
                 "conditions": [
                     "Monitor deployment closely",
                     "Have rollback plan ready",
@@ -267,149 +279,171 @@ Release Manager Agent Commands:
                 "estimated_downtime": "5 minutes",
                 "rollback_threshold": "5% error rate"
             },
-            "stakeholder_notifications": [
-                "Development team notified",
-                "Operations team notified",
-                "Product team notified",
-                "Customer success team notified"
+            "quality_gates": {
+                "code_quality": "Passed",
+                "security_scan": "Passed",
+                "performance_tests": "Passed",
+                "integration_tests": "Passed"
+            },
+            "stakeholder_signoffs": {
+                "product_owner": "Approved",
+                "tech_lead": "Approved",
+                "security_team": "Approved",
+                "operations_team": "Approved"
+            },
+            "timestamp": datetime.now().isoformat(),
+            "agent": "ReleaseManagerAgent"
+        }
+
+        # Log performance metrics
+        self.monitor._record_metric("ReleaseManagerAgent", MetricType.SUCCESS_RATE, 92, "%")
+
+        logger.info(f"Release approved: {approval_result}")
+        return approval_result
+
+    def deploy_release(self, version: str = "1.2.0") -> Dict[str, Any]:
+        """Deploy release to production with enhanced functionality."""
+        # Input validation
+        if not isinstance(version, str):
+            raise TypeError("version must be a string")
+            
+        logger.info(f"Deploying release version {version}")
+
+        # Simulate deployment process
+        time.sleep(2)
+
+        deployment_result = {
+            "version": version,
+            "deployment_type": "Production Deployment",
+            "status": "deployed",
+            "deployment_details": {
+                "deployment_strategy": "Blue-green deployment",
+                "deployment_start": datetime.now().isoformat(),
+                "deployment_end": datetime.now().isoformat(),
+                "deployment_duration": "15 minutes",
+                "deployment_team": "DevOps Team"
+            },
+            "deployment_environment": {
+                "environment": "Production",
+                "region": "us-east-1",
+                "infrastructure": "AWS EKS",
+                "load_balancer": "ALB",
+                "database": "RDS PostgreSQL"
+            },
+            "deployment_status": {
+                "overall_status": "Success",
+                "frontend_deployment": "Completed",
+                "backend_deployment": "Completed",
+                "database_migrations": "Completed",
+                "health_checks": "Passed"
+            },
+            "monitoring_info": {
+                "application_metrics": "All systems operational",
+                "error_rate": "0.1%",
+                "response_time": "150ms",
+                "throughput": "1000 requests/second",
+                "resource_utilization": "Normal"
+            },
+            "rollback_status": {
+                "rollback_available": True,
+                "rollback_window": "30 minutes",
+                "previous_version": "1.1.0",
+                "rollback_procedure": "Automated rollback on failure"
+            },
+            "post_deployment_checks": [
+                "Application health checks passed",
+                "Database connectivity verified",
+                "External integrations tested",
+                "Performance benchmarks met",
+                "Security scans completed"
             ],
             "timestamp": datetime.now().isoformat(),
             "agent": "ReleaseManagerAgent"
         }
 
         # Log performance metrics
-        self.monitor._record_metric("ReleaseManager", MetricType.SUCCESS_RATE, 98, "%")
-
-        logger.info(f"Release approved: {approval_result}")
-        return approval_result
-
-    def deploy_release(self, version: str = "1.2.0") -> Dict[str, Any]:
-        """Deploy release to production."""
-        logger.info(f"Deploying release {version} to production")
-
-        # Simulate release deployment
-        time.sleep(2)
-
-        deployment_result = {
-            "version": version,
-            "deployment_type": "Production Deployment",
-            "status": "success",
-            "deployment_phases": {
-                "pre_deployment": {
-                    "status": "completed",
-                    "checks": [
-                        "Environment validation",
-                        "Database backup",
-                        "Service health check",
-                        "Resource availability"
-                    ]
-                },
-                "deployment": {
-                    "status": "completed",
-                    "steps": [
-                        "Blue environment deployment",
-                        "Health checks",
-                        "Traffic switch",
-                        "Green environment cleanup"
-                    ]
-                },
-                "post_deployment": {
-                    "status": "completed",
-                    "verifications": [
-                        "Service health verification",
-                        "Performance monitoring",
-                        "Error rate monitoring",
-                        "User experience validation"
-                    ]
-                }
-            },
-            "deployment_metrics": {
-                "deployment_time": "8 minutes",
-                "downtime": "2 minutes",
-                "success_rate": "100%",
-                "error_rate": "0.1%",
-                "performance_impact": "minimal"
-            },
-            "monitoring_results": {
-                "response_time": "120ms (baseline: 125ms)",
-                "throughput": "1500 req/s (baseline: 1450 req/s)",
-                "error_rate": "0.1% (baseline: 0.2%)",
-                "resource_usage": "65% (baseline: 60%)"
-            },
-            "timestamp": datetime.now().isoformat(),
-            "agent": "ReleaseManagerAgent"
-        }
-
-        # Log performance metrics
-        self.monitor._record_metric("ReleaseManager", MetricType.SUCCESS_RATE, 100, "%")
+        self.monitor._record_metric("ReleaseManagerAgent", MetricType.SUCCESS_RATE, 90, "%")
 
         # Add to release history
-        release_entry = f"{datetime.now().isoformat()}: Release {version} deployed successfully to production"
-        self.release_history.append(release_entry)
+        deployment_entry = f"{datetime.now().isoformat()}: Release deployed - {version}"
+        self.release_history.append(deployment_entry)
         self._save_release_history()
 
         logger.info(f"Release deployed: {deployment_result}")
         return deployment_result
 
     def rollback_release(self, version: str = "1.2.0", reason: str = "High error rate") -> Dict[str, Any]:
-        """Rollback failed release."""
-        logger.info(f"Rolling back release {version} due to: {reason}")
+        """Rollback failed release with enhanced functionality."""
+        # Input validation
+        if not isinstance(version, str):
+            raise TypeError("version must be a string")
+        if not isinstance(reason, str):
+            raise TypeError("reason must be a string")
+            
+        logger.info(f"Rolling back release version {version}")
 
-        # Simulate rollback
+        # Simulate rollback process
         time.sleep(2)
 
         rollback_result = {
             "version": version,
-            "rollback_type": "Production Rollback",
-            "status": "completed",
+            "rollback_type": "Emergency Rollback",
+            "status": "rolled_back",
             "reason": reason,
-            "rollback_phases": {
-                "trigger": {
-                    "status": "completed",
-                    "trigger_type": "automatic",
-                    "threshold_exceeded": "Error rate > 5%"
-                },
-                "rollback": {
-                    "status": "completed",
-                    "steps": [
-                        "Traffic switch to previous version",
-                        "Health checks",
-                        "Service validation",
-                        "Monitoring verification"
-                    ]
-                },
-                "verification": {
-                    "status": "completed",
-                    "checks": [
-                        "Service health restored",
-                        "Error rate normalized",
-                        "Performance restored",
-                        "User experience validated"
-                    ]
-                }
+            "rollback_details": {
+                "rollback_trigger": reason,
+                "rollback_start": datetime.now().isoformat(),
+                "rollback_end": datetime.now().isoformat(),
+                "rollback_duration": "8 minutes",
+                "rollback_team": "DevOps Team"
             },
-            "rollback_metrics": {
-                "rollback_time": "3 minutes",
-                "downtime": "1 minute",
-                "success_rate": "100%",
-                "error_rate": "0.1% (restored)",
-                "data_loss": "none"
+            "rollback_plan": {
+                "rollback_strategy": "Immediate rollback to previous version",
+                "previous_version": "1.1.0",
+                "rollback_steps": [
+                    "Stop traffic to new version",
+                    "Revert to previous version",
+                    "Restore database state",
+                    "Verify system health",
+                    "Notify stakeholders"
+                ],
+                "rollback_automation": "Automated rollback triggered"
+            },
+            "rollback_status": {
+                "overall_status": "Completed",
+                "traffic_redirected": "Completed",
+                "version_reverted": "Completed",
+                "database_restored": "Completed",
+                "health_checks": "Passed"
+            },
+            "impact_assessment": {
+                "user_impact": "Minimal - 5 minutes of downtime",
+                "business_impact": "Low - No data loss",
+                "technical_impact": "System restored to stable state",
+                "reputation_impact": "Managed professionally"
             },
             "post_rollback_actions": [
                 "Incident investigation initiated",
                 "Root cause analysis scheduled",
-                "Stakeholders notified",
-                "Next release planning updated"
+                "Stakeholder communication sent",
+                "Lessons learned documented",
+                "Prevention measures planned"
             ],
+            "monitoring_post_rollback": {
+                "error_rate": "0.05%",
+                "response_time": "120ms",
+                "system_stability": "Stable",
+                "user_satisfaction": "High"
+            },
             "timestamp": datetime.now().isoformat(),
             "agent": "ReleaseManagerAgent"
         }
 
         # Log performance metrics
-        self.monitor._record_metric("ReleaseManager", MetricType.SUCCESS_RATE, 95, "%")
+        self.monitor._record_metric("ReleaseManagerAgent", MetricType.SUCCESS_RATE, 88, "%")
 
         # Add to rollback history
-        rollback_entry = f"{datetime.now().isoformat()}: Release {version} rolled back due to {reason}"
+        rollback_entry = f"{datetime.now().isoformat()}: Release rolled back - {version} - {reason}"
         self.rollback_history.append(rollback_entry)
         self._save_rollback_history()
 
