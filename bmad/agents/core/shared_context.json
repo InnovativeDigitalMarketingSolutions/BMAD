@@ -1,11 +1,84 @@
 {
   "events": [
     {
-      "timestamp": "2025-07-30T17:51:24.786192",
+      "timestamp": "2025-07-30T22:45:02.453564",
       "event": "test_topic",
       "data": {
         "type": "test",
         "data": "test_data"
+      }
+    },
+    {
+      "timestamp": "2025-07-30T22:45:31.033031",
+      "event": "tests_requested",
+      "data": {
+        "desc": "Tests uitvoeren"
+      }
+    },
+    {
+      "timestamp": "2025-07-30T22:45:33.041372",
+      "event": "deployment_completed",
+      "data": {
+        "desc": "Deployment afgerond"
+      }
+    },
+    {
+      "timestamp": "2025-07-30T22:45:42.626445",
+      "event": "documentation_completed",
+      "data": {
+        "status": "success",
+        "agent": "DocumentationAgent",
+        "docs_created": 3,
+        "api_docs": 1,
+        "user_guides": 1,
+        "figma_docs": 1
+      }
+    },
+    {
+      "timestamp": "2025-07-30T22:45:55.196766",
+      "event": "feedback_collected",
+      "data": {
+        "desc": "Feedback verzameld"
+      }
+    },
+    {
+      "timestamp": "2025-07-30T22:45:56.201570",
+      "event": "trends_analyzed",
+      "data": {
+        "desc": "Trends geanalyseerd"
+      }
+    },
+    {
+      "timestamp": "2025-07-30T22:47:21.904487",
+      "event": "security_findings_reported",
+      "data": {
+        "desc": "Security bevindingen gerapporteerd"
+      }
+    },
+    {
+      "timestamp": "2025-07-30T22:47:27.366175",
+      "event": "design_requested",
+      "data": {
+        "agent": "UXUIDesignerAgent",
+        "task": "Create Shadcn Button Component",
+        "timestamp": "2025-07-30T22:47:27.366033"
+      }
+    },
+    {
+      "timestamp": "2025-07-30T22:47:28.374706",
+      "event": "design_completed",
+      "data": {
+        "status": "success",
+        "agent": "UXUIDesignerAgent",
+        "component": "Button",
+        "accessibility_score": 98
+      }
+    },
+    {
+      "timestamp": "2025-07-30T22:47:29.266157",
+      "event": "test_event",
+      "data": {
+        "data": "test"
       }
     }
   ]
