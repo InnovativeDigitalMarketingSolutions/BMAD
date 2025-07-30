@@ -12,7 +12,7 @@ def mock_slack_notifications():
         return True
     
     return patch.multiple(
-        'bmad.agents.core.slack_notify',
+        'integrations.slack.slack_notify',
         send_slack_message=mock_send_slack_message,
         send_human_in_loop_alert=mock_send_human_in_loop_alert
     )
