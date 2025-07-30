@@ -141,6 +141,12 @@ Accessibility Agent Commands:
 
     def test_shadcn_component(self, component_name: str = "Button") -> Dict[str, Any]:
         """Test Shadcn component accessibility."""
+        # Input validation
+        if not isinstance(component_name, str):
+            raise TypeError("component_name must be a string")
+        if not component_name.strip():
+            raise ValueError("component_name cannot be empty")
+            
         logger.info(f"Testing Shadcn component accessibility: {component_name}")
 
         # Simulate Shadcn component accessibility testing
@@ -149,6 +155,7 @@ Accessibility Agent Commands:
         test_result = {
             "component": component_name,
             "type": "Shadcn/ui",
+            "status": "tested",
             "accessibility_score": 96,
             "tests_performed": {
                 "aria_labels": "PASS",
@@ -177,6 +184,16 @@ Accessibility Agent Commands:
                 "navigation": "Keyboard navigation works correctly",
                 "state_changes": "State changes properly communicated"
             },
+            "wcag_compliance": {
+                "wcag_2_1_aa": "Compliant",
+                "wcag_2_1_aaa": "Partially compliant",
+                "wcag_2_2": "Ready for compliance"
+            },
+            "performance_impact": {
+                "load_time": "No significant impact",
+                "memory_usage": "Optimized",
+                "bundle_size": "Minimal increase"
+            },
             "timestamp": datetime.now().isoformat(),
             "agent": "AccessibilityAgent"
         }
@@ -194,6 +211,12 @@ Accessibility Agent Commands:
 
     def validate_aria(self, component_code: str = "") -> Dict[str, Any]:
         """Validate ARIA attributes in component code."""
+        # Input validation
+        if not isinstance(component_code, str):
+            raise TypeError("component_code must be a string")
+        if not component_code.strip():
+            raise ValueError("component_code cannot be empty")
+            
         logger.info("Validating ARIA attributes")
 
         # Simulate ARIA validation
@@ -201,6 +224,7 @@ Accessibility Agent Commands:
 
         validation_result = {
             "validation_type": "ARIA attributes",
+            "status": "validated",
             "overall_score": 94,
             "checks_performed": {
                 "aria_labels": {
@@ -238,6 +262,17 @@ Accessibility Agent Commands:
                 "Ensure proper aria-expanded states for collapsible content",
                 "Use aria-live regions for dynamic content updates"
             ],
+            "wcag_compliance": {
+                "wcag_2_1_aa": "Compliant",
+                "wcag_2_1_aaa": "Partially compliant"
+            },
+            "automated_fixes": [
+                {
+                    "issue": "Missing aria-label",
+                    "suggested_fix": "Add aria-label attribute",
+                    "code_example": 'aria-label="Search"'
+                }
+            ],
             "timestamp": datetime.now().isoformat(),
             "agent": "AccessibilityAgent"
         }
@@ -250,6 +285,12 @@ Accessibility Agent Commands:
 
     def test_screen_reader(self, component_name: str = "Button") -> Dict[str, Any]:
         """Test screen reader compatibility."""
+        # Input validation
+        if not isinstance(component_name, str):
+            raise TypeError("component_name must be a string")
+        if not component_name.strip():
+            raise ValueError("component_name cannot be empty")
+            
         logger.info(f"Testing screen reader compatibility for: {component_name}")
 
         # Simulate screen reader testing
@@ -258,6 +299,7 @@ Accessibility Agent Commands:
         screen_reader_test = {
             "component": component_name,
             "test_type": "Screen reader compatibility",
+            "status": "tested",
             "overall_score": 98,
             "screen_readers_tested": {
                 "NVDA": {
@@ -297,6 +339,11 @@ Accessibility Agent Commands:
                 "Keyboard navigation is fully functional",
                 "Focus management is properly implemented"
             ],
+            "accessibility_standards": {
+                "wcag_2_1_aa": "Compliant",
+                "wcag_2_1_aaa": "Compliant",
+                "section_508": "Compliant"
+            },
             "timestamp": datetime.now().isoformat(),
             "agent": "AccessibilityAgent"
         }
@@ -309,6 +356,12 @@ Accessibility Agent Commands:
 
     def check_design_tokens(self, design_system: str = "Shadcn") -> Dict[str, Any]:
         """Check design token accessibility."""
+        # Input validation
+        if not isinstance(design_system, str):
+            raise TypeError("design_system must be a string")
+        if not design_system.strip():
+            raise ValueError("design_system cannot be empty")
+            
         logger.info(f"Checking design token accessibility for: {design_system}")
 
         # Simulate design token accessibility check
@@ -317,6 +370,7 @@ Accessibility Agent Commands:
         design_token_check = {
             "design_system": design_system,
             "check_type": "Design token accessibility",
+            "status": "checked",
             "overall_score": 97,
             "color_tokens": {
                 "primary": {
@@ -371,6 +425,15 @@ Accessibility Agent Commands:
                 "Spacing supports adequate touch targets",
                 "Typography is readable and scalable"
             ],
+            "wcag_compliance": {
+                "wcag_2_1_aa": "Compliant",
+                "wcag_2_1_aaa": "Partially compliant"
+            },
+            "mobile_accessibility": {
+                "touch_targets": "Compliant (44px minimum)",
+                "gesture_support": "Properly implemented",
+                "viewport_scaling": "Supports zoom up to 200%"
+            },
             "timestamp": datetime.now().isoformat(),
             "agent": "AccessibilityAgent"
         }
@@ -383,6 +446,12 @@ Accessibility Agent Commands:
 
     def run_accessibility_audit(self, target: str = "/mock/page") -> Dict[str, Any]:
         """Run accessibility audit on target."""
+        # Input validation
+        if not isinstance(target, str):
+            raise TypeError("target must be a string")
+        if not target.strip():
+            raise ValueError("target cannot be empty")
+            
         logger.info(f"Running accessibility audit on: {target}")
 
         # Simulate accessibility audit
@@ -391,6 +460,7 @@ Accessibility Agent Commands:
         audit_result = {
             "target": target,
             "audit_type": "comprehensive",
+            "status": "audited",
             "timestamp": datetime.now().isoformat(),
             "overall_score": 85,
             "categories": {
@@ -420,6 +490,27 @@ Accessibility Agent Commands:
                 "Improve color contrast to meet WCAG AA standards",
                 "Ensure all interactive elements are keyboard accessible"
             ],
+            "wcag_compliance": {
+                "wcag_2_1_aa": "Partially compliant",
+                "wcag_2_1_aaa": "Not compliant",
+                "section_508": "Partially compliant"
+            },
+            "performance_metrics": {
+                "audit_duration": "2.3 seconds",
+                "elements_checked": 156,
+                "issues_found": 8,
+                "critical_issues": 2
+            },
+            "automated_testing": {
+                "axe_core": "Used for automated testing",
+                "lighthouse": "Accessibility score: 85",
+                "wave": "Manual verification completed"
+            },
+            "mobile_accessibility": {
+                "touch_targets": "Compliant",
+                "viewport_scaling": "Supports 200% zoom",
+                "gesture_support": "Properly implemented"
+            },
             "agent": "AccessibilityAgent"
         }
 
@@ -436,10 +527,19 @@ Accessibility Agent Commands:
 
     def export_audit(self, format_type: str = "md", audit_data: Optional[Dict] = None):
         """Export audit results in specified format."""
+        # Input validation
+        if not isinstance(format_type, str):
+            raise TypeError("format_type must be a string")
+        if not format_type.strip():
+            raise ValueError("format_type cannot be empty")
+        if audit_data is not None and not isinstance(audit_data, dict):
+            raise TypeError("audit_data must be a dictionary")
+            
         if not audit_data:
             audit_data = {
                 "audit_type": "Accessibility Audit",
                 "target": "BMAD Application",
+                "status": "exported",
                 "overall_score": 85,
                 "critical_issues": 3,
                 "recommendations": 5,
@@ -524,6 +624,7 @@ Accessibility Agent Commands:
 
         report = {
             "report_type": "Accessibility Improvement",
+            "status": "generated",
             "generated_date": datetime.now().isoformat(),
             "common_issues": common_issues,
             "trends": {
@@ -535,6 +636,36 @@ Accessibility Agent Commands:
                 "Focus on color contrast improvements",
                 "Implement comprehensive ARIA training",
                 "Add automated accessibility testing to CI/CD"
+            ],
+            "priority_actions": [
+                {
+                    "action": "Fix critical contrast issues",
+                    "priority": "high",
+                    "estimated_effort": "2-3 days",
+                    "impact": "Immediate accessibility improvement"
+                },
+                {
+                    "action": "Add missing alt text",
+                    "priority": "medium",
+                    "estimated_effort": "1-2 days",
+                    "impact": "Better screen reader support"
+                },
+                {
+                    "action": "Improve keyboard navigation",
+                    "priority": "medium",
+                    "estimated_effort": "3-4 days",
+                    "impact": "Enhanced usability for keyboard users"
+                }
+            ],
+            "compliance_tracking": {
+                "wcag_2_1_aa_target": "95%",
+                "current_compliance": "85%",
+                "gap_analysis": "10% improvement needed"
+            },
+            "automation_opportunities": [
+                "Automated contrast checking in CI/CD",
+                "Automated alt text validation",
+                "Automated keyboard navigation testing"
             ],
             "agent": "AccessibilityAgent"
         }
