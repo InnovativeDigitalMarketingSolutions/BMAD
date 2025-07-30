@@ -40,6 +40,9 @@ logger = logging.getLogger(__name__)
 
 class FullstackDeveloperAgent:
     def __init__(self):
+        # Set agent name
+        self.agent_name = "FullstackDeveloper"
+        
         # Initialize core services
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
@@ -308,7 +311,7 @@ FullstackDeveloper Agent Commands:
         })
 
         # Save context
-        save_context("FullstackDeveloper", {"feature_status": "deployed"})
+        save_context("FullstackDeveloper", "status", {"feature_status": "deployed"})
 
         # Notify via Slack
         try:

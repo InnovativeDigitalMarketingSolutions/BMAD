@@ -28,6 +28,8 @@ logger = logging.getLogger(__name__)
 
 class DataEngineerAgent:
     def __init__(self):
+        # Set agent name
+        self.agent_name = "DataEngineer"
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
@@ -490,7 +492,7 @@ Data Engineer Agent Commands:
         })
 
         # Save context
-        save_context("DataEngineer", {"pipeline_status": "validated"})
+        save_context("DataEngineer", "status", {"pipeline_status": "validated"})
 
         # Notify via Slack
         try:

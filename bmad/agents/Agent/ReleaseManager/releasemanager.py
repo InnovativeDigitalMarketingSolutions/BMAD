@@ -27,6 +27,8 @@ logger = logging.getLogger(__name__)
 
 class ReleaseManagerAgent:
     def __init__(self):
+        # Set agent name
+        self.agent_name = "ReleaseManager"
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
@@ -546,7 +548,7 @@ Release Manager Agent Commands:
         })
 
         # Save context
-        save_context("ReleaseManager", {"release_status": "deployed"})
+        save_context("ReleaseManager", "status", {"release_status": "deployed"})
 
         # Notify via Slack
         try:

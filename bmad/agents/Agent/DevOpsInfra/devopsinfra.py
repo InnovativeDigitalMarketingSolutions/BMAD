@@ -29,6 +29,8 @@ logger = logging.getLogger(__name__)
 
 class DevOpsInfraAgent:
     def __init__(self):
+        # Set agent name
+        self.agent_name = "DevOpsInfra"
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
@@ -521,7 +523,7 @@ DevOps Infrastructure Agent Commands:
         else:
             print("All resources are available!")
 
-    def collaborate_example(self):
+    async def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         logger.info("Starting DevOps infrastructure collaboration example...")
 
@@ -533,7 +535,7 @@ DevOps Infrastructure Agent Commands:
         })
 
         # Deploy infrastructure
-        deployment_result = self.deploy_infrastructure("kubernetes")
+        deployment_result = await self.deploy_infrastructure("kubernetes")
 
         # Generate pipeline advice
         advice_result = self.pipeline_advice("Sample CI/CD pipeline configuration")
@@ -547,7 +549,7 @@ DevOps Infrastructure Agent Commands:
         })
 
         # Save context
-        save_context("DevOpsInfra", {"infrastructure_status": "deployed"})
+        save_context("DevOpsInfra", "status", {"infrastructure_status": "deployed"})
 
         # Notify via Slack
         try:
@@ -610,7 +612,7 @@ DevOps Infrastructure Agent Commands:
         subscribe("deployment_executed", self.handle_deployment_executed)
 
         logger.info("DevOpsInfraAgent ready and listening for events...")
-        self.collaborate_example()
+        asyncio.run(self.collaborate_example())
 
 def main():
     parser = argparse.ArgumentParser(description="DevOps Infrastructure Agent CLI")

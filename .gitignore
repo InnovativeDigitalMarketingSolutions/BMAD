@@ -61,6 +61,7 @@ tmp/
 
 # Test coverage and reports
 .coverage
+.coverage.*
 coverage.xml
 htmlcov/
 .pytest_cache/
@@ -72,6 +73,20 @@ coverage/
 # Allure test reports
 allure-results/
 allure-report/
+
+# Generated reports and exports
+*_report_*.json
+*_report_*.csv
+*_report_*.md
+component_export_*.json
+infrastructure_report_*.json
+uxui_report_*.json
+documentation_report_*.json
+performance_report_*.json
+security_report_*.json
+accessibility_report_*.json
+test_report_*.json
+coverage_report_*.json
 
 # Documentation builds
 docs/_build/

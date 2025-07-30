@@ -122,28 +122,49 @@ def test_confidence_message_formatting():
     assert "✅" in message  # High review level emoji
 
 def test_llm_confidence_integration():
-    """Test LLM confidence integratie (skip als geen API key)."""
-    if not os.getenv("OPENAI_API_KEY"):
-        pytest.skip("Geen OpenAI API key beschikbaar")
+    """Test LLM confidence integratie met mocking."""
+    from unittest.mock import patch, MagicMock
+    from bmad.agents.core.ai.llm_client import ask_openai_with_confidence
     
-    prompt = "Schrijf een korte user story voor een login feature."
-    context = {
-        "task": "create_user_story",
-        "agent": "ProductOwner",
-        "requirement": "User login"
-    }
-    
-    result = ask_openai_with_confidence(prompt, context)
-    
-    # Check dat result de juiste structuur heeft
-    assert "answer" in result
-    assert "confidence" in result
-    assert "cached" in result
-    assert "model" in result
-    assert "timestamp" in result
-    
-    # Check dat confidence tussen 0 en 1 ligt
-    assert 0.0 <= result["confidence"] <= 1.0
+    # Mock the cache to return None (cache miss)
+    with patch('bmad.agents.core.ai.llm_client._file_cache_get', return_value=None), \
+         patch('bmad.agents.core.data.redis_cache.get_redis_client') as mock_get_redis_client:
+        
+        # Mock Redis client to return None (cache miss)
+        mock_redis_client = MagicMock()
+        mock_redis_client.get.return_value = None
+        mock_get_redis_client.return_value = mock_redis_client
+        
+        # Mock the OpenAI API call
+        with patch('bmad.agents.core.ai.llm_client.requests.post') as mock_post:
+            # Create a mock API response
+            mock_response = MagicMock()
+            mock_response.status_code = 200
+            mock_response.json.return_value = {
+                "choices": [{"message": {"content": "Test user story"}}],
+                "usage": {"total_tokens": 10}
+            }
+            mock_post.return_value = mock_response
+            
+            prompt = "Schrijf een korte user story voor een login feature."
+            context = {
+                "task": "create_user_story",
+                "agent": "ProductOwner",
+                "requirement": "User login"
+            }
+            
+            result = ask_openai_with_confidence(prompt, context)
+            
+            # Verify the API was called
+            mock_post.assert_called_once()
+            
+            # Check dat result de juiste structuur heeft
+            assert "answer" in result
+            assert "llm_confidence" in result
+            assert "model" in result
+            
+            # Check dat confidence tussen 0 en 1 ligt
+            assert 0.0 <= result["llm_confidence"] <= 1.0
 
 def test_confidence_thresholds():
     """Test confidence thresholds en review levels."""

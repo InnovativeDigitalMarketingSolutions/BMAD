@@ -22,6 +22,7 @@ from bmad.agents.core.monitoring.monitoring import (
     MetricType,
     MetricsCollector,
 )
+from bmad.agents.core.performance_optimizer import PerformanceOptimizer
 from integrations.slack.slack_notify import send_slack_message
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from bmad.agents.core.agent.test_sprites import get_sprite_library
@@ -36,7 +37,9 @@ logger = logging.getLogger(__name__)
 
 class DocumentationAgent:
     def __init__(self):
-        self.monitor = get_performance_monitor()
+        # Set agent name
+        self.agent_name = "DocumentationAgent"
+        self.monitor = PerformanceOptimizer()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
 
@@ -588,7 +591,7 @@ DocumentationAgent Commands:
         })
 
         # Save context
-        save_context("DocumentationAgent", {"documentation_status": "completed"})
+        save_context("DocumentationAgent", "status", {"documentation_status": "completed"})
 
         # Notify via Slack
         try:
