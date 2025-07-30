@@ -1,7 +1,5 @@
 # Test History
 
-- 2025-07-27T18:18:03.088818: 2/4 tests succesvol
-- 2025-07-27T18:18:34.483720: 2/4 tests succesvol
 - 2025-07-27T18:18:43.192630: 2/4 tests succesvol
 - 2025-07-29T19:10:19.386942: 2/4 tests succesvol
 - 2025-07-29T19:10:21.019273: 2/4 tests succesvol
@@ -48,3 +46,7 @@
 - 2025-07-30T10:54:50.282482: 2/4 tests succesvol
 - 2025-07-30T10:56:15.954287: 2/4 tests succesvol
 - 2025-07-30T10:56:17.905244: 2/4 tests succesvol
+- 2025-07-30T16:04:58.608130: 2/4 tests succesvol
+- 2025-07-30T16:05:00.648937: 2/4 tests succesvol
+- 2025-07-30T16:26:57.934313: 2/4 tests succesvol
+- 2025-07-30T16:26:59.904097: 2/4 tests succesvol

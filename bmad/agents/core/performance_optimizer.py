@@ -47,6 +47,9 @@ class IntelligentCache:
             # Remove if exists
             if key in self.cache:
                 del self.cache[key]
+                # Reset access count for updated key
+                if key in self.access_count:
+                    del self.access_count[key]
             
             # Add new item
             self.cache[key] = value
@@ -82,8 +85,10 @@ class IntelligentCache:
         
         for key, _ in sorted_items[:items_to_remove]:
             del self.cache[key]
-            del self.access_count[key]
-            del self.creation_time[key]
+            if key in self.access_count:
+                del self.access_count[key]
+            if key in self.creation_time:
+                del self.creation_time[key]
     
     def clear(self) -> None:
         """Clear all cache entries."""
@@ -314,7 +319,7 @@ def profiled(name: Optional[str] = None):
         return wrapper
     return decorator
 
-async def async_profiled(name: Optional[str] = None):
+def async_profiled(name: Optional[str] = None):
     """
     Async decorator voor performance profiling.
     """
