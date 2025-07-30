@@ -850,5 +850,41 @@
     "workflow": "automated_deployment",
     "status": "afgerond",
     "timestamp": "2025-07-30T16:27:16.567120"
+  },
+  {
+    "event_type": "workflow_status",
+    "workflow": "security_review",
+    "status": "lopend",
+    "timestamp": "2025-07-30T16:42:38.824488"
+  },
+  {
+    "event_type": "workflow_status",
+    "workflow": "automated_deployment",
+    "status": "lopend",
+    "timestamp": "2025-07-30T16:42:41.785103"
+  },
+  {
+    "event_type": "workflow_status",
+    "workflow": "feature",
+    "status": "lopend",
+    "timestamp": "2025-07-30T16:42:44.172407"
+  },
+  {
+    "event_type": "workflow_status",
+    "workflow": "automated_deployment",
+    "status": "lopend",
+    "timestamp": "2025-07-30T16:42:46.379014"
+  },
+  {
+    "event_type": "workflow_status",
+    "workflow": "automated_deployment",
+    "status": "lopend",
+    "timestamp": "2025-07-30T16:42:56.152386"
+  },
+  {
+    "event_type": "workflow_status",
+    "workflow": "automated_deployment",
+    "status": "afgerond",
+    "timestamp": "2025-07-30T16:42:56.177192"
   }
 ]
