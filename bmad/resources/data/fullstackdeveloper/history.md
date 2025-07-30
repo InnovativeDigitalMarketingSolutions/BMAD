@@ -1,15 +1,5 @@
 # Development History
 
-- Stack-overview and code-style-guide established (see changelog.md)
-- First CI/CD pipeline set up, documentation improved based on feedback (see feedback.md)
-- Refactoring and performance improvements implemented based on team input
-- 2025-07-27T18:54:16.993507: User Authentication story implemented
-- 2025-07-29T19:10:17.761302: User Authentication story implemented
-- 2025-07-29T19:12:29.334643: User Authentication story implemented
-- 2025-07-29T19:25:42.551688: User Authentication story implemented
-- 2025-07-29T19:35:47.506161: User Authentication story implemented
-- 2025-07-29T19:40:58.795476: User Authentication story implemented
-- 2025-07-29T19:48:26.394808: User Authentication story implemented
 - 2025-07-29T19:51:58.337115: User Authentication story implemented
 - 2025-07-29T19:52:28.599697: User Authentication story implemented
 - 2025-07-29T19:54:01.264032: User Authentication story implemented
@@ -36,3 +26,27 @@
 - 2025-07-30T17:37:30.463256: User Authentication story implemented
 - 2025-07-30T17:44:04.379368: User Authentication story implemented
 - 2025-07-30T17:51:07.376084: User Authentication story implemented
+- 2025-07-30T18:01:57.865438: User Authentication story implemented
+- 2025-07-30T18:13:01.534420: User Authentication story implemented
+- 2025-07-30T18:29:46.484589: User Authentication story implemented
+- 2025-07-30T18:51:29.104904: User Authentication story implemented
+- 2025-07-30T18:52:29.742145: User Authentication story implemented
+- 2025-07-30T20:03:58.500292: User Authentication story implemented
+- 2025-07-30T20:12:56.355523: User Authentication story implemented
+- 2025-07-30T20:19:22.137443: User Authentication story implemented
+- 2025-07-30T20:20:39.613136: User Authentication story implemented
+- 2025-07-30T20:22:01.570036: User Authentication story implemented
+- 2025-07-30T20:35:45.432060: User Authentication story implemented
+- 2025-07-30T20:36:59.033702: User Authentication story implemented
+- 2025-07-30T21:03:31.140651: User Authentication story implemented
+- 2025-07-30T21:11:01.300766: User Authentication story implemented
+- 2025-07-30T21:19:06.363946: User Authentication story implemented
+- 2025-07-30T21:28:43.380500: User Authentication story implemented
+- 2025-07-30T21:38:39.973893: User Authentication story implemented
+- 2025-07-30T21:52:38.397685: User Authentication story implemented
+- 2025-07-30T22:04:31.344568: User Authentication story implemented
+- 2025-07-30T22:09:51.223883: User Authentication story implemented
+- 2025-07-30T22:22:45.575943: User Authentication story implemented
+- 2025-07-30T22:31:01.514584: User Authentication story implemented
+- 2025-07-30T22:36:13.928907: User Authentication story implemented
+- 2025-07-30T22:44:41.249803: User Authentication story implemented
