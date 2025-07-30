@@ -6,7 +6,7 @@
   "workflow_paused": 0,
   "workflow_durations": {
     "feature": 1.1073651313781738,
-    "automated_deployment": 0.026800870895385742
+    "automated_deployment": 0.024829864501953125
   },
-  "hitl_moments": 7
+  "hitl_moments": 10
 }
