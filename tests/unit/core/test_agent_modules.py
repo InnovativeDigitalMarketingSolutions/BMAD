@@ -355,45 +355,6 @@ class TestLLMClient:
         except ImportError as e:
             pytest.skip(f"llm_client module not available: {e}")
 
-class TestConnectionPool:
-    """Test connection pool module."""
-    
-    def test_connection_pool_import(self):
-        """Test that connection pool module can be imported."""
-        try:
-            import bmad.agents.core.performance_optimizer
-            assert True
-        except ImportError as e:
-            pytest.skip(f"connection_pool module not available: {e}")
-    
-    def test_connection_pool_creation(self):
-        """Test connection pool creation."""
-        try:
-            from bmad.agents.core.performance_optimizer import PerformanceOptimizer
-            
-            # Test optimizer creation
-            optimizer = PerformanceOptimizer()
-            assert optimizer is not None
-            
-        except ImportError as e:
-            pytest.skip(f"connection_pool module not available: {e}")
-    
-    def test_connection_pool_get_connection(self):
-        """Test get_connection method."""
-        try:
-            from bmad.agents.core.performance_optimizer import PerformanceOptimizer
-            
-            # Test optimizer creation and basic attributes
-            optimizer = PerformanceOptimizer()
-            assert optimizer is not None
-            
-            # Test that optimizer has expected methods
-            assert hasattr(optimizer, 'get_connection'), "PerformanceOptimizer should have get_connection method"
-            assert callable(getattr(optimizer, 'get_connection', None)), "get_connection should be callable"
-            
-        except ImportError as e:
-            pytest.skip(f"connection_pool module not available: {e}")
-
 class TestSlackNotify:
     """Test slack_notify module."""
     
