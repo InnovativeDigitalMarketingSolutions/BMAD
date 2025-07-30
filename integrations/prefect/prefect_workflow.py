@@ -15,9 +15,30 @@ from typing import Any, Callable, Dict, List, Optional
 
 from bmad.agents.core.ai.confidence_scoring import confidence_scoring
 from bmad.agents.core.communication.message_bus import publish, subscribe
-from prefect import flow, get_run_logger
-from prefect.artifacts import create_markdown_artifact
-from prefect.context import get_run_context
+
+# Try to import Prefect, but provide fallbacks if not available
+try:
+    from prefect import flow, get_run_logger
+    from prefect.artifacts import create_markdown_artifact
+    from prefect.context import get_run_context
+    PREFECT_AVAILABLE = True
+except ImportError:
+    # Create mock functions if Prefect is not available
+    def flow(*args, **kwargs):
+        def decorator(func):
+            return func
+        return decorator
+    
+    def get_run_logger():
+        return logging.getLogger(__name__)
+    
+    def create_markdown_artifact(*args, **kwargs):
+        pass
+    
+    def get_run_context():
+        return {}
+    
+    PREFECT_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
