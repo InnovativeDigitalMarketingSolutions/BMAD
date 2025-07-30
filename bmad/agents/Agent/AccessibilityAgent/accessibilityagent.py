@@ -28,6 +28,8 @@ logger = logging.getLogger(__name__)
 
 class AccessibilityAgent:
     def __init__(self):
+        # Set agent name
+        self.agent_name = "AccessibilityAgent"
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()

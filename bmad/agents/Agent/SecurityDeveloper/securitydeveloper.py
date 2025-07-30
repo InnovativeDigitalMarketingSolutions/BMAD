@@ -28,6 +28,8 @@ logger = logging.getLogger(__name__)
 
 class SecurityDeveloperAgent:
     def __init__(self):
+        # Set agent name
+        self.agent_name = "SecurityDeveloper"
         # Initialize core services
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()

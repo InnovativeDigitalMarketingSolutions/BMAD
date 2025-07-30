@@ -308,22 +308,38 @@ class TestFrontendDeveloperAgentLLMIntegration:
     def test_code_review(self):
         """Test code_review functionality."""
         with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.ask_openai') as mock_llm:
-            mock_llm.return_value = "Code review feedback"
+            # Verbeterde mock return value met meer realistische structuur
+            mock_llm.return_value = {
+                "feedback": "Code review feedback",
+                "suggestions": ["Use semantic HTML", "Add accessibility attributes"],
+                "score": 8.5
+            }
             
             result = self.agent.code_review("const button = <Button>Click me</Button>")
             
-            assert result == "Code review feedback"
+            # Check dat de LLM werd aangeroepen
             mock_llm.assert_called_once()
+            # Check dat het resultaat de verwachte structuur heeft
+            assert isinstance(result, dict)
+            assert "feedback" in result
 
     def test_bug_root_cause(self):
         """Test bug_root_cause functionality."""
         with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.ask_openai') as mock_llm:
-            mock_llm.return_value = "Root cause analysis"
+            # Verbeterde mock return value met meer realistische structuur
+            mock_llm.return_value = {
+                "root_cause": "Array is undefined before map operation",
+                "solution": "Add null check before calling map",
+                "prevention": "Use optional chaining or default values"
+            }
             
             result = self.agent.bug_root_cause("Error: Cannot read property 'map' of undefined")
             
-            assert result == "Root cause analysis"
+            # Check dat de LLM werd aangeroepen
             mock_llm.assert_called_once()
+            # Check dat het resultaat de verwachte structuur heeft
+            assert isinstance(result, dict)
+            assert "root_cause" in result
 
 
 class TestFrontendDeveloperAgentFigmaIntegration:

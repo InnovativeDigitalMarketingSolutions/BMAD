@@ -34,6 +34,8 @@ logger = logging.getLogger(__name__)
 
 class AiDeveloperAgent:
     def __init__(self):
+        # Set agent name
+        self.agent_name = "AiDeveloper"
         # Initialize core services
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
