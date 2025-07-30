@@ -1,6 +1,6 @@
 # Centrale Changelog (samengesteld)
 
-> Laatst samengevoegd op 2025-07-29 22:03
+> Laatst samengevoegd op 2025-07-30 07:20
 
 
 ## AccessibilityAgent
