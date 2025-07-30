@@ -308,7 +308,7 @@ FullstackDeveloper Agent Commands:
         })
 
         # Save context
-        save_context("FullstackDeveloper", {"feature_status": "deployed"})
+        save_context("FullstackDeveloper", "status", {"feature_status": "deployed"})
 
         # Notify via Slack
         try:

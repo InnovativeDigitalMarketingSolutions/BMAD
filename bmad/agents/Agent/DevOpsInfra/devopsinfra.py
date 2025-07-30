@@ -547,7 +547,7 @@ DevOps Infrastructure Agent Commands:
         })
 
         # Save context
-        save_context("DevOpsInfra", {"infrastructure_status": "deployed"})
+        save_context("DevOpsInfra", "status", {"infrastructure_status": "deployed"})
 
         # Notify via Slack
         try:

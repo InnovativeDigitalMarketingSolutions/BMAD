@@ -589,7 +589,7 @@ DocumentationAgent Commands:
         })
 
         # Save context
-        save_context("DocumentationAgent", {"documentation_status": "completed"})
+        save_context("DocumentationAgent", "status", {"documentation_status": "completed"})
 
         # Notify via Slack
         try:

@@ -906,7 +906,7 @@ MobileDeveloper Agent Commands:
         })
 
         # Save context
-        save_context("MobileDeveloperAgent", {"development_status": "completed"})
+        save_context("MobileDeveloperAgent", "status", {"development_status": "completed"})
 
         # Notify via Slack
         try:

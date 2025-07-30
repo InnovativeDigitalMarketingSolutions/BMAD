@@ -265,7 +265,7 @@ def show_bmad_vision():
 def collaborate_example():
     """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
     publish("backlog_updated", {"status": "success", "agent": "ProductOwner"})
-    save_context("ProductOwner", {"backlog_status": "updated"})
+    save_context("ProductOwner", "status", {"backlog_status": "updated"})
     print("Event gepubliceerd en context opgeslagen.")
     context = get_context("ProductOwner")
     print(f"Opgehaalde context: {context}")

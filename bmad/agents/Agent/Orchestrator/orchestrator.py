@@ -684,7 +684,7 @@ Orchestrator Agent Commands:
         })
 
         # Save context
-        save_context("OrchestratorAgent", {"orchestration_status": "completed"})
+        save_context("OrchestratorAgent", "status", {"orchestration_status": "completed"})
 
         # Notify via Slack
         try:

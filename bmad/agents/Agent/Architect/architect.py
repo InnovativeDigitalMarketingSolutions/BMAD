@@ -132,7 +132,7 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
     def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         publish("architecture_reviewed", {"status": "success", "agent": "Architect"})
-        save_context("Architect", {"review_status": "completed"})
+        save_context("Architect", "review_status", {"review_status": "completed"})
         print("Event gepubliceerd en context opgeslagen.")
         context = get_context("Architect")
         print(f"Opgehaalde context: {context}")
@@ -142,6 +142,7 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
         prompt = f"Ontwerp een REST API endpoint voor de volgende use case: {use_case}. Geef een korte beschrijving en een voorbeeld van de JSON input/output."
         result = ask_openai(prompt)
         print(f"[LLM API-design]: {result}")
+        return result
 
     def design_frontend(self):
         """Ontwerp de BMAD frontend architectuur."""
@@ -364,6 +365,7 @@ def on_api_design_requested(event):
     prompt = f"Ontwerp een REST API endpoint voor de volgende use case: {use_case}. Context: {context}. Geef een korte beschrijving en een voorbeeld van de JSON input/output."
     result = ask_openai(prompt)
     logging.info(f"[Architect][LLM API-design automatisch]: {result}")
+    return result
 
 subscribe("api_design_requested", on_api_design_requested)
 
@@ -373,6 +375,7 @@ def on_pipeline_advice_requested(event):
     structured_output = '{"samenvatting": "...", "adviezen": ["advies 1", "advies 2"]}'
     result = ask_openai(prompt, structured_output=structured_output)
     logging.info(f"[Architect][LLM Pipeline Advies]: {result}")
+    return result
 
 subscribe("pipeline_advice_requested", on_pipeline_advice_requested)
 

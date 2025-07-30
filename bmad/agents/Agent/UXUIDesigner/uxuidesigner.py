@@ -649,7 +649,7 @@ UXUIDesigner Agent Commands:
         })
 
         # Save context
-        save_context("UXUIDesigner", {"design_status": "completed"})
+        save_context("UXUIDesigner", "status", {"design_status": "completed"})
 
         # Notify via Slack
         try:
@@ -690,7 +690,7 @@ UXUIDesigner Agent Commands:
     def collaborate_example_original(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         publish("design_finalized", {"status": "success", "agent": "UXUIDesigner"})
-        save_context("UXUIDesigner", {"design_status": "finalized"})
+        save_context("UXUIDesigner", "status", {"design_status": "finalized"})
         print("Event gepubliceerd en context opgeslagen.")
         context = get_context("UXUIDesigner")
         print(f"Opgehaalde context: {context}")
