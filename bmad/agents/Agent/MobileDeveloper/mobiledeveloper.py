@@ -147,30 +147,19 @@ MobileDeveloper Agent Commands:
         print(help_text)
 
     def show_resource(self, resource_type: str):
-        """Show resource content"""
-        try:
+        """Show resource file content for a given type."""
+        resource_file = self.template_paths.get(resource_type)
+        if resource_file and resource_file.exists():
+            content = resource_file.read_text()
             if resource_type == "best-practices":
-                path = self.template_paths["best-practices"]
-            elif resource_type == "changelog":
-                path = self.data_paths["changelog"]
-            elif resource_type == "react-native-template":
-                path = self.template_paths["react-native-template"]
-            elif resource_type == "flutter-template":
-                path = self.template_paths["flutter-template"]
-            elif resource_type == "ios-template":
-                path = self.template_paths["ios-template"]
-            elif resource_type == "android-template":
-                path = self.template_paths["android-template"]
+                print("Mobile Best Practices\n" + content)
             else:
-                print(f"Unknown resource type: {resource_type}")
-                return
-            if path.exists():
-                with open(path) as f:
-                    print(f.read())
+                print(content)
+        else:
+            if resource_type == "best-practices":
+                print("Geen best-practices resource gevonden")
             else:
-                print(f"Resource file not found: {path}")
-        except Exception as e:
-            logger.error(f"Error reading resource {resource_type}: {e}")
+                print(f"Resource file not found: {resource_file}")
 
     def show_app_history(self):
         """Show app development history"""
@@ -196,6 +185,16 @@ MobileDeveloper Agent Commands:
         """Create a new mobile app with enhanced functionality."""
         logger.info(f"Creating mobile app: {app_name} on {platform}")
 
+        # Validate platform
+        supported_platforms = ["react-native", "flutter", "ios", "android"]
+        if platform not in supported_platforms:
+            return {
+                "status": "error",
+                "message": f"Unsupported platform: {platform}. Supported platforms: {', '.join(supported_platforms)}",
+                "app_name": app_name,
+                "platform": platform
+            }
+
         # Simulate app creation
         time.sleep(1)
 
@@ -204,7 +203,7 @@ MobileDeveloper Agent Commands:
             "app_name": app_name,
             "platform": platform,
             "app_type": app_type,
-            "status": "created",
+            "status": "success",
             "project_structure": {
                 "src": {
                     "components": "Reusable UI components",
@@ -270,8 +269,35 @@ MobileDeveloper Agent Commands:
                 "monitoring": "Production monitoring and analytics"
             },
             "timestamp": datetime.now().isoformat(),
-            "agent": "MobileDeveloperAgent"
+            "agent": "MobileDeveloperAgent",
+            "created_at": datetime.now().isoformat()
         }
+
+        # Add platform-specific configurations
+        if platform == "flutter":
+            app_result["flutter_config"] = {
+                "sdk_version": "3.10.0",
+                "dart_version": "3.0.0",
+                "target_platforms": ["android", "ios", "web"],
+                "state_management": "Provider",
+                "navigation": "GoRouter"
+            }
+        elif platform == "ios":
+            app_result["ios_config"] = {
+                "swift_version": "5.8",
+                "ios_version": "16.0+",
+                "deployment_target": "iOS 16.0",
+                "framework": "SwiftUI",
+                "state_management": "Combine"
+            }
+        elif platform == "android":
+            app_result["android_config"] = {
+                "kotlin_version": "1.8.0",
+                "min_sdk": "24",
+                "target_sdk": "33",
+                "framework": "Jetpack Compose",
+                "state_management": "ViewModel"
+            }
 
         # Log performance metrics
         self.monitor._record_metric("MobileDeveloperAgent", MetricType.SUCCESS_RATE, 95, "%")
@@ -281,12 +307,30 @@ MobileDeveloper Agent Commands:
         self.app_history.append(app_entry)
         self._save_app_history()
 
+        # Publish event
+        from bmad.agents.core.communication.message_bus import publish
+        publish("mobile_app_created", {
+            "app_name": app_name,
+            "platform": platform,
+            "status": "success"
+        })
+
         logger.info(f"Mobile app created: {app_result}")
         return app_result
 
     def build_component(self, component_name: str = "CustomButton", platform: str = "react-native", component_type: str = "ui") -> Dict[str, Any]:
         """Build a mobile component with enhanced functionality."""
         logger.info(f"Building mobile component: {component_name} for {platform}")
+
+        # Validate platform
+        supported_platforms = ["react-native", "flutter", "ios", "android"]
+        if platform not in supported_platforms:
+            return {
+                "status": "error",
+                "message": f"Unsupported platform: {platform}. Supported platforms: {', '.join(supported_platforms)}",
+                "component_name": component_name,
+                "platform": platform
+            }
 
         # Simulate component building
         time.sleep(1)
@@ -296,7 +340,7 @@ MobileDeveloper Agent Commands:
             "component_name": component_name,
             "platform": platform,
             "component_type": component_type,
-            "status": "built",
+            "status": "success",
             "component_structure": {
                 "props": "Component properties and configuration",
                 "state": "Component state management",
@@ -361,8 +405,156 @@ MobileDeveloper Agent Commands:
             "agent": "MobileDeveloperAgent"
         }
 
+        # Add platform-specific component code
+        if platform == "react-native":
+            component_result["component_code"] = f"""
+import React from 'react';
+import {{ View, Text, TouchableOpacity, StyleSheet }} from 'react-native';
+
+interface {component_name}Props {{
+  title: string;
+  onPress?: () => void;
+  disabled?: boolean;
+}}
+
+export const {component_name}: React.FC<{component_name}Props> = ({{ title, onPress, disabled = false }}) => (
+  <TouchableOpacity
+    style={{[styles.button, disabled && styles.disabled]}}
+    onPress={{onPress}}
+    disabled={{disabled}}
+  >
+    <Text style={{styles.text}}>{{title}}</Text>
+  </TouchableOpacity>
+);
+
+const styles = StyleSheet.create({{
+  button: {{
+    backgroundColor: '#007AFF',
+    padding: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  }},
+  disabled: {{
+    backgroundColor: '#CCCCCC',
+  }},
+  text: {{
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  }},
+}});
+"""
+            component_result["file_extension"] = "tsx"
+        elif platform == "flutter":
+            component_result["component_code"] = f"""
+import 'package:flutter/material.dart';
+
+class {component_name} extends StatelessWidget {{
+  final String title;
+  final VoidCallback? onPressed;
+  final bool disabled;
+
+  const {component_name}({{Key? key, required this.title, this.onPressed, this.disabled = false}}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {{
+    return ElevatedButton(
+      onPressed: disabled ? null : onPressed,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.blue,
+        disabledBackgroundColor: Colors.grey,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+      ),
+      child: Text(
+        title,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }}
+}}
+"""
+            component_result["file_extension"] = "dart"
+        elif platform == "ios":
+            component_result["component_code"] = f"""
+import SwiftUI
+
+struct {component_name}: View {{
+    let title: String
+    let action: () -> Void
+    let disabled: Bool
+    
+    init(title: String, action: @escaping () -> Void, disabled: Bool = false) {{
+        self.title = title
+        self.action = action
+        self.disabled = disabled
+    }}
+    
+    var body: some View {{
+        Button(action: action) {{
+            Text(title)
+                .foregroundColor(.white)
+                .font(.system(size: 16, weight: .semibold))
+                .padding(.horizontal, 16)
+                .padding(.vertical, 12)
+                .background(disabled ? Color.gray : Color.blue)
+                .cornerRadius(8)
+        }}
+        .disabled(disabled)
+    }}
+}}
+"""
+            component_result["file_extension"] = "swift"
+        elif platform == "android":
+            component_result["component_code"] = f"""
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+@Composable
+fun {component_name}(
+    title: String,
+    onClick: () -> Unit,
+    enabled: Boolean = true,
+    modifier: Modifier = Modifier
+) {{
+    Button(
+        onClick = onClick,
+        enabled = enabled,
+        modifier = modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+    ) {{
+        Text(
+            text = title,
+            color = Color.White,
+            fontSize = 16.sp,
+            fontWeight = androidx.compose.ui.text.font.FontWeight.SemiBold
+        )
+    }}
+}}
+"""
+            component_result["file_extension"] = "kt"
+
         # Log performance metrics
         self.monitor._record_metric("MobileDeveloperAgent", MetricType.SUCCESS_RATE, 92, "%")
+
+        # Publish event
+        from bmad.agents.core.communication.message_bus import publish
+        publish("mobile_component_built", {
+            "component_name": component_name,
+            "platform": platform,
+            "status": "success"
+        })
 
         logger.info(f"Mobile component built: {component_result}")
         return component_result
@@ -371,6 +563,16 @@ MobileDeveloper Agent Commands:
         """Optimize mobile app performance with enhanced functionality."""
         logger.info(f"Optimizing performance for app: {app_name}")
 
+        # Validate optimization type
+        supported_optimization_types = ["general", "memory", "battery", "network", "render"]
+        if optimization_type not in supported_optimization_types:
+            return {
+                "status": "error",
+                "message": f"Unsupported optimization type: {optimization_type}. Supported types: {', '.join(supported_optimization_types)}",
+                "app_name": app_name,
+                "optimization_type": optimization_type
+            }
+
         # Simulate performance optimization
         time.sleep(1)
 
@@ -378,7 +580,7 @@ MobileDeveloper Agent Commands:
             "optimization_id": hashlib.sha256(f"{app_name}_{optimization_type}".encode()).hexdigest()[:8],
             "app_name": app_name,
             "optimization_type": optimization_type,
-            "status": "completed",
+            "status": "success",
             "performance_metrics": {
                 "app_launch_time": {
                     "before": "4.2 seconds",
@@ -460,6 +662,40 @@ MobileDeveloper Agent Commands:
             "agent": "MobileDeveloperAgent"
         }
 
+        # Add optimization type specific results
+        if optimization_type == "memory":
+            optimization_result["memory_optimizations"] = {
+                "image_compression": "Reduced image sizes by 40%",
+                "memory_leak_fixes": "Fixed 3 memory leaks",
+                "cache_optimization": "Optimized cache usage",
+                "garbage_collection": "Improved GC performance"
+            }
+        elif optimization_type == "battery":
+            optimization_result["battery_optimizations"] = {
+                "background_processing": "Reduced background tasks",
+                "location_services": "Optimized location updates",
+                "network_requests": "Batched network calls",
+                "screen_brightness": "Adaptive brightness control"
+            }
+        elif optimization_type == "network":
+            optimization_result["network_optimizations"] = {
+                "request_batching": "Batched API calls",
+                "caching_strategy": "Improved caching",
+                "compression": "Enabled gzip compression",
+                "connection_pooling": "Optimized connections"
+            }
+        if optimization_type == "general":
+            optimization_result["optimizations"] = [
+                "Code splitting",
+                "Lazy loading",
+                "Image optimization",
+                "Caching strategy",
+                "Memory management",
+                "Network optimization",
+                "Bundle optimization",
+                "Render optimization"
+            ]
+
         # Log performance metrics
         self.monitor._record_metric("MobileDeveloperAgent", MetricType.SUCCESS_RATE, 88, "%")
 
@@ -468,12 +704,30 @@ MobileDeveloper Agent Commands:
         self.performance_history.append(performance_entry)
         self._save_performance_history()
 
+        # Publish event
+        from bmad.agents.core.communication.message_bus import publish
+        publish("mobile_performance_optimized", {
+            "app_name": app_name,
+            "optimization_type": optimization_type,
+            "status": "success"
+        })
+
         logger.info(f"Performance optimization completed: {optimization_result}")
         return optimization_result
 
     def test_app(self, app_name: str = "MyMobileApp", test_type: str = "comprehensive") -> Dict[str, Any]:
         """Test mobile app functionality with enhanced testing."""
         logger.info(f"Testing mobile app: {app_name}")
+
+        # Validate test type
+        supported_test_types = ["comprehensive", "unit", "integration", "ui", "performance", "security", "accessibility"]
+        if test_type not in supported_test_types:
+            return {
+                "status": "error",
+                "message": f"Unsupported test type: {test_type}. Supported types: {', '.join(supported_test_types)}",
+                "app_name": app_name,
+                "test_type": test_type
+            }
 
         # Simulate app testing
         time.sleep(1)
@@ -482,7 +736,7 @@ MobileDeveloper Agent Commands:
             "test_id": hashlib.sha256(f"{app_name}_{test_type}".encode()).hexdigest()[:8],
             "app_name": app_name,
             "test_type": test_type,
-            "status": "completed",
+            "status": "success",
             "test_results": {
                 "unit_tests": {
                     "total_tests": 156,
@@ -564,8 +818,36 @@ MobileDeveloper Agent Commands:
             "agent": "MobileDeveloperAgent"
         }
 
+        # Add test type specific results
+        if test_type == "unit":
+            test_result["unit_tests"] = {
+                "total_tests": 156,
+                "passed": 152,
+                "failed": 4,
+                "coverage": "94%",
+                "status": "passed"
+            }
+        elif test_type == "integration":
+            test_result["integration_tests"] = {
+                "total_tests": 45,
+                "passed": 43,
+                "failed": 2,
+                "coverage": "89%",
+                "status": "passed"
+            }
+        if test_type == "comprehensive":
+            test_result["coverage"] = "94%"
+
         # Log performance metrics
         self.monitor._record_metric("MobileDeveloperAgent", MetricType.SUCCESS_RATE, 92, "%")
+
+        # Publish event
+        from bmad.agents.core.communication.message_bus import publish
+        publish("mobile_app_tested", {
+            "app_name": app_name,
+            "test_type": test_type,
+            "status": "success"
+        })
 
         logger.info(f"App testing completed: {test_result}")
         return test_result
@@ -574,6 +856,16 @@ MobileDeveloper Agent Commands:
         """Deploy mobile app with enhanced deployment process."""
         logger.info(f"Deploying mobile app: {app_name} to {deployment_target}")
 
+        # Validate deployment target
+        supported_deployment_targets = ["app-store", "google-play", "testflight", "internal", "beta"]
+        if deployment_target not in supported_deployment_targets:
+            return {
+                "status": "error",
+                "message": f"Unsupported deployment target: {deployment_target}. Supported targets: {', '.join(supported_deployment_targets)}",
+                "app_name": app_name,
+                "deployment_target": deployment_target
+            }
+
         # Simulate app deployment
         time.sleep(1)
 
@@ -581,7 +873,7 @@ MobileDeveloper Agent Commands:
             "deployment_id": hashlib.sha256(f"{app_name}_{deployment_target}".encode()).hexdigest()[:8],
             "app_name": app_name,
             "deployment_target": deployment_target,
-            "status": "deployed",
+            "status": "success",
             "deployment_config": {
                 "version": "1.0.0",
                 "build_number": "100",
@@ -641,8 +933,39 @@ MobileDeveloper Agent Commands:
             "agent": "MobileDeveloperAgent"
         }
 
+        # Add deployment target specific configurations
+        if deployment_target == "app-store":
+            deployment_result["app_store_config"] = {
+                "review_time": "24-48 hours",
+                "requirements": "iOS 16.0+",
+                "certificates": "Apple Developer Certificate",
+                "provisioning": "App Store Provisioning Profile"
+            }
+        elif deployment_target == "google-play":
+            deployment_result["google_play_config"] = {
+                "review_time": "2-7 days",
+                "requirements": "Android 7.0+",
+                "signing": "Google Play App Signing",
+                "bundle": "AAB format required"
+            }
+        elif deployment_target == "testflight":
+            deployment_result["testflight_config"] = {
+                "review_time": "24 hours",
+                "testers": "Up to 10,000 testers",
+                "builds": "Up to 100 builds",
+                "feedback": "Integrated feedback collection"
+            }
+
         # Log performance metrics
         self.monitor._record_metric("MobileDeveloperAgent", MetricType.SUCCESS_RATE, 90, "%")
+
+        # Publish event
+        from bmad.agents.core.communication.message_bus import publish
+        publish("mobile_app_deployed", {
+            "app_name": app_name,
+            "deployment_target": deployment_target,
+            "status": "success"
+        })
 
         logger.info(f"App deployment completed: {deployment_result}")
         return deployment_result
@@ -651,6 +974,16 @@ MobileDeveloper Agent Commands:
         """Analyze mobile app performance with enhanced analytics."""
         logger.info(f"Analyzing performance for app: {app_name}")
 
+        # Validate analysis type
+        supported_analysis_types = ["comprehensive", "memory", "network", "battery", "render", "startup"]
+        if analysis_type not in supported_analysis_types:
+            return {
+                "status": "error",
+                "message": f"Unsupported analysis type: {analysis_type}. Supported types: {', '.join(supported_analysis_types)}",
+                "app_name": app_name,
+                "analysis_type": analysis_type
+            }
+
         # Simulate performance analysis
         time.sleep(1)
 
@@ -658,7 +991,7 @@ MobileDeveloper Agent Commands:
             "analysis_id": hashlib.sha256(f"{app_name}_{analysis_type}".encode()).hexdigest()[:8],
             "app_name": app_name,
             "analysis_type": analysis_type,
-            "status": "completed",
+            "status": "success",
             "performance_metrics": {
                 "app_launch_time": {
                     "cold_start": "2.8 seconds",
@@ -771,8 +1104,38 @@ MobileDeveloper Agent Commands:
             "agent": "MobileDeveloperAgent"
         }
 
+        # Add analysis type specific results
+        if analysis_type == "memory":
+            analysis_result["memory_analysis"] = {
+                "memory_leaks": "3 potential leaks detected",
+                "memory_fragmentation": "Low fragmentation",
+                "gc_performance": "Good garbage collection",
+                "memory_usage_patterns": "Efficient usage patterns"
+            }
+        elif analysis_type == "network":
+            analysis_result["network_analysis"] = {
+                "request_patterns": "Efficient request patterns",
+                "bandwidth_usage": "Optimized bandwidth usage",
+                "latency": "Low latency connections",
+                "error_rates": "Minimal network errors"
+            }
+        if analysis_type == "comprehensive":
+            analysis_result["bottlenecks"] = [
+                "Slow image loading in HomeScreen",
+                "Unoptimized API calls in DataService",
+                "Memory spikes during navigation"
+            ]
+
         # Log performance metrics
         self.monitor._record_metric("MobileDeveloperAgent", MetricType.SUCCESS_RATE, 94, "%")
+
+        # Publish event
+        from bmad.agents.core.communication.message_bus import publish
+        publish("mobile_performance_analyzed", {
+            "app_name": app_name,
+            "analysis_type": analysis_type,
+            "status": "success"
+        })
 
         logger.info(f"Performance analysis completed: {analysis_result}")
         return analysis_result
