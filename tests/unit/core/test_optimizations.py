@@ -138,7 +138,9 @@ class TestLLMCaching(unittest.TestCase):
             self.assertEqual(mock_post.call_count, 1)
 
             # Tweede call: cache hit, API wordt NIET opnieuw aangeroepen
-            cached_data = json.dumps({
+            # Mock compressed data (bytes) zoals _compress_data zou doen
+            from bmad.agents.core.data.redis_cache import _compress_data
+            cached_data = _compress_data({
                 "answer": "Test response",
                 "llm_confidence": 0.85
             })
