@@ -169,6 +169,16 @@ Feedback Agent Commands:
 
     def collect_feedback(self, feedback_text: str = "The new dashboard is much more user-friendly", source: str = "User Survey") -> Dict[str, Any]:
         """Collect new feedback with enhanced functionality."""
+        # Input validation
+        if not isinstance(feedback_text, str):
+            raise TypeError("feedback_text must be a string")
+        if not isinstance(source, str):
+            raise TypeError("source must be a string")
+        if not feedback_text.strip():
+            raise ValueError("feedback_text cannot be empty")
+        if not source.strip():
+            raise ValueError("source cannot be empty")
+            
         logger.info(f"Collecting feedback from {source}")
 
         # Simulate feedback collection
@@ -228,6 +238,12 @@ Feedback Agent Commands:
 
     def analyze_sentiment(self, feedback_text: str = "The new dashboard is much more user-friendly") -> Dict[str, Any]:
         """Analyze feedback sentiment with enhanced functionality."""
+        # Input validation
+        if not isinstance(feedback_text, str):
+            raise TypeError("feedback_text must be a string")
+        if not feedback_text.strip():
+            raise ValueError("feedback_text cannot be empty")
+            
         logger.info("Analyzing feedback sentiment")
 
         # Simulate sentiment analysis
@@ -236,7 +252,7 @@ Feedback Agent Commands:
         sentiment_result = {
             "feedback_id": hashlib.sha256(feedback_text.encode()).hexdigest()[:8],
             "sentiment_analysis_type": "Feedback Sentiment Analysis",
-            "status": "completed",
+            "status": "analyzed",
             "sentiment_results": {
                 "overall_sentiment": "positive",
                 "sentiment_score": 0.85,
@@ -293,6 +309,18 @@ Feedback Agent Commands:
 
     def summarize_feedback(self, feedback_list: List[str] = None) -> Dict[str, Any]:
         """Summarize feedback collection with enhanced functionality."""
+        # Input validation
+        if feedback_list is not None:
+            if not isinstance(feedback_list, list):
+                raise TypeError("feedback_list must be a list")
+            if not feedback_list:
+                raise ValueError("feedback_list cannot be empty")
+            for i, feedback in enumerate(feedback_list):
+                if not isinstance(feedback, str):
+                    raise TypeError(f"feedback_list[{i}] must be a string")
+                if not feedback.strip():
+                    raise ValueError(f"feedback_list[{i}] cannot be empty")
+            
         if feedback_list is None:
             feedback_list = [
                 "The new dashboard is much more user-friendly",
@@ -310,7 +338,7 @@ Feedback Agent Commands:
         summary_result = {
             "summary_type": "Feedback Collection Summary",
             "total_feedback_items": len(feedback_list),
-            "status": "completed",
+            "status": "summarized",
             "summary_statistics": {
                 "positive_feedback": 3,
                 "negative_feedback": 1,
@@ -377,6 +405,13 @@ Feedback Agent Commands:
 
     def generate_insights(self, feedback_data: Dict = None) -> Dict[str, Any]:
         """Generate insights from feedback data."""
+        # Input validation
+        if feedback_data is not None:
+            if not isinstance(feedback_data, dict):
+                raise TypeError("feedback_data must be a dictionary")
+            if not feedback_data:
+                raise ValueError("feedback_data cannot be empty")
+            
         if feedback_data is None:
             feedback_data = {
                 "total_feedback": 25,
@@ -392,7 +427,7 @@ Feedback Agent Commands:
 
         insights_result = {
             "insights_type": "Feedback Insights Generation",
-            "status": "completed",
+            "status": "generated",
             "insights_data": {
                 "total_feedback_analyzed": feedback_data.get("total_feedback", 25),
                 "analysis_period": "Last 30 days",
@@ -482,6 +517,12 @@ Feedback Agent Commands:
 
     def track_trends(self, timeframe: str = "30 days") -> Dict[str, Any]:
         """Track feedback trends over time."""
+        # Input validation
+        if not isinstance(timeframe, str):
+            raise TypeError("timeframe must be a string")
+        if not timeframe.strip():
+            raise ValueError("timeframe cannot be empty")
+            
         logger.info(f"Tracking feedback trends over {timeframe}")
 
         # Simulate trend tracking
@@ -490,7 +531,7 @@ Feedback Agent Commands:
         trends_result = {
             "trends_type": "Feedback Trends Analysis",
             "timeframe": timeframe,
-            "status": "completed",
+            "status": "tracked",
             "trend_metrics": {
                 "total_feedback": {
                     "current": 125,
