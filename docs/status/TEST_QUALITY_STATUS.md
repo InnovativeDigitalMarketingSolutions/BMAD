@@ -48,12 +48,16 @@ De BMAD test suite heeft een significante kwaliteitsverbetering ondergaan! Hier 
 ### **Agent Test Results**
 - **DocumentationAgent**: 37/37 tests geslaagd (100% success rate)
 - **ArchitectAgent**: 32/32 tests geslaagd (100% success rate)
+- **FrontendDeveloperAgent**: 35/35 tests geslaagd (100% success rate)
+- **UXUIDesigner**: 39/39 tests geslaagd (100% success rate) - **NIEUW**
 - **Core Modules**: 346/347 tests geslaagd (99.7% success rate)
-- **Totaal gerepareerde tests**: 69 tests
+- **Totaal gerepareerde tests**: 143 tests
 
 ### **Test Coverage Status**
 - **DocumentationAgent**: 60% coverage (was 14%)
-- **ArchitectAgent**: Coverage verbeterd
+- **ArchitectAgent**: 75% coverage (was laag)
+- **FrontendDeveloperAgent**: 64% coverage (was 19%)
+- **UXUIDesigner**: 69% coverage (was 20%) - **NIEUW**
 - **Core Modules**: Hoge coverage behouden
 - **Doel**: +70% coverage voor alle modules
 
