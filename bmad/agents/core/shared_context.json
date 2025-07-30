@@ -1,18 +1,11 @@
 {
   "events": [
     {
-      "timestamp": "2025-07-30T16:42:56.191505",
+      "timestamp": "2025-07-30T17:51:24.786192",
       "event": "test_topic",
       "data": {
         "type": "test",
         "data": "test_data"
-      }
-    },
-    {
-      "timestamp": "2025-07-30T16:42:56.733405",
-      "event": "test_event",
-      "data": {
-        "data": "test"
       }
     }
   ]

@@ -705,7 +705,7 @@ Feedback Agent Commands:
         })
 
         # Save context
-        save_context("FeedbackAgent", {"feedback_status": "analyzed"})
+        save_context("FeedbackAgent", "status", {"feedback_status": "analyzed"})
 
         # Notify via Slack
         try:

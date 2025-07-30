@@ -285,7 +285,7 @@ AiDeveloper Agent Commands:
         })
 
         # Save context
-        save_context("AiDeveloper", {"model_status": "deployed"})
+        save_context("AiDeveloper", "status", {"model_status": "deployed"})
 
         # Notify via Slack
         try:

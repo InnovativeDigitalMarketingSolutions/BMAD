@@ -754,7 +754,7 @@ RnD Agent Commands:
         })
 
         # Save context
-        save_context("RnDAgent", {"experiment_status": "completed"})
+        save_context("RnDAgent", "status", {"experiment_status": "completed"})
 
         # Notify via Slack
         try:

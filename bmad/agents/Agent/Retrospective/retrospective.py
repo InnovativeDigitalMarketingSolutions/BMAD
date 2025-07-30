@@ -638,7 +638,7 @@ Retrospective Agent Commands:
         })
 
         # Save context
-        save_context("Retrospective", {"retrospective_status": "completed"})
+        save_context("Retrospective", "status", {"retrospective_status": "completed"})
 
         # Notify via Slack
         try:

@@ -590,7 +590,7 @@ Accessibility Agent Commands:
         })
 
         # Save context
-        save_context("AccessibilityAgent", {"accessibility_status": "audited"})
+        save_context("AccessibilityAgent", "status", {"accessibility_status": "audited"})
 
         # Notify via Slack
         try:

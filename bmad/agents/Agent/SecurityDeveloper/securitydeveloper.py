@@ -382,7 +382,7 @@ SecurityDeveloper Agent Commands:
         })
 
         # Save context
-        save_context("SecurityDeveloper", {"security_status": "scanned"})
+        save_context("SecurityDeveloper", "status", {"security_status": "scanned"})
 
         # Notify via Slack
         try:

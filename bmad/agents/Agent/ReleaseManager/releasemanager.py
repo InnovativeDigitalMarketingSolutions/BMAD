@@ -546,7 +546,7 @@ Release Manager Agent Commands:
         })
 
         # Save context
-        save_context("ReleaseManager", {"release_status": "deployed"})
+        save_context("ReleaseManager", "status", {"release_status": "deployed"})
 
         # Notify via Slack
         try:

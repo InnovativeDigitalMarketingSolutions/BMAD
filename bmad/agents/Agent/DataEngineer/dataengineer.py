@@ -490,7 +490,7 @@ Data Engineer Agent Commands:
         })
 
         # Save context
-        save_context("DataEngineer", {"pipeline_status": "validated"})
+        save_context("DataEngineer", "status", {"pipeline_status": "validated"})
 
         # Notify via Slack
         try:
