@@ -66,6 +66,14 @@ class DataEngineerAgent:
                     for line in lines:
                         if line.strip().startswith("- "):
                             self.pipeline_history.append(line.strip()[2:])
+        except FileNotFoundError:
+            logger.info("Pipeline history file not found, starting with empty history")
+        except PermissionError as e:
+            logger.error(f"Permission denied accessing pipeline history: {e}")
+        except UnicodeDecodeError as e:
+            logger.error(f"Unicode decode error in pipeline history: {e}")
+        except OSError as e:
+            logger.error(f"OS error loading pipeline history: {e}")
         except Exception as e:
             logger.warning(f"Could not load pipeline history: {e}")
 
@@ -77,6 +85,10 @@ class DataEngineerAgent:
                 f.write("# Data Pipeline History\n\n")
                 for pipeline in self.pipeline_history[-50:]:  # Keep last 50 pipelines
                     f.write(f"- {pipeline}\n")
+        except PermissionError as e:
+            logger.error(f"Permission denied saving pipeline history: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving pipeline history: {e}")
         except Exception as e:
             logger.error(f"Could not save pipeline history: {e}")
 
@@ -90,6 +102,14 @@ class DataEngineerAgent:
                     for line in lines:
                         if line.strip().startswith("- "):
                             self.quality_history.append(line.strip()[2:])
+        except FileNotFoundError:
+            logger.info("Quality history file not found, starting with empty history")
+        except PermissionError as e:
+            logger.error(f"Permission denied accessing quality history: {e}")
+        except UnicodeDecodeError as e:
+            logger.error(f"Unicode decode error in quality history: {e}")
+        except OSError as e:
+            logger.error(f"OS error loading quality history: {e}")
         except Exception as e:
             logger.warning(f"Could not load quality history: {e}")
 
@@ -101,6 +121,10 @@ class DataEngineerAgent:
                 f.write("# Data Quality History\n\n")
                 for quality in self.quality_history[-50:]:  # Keep last 50 quality checks
                     f.write(f"- {quality}\n")
+        except PermissionError as e:
+            logger.error(f"Permission denied saving quality history: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving quality history: {e}")
         except Exception as e:
             logger.error(f"Could not save quality history: {e}")
 
@@ -125,6 +149,15 @@ Data Engineer Agent Commands:
 
     def show_resource(self, resource_type: str):
         """Show resource content"""
+        # Input validation
+        if not isinstance(resource_type, str):
+            print("Error: resource_type must be a string")
+            return
+        
+        if not resource_type.strip():
+            print("Error: resource_type cannot be empty")
+            return
+        
         try:
             if resource_type == "best-practices":
                 path = self.template_paths["best-practices"]
@@ -142,6 +175,12 @@ Data Engineer Agent Commands:
                     print(f.read())
             else:
                 print(f"Resource file not found: {path}")
+        except FileNotFoundError:
+            print(f"Resource file not found: {resource_type}")
+        except PermissionError as e:
+            print(f"Permission denied accessing resource {resource_type}: {e}")
+        except UnicodeDecodeError as e:
+            print(f"Unicode decode error in resource {resource_type}: {e}")
         except Exception as e:
             logger.error(f"Error reading resource {resource_type}: {e}")
 
@@ -167,6 +206,13 @@ Data Engineer Agent Commands:
 
     def data_quality_check(self, data_summary: str = "Sample data summary") -> Dict[str, Any]:
         """Run data quality check with enhanced functionality."""
+        # Input validation
+        if not isinstance(data_summary, str):
+            raise TypeError("data_summary must be a string")
+        
+        if not data_summary.strip():
+            raise ValueError("data_summary cannot be empty")
+        
         logger.info("Running data quality check")
 
         # Simulate data quality check
@@ -228,6 +274,13 @@ Data Engineer Agent Commands:
 
     def explain_pipeline(self, pipeline_code: str = "Sample ETL pipeline") -> Dict[str, Any]:
         """Explain ETL pipeline with enhanced functionality."""
+        # Input validation
+        if not isinstance(pipeline_code, str):
+            raise TypeError("pipeline_code must be a string")
+        
+        if not pipeline_code.strip():
+            raise ValueError("pipeline_code cannot be empty")
+        
         logger.info("Explaining ETL pipeline")
 
         # Simulate pipeline explanation
@@ -277,6 +330,13 @@ Data Engineer Agent Commands:
 
     def build_pipeline(self, pipeline_name: str = "ETL Pipeline") -> Dict[str, Any]:
         """Build new data pipeline."""
+        # Input validation
+        if not isinstance(pipeline_name, str):
+            raise TypeError("pipeline_name must be a string")
+        
+        if not pipeline_name.strip():
+            raise ValueError("pipeline_name cannot be empty")
+        
         logger.info(f"Building data pipeline: {pipeline_name}")
 
         # Simulate pipeline building
@@ -324,6 +384,13 @@ Data Engineer Agent Commands:
 
     def monitor_pipeline(self, pipeline_id: str = "pipeline_001") -> Dict[str, Any]:
         """Monitor pipeline performance."""
+        # Input validation
+        if not isinstance(pipeline_id, str):
+            raise TypeError("pipeline_id must be a string")
+        
+        if not pipeline_id.strip():
+            raise ValueError("pipeline_id cannot be empty")
+        
         logger.info(f"Monitoring pipeline: {pipeline_id}")
 
         # Simulate pipeline monitoring
@@ -371,6 +438,16 @@ Data Engineer Agent Commands:
 
     def export_report(self, format_type: str = "md", report_data: Optional[Dict] = None):
         """Export pipeline report in specified format."""
+        # Input validation
+        if not isinstance(format_type, str):
+            raise TypeError("format_type must be a string")
+        
+        if format_type not in ["md", "csv", "json"]:
+            raise ValueError("format_type must be one of: md, csv, json")
+        
+        if report_data is not None and not isinstance(report_data, dict):
+            raise TypeError("report_data must be a dictionary")
+        
         if not report_data:
             report_data = {
                 "report_type": "Data Pipeline Report",
@@ -396,9 +473,10 @@ Data Engineer Agent Commands:
 
     def _export_markdown(self, report_data: Dict):
         """Export report data as markdown."""
-        output_file = f"data_pipeline_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+        try:
+            output_file = f"data_pipeline_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
 
-        content = f"""# Data Pipeline Report
+            content = f"""# Data Pipeline Report
 
 ## Summary
 - **Report Type**: {report_data.get('report_type', 'N/A')}
@@ -420,31 +498,51 @@ Data Engineer Agent Commands:
 - **Consistency**: {report_data.get('quality_metrics', {}).get('consistency', 'N/A')}
 """
 
-        with open(output_file, "w") as f:
-            f.write(content)
-        print(f"Report export saved to: {output_file}")
+            with open(output_file, "w") as f:
+                f.write(content)
+            print(f"Report export saved to: {output_file}")
+        except PermissionError as e:
+            logger.error(f"Permission denied saving markdown report: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving markdown report: {e}")
+        except Exception as e:
+            logger.error(f"Error saving markdown report: {e}")
 
     def _export_csv(self, report_data: Dict):
         """Export report data as CSV."""
-        output_file = f"data_pipeline_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        try:
+            output_file = f"data_pipeline_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 
-        with open(output_file, "w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(["Metric", "Value"])
-            writer.writerow(["Overall Score", report_data.get("overall_score", 0)])
-            writer.writerow(["Success Rate", report_data.get("success_rate", "N/A")])
-            writer.writerow(["Total Pipelines", report_data.get("total_pipelines", 0)])
+            with open(output_file, "w", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow(["Metric", "Value"])
+                writer.writerow(["Overall Score", report_data.get("overall_score", 0)])
+                writer.writerow(["Success Rate", report_data.get("success_rate", "N/A")])
+                writer.writerow(["Total Pipelines", report_data.get("total_pipelines", 0)])
 
-        print(f"Report export saved to: {output_file}")
+            print(f"Report export saved to: {output_file}")
+        except PermissionError as e:
+            logger.error(f"Permission denied saving CSV report: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving CSV report: {e}")
+        except Exception as e:
+            logger.error(f"Error saving CSV report: {e}")
 
     def _export_json(self, report_data: Dict):
         """Export report data as JSON."""
-        output_file = f"data_pipeline_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        try:
+            output_file = f"data_pipeline_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
 
-        with open(output_file, "w") as f:
-            json.dump(report_data, f, indent=2)
+            with open(output_file, "w") as f:
+                json.dump(report_data, f, indent=2)
 
-        print(f"Report export saved to: {output_file}")
+            print(f"Report export saved to: {output_file}")
+        except PermissionError as e:
+            logger.error(f"Permission denied saving JSON report: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving JSON report: {e}")
+        except Exception as e:
+            logger.error(f"Error saving JSON report: {e}")
 
     def test_resource_completeness(self):
         """Test if all required resources are available."""
@@ -506,12 +604,22 @@ Data Engineer Agent Commands:
 
     def handle_data_quality_check_requested(self, event):
         """Handle data quality check request from other agents."""
+        # Input validation
+        if not isinstance(event, dict):
+            logger.warning("Invalid event type for data quality check request")
+            return
+        
         logger.info(f"Data quality check requested: {event}")
         data_summary = event.get("data_summary", "Sample data summary")
         self.data_quality_check(data_summary)
 
     def handle_explain_pipeline(self, event):
         """Handle pipeline explanation request from other agents."""
+        # Input validation
+        if not isinstance(event, dict):
+            logger.warning("Invalid event type for pipeline explanation request")
+            return
+        
         logger.info(f"Pipeline explanation requested: {event}")
         pipeline_code = event.get("pipeline_code", "Sample ETL pipeline")
         self.explain_pipeline(pipeline_code)
@@ -574,6 +682,10 @@ def main():
         agent.collaborate_example()
     elif args.command == "run":
         agent.run()
+    else:
+        print("Unknown command. Use 'help' to see available commands.")
+        sys.exit(1)
+        return
 
 if __name__ == "__main__":
     main()
