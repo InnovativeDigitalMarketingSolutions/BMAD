@@ -554,7 +554,7 @@ class TestUXUIDesignerAgentRunMethod:
 
 
 class TestUXUIDesignerAgentErrorHandling:
-    """Test error handling scenarios."""
+    """Test improved error handling and edge cases."""
 
     def setup_method(self):
         """Setup method voor alle tests in deze class."""
@@ -563,16 +563,127 @@ class TestUXUIDesignerAgentErrorHandling:
              patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.get_sprite_library'):
             self.agent = UXUIDesignerAgent()
 
-    def test_agent_error_handling(self):
-        """Test agent error handling."""
-        with patch.object(self.agent, 'run') as mock_run:
-            mock_run.side_effect = Exception("Test error")
-            
-            # Should not raise exception
-            try:
-                self.agent.run()
-            except Exception:
-                pass  # Expected behavior
+    def test_create_mobile_ux_design_invalid_platform(self):
+        """Test create_mobile_ux_design with invalid platform."""
+        with pytest.raises(ValueError, match="Platform must be one of"):
+            self.agent.create_mobile_ux_design("InvalidPlatform", "native")
+
+    def test_create_mobile_ux_design_invalid_app_type(self):
+        """Test create_mobile_ux_design with invalid app type."""
+        with pytest.raises(ValueError, match="App type must be one of"):
+            self.agent.create_mobile_ux_design("iOS", "InvalidType")
+
+    def test_create_mobile_ux_design_empty_platform(self):
+        """Test create_mobile_ux_design with empty platform."""
+        with pytest.raises(ValueError, match="Platform must be a non-empty string"):
+            self.agent.create_mobile_ux_design("", "native")
+
+    def test_create_mobile_ux_design_empty_app_type(self):
+        """Test create_mobile_ux_design with empty app type."""
+        with pytest.raises(ValueError, match="App type must be a non-empty string"):
+            self.agent.create_mobile_ux_design("iOS", "")
+
+    def test_build_shadcn_component_invalid_name(self):
+        """Test build_shadcn_component with invalid component name."""
+        with pytest.raises(ValueError, match="Component name must be a non-empty string"):
+            self.agent.build_shadcn_component("")
+
+    def test_build_shadcn_component_lowercase_name(self):
+        """Test build_shadcn_component with lowercase component name."""
+        with pytest.raises(ValueError, match="Component name should start with uppercase letter"):
+            self.agent.build_shadcn_component("button")
+
+    def test_show_resource_invalid_type(self):
+        """Test show_resource with invalid resource type."""
+        with patch('builtins.print') as mock_print:
+            self.agent.show_resource("invalid-resource")
+            mock_print.assert_any_call("Error: Unknown resource type: invalid-resource")
+            mock_print.assert_any_call("Available resource types: best-practices, changelog, design-system, shadcn-tokens, accessibility-checklist")
+
+    def test_show_resource_empty_type(self):
+        """Test show_resource with empty resource type."""
+        with patch('builtins.print') as mock_print:
+            self.agent.show_resource("")
+            mock_print.assert_called_with("Error: Invalid resource type provided")
+
+    def test_show_resource_none_type(self):
+        """Test show_resource with None resource type."""
+        with patch('builtins.print') as mock_print:
+            self.agent.show_resource(None)
+            mock_print.assert_called_with("Error: Invalid resource type provided")
+
+    def test_show_resource_permission_error(self):
+        """Test show_resource with permission error."""
+        with patch('pathlib.Path.exists', return_value=True), \
+             patch('builtins.open', side_effect=PermissionError("Permission denied")), \
+             patch('builtins.print') as mock_print:
+            self.agent.show_resource("best-practices")
+            mock_print.assert_called_with("Error: Permission denied accessing resource: best-practices")
+
+    def test_show_resource_unicode_error(self):
+        """Test show_resource with unicode decode error."""
+        with patch('pathlib.Path.exists', return_value=True), \
+             patch('builtins.open', side_effect=UnicodeDecodeError("utf-8", b"", 0, 1, "invalid")), \
+             patch('builtins.print') as mock_print:
+            self.agent.show_resource("best-practices")
+            mock_print.assert_called_with("Error: Resource file contains invalid characters: best-practices")
+
+    def test_load_design_history_file_not_found(self):
+        """Test _load_design_history with file not found."""
+        with patch('pathlib.Path.exists', return_value=False):
+            agent = UXUIDesignerAgent()
+            assert agent.design_history == []
+
+    def test_load_design_history_permission_error(self):
+        """Test _load_design_history with permission error."""
+        with patch('pathlib.Path.exists', return_value=True), \
+             patch('builtins.open', side_effect=PermissionError("Permission denied")):
+            agent = UXUIDesignerAgent()
+            assert agent.design_history == []
+
+    def test_load_design_history_unicode_error(self):
+        """Test _load_design_history with unicode decode error."""
+        with patch('pathlib.Path.exists', return_value=True), \
+             patch('builtins.open', side_effect=UnicodeDecodeError("utf-8", b"", 0, 1, "invalid")):
+            agent = UXUIDesignerAgent()
+            assert agent.design_history == []
+
+    def test_save_design_history_permission_error(self):
+        """Test _save_design_history with permission error."""
+        with patch('pathlib.Path.mkdir'), \
+             patch('builtins.open', side_effect=PermissionError("Permission denied")):
+            self.agent._save_design_history()
+
+    def test_save_design_history_os_error(self):
+        """Test _save_design_history with OS error."""
+        with patch('pathlib.Path.mkdir'), \
+             patch('builtins.open', side_effect=OSError("Disk full")):
+            self.agent._save_design_history()
+
+    def test_load_feedback_history_file_not_found(self):
+        """Test _load_feedback_history with file not found."""
+        with patch('pathlib.Path.exists', return_value=False):
+            agent = UXUIDesignerAgent()
+            assert agent.feedback_history == []
+
+    def test_load_feedback_history_permission_error(self):
+        """Test _load_feedback_history with permission error."""
+        with patch('pathlib.Path.exists', return_value=True), \
+             patch('builtins.open', side_effect=PermissionError("Permission denied")):
+            agent = UXUIDesignerAgent()
+            assert agent.feedback_history == []
+
+    def test_save_feedback_history_permission_error(self):
+        """Test _save_feedback_history with permission error."""
+        with patch('pathlib.Path.mkdir'), \
+             patch('builtins.open', side_effect=PermissionError("Permission denied")):
+            self.agent._save_feedback_history()
+
+    def test_save_feedback_history_os_error(self):
+        """Test _save_feedback_history with OS error."""
+        with patch('pathlib.Path.mkdir'), \
+             patch('builtins.open', side_effect=OSError("Disk full")):
+            self.agent._save_feedback_history()
 
 
 class TestUXUIDesignerAgentIntegration:
@@ -617,3 +728,199 @@ class TestUXUIDesignerAgentIntegration:
             assert feedback == "Generated response"
             assert documentation == "Generated response"
             assert mock_llm.call_count == 2 
+
+
+class TestUXUIDesignerAgentCLI:
+    """Test CLI interface functionality."""
+
+    def setup_method(self):
+        """Setup method voor alle tests in deze class."""
+        with patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.get_performance_monitor'), \
+             patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.get_advanced_policy_engine'), \
+             patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.get_sprite_library'):
+            self.agent = UXUIDesignerAgent()
+
+    @patch('sys.argv', ['uxuidesigner.py', 'help'])
+    @patch('builtins.print')
+    def test_cli_help_command(self, mock_print):
+        """Test CLI help command."""
+        from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
+        main()
+        mock_print.assert_called()
+
+    @patch('sys.argv', ['uxuidesigner.py', 'build-shadcn-component', '--component-name', 'Button'])
+    @patch('builtins.print')
+    @patch('json.dumps')
+    def test_cli_build_shadcn_component(self, mock_json_dumps, mock_print):
+        """Test CLI build-shadcn-component command."""
+        from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
+        main()
+        mock_json_dumps.assert_called()
+
+    @patch('sys.argv', ['uxuidesigner.py', 'create-component-spec', '--component-name', 'Card'])
+    @patch('builtins.print')
+    @patch('json.dumps')
+    def test_cli_create_component_spec(self, mock_json_dumps, mock_print):
+        """Test CLI create-component-spec command."""
+        from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
+        main()
+        mock_json_dumps.assert_called()
+
+    @patch('sys.argv', ['uxuidesigner.py', 'create-mobile-ux', '--platform', 'iOS', '--app-type', 'native'])
+    @patch('builtins.print')
+    @patch('json.dumps')
+    def test_cli_create_mobile_ux(self, mock_json_dumps, mock_print):
+        """Test CLI create-mobile-ux command."""
+        from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
+        main()
+        mock_json_dumps.assert_called()
+
+    @patch('sys.argv', ['uxuidesigner.py', 'design-mobile-component', '--component-name', 'Button', '--platform', 'Android'])
+    @patch('builtins.print')
+    @patch('json.dumps')
+    def test_cli_design_mobile_component(self, mock_json_dumps, mock_print):
+        """Test CLI design-mobile-component command."""
+        from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
+        main()
+        mock_json_dumps.assert_called()
+
+    @patch('sys.argv', ['uxuidesigner.py', 'create-mobile-flow', '--flow-name', 'Onboarding', '--platform', 'iOS'])
+    @patch('builtins.print')
+    @patch('json.dumps')
+    def test_cli_create_mobile_flow(self, mock_json_dumps, mock_print):
+        """Test CLI create-mobile-flow command."""
+        from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
+        main()
+        mock_json_dumps.assert_called()
+
+    @patch('sys.argv', ['uxuidesigner.py', 'design-feedback', '--feedback-text', 'Test feedback'])
+    @patch('builtins.print')
+    @patch('json.dumps')
+    @patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.ask_openai', return_value="Mocked feedback response")
+    def test_cli_design_feedback(self, mock_ask_openai, mock_json_dumps, mock_print):
+        """Test CLI design-feedback command."""
+        from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
+        main()
+        mock_json_dumps.assert_called()
+
+    @patch('sys.argv', ['uxuidesigner.py', 'document-component', '--component-desc', 'Test component'])
+    @patch('builtins.print')
+    @patch('json.dumps')
+    @patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.ask_openai', return_value="Mocked documentation response")
+    def test_cli_document_component(self, mock_ask_openai, mock_json_dumps, mock_print):
+        """Test CLI document-component command."""
+        from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
+        main()
+        mock_json_dumps.assert_called()
+
+    @patch('sys.argv', ['uxuidesigner.py', 'analyze-figma', '--figma-file-id', 'test123'])
+    @patch('builtins.print')
+    @patch('json.dumps')
+    def test_cli_analyze_figma(self, mock_json_dumps, mock_print):
+        """Test CLI analyze-figma command."""
+        from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
+        main()
+        mock_json_dumps.assert_called()
+
+    @patch('sys.argv', ['uxuidesigner.py', 'show-design-history'])
+    @patch('builtins.print')
+    def test_cli_show_design_history(self, mock_print):
+        """Test CLI show-design-history command."""
+        from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
+        main()
+        mock_print.assert_called()
+
+    @patch('sys.argv', ['uxuidesigner.py', 'show-feedback-history'])
+    @patch('builtins.print')
+    def test_cli_show_feedback_history(self, mock_print):
+        """Test CLI show-feedback-history command."""
+        from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
+        main()
+        mock_print.assert_called()
+
+    @patch('sys.argv', ['uxuidesigner.py', 'show-best-practices'])
+    @patch('builtins.print')
+    def test_cli_show_best_practices(self, mock_print):
+        """Test CLI show-best-practices command."""
+        from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
+        main()
+        mock_print.assert_called()
+
+    @patch('sys.argv', ['uxuidesigner.py', 'show-changelog'])
+    @patch('builtins.print')
+    def test_cli_show_changelog(self, mock_print):
+        """Test CLI show-changelog command."""
+        from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
+        main()
+        mock_print.assert_called()
+
+    @patch('sys.argv', ['uxuidesigner.py', 'export-report', '--format', 'json'])
+    @patch('builtins.print')
+    def test_cli_export_report(self, mock_print):
+        """Test CLI export-report command."""
+        from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
+        main()
+        mock_print.assert_called()
+
+    @patch('sys.argv', ['uxuidesigner.py', 'test'])
+    @patch('builtins.print')
+    def test_cli_test(self, mock_print):
+        """Test CLI test command."""
+        from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
+        main()
+        mock_print.assert_called()
+
+    @patch('sys.argv', ['uxuidesigner.py', 'collaborate'])
+    @patch('builtins.print')
+    @patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.save_context')
+    @patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.publish')
+    @patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.get_context', return_value={"status": "active"})
+    def test_cli_collaborate(self, mock_get_context, mock_publish, mock_save_context, mock_print):
+        """Test CLI collaborate command."""
+        from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
+        main()
+        mock_print.assert_called()
+
+    @patch('sys.argv', ['uxuidesigner.py', 'run'])
+    @patch('builtins.print')
+    @patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.save_context')
+    @patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.publish')
+    @patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.get_context', return_value={"status": "active"})
+    def test_cli_run(self, mock_get_context, mock_publish, mock_save_context, mock_print):
+        """Test CLI run command."""
+        from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
+        main()
+        mock_print.assert_called()
+
+    @patch('sys.argv', ['uxuidesigner.py', 'design-feedback'])
+    @patch('sys.exit')
+    @patch('builtins.print')
+    @patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.UXUIDesignerAgent.design_feedback')
+    def test_cli_design_feedback_missing_text(self, mock_design_feedback, mock_print, mock_exit):
+        """Test CLI design-feedback command with missing feedback text."""
+        from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
+        main()
+        mock_print.assert_called_with("Geef feedback tekst op met --feedback-text")
+        mock_exit.assert_called_with(1)
+
+    @patch('sys.argv', ['uxuidesigner.py', 'document-component'])
+    @patch('sys.exit')
+    @patch('builtins.print')
+    @patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.UXUIDesignerAgent.document_component')
+    def test_cli_document_component_missing_desc(self, mock_document_component, mock_print, mock_exit):
+        """Test CLI document-component command with missing component description."""
+        from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
+        main()
+        mock_print.assert_called_with("Geef component beschrijving op met --component-desc")
+        mock_exit.assert_called_with(1)
+
+    @patch('sys.argv', ['uxuidesigner.py', 'analyze-figma'])
+    @patch('sys.exit')
+    @patch('builtins.print')
+    @patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.UXUIDesignerAgent.analyze_figma_design')
+    def test_cli_analyze_figma_missing_file_id(self, mock_analyze_figma, mock_print, mock_exit):
+        """Test CLI analyze-figma command with missing file ID."""
+        from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
+        main()
+        mock_print.assert_called_with("Geef Figma file ID op met --figma-file-id")
+        mock_exit.assert_called_with(1) 
