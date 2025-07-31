@@ -1,7 +1,7 @@
 {
   "events": [
     {
-      "timestamp": "2025-07-31T10:54:10.359170",
+      "timestamp": "2025-07-31T11:17:39.606324",
       "event": "test_topic",
       "data": {
         "type": "test",
@@ -9,21 +9,21 @@
       }
     },
     {
-      "timestamp": "2025-07-31T10:54:38.992455",
+      "timestamp": "2025-07-31T11:18:08.265370",
       "event": "tests_requested",
       "data": {
         "desc": "Tests uitvoeren"
       }
     },
     {
-      "timestamp": "2025-07-31T10:54:41.002118",
+      "timestamp": "2025-07-31T11:18:10.280397",
       "event": "deployment_completed",
       "data": {
         "desc": "Deployment afgerond"
       }
     },
     {
-      "timestamp": "2025-07-31T10:54:50.565423",
+      "timestamp": "2025-07-31T11:18:19.876487",
       "event": "documentation_completed",
       "data": {
         "status": "success",
@@ -35,30 +35,30 @@
       }
     },
     {
-      "timestamp": "2025-07-31T10:55:03.229204",
+      "timestamp": "2025-07-31T11:18:32.561554",
       "event": "feedback_collected",
       "data": {
         "desc": "Feedback verzameld"
       }
     },
     {
-      "timestamp": "2025-07-31T10:55:04.239131",
+      "timestamp": "2025-07-31T11:18:33.570127",
       "event": "trends_analyzed",
       "data": {
         "desc": "Trends geanalyseerd"
       }
     },
     {
-      "timestamp": "2025-07-31T10:55:09.342478",
+      "timestamp": "2025-07-31T11:18:38.669617",
       "event": "component_build_requested",
       "data": {
         "agent": "FrontendDeveloperAgent",
         "component_name": "Button",
-        "timestamp": "2025-07-31T10:55:09.342363"
+        "timestamp": "2025-07-31T11:18:38.669515"
       }
     },
     {
-      "timestamp": "2025-07-31T10:55:09.343543",
+      "timestamp": "2025-07-31T11:18:38.670651",
       "event": "component_build_completed",
       "data": {
         "name": "Button",
@@ -66,12 +66,12 @@
         "status": "created",
         "accessibility_score": 95,
         "performance_score": 88,
-        "timestamp": "2025-07-31T10:55:09.343110",
+        "timestamp": "2025-07-31T11:18:38.670229",
         "agent": "FrontendDeveloperAgent"
       }
     },
     {
-      "timestamp": "2025-07-31T10:55:09.343997",
+      "timestamp": "2025-07-31T11:18:38.671137",
       "event": "accessibility_check_completed",
       "data": {
         "component": "Button",
@@ -88,21 +88,21 @@
             "description": "Missing alt text on image"
           }
         ],
-        "timestamp": "2025-07-31T10:55:09.343426",
+        "timestamp": "2025-07-31T11:18:38.670529",
         "agent": "FrontendDeveloperAgent"
       }
     },
     {
-      "timestamp": "2025-07-31T10:55:10.823495",
+      "timestamp": "2025-07-31T11:18:40.149779",
       "event": "component_build_requested",
       "data": {
         "agent": "FrontendDeveloperAgent",
         "component_name": "Button",
-        "timestamp": "2025-07-31T10:55:10.823352"
+        "timestamp": "2025-07-31T11:18:40.149649"
       }
     },
     {
-      "timestamp": "2025-07-31T10:55:13.842388",
+      "timestamp": "2025-07-31T11:18:43.165872",
       "event": "component_build_completed",
       "data": {
         "name": "Button",
@@ -110,12 +110,12 @@
         "status": "created",
         "accessibility_score": 95,
         "performance_score": 88,
-        "timestamp": "2025-07-31T10:55:12.835167",
+        "timestamp": "2025-07-31T11:18:42.158502",
         "agent": "FrontendDeveloperAgent"
       }
     },
     {
-      "timestamp": "2025-07-31T10:55:13.873089",
+      "timestamp": "2025-07-31T11:18:43.186121",
       "event": "accessibility_check_completed",
       "data": {
         "component": "Button",
@@ -132,12 +132,12 @@
             "description": "Missing alt text on image"
           }
         ],
-        "timestamp": "2025-07-31T10:55:13.841740",
+        "timestamp": "2025-07-31T11:18:43.165308",
         "agent": "FrontendDeveloperAgent"
       }
     },
     {
-      "timestamp": "2025-07-31T10:55:41.822980",
+      "timestamp": "2025-07-31T11:19:14.296327",
       "event": "new_task",
       "data": {
         "event_type": "new_task",
@@ -145,7 +145,7 @@
       }
     },
     {
-      "timestamp": "2025-07-31T10:55:41.824269",
+      "timestamp": "2025-07-31T11:19:14.297433",
       "event": "user_story_requested",
       "data": {
         "event_type": "user_story_requested",
@@ -153,7 +153,7 @@
       }
     },
     {
-      "timestamp": "2025-07-31T10:55:41.825462",
+      "timestamp": "2025-07-31T11:19:14.298448",
       "event": "test_generation_requested",
       "data": {
         "event_type": "test_generation_requested",
@@ -161,7 +161,7 @@
       }
     },
     {
-      "timestamp": "2025-07-31T10:55:50.942937",
+      "timestamp": "2025-07-31T11:19:23.411765",
       "event": "backlog_updated",
       "data": {
         "status": "success",
@@ -169,16 +169,16 @@
       }
     },
     {
-      "timestamp": "2025-07-31T10:56:37.023505",
+      "timestamp": "2025-07-31T11:20:09.813316",
       "event": "security_scan_requested",
       "data": {
         "agent": "SecurityDeveloperAgent",
         "target": "BMAD Application",
-        "timestamp": "2025-07-31T10:56:37.022954"
+        "timestamp": "2025-07-31T11:20:09.813166"
       }
     },
     {
-      "timestamp": "2025-07-31T10:56:39.033686",
+      "timestamp": "2025-07-31T11:20:11.822163",
       "event": "security_scan_completed",
       "data": {
         "status": "success",
@@ -188,16 +188,16 @@
       }
     },
     {
-      "timestamp": "2025-07-31T10:56:41.162918",
+      "timestamp": "2025-07-31T11:20:13.954948",
       "event": "security_scan_requested",
       "data": {
         "agent": "SecurityDeveloperAgent",
         "target": "BMAD Application",
-        "timestamp": "2025-07-31T10:56:41.162729"
+        "timestamp": "2025-07-31T11:20:13.954791"
       }
     },
     {
-      "timestamp": "2025-07-31T10:56:45.180460",
+      "timestamp": "2025-07-31T11:20:17.971034",
       "event": "security_scan_completed",
       "data": {
         "status": "success",
@@ -207,23 +207,23 @@
       }
     },
     {
-      "timestamp": "2025-07-31T10:56:48.740519",
+      "timestamp": "2025-07-31T11:20:21.457470",
       "event": "security_findings_reported",
       "data": {
         "desc": "Security bevindingen gerapporteerd"
       }
     },
     {
-      "timestamp": "2025-07-31T10:56:54.325530",
+      "timestamp": "2025-07-31T11:20:27.025169",
       "event": "design_requested",
       "data": {
         "agent": "UXUIDesignerAgent",
         "task": "Create Shadcn Button Component",
-        "timestamp": "2025-07-31T10:56:54.325312"
+        "timestamp": "2025-07-31T11:20:27.025012"
       }
     },
     {
-      "timestamp": "2025-07-31T10:56:55.336474",
+      "timestamp": "2025-07-31T11:20:28.033645",
       "event": "design_completed",
       "data": {
         "status": "success",
@@ -233,154 +233,104 @@
       }
     },
     {
-      "timestamp": "2025-07-31T10:56:57.067493",
+      "timestamp": "2025-07-31T11:20:29.881800",
       "event": "test_event",
       "data": {
         "data": "test"
       }
     },
     {
-      "timestamp": "2025-07-31T11:02:14.431509",
-      "event": "fullstack_development_requested",
+      "timestamp": "2025-07-31T11:33:43.866020",
+      "event": "accessibility_audit_requested",
       "data": {
-        "agent": "FullstackDeveloperAgent",
-        "story": "User Authentication",
-        "timestamp": "2025-07-31T11:02:14.431394"
+        "agent": "AccessibilityAgent",
+        "target": "BMAD Application",
+        "timestamp": "2025-07-31T11:33:43.865634"
       }
     },
     {
-      "timestamp": "2025-07-31T11:02:14.707254",
-      "event": "fullstack_development_requested",
+      "timestamp": "2025-07-31T11:33:44.963424",
+      "event": "accessibility_audit_requested",
       "data": {
-        "agent": "FullstackDeveloperAgent",
-        "story": "User Authentication",
-        "timestamp": "2025-07-31T11:02:14.707170"
+        "agent": "AccessibilityAgent",
+        "target": "BMAD Application",
+        "timestamp": "2025-07-31T11:33:44.962261"
       }
     },
     {
-      "timestamp": "2025-07-31T11:02:15.802538",
-      "event": "development_started",
+      "timestamp": "2025-07-31T11:35:19.455966",
+      "event": "accessibility_audit_requested",
       "data": {
-        "desc": "Ontwikkeling gestart"
+        "agent": "AccessibilityAgent",
+        "target": "BMAD Application",
+        "timestamp": "2025-07-31T11:35:19.454720"
       }
     },
     {
-      "timestamp": "2025-07-31T11:02:17.810734",
-      "event": "testing_started",
-      "data": {
-        "desc": "Testen gestart"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T11:03:33.220424",
-      "event": "fullstack_development_requested",
-      "data": {
-        "agent": "FullstackDeveloperAgent",
-        "story": "User Authentication",
-        "timestamp": "2025-07-31T11:03:33.220054"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T11:03:33.374299",
-      "event": "fullstack_development_requested",
-      "data": {
-        "agent": "FullstackDeveloperAgent",
-        "story": "User Authentication",
-        "timestamp": "2025-07-31T11:03:33.373900"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T11:03:34.468783",
-      "event": "development_started",
-      "data": {
-        "desc": "Ontwikkeling gestart"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T11:03:36.478115",
-      "event": "testing_started",
-      "data": {
-        "desc": "Testen gestart"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T11:04:14.540339",
-      "event": "fullstack_development_requested",
-      "data": {
-        "agent": "FullstackDeveloperAgent",
-        "story": "User Authentication",
-        "timestamp": "2025-07-31T11:04:14.539984"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T11:04:14.783892",
-      "event": "fullstack_development_requested",
-      "data": {
-        "agent": "FullstackDeveloperAgent",
-        "story": "User Authentication",
-        "timestamp": "2025-07-31T11:04:14.783414"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T11:04:15.875798",
-      "event": "development_started",
-      "data": {
-        "desc": "Ontwikkeling gestart"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T11:04:17.889511",
-      "event": "testing_started",
-      "data": {
-        "desc": "Testen gestart"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T11:06:54.624224",
-      "event": "fullstack_development_requested",
-      "data": {
-        "agent": "FullstackDeveloperAgent",
-        "story": "User Authentication",
-        "timestamp": "2025-07-31T11:06:54.623896"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T11:07:16.162897",
-      "event": "development_started",
-      "data": {
-        "desc": "Ontwikkeling gestart"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T11:10:28.701440",
-      "event": "fullstack_development_requested",
-      "data": {
-        "agent": "FullstackDeveloperAgent",
-        "story": "User Authentication",
-        "timestamp": "2025-07-31T11:10:28.701019"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T11:10:28.704466",
-      "event": "fullstack_development_completed",
+      "timestamp": "2025-07-31T11:35:20.464999",
+      "event": "accessibility_audit_completed",
       "data": {
         "status": "success",
-        "agent": "FullstackDeveloperAgent",
-        "shadcn_components": 1
+        "agent": "AccessibilityAgent",
+        "overall_score": 0,
+        "shadcn_score": 96
       }
     },
     {
-      "timestamp": "2025-07-31T11:10:30.048120",
-      "event": "development_started",
+      "timestamp": "2025-07-31T11:35:20.732085",
+      "event": "accessibility_audit_requested",
       "data": {
-        "desc": "Ontwikkeling gestart"
+        "agent": "AccessibilityAgent",
+        "target": "BMAD Application",
+        "timestamp": "2025-07-31T11:35:20.731971"
       }
     },
     {
-      "timestamp": "2025-07-31T11:10:32.059417",
-      "event": "testing_started",
+      "timestamp": "2025-07-31T11:35:21.740112",
+      "event": "accessibility_audit_completed",
       "data": {
-        "desc": "Testen gestart"
+        "status": "success",
+        "agent": "AccessibilityAgent",
+        "overall_score": 0,
+        "shadcn_score": 96
+      }
+    },
+    {
+      "timestamp": "2025-07-31T11:35:50.342886",
+      "event": "accessibility_audit_requested",
+      "data": {
+        "agent": "AccessibilityAgent",
+        "target": "BMAD Application",
+        "timestamp": "2025-07-31T11:35:50.342412"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T11:35:50.345428",
+      "event": "accessibility_audit_completed",
+      "data": {
+        "status": "success",
+        "agent": "AccessibilityAgent",
+        "overall_score": 85,
+        "shadcn_score": 96
+      }
+    },
+    {
+      "timestamp": "2025-07-31T11:36:26.082668",
+      "event": "accessibility_audit_requested",
+      "data": {
+        "agent": "AccessibilityAgent",
+        "target": "BMAD Application",
+        "timestamp": "2025-07-31T11:36:26.082207"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T11:36:26.085140",
+      "event": "accessibility_audit_completed",
+      "data": {
+        "status": "success",
+        "agent": "AccessibilityAgent",
+        "overall_score": 85,
+        "shadcn_score": 96
       }
     }
   ]

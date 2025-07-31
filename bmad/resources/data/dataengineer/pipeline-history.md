@@ -1,7 +1,5 @@
 # Data Pipeline History
 
-- Analytics Platform (Google Analytics)
-- Data Warehouse (Snowflake)
 - Data Lake (AWS S3)
 - Analytics Platform (Tableau)
 - ML Platform (AWS SageMaker)
@@ -50,3 +48,5 @@
 - 2025-07-31T10:44:08.299995: Test Pipeline pipeline built successfully
 - 2025-07-31T10:54:28.822720: Test Pipeline pipeline built successfully
 - 2025-07-31T10:54:35.884923: Test Pipeline pipeline built successfully
+- 2025-07-31T11:17:58.089704: Test Pipeline pipeline built successfully
+- 2025-07-31T11:18:05.150104: Test Pipeline pipeline built successfully
