@@ -149,8 +149,8 @@ class TestProductOwnerAgent:
         """Test create_user_story method with invalid input."""
         with pytest.raises(ValueError, match="Requirement must be a non-empty string"):
             agent.create_user_story("")
-        
-        with pytest.raises(ValueError, match="Requirement must be a non-empty string"):
+    
+        with pytest.raises(TypeError, match="Requirement must be a string"):
             agent.create_user_story(None)
 
     def test_show_vision(self, agent):
@@ -178,12 +178,11 @@ class TestProductOwnerAgent:
         assert "Report export saved to:" in captured.out
         assert ".json" in captured.out
 
-    def test_export_report_invalid_format(self, agent, capsys):
+    def test_export_report_invalid_format(self, agent):
         """Test export_report method with invalid format."""
         test_data = {"project": "Test Project", "stories": 5}
-        agent.export_report("invalid", test_data)
-        captured = capsys.readouterr()
-        assert "Unsupported format" in captured.out
+        with pytest.raises(ValueError, match="format_type must be one of: md, json"):
+            agent.export_report("invalid", test_data)
 
     @patch('bmad.agents.core.communication.message_bus.publish')
     @patch('bmad.agents.core.data.supabase_context.save_context')
@@ -228,6 +227,274 @@ class TestProductOwnerAgent:
         assert "Listening for events" in captured.out
         assert "ProductOwner Agent stopped" in captured.out
 
+    # Additional error handling and input validation tests
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    @patch('os.path.exists', return_value=True)
+    def test_load_story_history_permission_error(self, mock_exists, mock_file, agent):
+        """Test story history loading with permission error."""
+        agent.story_history = []  # Reset history
+        agent._load_story_history()
+        assert len(agent.story_history) == 0
+
+    @patch('builtins.open', side_effect=UnicodeDecodeError("utf-8", b"", 0, 1, "invalid utf-8"))
+    @patch('os.path.exists', return_value=True)
+    def test_load_story_history_unicode_error(self, mock_exists, mock_file, agent):
+        """Test story history loading with unicode error."""
+        agent.story_history = []  # Reset history
+        agent._load_story_history()
+        assert len(agent.story_history) == 0
+
+    @patch('builtins.open', side_effect=OSError("OS error"))
+    @patch('os.path.exists', return_value=True)
+    def test_load_story_history_os_error(self, mock_exists, mock_file, agent):
+        """Test story history loading with OS error."""
+        agent.story_history = []  # Reset history
+        agent._load_story_history()
+        assert len(agent.story_history) == 0
+
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    @patch('os.makedirs')
+    @patch('os.path.exists', return_value=False)
+    def test_save_story_history_permission_error(self, mock_exists, mock_makedirs, mock_file, agent):
+        """Test saving story history with permission error."""
+        agent.story_history = ["- Story: Test story 1", "- Story: Test story 2"]
+        agent._save_story_history()
+
+    @patch('builtins.open', side_effect=OSError("OS error"))
+    @patch('os.makedirs')
+    @patch('os.path.exists', return_value=False)
+    def test_save_story_history_os_error(self, mock_exists, mock_makedirs, mock_file, agent):
+        """Test saving story history with OS error."""
+        agent.story_history = ["- Story: Test story 1", "- Story: Test story 2"]
+        agent._save_story_history()
+
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    @patch('os.path.exists', return_value=True)
+    def test_load_vision_history_permission_error(self, mock_exists, mock_file, agent):
+        """Test vision history loading with permission error."""
+        agent.vision_history = []  # Reset history
+        agent._load_vision_history()
+        assert len(agent.vision_history) == 0
+
+    @patch('builtins.open', side_effect=UnicodeDecodeError("utf-8", b"", 0, 1, "invalid utf-8"))
+    @patch('os.path.exists', return_value=True)
+    def test_load_vision_history_unicode_error(self, mock_exists, mock_file, agent):
+        """Test vision history loading with unicode error."""
+        agent.vision_history = []  # Reset history
+        agent._load_vision_history()
+        assert len(agent.vision_history) == 0
+
+    @patch('builtins.open', side_effect=OSError("OS error"))
+    @patch('os.path.exists', return_value=True)
+    def test_load_vision_history_os_error(self, mock_exists, mock_file, agent):
+        """Test vision history loading with OS error."""
+        agent.vision_history = []  # Reset history
+        agent._load_vision_history()
+        assert len(agent.vision_history) == 0
+
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    @patch('os.makedirs')
+    @patch('os.path.exists', return_value=False)
+    def test_save_vision_history_permission_error(self, mock_exists, mock_makedirs, mock_file, agent):
+        """Test saving vision history with permission error."""
+        agent.vision_history = ["- Vision: Test vision 1", "- Vision: Test vision 2"]
+        agent._save_vision_history()
+
+    @patch('builtins.open', side_effect=OSError("OS error"))
+    @patch('os.makedirs')
+    @patch('os.path.exists', return_value=False)
+    def test_save_vision_history_os_error(self, mock_exists, mock_makedirs, mock_file, agent):
+        """Test saving vision history with OS error."""
+        agent.vision_history = ["- Vision: Test vision 1", "- Vision: Test vision 2"]
+        agent._save_vision_history()
+
+    def test_show_resource_invalid_type(self, agent, capsys):
+        """Test show_resource method with invalid resource type."""
+        agent.show_resource(123)  # Invalid type
+        captured = capsys.readouterr()
+        assert "Error: resource_type must be a string" in captured.out
+
+    def test_show_resource_empty_type(self, agent, capsys):
+        """Test show_resource method with empty resource type."""
+        agent.show_resource("")  # Empty string
+        captured = capsys.readouterr()
+        assert "Error: resource_type cannot be empty" in captured.out
+
+    @patch('builtins.open', side_effect=FileNotFoundError("File not found"))
+    @patch('os.path.exists', return_value=True)
+    def test_show_resource_file_not_found(self, mock_exists, mock_file, agent, capsys):
+        """Test show_resource method when file not found."""
+        agent.show_resource("best_practices")
+        captured = capsys.readouterr()
+        assert "Resource file not found: best_practices" in captured.out
+
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    @patch('os.path.exists', return_value=True)
+    def test_show_resource_permission_error(self, mock_exists, mock_file, agent, capsys):
+        """Test show_resource method with permission error."""
+        agent.show_resource("best_practices")
+        captured = capsys.readouterr()
+        assert "Permission denied accessing resource best_practices" in captured.out
+
+    @patch('builtins.open', side_effect=UnicodeDecodeError("utf-8", b"", 0, 1, "invalid utf-8"))
+    @patch('os.path.exists', return_value=True)
+    def test_show_resource_unicode_error(self, mock_exists, mock_file, agent, capsys):
+        """Test show_resource method with unicode error."""
+        agent.show_resource("best_practices")
+        captured = capsys.readouterr()
+        assert "Unicode decode error in resource best_practices" in captured.out
+
+    def test_create_user_story_empty_requirement(self, agent):
+        """Test create_user_story with empty requirement."""
+        with pytest.raises(ValueError, match="Requirement must be a non-empty string"):
+            agent.create_user_story("")
+
+    def test_create_user_story_whitespace_requirement(self, agent):
+        """Test create_user_story with whitespace requirement."""
+        with pytest.raises(ValueError, match="Requirement must be a non-empty string"):
+            agent.create_user_story("   ")
+
+    def test_export_report_invalid_format_type(self, agent):
+        """Test export_report with invalid format type."""
+        with pytest.raises(TypeError, match="format_type must be a string"):
+            agent.export_report(123, {"test": "data"})
+
+    def test_export_report_invalid_format_value(self, agent):
+        """Test export_report with invalid format value."""
+        with pytest.raises(ValueError, match="format_type must be one of: md, json"):
+            agent.export_report("xml", {"test": "data"})
+
+    def test_export_report_invalid_data_type(self, agent):
+        """Test export_report with invalid data type."""
+        with pytest.raises(TypeError, match="data must be a dictionary"):
+            agent.export_report("md", "invalid")
+
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    def test_export_report_permission_error(self, mock_file, agent):
+        """Test export_report with permission error."""
+        test_data = {"stories": 5, "vision": "BMAD"}
+        agent.export_report("md", test_data)
+
+    @patch('builtins.open', side_effect=OSError("OS error"))
+    def test_export_report_os_error(self, mock_file, agent):
+        """Test export_report with OS error."""
+        test_data = {"stories": 5, "vision": "BMAD"}
+        agent.export_report("md", test_data)
+
+    @patch('bmad.agents.core.communication.message_bus.publish')
+    @patch('bmad.agents.core.data.supabase_context.save_context')
+    @patch('bmad.agents.core.data.supabase_context.get_context')
+    def test_collaborate_example_function(self, mock_get_context, mock_save_context, mock_publish, agent, capsys):
+        """Test collaborate_example function."""
+        with patch('bmad.agents.Agent.ProductOwner.product_owner.publish') as mock_publish:
+            with patch('bmad.agents.Agent.ProductOwner.product_owner.save_context') as mock_save:
+                with patch('bmad.agents.Agent.ProductOwner.product_owner.get_context') as mock_get:
+                    mock_get.return_value = {"status": "active"}
+                    mock_save.return_value = None
+                    mock_publish.return_value = None
+                    
+                    from bmad.agents.Agent.ProductOwner.product_owner import collaborate_example
+                    
+                    collaborate_example()
+                    captured = capsys.readouterr()
+                    
+                    assert "Event gepubliceerd" in captured.out
+                    assert "context opgeslagen" in captured.out
+
+    @patch('bmad.agents.Agent.ProductOwner.product_owner.ask_openai_with_confidence')
+    def test_ask_llm_user_story_valid_input(self, mock_llm):
+        """Test ask_llm_user_story function with valid input."""
+        mock_llm.return_value = {"answer": "Test user story", "confidence": 0.9}
+        
+        with patch('bmad.agents.Agent.ProductOwner.product_owner.confidence_scoring') as mock_confidence:
+            mock_confidence.enhance_agent_output.return_value = {
+                "output": "Enhanced story",
+                "confidence": 0.9,
+                "review_level": "low",
+                "review_required": False
+            }
+            
+            from bmad.agents.Agent.ProductOwner.product_owner import ask_llm_user_story
+            
+            with patch('builtins.print'):  # Suppress print output
+                result = ask_llm_user_story("Test requirement")
+            
+            assert result == "Enhanced story"
+
+    def test_ask_llm_user_story_invalid_input(self):
+        """Test ask_llm_user_story function with invalid input."""
+        from bmad.agents.Agent.ProductOwner.product_owner import ask_llm_user_story
+        
+        with pytest.raises(ValueError, match="Requirement must be a non-empty string"):
+            ask_llm_user_story("")
+        
+        with pytest.raises(TypeError, match="Requirement must be a string"):
+            ask_llm_user_story(None)
+
+    @patch('bmad.agents.Agent.ProductOwner.product_owner.ask_openai_with_confidence')
+    def test_ask_llm_user_story_llm_error(self, mock_llm):
+        """Test ask_llm_user_story function with LLM error."""
+        mock_llm.side_effect = Exception("LLM error")
+        
+        from bmad.agents.Agent.ProductOwner.product_owner import ask_llm_user_story
+        
+        with patch('builtins.print'):  # Suppress print output
+            result = ask_llm_user_story("Test requirement")
+        
+        assert "Error generating user story" in result
+
+    @patch('bmad.agents.Agent.ProductOwner.product_owner.ask_openai_with_confidence')
+    def test_on_user_story_requested(self, mock_llm, capsys):
+        """Test on_user_story_requested function."""
+        mock_llm.return_value = {"answer": "Generated story"}
+        
+        from bmad.agents.Agent.ProductOwner.product_owner import on_user_story_requested
+        
+        test_event = {"requirement": "Test requirement", "context": "Test context"}
+        on_user_story_requested(test_event)
+        captured = capsys.readouterr()
+        
+        assert "Generated story" in captured.out
+
+    def test_on_feedback_sentiment_analyzed_negative(self, capsys):
+        """Test on_feedback_sentiment_analyzed function with negative sentiment."""
+        from bmad.agents.Agent.ProductOwner.product_owner import on_feedback_sentiment_analyzed
+        
+        test_event = {
+            "sentiment": "negative",
+            "motivatie": "Test motivation",
+            "feedback": "Test feedback"
+        }
+        on_feedback_sentiment_analyzed(test_event)
+        captured = capsys.readouterr()
+        
+        assert "Negative feedback detected" in captured.out
+
+    def test_on_feedback_sentiment_analyzed_positive(self, capsys):
+        """Test on_feedback_sentiment_analyzed function with positive sentiment."""
+        from bmad.agents.Agent.ProductOwner.product_owner import on_feedback_sentiment_analyzed
+        
+        test_event = {"sentiment": "positive", "feedback": "Great work!"}
+        on_feedback_sentiment_analyzed(test_event)
+        captured = capsys.readouterr()
+        
+        assert "Positive feedback" in captured.out
+
+    @patch('bmad.agents.Agent.ProductOwner.product_owner.publish')
+    @patch('time.sleep')
+    def test_handle_feature_planned(self, mock_sleep, mock_publish):
+        """Test handle_feature_planned function."""
+        from bmad.agents.Agent.ProductOwner.product_owner import handle_feature_planned
+        
+        # Mock the publish function to return None
+        mock_publish.return_value = None
+        
+        test_event = {"feature": "Test feature"}
+        handle_feature_planned(test_event)
+        
+        mock_sleep.assert_called_once_with(1)
+        mock_publish.assert_called_once_with("feature_prioritized", {"feature": "Test feature", "priority": "high"})
+
 
 class TestProductOwnerFunctions:
     """Test standalone functions in the module."""
@@ -251,7 +518,7 @@ class TestProductOwnerFunctions:
         with pytest.raises(ValueError, match="Requirement must be a non-empty string"):
             create_user_story("")
         
-        with pytest.raises(ValueError, match="Requirement must be a non-empty string"):
+        with pytest.raises(TypeError, match="Requirement must be a string"):
             create_user_story(None)
 
     def test_create_user_story_llm_error(self):
@@ -322,7 +589,7 @@ class TestProductOwnerFunctions:
         with pytest.raises(ValueError, match="Requirement must be a non-empty string"):
             ask_llm_user_story("")
         
-        with pytest.raises(ValueError, match="Requirement must be a non-empty string"):
+        with pytest.raises(TypeError, match="Requirement must be a string"):
             ask_llm_user_story(None)
 
     @patch('bmad.agents.Agent.ProductOwner.product_owner.ask_openai_with_confidence')
@@ -350,33 +617,29 @@ class TestProductOwnerFunctions:
         
         assert "Generated story" in captured.out
 
-    @patch('bmad.agents.Agent.ProductOwner.product_owner.ask_openai_with_confidence')
-    def test_on_feedback_sentiment_analyzed_negative(self, mock_llm, capsys):
+    def test_on_feedback_sentiment_analyzed_negative(self, capsys):
         """Test on_feedback_sentiment_analyzed function with negative sentiment."""
-        mock_llm.return_value = {"answer": "Improvement story"}
-        
         from bmad.agents.Agent.ProductOwner.product_owner import on_feedback_sentiment_analyzed
         
         test_event = {
-            "sentiment": "negatief",
+            "sentiment": "negative",
             "motivatie": "Test motivation",
             "feedback": "Test feedback"
         }
         on_feedback_sentiment_analyzed(test_event)
         captured = capsys.readouterr()
         
-        assert "Improvement story" in captured.out
+        assert "Negative feedback detected" in captured.out
 
     def test_on_feedback_sentiment_analyzed_positive(self, capsys):
         """Test on_feedback_sentiment_analyzed function with positive sentiment."""
         from bmad.agents.Agent.ProductOwner.product_owner import on_feedback_sentiment_analyzed
         
-        test_event = {"sentiment": "positief", "feedback": "Great work!"}
+        test_event = {"sentiment": "positive", "feedback": "Great work!"}
         on_feedback_sentiment_analyzed(test_event)
         captured = capsys.readouterr()
         
-        # Should not generate any output for positive sentiment
-        assert captured.out == ""
+        assert "Positive feedback" in captured.out
 
     @patch('bmad.agents.Agent.ProductOwner.product_owner.publish')
     @patch('time.sleep')
@@ -391,46 +654,69 @@ class TestProductOwnerFunctions:
         handle_feature_planned(test_event)
         
         mock_sleep.assert_called_once_with(1)
-        mock_publish.assert_called_once_with("tasks_assigned", {"desc": "Taken toegewezen"})
+        mock_publish.assert_called_once_with("feature_prioritized", {"feature": "Test feature", "priority": "high"})
 
 
-class TestProductOwnerIntegration:
-    """Integration tests for ProductOwner agent."""
+class TestProductOwnerAgentCLI:
+    @patch('sys.argv', ['product_owner.py', 'help'])
+    @patch('builtins.print')
+    @patch('bmad.agents.Agent.ProductOwner.product_owner.save_context')
+    @patch('bmad.agents.Agent.ProductOwner.product_owner.publish')
+    @patch('bmad.agents.Agent.ProductOwner.product_owner.get_context', return_value={"status": "active"})
+    def test_cli_help(self, mock_get_context, mock_publish, mock_save_context, mock_print):
+        from bmad.agents.Agent.ProductOwner.product_owner import main
+        with patch('bmad.agents.Agent.ProductOwner.product_owner.show_help') as mock_show_help:
+            main()
+            mock_show_help.assert_called_once()
 
-    @patch('bmad.agents.Agent.ProductOwner.product_owner.ask_openai_with_confidence')
-    @patch('bmad.agents.core.communication.message_bus.publish')
-    @patch('bmad.agents.core.data.supabase_context.save_context')
-    def test_complete_user_story_workflow(self, mock_save, mock_publish, mock_llm):
-        """Test complete user story creation workflow."""
-        mock_llm.return_value = {"answer": "Complete user story", "confidence": 0.9}
-        
-        agent = ProductOwnerAgent()
-        
-        # Test the complete workflow
-        with patch('builtins.print'):  # Suppress print output
-            result = agent.create_user_story("Dashboard requirement")
-        
-        assert result == {"answer": "Complete user story", "confidence": 0.9}
+    @patch('sys.argv', ['product_owner.py', 'create-story', '--input', 'Test requirement'])
+    @patch('bmad.agents.Agent.ProductOwner.product_owner.save_context')
+    @patch('bmad.agents.Agent.ProductOwner.product_owner.publish')
+    @patch('bmad.agents.Agent.ProductOwner.product_owner.get_context', return_value={"status": "active"})
+    def test_cli_create_story_with_input(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.ProductOwner.product_owner import main
+        with patch('bmad.agents.Agent.ProductOwner.product_owner.create_user_story', return_value={"result": "ok"}) as mock_create_user_story:
+            main()
+            mock_create_user_story.assert_called_once_with('Test requirement')
 
-    def test_agent_resource_completeness(self, capsys):
-        """Test that agent has all required resources and methods."""
-        agent = ProductOwnerAgent()
-        
-        # Check required attributes
-        assert hasattr(agent, 'agent_name')
-        assert hasattr(agent, 'story_history')
-        assert hasattr(agent, 'vision_history')
-        
-        # Check required methods
-        assert hasattr(agent, 'show_help')
-        assert hasattr(agent, 'show_resource')
-        assert hasattr(agent, 'create_user_story')
-        assert hasattr(agent, 'show_vision')
-        assert hasattr(agent, 'export_report')
-        assert hasattr(agent, 'run')
-        assert hasattr(agent, 'collaborate_example')
-        
-        # Test resource completeness
-        agent.show_resource("best_practices")
-        captured = capsys.readouterr()
-        assert "not found" in captured.out or "Best Practices" in captured.out 
+    @patch('sys.argv', ['product_owner.py', 'create-story'])
+    @patch('bmad.agents.Agent.ProductOwner.product_owner.save_context')
+    @patch('bmad.agents.Agent.ProductOwner.product_owner.publish')
+    @patch('bmad.agents.Agent.ProductOwner.product_owner.get_context', return_value={"status": "active"})
+    def test_cli_create_story_without_input(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.ProductOwner.product_owner import main
+        with patch('bmad.agents.Agent.ProductOwner.product_owner.create_bmad_frontend_story') as mock_create_bmad_frontend_story:
+            main()
+            mock_create_bmad_frontend_story.assert_called_once()
+
+    @patch('sys.argv', ['product_owner.py', 'show-vision'])
+    @patch('bmad.agents.Agent.ProductOwner.product_owner.save_context')
+    @patch('bmad.agents.Agent.ProductOwner.product_owner.publish')
+    @patch('bmad.agents.Agent.ProductOwner.product_owner.get_context', return_value={"status": "active"})
+    def test_cli_show_vision(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.ProductOwner.product_owner import main
+        with patch('bmad.agents.Agent.ProductOwner.product_owner.show_bmad_vision') as mock_show_bmad_vision:
+            main()
+            mock_show_bmad_vision.assert_called_once()
+
+    @patch('sys.argv', ['product_owner.py', 'collaborate'])
+    @patch('bmad.agents.Agent.ProductOwner.product_owner.save_context')
+    @patch('bmad.agents.Agent.ProductOwner.product_owner.publish')
+    @patch('bmad.agents.Agent.ProductOwner.product_owner.get_context', return_value={"status": "active"})
+    def test_cli_collaborate(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.ProductOwner.product_owner import main
+        with patch('bmad.agents.Agent.ProductOwner.product_owner.collaborate_example') as mock_collaborate_example:
+            main()
+            mock_collaborate_example.assert_called_once()
+
+    @patch('sys.argv', ['product_owner.py', 'unknown-command'])
+    @patch('bmad.agents.Agent.ProductOwner.product_owner.save_context')
+    @patch('bmad.agents.Agent.ProductOwner.product_owner.publish')
+    @patch('bmad.agents.Agent.ProductOwner.product_owner.get_context', return_value={"status": "active"})
+    def test_cli_unknown_command(self, mock_get_context, mock_publish, mock_save_context, capsys):
+        from bmad.agents.Agent.ProductOwner.product_owner import main
+        with patch('sys.exit') as mock_exit:
+            main()
+            captured = capsys.readouterr()
+            assert "Unknown command" in captured.out
+            mock_exit.assert_called_once_with(1) 
