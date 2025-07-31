@@ -1,7 +1,5 @@
 # Data Pipeline History
 
-- ERP System (SAP)
-- E-commerce Platform (Shopify)
 - Analytics Platform (Google Analytics)
 - Data Warehouse (Snowflake)
 - Data Lake (AWS S3)
@@ -50,3 +48,5 @@
 - 2025-07-31T10:18:20.229405: Test Pipeline pipeline built successfully
 - 2025-07-31T10:44:01.247250: Test Pipeline pipeline built successfully
 - 2025-07-31T10:44:08.299995: Test Pipeline pipeline built successfully
+- 2025-07-31T10:54:28.822720: Test Pipeline pipeline built successfully
+- 2025-07-31T10:54:35.884923: Test Pipeline pipeline built successfully
