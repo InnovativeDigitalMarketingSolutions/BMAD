@@ -898,6 +898,198 @@
         "component": "Button",
         "accessibility_score": 98
       }
+    },
+    {
+      "timestamp": "2025-07-31T09:19:02.644838",
+      "event": "new_task",
+      "data": {
+        "event_type": "new_task",
+        "task_desc": "Nieuwe feature ontwikkelen"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T09:19:02.651230",
+      "event": "user_story_requested",
+      "data": {
+        "event_type": "user_story_requested",
+        "requirement": "Feature requirement"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T09:19:02.656735",
+      "event": "test_generation_requested",
+      "data": {
+        "event_type": "test_generation_requested",
+        "function_description": "Feature test"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T09:21:11.742282",
+      "event": "new_task",
+      "data": {
+        "event_type": "new_task",
+        "task_desc": "Nieuwe feature ontwikkelen"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T09:21:11.746989",
+      "event": "user_story_requested",
+      "data": {
+        "event_type": "user_story_requested",
+        "requirement": "Feature requirement"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T09:21:11.751452",
+      "event": "test_generation_requested",
+      "data": {
+        "event_type": "test_generation_requested",
+        "function_description": "Feature test"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T09:22:27.754545",
+      "event": "new_task",
+      "data": {
+        "event_type": "new_task",
+        "task_desc": "Nieuwe feature ontwikkelen"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T09:22:27.761156",
+      "event": "user_story_requested",
+      "data": {
+        "event_type": "user_story_requested",
+        "requirement": "Feature requirement"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T09:22:27.767381",
+      "event": "test_generation_requested",
+      "data": {
+        "event_type": "test_generation_requested",
+        "function_description": "Feature test"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T09:23:15.249512",
+      "event": "new_task",
+      "data": {
+        "event_type": "new_task",
+        "task_desc": "Nieuwe feature ontwikkelen"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T09:23:15.254595",
+      "event": "user_story_requested",
+      "data": {
+        "event_type": "user_story_requested",
+        "requirement": "Feature requirement"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T09:23:15.258828",
+      "event": "test_generation_requested",
+      "data": {
+        "event_type": "test_generation_requested",
+        "function_description": "Feature test"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T09:26:55.377816",
+      "event": "new_task",
+      "data": {
+        "event_type": "new_task",
+        "task_desc": "Nieuwe feature ontwikkelen"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T09:26:55.383988",
+      "event": "user_story_requested",
+      "data": {
+        "event_type": "user_story_requested",
+        "requirement": "Feature requirement"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T09:26:55.389560",
+      "event": "test_generation_requested",
+      "data": {
+        "event_type": "test_generation_requested",
+        "function_description": "Feature test"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T09:28:25.520862",
+      "event": "new_task",
+      "data": {
+        "event_type": "new_task",
+        "task_desc": "Nieuwe feature ontwikkelen"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T09:28:25.526776",
+      "event": "user_story_requested",
+      "data": {
+        "event_type": "user_story_requested",
+        "requirement": "Feature requirement"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T09:28:25.532300",
+      "event": "test_generation_requested",
+      "data": {
+        "event_type": "test_generation_requested",
+        "function_description": "Feature test"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T09:39:08.774236",
+      "event": "new_task",
+      "data": {
+        "event_type": "new_task",
+        "task_desc": "Nieuwe feature ontwikkelen"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T09:39:08.780680",
+      "event": "user_story_requested",
+      "data": {
+        "event_type": "user_story_requested",
+        "requirement": "Feature requirement"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T09:39:08.785892",
+      "event": "test_generation_requested",
+      "data": {
+        "event_type": "test_generation_requested",
+        "function_description": "Feature test"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T09:47:49.615875",
+      "event": "new_task",
+      "data": {
+        "event_type": "new_task",
+        "task_desc": "Nieuwe feature ontwikkelen"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T09:47:49.622789",
+      "event": "user_story_requested",
+      "data": {
+        "event_type": "user_story_requested",
+        "requirement": "Feature requirement"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T09:47:49.628737",
+      "event": "test_generation_requested",
+      "data": {
+        "event_type": "test_generation_requested",
+        "function_description": "Feature test"
+      }
     }
   ]
 }

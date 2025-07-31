@@ -18,6 +18,8 @@ from dotenv import load_dotenv
 from bmad.agents.core.agent.agent_performance_monitor import (
     MetricType,
     get_performance_monitor,
+    AgentPerformanceProfile,
+    AlertLevel,
 )
 from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.ai.llm_client import ask_openai
@@ -119,19 +121,49 @@ class OrchestratorAgent:
             "orchestration-history": self.resource_base / "data/orchestrator/orchestration-history.md"
         }
 
-        # Initialize history
+        # Initialize history (lazy loading)
         self.workflow_history = []
         self.orchestration_history = []
-        self._load_workflow_history()
-        self._load_orchestration_history()
+        self._history_loaded = False
 
         # Original functionality
         self.status = {}  # workflow_name -> status
         self.event_log = self.load_event_log()
 
+        # Register performance profile
+        profile = AgentPerformanceProfile(
+            agent_name=self.agent_name,
+            thresholds={
+                MetricType.RESPONSE_TIME: {AlertLevel.WARNING: 5.0, AlertLevel.CRITICAL: 10.0},
+                MetricType.SUCCESS_RATE: {AlertLevel.WARNING: 90.0, AlertLevel.CRITICAL: 85.0},
+                MetricType.MEMORY_USAGE: {AlertLevel.WARNING: 512, AlertLevel.CRITICAL: 1024},
+                MetricType.CPU_USAGE: {AlertLevel.WARNING: 80, AlertLevel.CRITICAL: 95}
+            }
+        )
+        self.monitor.register_agent_profile(profile)
+
+    def _ensure_history_loaded(self):
+        """Ensure history is loaded (lazy loading)."""
+        if not self._history_loaded:
+            self._load_workflow_history()
+            self._load_orchestration_history()
+            self._history_loaded = True
+
+    def validate_input(self, workflow_name: str, orchestration_type: str = None, format_type: str = None):
+        """Validate input parameters for orchestration operations."""
+        if not workflow_name or not isinstance(workflow_name, str):
+            raise ValueError("Workflow name must be a non-empty string")
+        if orchestration_type and orchestration_type not in ["task_assignment", "workflow_coordination", "resource_allocation"]:
+            raise ValueError("Orchestration type must be task_assignment, workflow_coordination, or resource_allocation")
+        if format_type and format_type not in ["md", "csv", "json"]:
+            raise ValueError("Format type must be 'md', 'csv', or 'json'")
+
     def _load_workflow_history(self):
         """Load workflow history from data file"""
         try:
+            # Clear existing history to prevent duplicates
+            self.workflow_history.clear()
+            
             if self.data_paths["workflow-history"].exists():
                 with open(self.data_paths["workflow-history"]) as f:
                     content = f.read()
@@ -145,17 +177,24 @@ class OrchestratorAgent:
     def _save_workflow_history(self):
         """Save workflow history to data file"""
         try:
-            self.data_paths["workflow-history"].parent.mkdir(parents=True, exist_ok=True)
+            # Ensure directory exists (only if it doesn't already exist)
+            if not self.data_paths["workflow-history"].parent.exists():
+                self.data_paths["workflow-history"].parent.mkdir(parents=True, exist_ok=True)
+            
             with open(self.data_paths["workflow-history"], "w") as f:
                 f.write("# Workflow History\n\n")
                 for workflow in self.workflow_history[-50:]:  # Keep last 50 workflows
                     f.write(f"- {workflow}\n")
         except Exception as e:
             logger.error(f"Could not save workflow history: {e}")
+            raise  # Re-raise to allow proper error handling
 
     def _load_orchestration_history(self):
         """Load orchestration history from data file"""
         try:
+            # Clear existing history to prevent duplicates
+            self.orchestration_history.clear()
+            
             if self.data_paths["orchestration-history"].exists():
                 with open(self.data_paths["orchestration-history"]) as f:
                     content = f.read()
@@ -169,13 +208,17 @@ class OrchestratorAgent:
     def _save_orchestration_history(self):
         """Save orchestration history to data file"""
         try:
-            self.data_paths["orchestration-history"].parent.mkdir(parents=True, exist_ok=True)
+            # Ensure directory exists (only if it doesn't already exist)
+            if not self.data_paths["orchestration-history"].parent.exists():
+                self.data_paths["orchestration-history"].parent.mkdir(parents=True, exist_ok=True)
+            
             with open(self.data_paths["orchestration-history"], "w") as f:
                 f.write("# Orchestration History\n\n")
                 for orchestration in self.orchestration_history[-50:]:  # Keep last 50 orchestrations
                     f.write(f"- {orchestration}\n")
         except Exception as e:
             logger.error(f"Could not save orchestration history: {e}")
+            raise  # Re-raise to allow proper error handling
 
     def show_help(self):
         """Show available commands"""
@@ -228,6 +271,7 @@ Orchestrator Agent Commands:
 
     def show_workflow_history(self):
         """Show workflow history"""
+        self._ensure_history_loaded()
         if not self.workflow_history:
             print("No workflow history available.")
             return
@@ -238,6 +282,7 @@ Orchestrator Agent Commands:
 
     def show_orchestration_history(self):
         """Show orchestration history"""
+        self._ensure_history_loaded()
         if not self.orchestration_history:
             print("No orchestration history available.")
             return
@@ -248,6 +293,9 @@ Orchestrator Agent Commands:
 
     def monitor_workflows(self) -> Dict[str, Any]:
         """Monitor active workflows with enhanced functionality."""
+        # Validate input
+        self.validate_input("workflow_monitoring")
+        
         logger.info("Monitoring active workflows")
 
         # Simulate workflow monitoring
@@ -326,6 +374,9 @@ Orchestrator Agent Commands:
 
     def orchestrate_agents(self, orchestration_type: str = "task_assignment", task_description: str = "Feature development") -> Dict[str, Any]:
         """Orchestrate agent activities with enhanced functionality."""
+        # Validate input
+        self.validate_input("orchestration", orchestration_type)
+        
         logger.info(f"Orchestrating agents for {orchestration_type}")
 
         # Simulate agent orchestration
@@ -562,6 +613,10 @@ Orchestrator Agent Commands:
 
     def export_report(self, format_type: str = "md", report_data: Optional[Dict] = None):
         """Export orchestration report in specified format."""
+        # Validate format type
+        if format_type not in ["md", "csv", "json"]:
+            raise ValueError("Format type must be 'md', 'csv', or 'json'")
+
         if not report_data:
             report_data = {
                 "report_type": "Orchestration Report",
@@ -581,10 +636,9 @@ Orchestrator Agent Commands:
                 self._export_csv(report_data)
             elif format_type == "json":
                 self._export_json(report_data)
-            else:
-                print(f"Unsupported format: {format_type}")
         except Exception as e:
             logger.error(f"Error exporting report: {e}")
+            raise
 
     def _export_markdown(self, report_data: Dict):
         """Export report data as markdown."""
@@ -659,44 +713,48 @@ Orchestrator Agent Commands:
 
     def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
-        logger.info("Starting orchestrator collaboration example...")
-
-        # Publish workflow start
-        publish("workflow_started", {
-            "agent": "OrchestratorAgent",
-            "workflow_type": "feature_delivery",
-            "timestamp": datetime.now().isoformat()
-        })
-
-        # Monitor workflows
-        monitoring_result = self.monitor_workflows()
-
-        # Orchestrate agents
-        self.orchestrate_agents("task_assignment", "Feature development")
-
-        # Manage escalations
-        self.manage_escalations("workflow_blocked", "feature_delivery")
-
-        # Publish completion
-        publish("orchestration_completed", {
-            "status": "success",
-            "agent": "OrchestratorAgent",
-            "workflows_managed": 3,
-            "escalations_handled": 1
-        })
-
-        # Save context
-        save_context("OrchestratorAgent", "status", {"orchestration_status": "completed"})
-
-        # Notify via Slack
         try:
-            send_slack_message(f"Orchestration completed with {monitoring_result['workflow_metrics']['success_rate']} success rate")
-        except Exception as e:
-            logger.warning(f"Could not send Slack notification: {e}")
+            logger.info("Starting orchestrator collaboration example...")
 
-        print("Event gepubliceerd en context opgeslagen.")
-        context = get_context("OrchestratorAgent")
-        print(f"Opgehaalde context: {context}")
+            # Publish workflow start
+            publish("workflow_started", {
+                "agent": "OrchestratorAgent",
+                "workflow_type": "feature_delivery",
+                "timestamp": datetime.now().isoformat()
+            })
+
+            # Monitor workflows
+            monitoring_result = self.monitor_workflows()
+
+            # Orchestrate agents
+            self.orchestrate_agents("task_assignment", "Feature development")
+
+            # Manage escalations
+            self.manage_escalations("workflow_blocked", "feature_delivery")
+
+            # Publish completion
+            publish("orchestration_completed", {
+                "status": "success",
+                "agent": "OrchestratorAgent",
+                "workflows_managed": 3,
+                "escalations_handled": 1
+            })
+
+            # Save context
+            save_context("OrchestratorAgent", "status", {"orchestration_status": "completed"})
+
+            # Notify via Slack
+            try:
+                send_slack_message(f"Orchestration completed with {monitoring_result['workflow_metrics']['success_rate']} success rate")
+            except Exception as e:
+                logger.warning(f"Could not send Slack notification: {e}")
+
+            print("Collaboration example completed successfully.")
+            context = get_context("OrchestratorAgent")
+            print(f"Retrieved context: {context}")
+        except Exception as e:
+            logger.error(f"Collaboration example failed: {e}")
+            print(f"❌ Error in collaboration: {e}")
 
     # Original functionality preserved
     def load_event_log(self):
@@ -725,12 +783,21 @@ Orchestrator Agent Commands:
         logging.info(f"[Orchestrator] Event gerouteerd: {event_type}")
 
     def intelligent_task_assignment(self, task_desc):
-        prompt = f"Welke agent is het meest geschikt voor deze taak: '{task_desc}'? Kies uit: ProductOwner, Architect, TestEngineer, FeedbackAgent, DevOpsInfra, Retrospective. Geef alleen de agentnaam als JSON."
-        structured_output = '{"agent": "..."}'
-        result = ask_openai(prompt, structured_output=structured_output)
-        agent = result.get("agent")
-        logging.info(f"[Orchestrator] LLM adviseert agent: {agent} voor taak: {task_desc}")
-        return agent
+        if not task_desc or not isinstance(task_desc, str):
+            raise ValueError("Task description must be a non-empty string")
+        
+        try:
+            prompt = f"Welke agent is het meest geschikt voor deze taak: '{task_desc}'? Kies uit: ProductOwner, Architect, TestEngineer, FeedbackAgent, DevOpsInfra, Retrospective. Geef alleen de agentnaam als JSON."
+            structured_output = '{"agent": "..."}'
+            result = ask_openai(prompt, structured_output=structured_output)
+            agent = result.get("agent")
+            logging.info(f"[Orchestrator] LLM adviseert agent: {agent} voor taak: {task_desc}")
+            return agent
+        except Exception as e:
+            logger.error(f"Failed to get intelligent task assignment: {e}")
+            error_result = f"Error getting task assignment: {e}"
+            logging.info(f"[Orchestrator][LLM Task Assignment Error]: {error_result}")
+            return "ProductOwner"  # Default fallback
 
     def set_workflow_status(self, workflow_name, status):
         self.status[workflow_name] = status
@@ -821,6 +888,20 @@ Orchestrator Agent Commands:
         for event in self.event_log:
             print(event)
 
+    def get_status(self) -> Dict[str, Any]:
+        """Get the current status of the Orchestrator agent."""
+        self._ensure_history_loaded()
+        return {
+            "agent_name": self.agent_name,
+            "workflow_history_count": len(self.workflow_history),
+            "orchestration_history_count": len(self.orchestration_history),
+            "active_workflows": len([s for s in self.status.values() if s == "active"]),
+            "last_workflow": self.workflow_history[-1] if self.workflow_history else None,
+            "last_orchestration": self.orchestration_history[-1] if self.orchestration_history else None,
+            "event_log_count": len(self.event_log) if self.event_log else 0,
+            "status": "active"
+        }
+
     def replay_history(self):
         print("Replaying event history...")
         for event in self.event_log:
@@ -859,6 +940,12 @@ Orchestrator Agent Commands:
         logger.info("OrchestratorAgent ready and listening for events...")
         print("[Orchestrator] Ready and listening for events...")
         self.collaborate_example()
+    
+    @classmethod
+    def run_agent(cls):
+        """Class method to run the Orchestrator agent."""
+        agent = cls()
+        agent.run()
 
 # Workflow templates
 WORKFLOW_TEMPLATES = {
