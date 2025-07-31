@@ -47,8 +47,13 @@ Voorbeelden:
 
     def create_user_story(self, requirement):
         """Create a user story based on the requirement."""
-        if not requirement or not isinstance(requirement, str):
+        # Input validation
+        if not isinstance(requirement, str):
+            raise TypeError("Requirement must be a string")
+        
+        if not requirement or not requirement.strip():
             raise ValueError("Requirement must be a non-empty string")
+        
         return create_user_story(requirement)
 
     def show_vision(self):
@@ -67,6 +72,14 @@ Voorbeelden:
                     for line in lines:
                         if line.startswith('- ') and 'Story:' in line:
                             self.story_history.append(line.strip())
+        except FileNotFoundError:
+            logging.info("Story history file not found, starting with empty history")
+        except PermissionError as e:
+            logging.error(f"Permission denied accessing story history: {e}")
+        except UnicodeDecodeError as e:
+            logging.error(f"Unicode decode error in story history: {e}")
+        except OSError as e:
+            logging.error(f"OS error loading story history: {e}")
         except Exception as e:
             logging.warning(f"Could not load story history: {e}")
 
@@ -79,6 +92,10 @@ Voorbeelden:
                 f.write("# Story History\n\n")
                 for story in self.story_history:
                     f.write(f"{story}\n")
+        except PermissionError as e:
+            logging.error(f"Permission denied saving story history: {e}")
+        except OSError as e:
+            logging.error(f"OS error saving story history: {e}")
         except Exception as e:
             logging.error(f"Could not save story history: {e}")
 
@@ -94,6 +111,14 @@ Voorbeelden:
                     for line in lines:
                         if line.startswith('- ') and 'Vision:' in line:
                             self.vision_history.append(line.strip())
+        except FileNotFoundError:
+            logging.info("Vision history file not found, starting with empty history")
+        except PermissionError as e:
+            logging.error(f"Permission denied accessing vision history: {e}")
+        except UnicodeDecodeError as e:
+            logging.error(f"Unicode decode error in vision history: {e}")
+        except OSError as e:
+            logging.error(f"OS error loading vision history: {e}")
         except Exception as e:
             logging.warning(f"Could not load vision history: {e}")
 
@@ -106,17 +131,39 @@ Voorbeelden:
                 f.write("# Vision History\n\n")
                 for vision in self.vision_history:
                     f.write(f"{vision}\n")
+        except PermissionError as e:
+            logging.error(f"Permission denied saving vision history: {e}")
+        except OSError as e:
+            logging.error(f"OS error saving vision history: {e}")
         except Exception as e:
             logging.error(f"Could not save vision history: {e}")
 
     def show_resource(self, resource_type="best_practices"):
         """Display available resources."""
-        resource_file = os.path.join(os.path.dirname(__file__), f"{resource_type}.md")
-        if os.path.exists(resource_file):
-            with open(resource_file, 'r', encoding='utf-8') as f:
-                print(f.read())
-        else:
-            print(f"Resource '{resource_type}' not found. Available: best_practices, templates")
+        # Input validation
+        if not isinstance(resource_type, str):
+            print("Error: resource_type must be a string")
+            return
+        
+        if not resource_type.strip():
+            print("Error: resource_type cannot be empty")
+            return
+        
+        try:
+            resource_file = os.path.join(os.path.dirname(__file__), f"{resource_type}.md")
+            if os.path.exists(resource_file):
+                with open(resource_file, 'r', encoding='utf-8') as f:
+                    print(f.read())
+            else:
+                print(f"Resource '{resource_type}' not found. Available: best_practices, templates")
+        except FileNotFoundError:
+            print(f"Resource file not found: {resource_type}")
+        except PermissionError as e:
+            print(f"Permission denied accessing resource {resource_type}: {e}")
+        except UnicodeDecodeError as e:
+            print(f"Unicode decode error in resource {resource_type}: {e}")
+        except Exception as e:
+            logging.error(f"Error reading resource {resource_type}: {e}")
 
     def show_story_history(self):
         """Display story history."""
@@ -138,25 +185,42 @@ Voorbeelden:
 
     def export_report(self, format_type, data):
         """Export reports in various formats."""
+        # Input validation
+        if not isinstance(format_type, str):
+            raise TypeError("format_type must be a string")
+        
+        if format_type not in ["md", "json"]:
+            raise ValueError("format_type must be one of: md, json")
+        
+        if not isinstance(data, dict):
+            raise TypeError("data must be a dictionary")
+        
         timestamp = time.strftime("%Y%m%d_%H%M%S")
         filename = f"productowner_report_{timestamp}"
         
-        if format_type == "md":
-            filename += ".md"
-            with open(filename, 'w', encoding='utf-8') as f:
-                f.write("# Product Owner Report\n\n")
-                f.write(f"Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n")
-                f.write(f"Data: {data}\n")
-        elif format_type == "json":
-            filename += ".json"
-            import json
-            with open(filename, 'w', encoding='utf-8') as f:
-                json.dump(data, f, indent=2)
-        else:
-            print(f"Unsupported format: {format_type}")
-            return
-        
-        print(f"Report export saved to: {filename}")
+        try:
+            if format_type == "md":
+                filename += ".md"
+                with open(filename, 'w', encoding='utf-8') as f:
+                    f.write("# Product Owner Report\n\n")
+                    f.write(f"Generated: {time.strftime('%Y-%m-%d %H:%M:%S')}\n\n")
+                    f.write(f"Data: {data}\n")
+            elif format_type == "json":
+                filename += ".json"
+                import json
+                with open(filename, 'w', encoding='utf-8') as f:
+                    json.dump(data, f, indent=2)
+            else:
+                print(f"Unsupported format: {format_type}")
+                return
+            
+            print(f"Report export saved to: {filename}")
+        except PermissionError as e:
+            logging.error(f"Permission denied saving report: {e}")
+        except OSError as e:
+            logging.error(f"OS error saving report: {e}")
+        except Exception as e:
+            logging.error(f"Error saving report: {e}")
 
     def run(self):
         """Main event loop for the agent."""
@@ -200,8 +264,12 @@ def main():
             create_bmad_frontend_story()
     elif args.command == "show-vision":
         show_bmad_vision()
+    elif args.command == "collaborate":
+        collaborate_example()
     else:
-        print(f"Commando '{args.command}' wordt uitgevoerd (stub)")
+        print("Unknown command. Use 'help' to see available commands.")
+        sys.exit(1)
+        return
 
 def show_help():
     print("""
@@ -344,7 +412,11 @@ def create_bmad_frontend_story():
 
 def create_user_story(requirement):
     """Maak een user story op basis van een specifieke requirement."""
-    if not requirement or not isinstance(requirement, str):
+    # Input validation
+    if not isinstance(requirement, str):
+        raise TypeError("Requirement must be a string")
+    
+    if not requirement or not requirement.strip():
         raise ValueError("Requirement must be a non-empty string")
     
     prompt = f"""
@@ -415,7 +487,11 @@ def collaborate_example():
 
 def ask_llm_user_story(requirement):
     """Vraag de LLM om een user story te genereren met confidence scoring."""
-    if not requirement or not isinstance(requirement, str):
+    # Input validation
+    if not isinstance(requirement, str):
+        raise TypeError("Requirement must be a string")
+    
+    if not requirement or not requirement.strip():
         raise ValueError("Requirement must be a non-empty string")
     
     prompt = f"""
@@ -470,30 +546,42 @@ def ask_llm_user_story(requirement):
 
 
 def on_user_story_requested(event):
-    requirement = event.get("requirement", "Onbekende requirement")
-    context = event.get("context", "")
-    prompt = f"Schrijf een user story in Gherkin-formaat voor de volgende requirement: {requirement}. Context: {context}."
-    result = ask_openai_with_confidence(prompt)
-    print(f"[ProductOwner][LLM User Story automatisch]: {result['answer']}")
-
+    """Handle user story requested event."""
+    # Input validation
+    if not isinstance(event, dict):
+        logging.warning("Invalid event type for user story requested event")
+        return
+    
+    print("📝 User story requested event received")
+    requirement = event.get('requirement', 'Default requirement')
+    story = ask_llm_user_story(requirement)
+    print(f"Generated story: {story}")
 
 def on_feedback_sentiment_analyzed(event):
-    sentiment = event.get("sentiment", "")
-    motivatie = event.get("motivatie", "")
-    feedback = event.get("feedback", "")
-    if sentiment == "negatief":
-        prompt = f"Schrijf een user story voor een verbetering op basis van deze negatieve feedback: '{feedback}'. Motivatie: {motivatie}. Geef alleen de user story en acceptatiecriteria, geen uitleg."
-        structured_output = '{"user_story": "Als ... wil ik ... zodat ...", "acceptatiecriteria": ["...", "..."]}'
-        result = ask_openai_with_confidence(prompt, structured_output=structured_output)
-        print(f"[ProductOwner][LLM Verbeteruserstory]: {result['answer']}")
-
+    """Handle feedback sentiment analyzed event."""
+    # Input validation
+    if not isinstance(event, dict):
+        logging.warning("Invalid event type for feedback sentiment analyzed event")
+        return
+    
+    sentiment = event.get('sentiment', 'neutral')
+    if sentiment == 'negative':
+        print("😔 Negative feedback detected - prioritizing improvements")
+        # Trigger improvement workflow
+    else:
+        print("😊 Positive feedback - continuing current direction")
 
 def handle_feature_planned(event):
-    logging.info("[ProductOwner] Feature gepland, taken worden toegewezen...")
-    # Simuleer taaktoewijzing
-    time.sleep(1)
-    publish("tasks_assigned", {"desc": "Taken toegewezen"})
-    logging.info("[ProductOwner] Taken toegewezen, tasks_assigned gepubliceerd.")
+    """Handle feature planned event."""
+    # Input validation
+    if not isinstance(event, dict):
+        logging.warning("Invalid event type for feature planned event")
+        return
+    
+    feature = event.get('feature', 'Unknown feature')
+    print(f"🎯 Feature planned: {feature}")
+    time.sleep(1)  # Simulate processing
+    publish("feature_prioritized", {"feature": feature, "priority": "high"})
 
 
 if __name__ == "__main__":

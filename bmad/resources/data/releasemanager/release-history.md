@@ -1,41 +1,5 @@
 # Release History
 
-- 2025-07-31T12:11:02.771788: Release created - 1.3.0 - Feature release
-- 2025-07-31T12:11:05.786321: Release deployed - 1.3.0
-- 2025-07-31T12:14:37.505644: Release created - 1.3.0 - Feature release
-- 2025-07-31T12:14:40.519547: Release deployed - 1.3.0
-- 2025-07-31T12:14:44.880890: Release created - 1.3.0 - Feature release
-- 2025-07-31T12:14:47.892654: Release deployed - 1.3.0
-- 2025-07-31T12:27:40.151789: Release created - 1.3.0 - Feature release
-- 2025-07-31T12:27:43.168926: Release deployed - 1.3.0
-- 2025-07-31T12:27:47.618013: Release created - 1.3.0 - Feature release
-- 2025-07-31T12:27:50.626402: Release deployed - 1.3.0
-- 2025-07-31T12:31:02.117239: Release created - 1.3.0 - Feature release
-- 2025-07-31T12:31:05.131910: Release deployed - 1.3.0
-- 2025-07-31T12:31:09.531730: Release created - 1.3.0 - Feature release
-- 2025-07-31T12:31:12.541968: Release deployed - 1.3.0
-- 2025-07-31T12:41:38.609760: Release created - 1.3.0 - Feature release
-- 2025-07-31T12:41:41.620049: Release deployed - 1.3.0
-- 2025-07-31T12:41:45.919946: Release created - 1.3.0 - Feature release
-- 2025-07-31T12:41:48.925523: Release deployed - 1.3.0
-- 2025-07-31T12:49:30.809517: Release created - 1.3.0 - Feature release
-- 2025-07-31T12:49:33.824921: Release deployed - 1.3.0
-- 2025-07-31T12:49:38.260594: Release created - 1.3.0 - Feature release
-- 2025-07-31T12:49:41.267983: Release deployed - 1.3.0
-- 2025-07-31T12:56:54.318584: Release created - 1.3.0 - Feature release
-- 2025-07-31T12:56:57.332678: Release deployed - 1.3.0
-- 2025-07-31T12:57:01.700378: Release created - 1.3.0 - Feature release
-- 2025-07-31T12:57:04.712639: Release deployed - 1.3.0
-- 2025-07-31T13:37:46.643898: Release created - 1.3.0 - Feature release
-- 2025-07-31T13:37:49.663097: Release deployed - 1.3.0
-- 2025-07-31T13:37:54.092874: Release created - 1.3.0 - Feature release
-- 2025-07-31T13:37:57.102841: Release deployed - 1.3.0
-- 2025-07-31T13:45:47.134667: Release created - 1.3.0 - Feature release
-- 2025-07-31T13:45:50.152597: Release deployed - 1.3.0
-- 2025-07-31T13:45:54.658719: Release created - 1.3.0 - Feature release
-- 2025-07-31T13:45:57.669077: Release deployed - 1.3.0
-- 2025-07-31T13:53:37.090747: Release created - 1.3.0 - Feature release
-- 2025-07-31T13:53:40.110006: Release deployed - 1.3.0
 - 2025-07-31T13:53:44.594509: Release created - 1.3.0 - Feature release
 - 2025-07-31T13:53:47.606016: Release deployed - 1.3.0
 - 2025-07-31T14:07:18.429924: Release created - 1.3.0 - Feature release
@@ -50,3 +14,39 @@
 - 2025-07-31T14:56:55.779084: Release deployed - 1.3.0
 - 2025-07-31T14:57:00.163651: Release created - 1.3.0 - Feature release
 - 2025-07-31T14:57:03.178085: Release deployed - 1.3.0
+- 2025-07-31T15:20:20.717493: Release created - 1.3.0 - Feature release
+- 2025-07-31T15:20:23.735993: Release deployed - 1.3.0
+- 2025-07-31T15:20:28.143908: Release created - 1.3.0 - Feature release
+- 2025-07-31T15:20:31.154230: Release deployed - 1.3.0
+- 2025-07-31T15:32:55.489299: Release created - 1.3.0 - Feature release
+- 2025-07-31T15:32:58.508128: Release deployed - 1.3.0
+- 2025-07-31T15:33:03.067565: Release created - 1.3.0 - Feature release
+- 2025-07-31T15:33:06.077067: Release deployed - 1.3.0
+- 2025-07-31T16:08:11.247127: Release created - 1.3.0 - Feature release
+- 2025-07-31T16:08:14.264184: Release deployed - 1.3.0
+- 2025-07-31T16:08:18.721564: Release created - 1.3.0 - Feature release
+- 2025-07-31T16:08:21.769453: Release deployed - 1.3.0
+- 2025-07-31T16:16:29.529535: Release created - 1.3.0 - Feature release
+- 2025-07-31T16:16:32.548155: Release deployed - 1.3.0
+- 2025-07-31T16:16:37.041258: Release created - 1.3.0 - Feature release
+- 2025-07-31T16:16:40.054341: Release deployed - 1.3.0
+- 2025-07-31T16:26:29.171855: Release created - 1.3.0 - Feature release
+- 2025-07-31T16:26:32.191717: Release deployed - 1.3.0
+- 2025-07-31T16:26:36.647954: Release created - 1.3.0 - Feature release
+- 2025-07-31T16:26:39.658227: Release deployed - 1.3.0
+- 2025-07-31T16:32:52.062513: Release created - 1.3.0 - Feature release
+- 2025-07-31T16:32:55.079560: Release deployed - 1.3.0
+- 2025-07-31T16:32:59.442256: Release created - 1.3.0 - Feature release
+- 2025-07-31T16:33:02.451235: Release deployed - 1.3.0
+- 2025-07-31T16:34:58.027932: Release created - 1.3.0 - Feature release
+- 2025-07-31T16:35:01.043445: Release deployed - 1.3.0
+- 2025-07-31T16:35:05.414484: Release created - 1.3.0 - Feature release
+- 2025-07-31T16:35:08.423459: Release deployed - 1.3.0
+- 2025-07-31T16:39:05.274229: Release created - 1.3.0 - Feature release
+- 2025-07-31T16:39:08.296238: Release deployed - 1.3.0
+- 2025-07-31T16:39:12.819419: Release created - 1.3.0 - Feature release
+- 2025-07-31T16:39:15.831864: Release deployed - 1.3.0
+- 2025-07-31T16:50:36.232242: Release created - 1.3.0 - Feature release
+- 2025-07-31T16:50:39.250675: Release deployed - 1.3.0
+- 2025-07-31T16:50:43.732326: Release created - 1.3.0 - Feature release
+- 2025-07-31T16:50:46.743528: Release deployed - 1.3.0
