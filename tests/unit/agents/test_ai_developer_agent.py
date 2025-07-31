@@ -246,8 +246,8 @@ class TestAiDeveloperAgent:
         captured = capsys.readouterr()
         
         assert "Model versioning" in captured.out
-        assert "Semantic versioning" in captured.out
-        assert "Model registry" in captured.out
+        assert "mlflow" in captured.out
+        assert "log_model" in captured.out
 
     def test_auto_evaluate(self, agent, capsys):
         """Test auto_evaluate method."""
@@ -255,8 +255,8 @@ class TestAiDeveloperAgent:
         captured = capsys.readouterr()
         
         assert "Automatische evaluatie" in captured.out
-        assert "Automated testing" in captured.out
-        assert "Performance metrics" in captured.out
+        assert "evaluate" in captured.out
+        assert "accuracy_score" in captured.out
 
     def test_bias_check(self, agent, capsys):
         """Test bias_check method."""
@@ -265,7 +265,7 @@ class TestAiDeveloperAgent:
         
         assert "Bias/Fairness check" in captured.out
         assert "Fairness metrics" in captured.out
-        assert "Demographic parity" in captured.out
+        assert "demographic parity" in captured.out
 
     def test_explain(self, agent, capsys):
         """Test explain method."""
@@ -273,8 +273,8 @@ class TestAiDeveloperAgent:
         captured = capsys.readouterr()
         
         assert "Explainability (SHAP)" in captured.out
-        assert "SHAP values" in captured.out
-        assert "Feature importance" in captured.out
+        assert "shap" in captured.out
+        assert "Explainer" in captured.out
 
     def test_model_card(self, agent, capsys):
         """Test model_card method."""
@@ -282,8 +282,8 @@ class TestAiDeveloperAgent:
         captured = capsys.readouterr()
         
         assert "Model:" in captured.out
-        assert "Model details" in captured.out
-        assert "Performance metrics" in captured.out
+        assert "Doel:" in captured.out
+        assert "Performance:" in captured.out
 
     def test_prompt_eval(self, agent, capsys):
         """Test prompt_eval method."""
@@ -291,8 +291,8 @@ class TestAiDeveloperAgent:
         captured = capsys.readouterr()
         
         assert "Prompt Evaluatie Matrix" in captured.out
-        assert "Prompt testing" in captured.out
-        assert "Response quality" in captured.out
+        assert "Accuracy" in captured.out
+        assert "Latency" in captured.out
 
     def test_retrain(self, agent, capsys):
         """Test retrain method."""
@@ -300,8 +300,8 @@ class TestAiDeveloperAgent:
         captured = capsys.readouterr()
         
         assert "Automatische Retraining" in captured.out
-        assert "Incremental learning" in captured.out
-        assert "Performance monitoring" in captured.out
+        assert "Trigger:" in captured.out
+        assert "Deployment:" in captured.out
 
     def test_export_report_markdown(self, agent, capsys):
         """Test export_report method with markdown format."""

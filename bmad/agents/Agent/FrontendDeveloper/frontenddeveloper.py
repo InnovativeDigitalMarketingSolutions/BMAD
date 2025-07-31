@@ -14,10 +14,13 @@ from typing import Any, Dict, Optional
 from bmad.agents.core.agent.agent_performance_monitor import (
     MetricType,
     get_performance_monitor,
+    AgentPerformanceProfile,
+    AlertLevel,
 )
 from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.ai.llm_client import ask_openai
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
+from bmad.agents.core.communication.message_bus import publish, subscribe
 from integrations.figma.figma_client import FigmaClient
 from integrations.slack.slack_notify import send_slack_message
 
@@ -36,6 +39,23 @@ class FrontendDeveloperAgent:
         self.agent_name = "FrontendDeveloper"
         self.component_history = []
         self.performance_history = []
+        
+        # Resource paths
+        self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
+        self.template_paths = {
+            "best-practices": self.resource_base / "templates/frontenddeveloper/best-practices.md",
+            "component-template": self.resource_base / "templates/frontenddeveloper/component-template.md",
+            "component-export-md": self.resource_base / "templates/frontenddeveloper/component-export-template.md",
+            "component-export-json": self.resource_base / "templates/frontenddeveloper/component-export-template.json",
+            "performance-report": self.resource_base / "templates/frontenddeveloper/performance-report-template.md",
+            "storybook-template": self.resource_base / "templates/frontenddeveloper/storybook-template.mdx",
+            "accessibility-checklist": self.resource_base / "templates/frontenddeveloper/accessibility-checklist.md"
+        }
+        self.data_paths = {
+            "changelog": self.resource_base / "data/frontenddeveloper/component-changelog.md",
+            "component-history": self.resource_base / "data/frontenddeveloper/component-history.md",
+            "performance-history": self.resource_base / "data/frontenddeveloper/performance-history.md"
+        }
         
         # Lazy loading flags
         self._services_initialized = False
@@ -68,15 +88,16 @@ class FrontendDeveloperAgent:
             self.sprite_library = get_sprite_library()
             
             # Register performance profile
-            self.performance_monitor.register_agent_profile(
-                self.agent_name,
-                {
-                    "response_time_threshold": 2.0,
-                    "success_rate_threshold": 0.95,
-                    "memory_threshold": 512,
-                    "cpu_threshold": 80
+            profile = AgentPerformanceProfile(
+                agent_name=self.agent_name,
+                thresholds={
+                    MetricType.RESPONSE_TIME: {AlertLevel.WARNING: 2.0, AlertLevel.CRITICAL: 5.0},
+                    MetricType.SUCCESS_RATE: {AlertLevel.WARNING: 95.0, AlertLevel.CRITICAL: 90.0},
+                    MetricType.MEMORY_USAGE: {AlertLevel.WARNING: 512, AlertLevel.CRITICAL: 1024},
+                    MetricType.CPU_USAGE: {AlertLevel.WARNING: 80, AlertLevel.CRITICAL: 95}
                 }
             )
+            self.performance_monitor.register_agent_profile(profile)
             
             self._services_initialized = True
             logger.debug(f"{self.agent_name} services geïnitialiseerd")
@@ -95,6 +116,13 @@ class FrontendDeveloperAgent:
             self._ensure_services_initialized()
             # Policy engine is already initialized in services
             self._policy_engine_initialized = True
+
+    def validate_input(self, component_name: str, format_type: str = None):
+        """Validate input parameters for component operations."""
+        if not component_name or not isinstance(component_name, str):
+            raise ValueError("Component name must be a non-empty string")
+        if format_type and format_type not in ["md", "json"]:
+            raise ValueError("Format type must be 'md' or 'json'")
 
     def _load_component_history(self):
         try:
@@ -196,6 +224,9 @@ FrontendDeveloper Agent Commands:
 
     def build_shadcn_component(self, component_name: str = "Button") -> Dict[str, Any]:
         """Build a Shadcn/ui component with accessibility and performance optimization."""
+        # Validate input
+        self.validate_input(component_name)
+        
         logger.info(f"Building Shadcn component: {component_name}")
 
         # Simulate Shadcn component build with accessibility focus
@@ -220,8 +251,8 @@ FrontendDeveloper Agent Commands:
         }
 
         # Log performance metrics
-        self.monitor._record_metric("FrontendDeveloper", MetricType.SUCCESS_RATE, result["accessibility_score"], "%")
-        self.monitor._record_metric("FrontendDeveloper", MetricType.RESPONSE_TIME, result["performance_score"], "ms")
+        self.performance_monitor._record_metric("FrontendDeveloper", MetricType.SUCCESS_RATE, result["accessibility_score"], "%")
+        self.performance_monitor._record_metric("FrontendDeveloper", MetricType.RESPONSE_TIME, result["performance_score"], "ms")
 
         # Add to component history
         comp_entry = f"{datetime.now().isoformat()}: Shadcn {component_name} component built with {result['accessibility_score']}% accessibility score"
@@ -232,6 +263,9 @@ FrontendDeveloper Agent Commands:
         return result
 
     def build_component(self, component_name: str = "Button") -> Dict[str, Any]:
+        # Validate input
+        self.validate_input(component_name)
+        
         logger.info(f"Building component: {component_name}")
 
         # Simuleer component bouw
@@ -252,12 +286,15 @@ FrontendDeveloper Agent Commands:
         self._save_component_history()
 
         # Log performance metric
-        self.monitor._record_metric("FrontendDeveloper", MetricType.SUCCESS_RATE, result["accessibility_score"], "%")
+        self.performance_monitor._record_metric("FrontendDeveloper", MetricType.SUCCESS_RATE, result["accessibility_score"], "%")
 
         logger.info(f"Component build result: {result}")
         return result
 
     def run_accessibility_check(self, component_name: str = "Button") -> Dict[str, Any]:
+        # Validate input
+        self.validate_input(component_name)
+        
         logger.info(f"Running accessibility check for: {component_name}")
 
         # Simuleer accessibility check
@@ -274,7 +311,7 @@ FrontendDeveloper Agent Commands:
         }
 
         # Log performance metric
-        self.monitor._record_metric("FrontendDeveloper", MetricType.SUCCESS_RATE, result["score"], "%")
+        self.performance_monitor._record_metric("FrontendDeveloper", MetricType.SUCCESS_RATE, result["score"], "%")
 
         logger.info(f"Accessibility check result: {result}")
         return result
@@ -287,15 +324,18 @@ FrontendDeveloper Agent Commands:
             else:
                 component_data = self.build_component()
 
+        # Validate format type
+        if format_type not in ["md", "json"]:
+            raise ValueError("Format type must be 'md' or 'json'")
+
         try:
             if format_type == "md":
                 self._export_markdown(component_data)
             elif format_type == "json":
                 self._export_json(component_data)
-            else:
-                print(f"Unsupported format: {format_type}")
         except Exception as e:
             logger.error(f"Error exporting component: {e}")
+            raise
 
     def _export_markdown(self, component_data: Dict):
         template_path = self.template_paths["component-export-md"]
@@ -342,31 +382,51 @@ FrontendDeveloper Agent Commands:
         else:
             print("All resources are available!")
 
+    def get_status(self) -> Dict[str, Any]:
+        """Get the current status of the FrontendDeveloper agent."""
+        return {
+            "agent_name": self.agent_name,
+            "component_history_count": len(self.component_history),
+            "performance_history_count": len(self.performance_history),
+            "last_component": self.component_history[-1] if self.component_history else None,
+            "last_performance": self.performance_history[-1] if self.performance_history else None,
+            "services_initialized": self._services_initialized,
+            "resources_loaded": self._resources_loaded,
+            "status": "active"
+        }
+
     def collaborate_example(self):
-        logger.info("Starting collaboration example...")
-
-        # Publish component build request
-        publish("component_build_requested", {
-            "agent": "FrontendDeveloperAgent",
-            "component_name": "Button",
-            "timestamp": datetime.now().isoformat()
-        })
-
-        # Build component
-        component_result = self.build_component("Button")
-
-        # Run accessibility check
-        accessibility_result = self.run_accessibility_check("Button")
-
-        # Publish completion
-        publish("component_build_completed", component_result)
-        publish("accessibility_check_completed", accessibility_result)
-
-        # Notify via Slack
+        """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         try:
-            send_slack_message(f"Component {component_result['name']} built successfully with {accessibility_result['score']}% accessibility score")
+            logger.info("Starting collaboration example...")
+
+            # Publish component build request
+            publish("component_build_requested", {
+                "agent": "FrontendDeveloperAgent",
+                "component_name": "Button",
+                "timestamp": datetime.now().isoformat()
+            })
+
+            # Build component
+            component_result = self.build_component("Button")
+
+            # Run accessibility check
+            accessibility_result = self.run_accessibility_check("Button")
+
+            # Publish completion
+            publish("component_build_completed", component_result)
+            publish("accessibility_check_completed", accessibility_result)
+
+            # Notify via Slack
+            try:
+                send_slack_message(f"Component {component_result['name']} built successfully with {accessibility_result['score']}% accessibility score")
+            except Exception as e:
+                logger.warning(f"Could not send Slack notification: {e}")
+            
+            print("Collaboration example completed successfully.")
         except Exception as e:
-            logger.warning(f"Could not send Slack notification: {e}")
+            logger.error(f"Collaboration example failed: {e}")
+            print(f"❌ Error in collaboration: {e}")
 
     def handle_component_build_requested(self, event):
         logger.info(f"Component build requested: {event}")
@@ -384,16 +444,34 @@ FrontendDeveloper Agent Commands:
             logger.error(f"Policy evaluation failed: {e}")
 
     def code_review(self, code_snippet: str) -> str:
-        prompt = f"Geef een korte code review van de volgende code:\n{code_snippet}"
-        result = ask_openai(prompt)
-        logger.info(f"[FrontendDeveloper][LLM Code Review]: {result}")
-        return result
+        if not code_snippet or not isinstance(code_snippet, str):
+            raise ValueError("Code snippet must be a non-empty string")
+        
+        try:
+            prompt = f"Geef een korte code review van de volgende code:\n{code_snippet}"
+            result = ask_openai(prompt)
+            logger.info(f"[FrontendDeveloper][LLM Code Review]: {result}")
+            return result
+        except Exception as e:
+            logger.error(f"Failed to perform code review: {e}")
+            error_result = f"Error performing code review: {e}"
+            logger.info(f"[FrontendDeveloper][LLM Code Review Error]: {error_result}")
+            return error_result
 
     def bug_root_cause(self, error_log: str) -> str:
-        prompt = f"Analyseer deze foutmelding/log en geef een mogelijke oorzaak en oplossing:\n{error_log}"
-        result = ask_openai(prompt)
-        logger.info(f"[FrontendDeveloper][LLM Bug Analyse]: {result}")
-        return result
+        if not error_log or not isinstance(error_log, str):
+            raise ValueError("Error log must be a non-empty string")
+        
+        try:
+            prompt = f"Analyseer deze foutmelding/log en geef een mogelijke oorzaak en oplossing:\n{error_log}"
+            result = ask_openai(prompt)
+            logger.info(f"[FrontendDeveloper][LLM Bug Analyse]: {result}")
+            return result
+        except Exception as e:
+            logger.error(f"Failed to analyze bug root cause: {e}")
+            error_result = f"Error analyzing bug root cause: {e}"
+            logger.info(f"[FrontendDeveloper][LLM Bug Analyse Error]: {error_result}")
+            return error_result
 
     def parse_figma_components(self, figma_file_id: str) -> Dict:
         try:
@@ -501,6 +579,12 @@ FrontendDeveloper Agent Commands:
 
         logger.info("FrontendDeveloperAgent ready and listening for events...")
         self.collaborate_example()
+    
+    @classmethod
+    def run_agent(cls):
+        """Class method to run the FrontendDeveloper agent."""
+        agent = cls()
+        agent.run()
 
 def main():
     parser = argparse.ArgumentParser(description="FrontendDeveloper Agent CLI")
