@@ -20,6 +20,9 @@ class TestOrchestratorAgent:
         agent.workflow_history = []
         agent.orchestration_history = []
         agent._history_loaded = False
+        # Also reset status and event_log to ensure complete isolation
+        agent.status = {}
+        agent.event_log = []
         return agent
 
     def test_agent_initialization(self, agent):
@@ -68,14 +71,17 @@ class TestOrchestratorAgent:
         # Clear existing history and reload
         agent.workflow_history = []
         agent._history_loaded = False  # Reset lazy loading flag
-        agent._load_workflow_history()
+        
+        # Mock the file system to ensure no files exist
+        with patch('builtins.open', side_effect=FileNotFoundError):
+            agent._load_workflow_history()
         
         # Should remain empty since file doesn't exist
         assert len(agent.workflow_history) == 0
 
-    @patch('os.path.exists')
-    @patch('os.makedirs')
-    def test_save_workflow_history(self, mock_makedirs, mock_exists, agent):
+    @patch('pathlib.Path.exists')
+    @patch('pathlib.Path.mkdir')
+    def test_save_workflow_history(self, mock_mkdir, mock_exists, agent):
         """Test saving workflow history."""
         # Mock that directory doesn't exist, so mkdir should be called
         mock_exists.return_value = False
@@ -85,10 +91,13 @@ class TestOrchestratorAgent:
             agent._save_workflow_history()
         
         # Check that mkdir was called to ensure directory exists
-        mock_makedirs.assert_called_once()
+        mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
         
         # Check that file was opened for writing
         assert mock_file.call_count > 0
+        
+        # Verify the content that would be written
+        mock_file.assert_called_with(agent.data_paths["workflow-history"], "w")
 
     @patch('os.path.exists')
     @patch('os.makedirs')
@@ -114,14 +123,17 @@ class TestOrchestratorAgent:
         # Clear existing history and reload
         agent.orchestration_history = []
         agent._history_loaded = False  # Reset lazy loading flag
-        agent._load_orchestration_history()
+        
+        # Mock the file system to ensure no files exist
+        with patch('builtins.open', side_effect=FileNotFoundError):
+            agent._load_orchestration_history()
         
         # Should remain empty since file doesn't exist
         assert len(agent.orchestration_history) == 0
 
-    @patch('os.path.exists')
-    @patch('os.makedirs')
-    def test_save_orchestration_history(self, mock_makedirs, mock_exists, agent):
+    @patch('pathlib.Path.exists')
+    @patch('pathlib.Path.mkdir')
+    def test_save_orchestration_history(self, mock_mkdir, mock_exists, agent):
         """Test saving orchestration history."""
         # Mock that directory doesn't exist, so mkdir should be called
         mock_exists.return_value = False
@@ -131,10 +143,13 @@ class TestOrchestratorAgent:
             agent._save_orchestration_history()
         
         # Check that mkdir was called to ensure directory exists
-        mock_makedirs.assert_called_once()
+        mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
         
         # Check that file was opened for writing
         assert mock_file.call_count > 0
+        
+        # Verify the content that would be written
+        mock_file.assert_called_with(agent.data_paths["orchestration-history"], "w")
 
     def test_show_help(self, agent, capsys):
         """Test show_help method."""
