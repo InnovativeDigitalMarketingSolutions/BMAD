@@ -1,13 +1,5 @@
 # Test History
 
-- 2025-07-30T17:51:09.033751: 2/4 tests succesvol
-- 2025-07-30T17:51:10.665722: 2/4 tests succesvol
-- 2025-07-30T18:01:59.812030: 2/4 tests succesvol
-- 2025-07-30T18:02:01.757795: 2/4 tests succesvol
-- 2025-07-30T18:13:03.699359: 2/4 tests succesvol
-- 2025-07-30T18:13:05.676188: 2/4 tests succesvol
-- 2025-07-30T18:29:48.803220: 2/4 tests succesvol
-- 2025-07-30T18:29:50.904231: 2/4 tests succesvol
 - 2025-07-30T18:51:33.471852: 2/4 tests succesvol
 - 2025-07-30T18:51:36.804348: 2/4 tests succesvol
 - 2025-07-30T18:52:31.677690: 2/4 tests succesvol
@@ -50,3 +42,11 @@
 - 2025-07-30T22:36:17.827344: 2/4 tests succesvol
 - 2025-07-30T22:44:43.197400: 2/4 tests succesvol
 - 2025-07-30T22:44:45.156736: 2/4 tests succesvol
+- 2025-07-31T07:43:49.420825: 2/4 tests succesvol
+- 2025-07-31T07:43:51.035034: 2/4 tests succesvol
+- 2025-07-31T07:50:38.423762: 2/4 tests succesvol
+- 2025-07-31T07:50:40.043087: 2/4 tests succesvol
+- 2025-07-31T07:53:48.411993: 2/4 tests succesvol
+- 2025-07-31T07:53:50.372834: 2/4 tests succesvol
+- 2025-07-31T08:07:40.987002: 2/4 tests succesvol
+- 2025-07-31T08:07:42.970071: 2/4 tests succesvol
