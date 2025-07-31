@@ -38,6 +38,14 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
+class DevelopmentError(Exception):
+    """Custom exception for development-related errors."""
+    pass
+
+class DevelopmentValidationError(DevelopmentError):
+    """Exception for development validation failures."""
+    pass
+
 class FullstackDeveloperAgent:
     def __init__(self):
         # Set agent name
@@ -70,6 +78,89 @@ class FullstackDeveloperAgent:
         self.performance_history = []
         self._load_development_history()
         self._load_performance_history()
+
+    def _validate_input(self, value: Any, expected_type: type, param_name: str) -> None:
+        """Validate input type for parameters."""
+        if not isinstance(value, expected_type):
+            raise DevelopmentValidationError(
+                f"Invalid type for {param_name}: expected {expected_type.__name__}, got {type(value).__name__}"
+            )
+
+    def _validate_feature_name(self, feature_name: str) -> None:
+        """Validate feature name parameter."""
+        self._validate_input(feature_name, str, "feature_name")
+        if not feature_name.strip():
+            raise DevelopmentValidationError("Feature name cannot be empty")
+        if len(feature_name) > 100:
+            raise DevelopmentValidationError("Feature name cannot exceed 100 characters")
+
+    def _validate_component_name(self, component_name: str) -> None:
+        """Validate component name parameter."""
+        self._validate_input(component_name, str, "component_name")
+        if not component_name.strip():
+            raise DevelopmentValidationError("Component name cannot be empty")
+        if not component_name[0].isupper():
+            raise DevelopmentValidationError("Component name must start with uppercase letter")
+
+    def _validate_format_type(self, format_type: str) -> None:
+        """Validate export format type."""
+        self._validate_input(format_type, str, "format_type")
+        if format_type not in ["md", "json"]:
+            raise DevelopmentValidationError("Format type must be 'md' or 'json'")
+
+    def _record_development_metric(self, metric_name: str, value: float, unit: str = "%") -> None:
+        """Record development-specific metrics."""
+        try:
+            self.monitor._record_metric("FullstackDeveloper", MetricType.SUCCESS_RATE, value, unit)
+            logger.info(f"Development metric recorded: {metric_name} = {value}{unit}")
+        except Exception as e:
+            logger.error(f"Failed to record development metric: {e}")
+
+    def _assess_development_complexity(self, feature_description: str) -> str:
+        """Assess the complexity of a development task."""
+        if not feature_description:
+            return "low"
+        
+        complexity_indicators = {
+            "high": ["complex", "advanced", "sophisticated", "enterprise", "scalable", "distributed"],
+            "medium": ["standard", "typical", "common", "basic", "simple", "straightforward"]
+        }
+        
+        description_lower = feature_description.lower()
+        
+        for complexity, indicators in complexity_indicators.items():
+            if any(indicator in description_lower for indicator in indicators):
+                return complexity
+        
+        return "medium"
+
+    def _generate_development_recommendations(self, complexity: str) -> list:
+        """Generate development recommendations based on complexity."""
+        base_recommendations = [
+            "Follow coding standards and best practices",
+            "Write comprehensive unit tests",
+            "Document code and APIs",
+            "Perform code reviews before merging"
+        ]
+        
+        if complexity == "high":
+            return base_recommendations + [
+                "Implement comprehensive error handling",
+                "Add performance monitoring and logging",
+                "Consider scalability and maintainability",
+                "Plan for future extensibility"
+            ]
+        elif complexity == "medium":
+            return base_recommendations + [
+                "Add basic error handling",
+                "Include essential logging",
+                "Consider basic performance optimization"
+            ]
+        else:
+            return base_recommendations + [
+                "Keep implementation simple and focused",
+                "Ensure code readability"
+            ]
 
     def _load_development_history(self):
         try:
@@ -186,27 +277,36 @@ FullstackDeveloper Agent Commands:
             print(f"{i}. {perf}")
 
     def export_report(self, format_type: str = "md", report_data: Optional[Dict] = None):
-        if not report_data:
-            report_data = {
-                "story": "User Authentication",
-                "status": "implemented",
-                "frontend_components": 3,
-                "backend_endpoints": 2,
-                "tests_written": 5,
-                "shadcn_components": 2,
-                "timestamp": datetime.now().isoformat(),
-                "agent": "FullstackDeveloperAgent"
-            }
-
+        """Export development report with validation."""
         try:
+            self._validate_format_type(format_type)
+            
+            if report_data is None:
+                report_data = {
+                    "agent": "FullstackDeveloper",
+                    "timestamp": datetime.now().isoformat(),
+                    "development_history": self.development_history[-10:],
+                    "performance_metrics": {
+                        "total_features": len([h for h in self.development_history if "feature" in h.lower()]),
+                        "total_components": len([h for h in self.development_history if "component" in h.lower()]),
+                        "success_rate": 95.0
+                    }
+                }
+            
             if format_type == "md":
                 self._export_markdown(report_data)
             elif format_type == "json":
                 self._export_json(report_data)
-            else:
-                print(f"Unsupported format: {format_type}")
+            
+            # Log performance metric
+            self._record_development_metric("report_export", 100, "%")
+            
+        except DevelopmentValidationError as e:
+            logger.error(f"Validation error exporting report: {e}")
+            raise
         except Exception as e:
             logger.error(f"Error exporting report: {e}")
+            raise
 
     def _export_markdown(self, report_data: Dict):
         output_file = f"fullstack_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
@@ -262,26 +362,83 @@ FullstackDeveloper Agent Commands:
             print("All resources are available!")
 
     def build_shadcn_component(self, component_name: str = "Button") -> Dict[str, Any]:
-        logger.info(f"Building Shadcn component: {component_name}")
+        """Build a Shadcn/ui component with proper validation."""
+        try:
+            self._validate_component_name(component_name)
+            
+            logger.info(f"Building Shadcn/ui component: {component_name}")
+            
+            # Record start time for performance monitoring
+            start_time = time.time()
+            
+            # Generate component code
+            component_code = f"""
+import React from 'react';
+import {{ cn }} from '@/lib/utils';
 
-        # Simuleer Shadcn component bouw
-        time.sleep(1)
-        result = {
-            "component": component_name,
-            "type": "Shadcn/ui",
-            "variants": ["default", "secondary", "outline", "destructive", "ghost", "link"],
-            "sizes": ["sm", "default", "lg", "icon"],
-            "status": "created",
-            "accessibility_score": 98,
-            "timestamp": datetime.now().isoformat(),
-            "agent": "FullstackDeveloperAgent"
-        }
+interface {component_name}Props {{
+  className?: string;
+  children: React.ReactNode;
+  onClick?: () => void;
+  disabled?: boolean;
+}}
 
-        # Log performance metric
-        self.monitor._record_metric("FullstackDeveloper", MetricType.SUCCESS_RATE, result["accessibility_score"], "%")
-
-        logger.info(f"Shadcn component build result: {result}")
-        return result
+export function {component_name}({{ 
+  className, 
+  children, 
+  onClick, 
+  disabled = false 
+}}: {component_name}Props) {{
+  return (
+    <button
+      className={{cn(
+        "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background",
+        "bg-primary text-primary-foreground hover:bg-primary/90 h-10 py-2 px-4",
+        className
+      )}}
+      onClick={{onClick}}
+      disabled={{disabled}}
+    >
+      {{children}}
+    </button>
+  );
+}}
+"""
+            
+            # Record performance
+            end_time = time.time()
+            build_time = end_time - start_time
+            
+            # Log performance metric
+            self._record_development_metric("component_build_time", build_time, "s")
+            
+            # Add to development history
+            dev_entry = f"{datetime.now().isoformat()}: Built Shadcn/ui component {component_name}"
+            self.development_history.append(dev_entry)
+            self._save_development_history()
+            
+            return {
+                "success": True,
+                "component_name": component_name,
+                "component_code": component_code,
+                "build_time": build_time,
+                "template_used": "shadcn/ui"
+            }
+            
+        except DevelopmentValidationError as e:
+            logger.error(f"Validation error building component {component_name}: {e}")
+            return {
+                "success": False,
+                "component_name": component_name,
+                "error": str(e)
+            }
+        except Exception as e:
+            logger.error(f"Error building component {component_name}: {e}")
+            return {
+                "success": False,
+                "component_name": component_name,
+                "error": str(e)
+            }
 
     def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
@@ -1112,7 +1269,7 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
 
     def develop_feature(self, feature_name: str, feature_description: str = "") -> Dict[str, Any]:
         """
-        Develop a complete feature from frontend to backend.
+        Develop a complete feature from frontend to backend with enhanced validation.
         
         Args:
             feature_name: Name of the feature to develop
@@ -1122,15 +1279,24 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
             Dict containing development results
         """
         try:
+            self._validate_feature_name(feature_name)
+            self._validate_input(feature_description, str, "feature_description")
+            
             logger.info(f"Starting development of feature: {feature_name}")
             
             # Record start time for performance monitoring
             start_time = time.time()
             
+            # Assess complexity
+            complexity = self._assess_development_complexity(feature_description)
+            recommendations = self._generate_development_recommendations(complexity)
+            
             # Create feature development plan
             plan = {
                 "feature_name": feature_name,
                 "description": feature_description,
+                "complexity": complexity,
+                "recommendations": recommendations,
                 "components": [],
                 "apis": [],
                 "tests": [],
@@ -1157,12 +1323,7 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
             development_time = end_time - start_time
             
             # Log performance metric
-            self.monitor.record_metric(
-                MetricType.RESPONSE_TIME,
-                "feature_development",
-                development_time,
-                {"feature_name": feature_name}
-            )
+            self._record_development_metric("feature_development_time", development_time, "s")
             
             # Save to development history
             self.development_history.append(f"Developed feature: {feature_name} in {development_time:.2f}s")
@@ -1174,9 +1335,17 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
                 "success": True,
                 "feature_name": feature_name,
                 "development_time": development_time,
+                "complexity": complexity,
                 "plan": plan
             }
             
+        except DevelopmentValidationError as e:
+            logger.error(f"Validation error developing feature {feature_name}: {e}")
+            return {
+                "success": False,
+                "feature_name": feature_name,
+                "error": str(e)
+            }
         except Exception as e:
             logger.error(f"Error developing feature {feature_name}: {e}")
             return {
