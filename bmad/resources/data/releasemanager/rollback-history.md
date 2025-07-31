@@ -1,9 +1,5 @@
 # Rollback History
 
-- **Tool Improvements**: Rollback tool improvements
-- **Enhanced Monitoring**: Improved monitoring and alerting
-- **Faster Rollbacks**: Optimized rollback procedures
-- **Better Communication**: Improved communication processes
 - **Comprehensive Testing**: More comprehensive testing strategies
 - **Risk Assessment**: Better risk assessment procedures
 - **Kubernetes Rollbacks**: Kubernetes native rollback capabilities
@@ -50,3 +46,7 @@
 - 2025-07-31T07:55:49.200615: Release rolled back - 1.3.0 - High error rate
 - 2025-07-31T08:09:34.369520: Release rolled back - 1.3.0 - High error rate
 - 2025-07-31T08:09:41.861294: Release rolled back - 1.3.0 - High error rate
+- 2025-07-31T08:15:56.663497: Release rolled back - 1.3.0 - High error rate
+- 2025-07-31T08:16:04.092291: Release rolled back - 1.3.0 - High error rate
+- 2025-07-31T08:38:12.844040: Release rolled back - 1.3.0 - High error rate
+- 2025-07-31T08:38:20.211147: Release rolled back - 1.3.0 - High error rate

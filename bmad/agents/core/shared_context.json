@@ -1,7 +1,7 @@
 {
   "events": [
     {
-      "timestamp": "2025-07-31T08:07:59.674262",
+      "timestamp": "2025-07-31T08:14:22.212726",
       "event": "test_topic",
       "data": {
         "type": "test",
@@ -9,21 +9,21 @@
       }
     },
     {
-      "timestamp": "2025-07-31T08:08:28.293261",
+      "timestamp": "2025-07-31T08:14:50.817204",
       "event": "tests_requested",
       "data": {
         "desc": "Tests uitvoeren"
       }
     },
     {
-      "timestamp": "2025-07-31T08:08:30.302020",
+      "timestamp": "2025-07-31T08:14:52.824012",
       "event": "deployment_completed",
       "data": {
         "desc": "Deployment afgerond"
       }
     },
     {
-      "timestamp": "2025-07-31T08:08:39.955239",
+      "timestamp": "2025-07-31T08:15:02.379334",
       "event": "documentation_completed",
       "data": {
         "status": "success",
@@ -35,21 +35,21 @@
       }
     },
     {
-      "timestamp": "2025-07-31T08:08:52.537355",
+      "timestamp": "2025-07-31T08:15:14.863680",
       "event": "feedback_collected",
       "data": {
         "desc": "Feedback verzameld"
       }
     },
     {
-      "timestamp": "2025-07-31T08:08:53.546278",
+      "timestamp": "2025-07-31T08:15:15.872888",
       "event": "trends_analyzed",
       "data": {
         "desc": "Trends geanalyseerd"
       }
     },
     {
-      "timestamp": "2025-07-31T08:09:28.036030",
+      "timestamp": "2025-07-31T08:15:50.336027",
       "event": "backlog_updated",
       "data": {
         "status": "success",
@@ -57,23 +57,23 @@
       }
     },
     {
-      "timestamp": "2025-07-31T08:10:19.494801",
+      "timestamp": "2025-07-31T08:16:41.747627",
       "event": "security_findings_reported",
       "data": {
         "desc": "Security bevindingen gerapporteerd"
       }
     },
     {
-      "timestamp": "2025-07-31T08:10:25.006547",
+      "timestamp": "2025-07-31T08:16:47.176753",
       "event": "design_requested",
       "data": {
         "agent": "UXUIDesignerAgent",
         "task": "Create Shadcn Button Component",
-        "timestamp": "2025-07-31T08:10:25.005976"
+        "timestamp": "2025-07-31T08:16:47.176651"
       }
     },
     {
-      "timestamp": "2025-07-31T08:10:26.013379",
+      "timestamp": "2025-07-31T08:16:48.184811",
       "event": "design_completed",
       "data": {
         "status": "success",
@@ -83,10 +83,84 @@
       }
     },
     {
-      "timestamp": "2025-07-31T08:10:26.866266",
+      "timestamp": "2025-07-31T08:16:49.078412",
       "event": "test_event",
       "data": {
         "data": "test"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T08:37:06.775144",
+      "event": "tests_requested",
+      "data": {
+        "desc": "Tests uitvoeren"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T08:37:08.785480",
+      "event": "deployment_completed",
+      "data": {
+        "desc": "Deployment afgerond"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T08:37:18.362414",
+      "event": "documentation_completed",
+      "data": {
+        "status": "success",
+        "agent": "DocumentationAgent",
+        "docs_created": 3,
+        "api_docs": 1,
+        "user_guides": 1,
+        "figma_docs": 1
+      }
+    },
+    {
+      "timestamp": "2025-07-31T08:37:31.070269",
+      "event": "feedback_collected",
+      "data": {
+        "desc": "Feedback verzameld"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T08:37:32.078814",
+      "event": "trends_analyzed",
+      "data": {
+        "desc": "Trends geanalyseerd"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T08:38:06.492921",
+      "event": "backlog_updated",
+      "data": {
+        "status": "success",
+        "agent": "ProductOwner"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T08:38:57.919908",
+      "event": "security_findings_reported",
+      "data": {
+        "desc": "Security bevindingen gerapporteerd"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T08:39:05.110873",
+      "event": "design_requested",
+      "data": {
+        "agent": "UXUIDesignerAgent",
+        "task": "Create Shadcn Button Component",
+        "timestamp": "2025-07-31T08:39:05.109642"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T08:39:06.121095",
+      "event": "design_completed",
+      "data": {
+        "status": "success",
+        "agent": "UXUIDesignerAgent",
+        "component": "Button",
+        "accessibility_score": 98
       }
     }
   ]
