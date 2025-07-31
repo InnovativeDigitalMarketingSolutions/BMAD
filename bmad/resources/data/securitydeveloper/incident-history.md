@@ -1,7 +1,5 @@
 # Security Incident History
 
-- 2025-07-31T10:48:00.621029: Incident summary generated for 2 incidents
-- 2025-07-31T10:56:46.281763: Security review completed - test code...
 - 2025-07-31T10:56:46.726819: Incident summary generated for 2 incidents
 - 2025-07-31T11:20:19.006436: Security review completed - test code...
 - 2025-07-31T11:20:19.442987: Incident summary generated for 2 incidents
@@ -50,3 +48,5 @@
 - 2025-07-31T16:27:12.032462: data_breach incident (severity: high) - INC-20250731-162712
 - 2025-07-31T16:39:48.435598: data_breach incident (severity: high) - INC-20250731-163948
 - 2025-07-31T16:51:17.835161: data_breach incident (severity: high) - INC-20250731-165117
+- 2025-07-31T17:08:00.319102: data_breach incident (severity: high) - INC-20250731-170800
+- 2025-07-31T17:11:04.094151: data_breach incident (severity: high) - INC-20250731-171104
