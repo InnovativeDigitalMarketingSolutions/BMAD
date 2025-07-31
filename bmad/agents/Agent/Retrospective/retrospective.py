@@ -66,6 +66,14 @@ class RetrospectiveAgent:
                     for line in lines:
                         if line.strip().startswith("- "):
                             self.retro_history.append(line.strip()[2:])
+        except FileNotFoundError:
+            logger.info("Retrospective history file not found, starting with empty history")
+        except PermissionError as e:
+            logger.error(f"Permission denied accessing retrospective history: {e}")
+        except UnicodeDecodeError as e:
+            logger.error(f"Unicode decode error in retrospective history: {e}")
+        except OSError as e:
+            logger.error(f"OS error loading retrospective history: {e}")
         except Exception as e:
             logger.warning(f"Could not load retrospective history: {e}")
 
@@ -77,6 +85,10 @@ class RetrospectiveAgent:
                 f.write("# Retrospective History\n\n")
                 for retro in self.retro_history[-50:]:  # Keep last 50 retrospectives
                     f.write(f"- {retro}\n")
+        except PermissionError as e:
+            logger.error(f"Permission denied saving retrospective history: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving retrospective history: {e}")
         except Exception as e:
             logger.error(f"Could not save retrospective history: {e}")
 
@@ -90,6 +102,14 @@ class RetrospectiveAgent:
                     for line in lines:
                         if line.strip().startswith("- "):
                             self.action_history.append(line.strip()[2:])
+        except FileNotFoundError:
+            logger.info("Action history file not found, starting with empty history")
+        except PermissionError as e:
+            logger.error(f"Permission denied accessing action history: {e}")
+        except UnicodeDecodeError as e:
+            logger.error(f"Unicode decode error in action history: {e}")
+        except OSError as e:
+            logger.error(f"OS error loading action history: {e}")
         except Exception as e:
             logger.warning(f"Could not load action history: {e}")
 
@@ -101,6 +121,10 @@ class RetrospectiveAgent:
                 f.write("# Action History\n\n")
                 for action in self.action_history[-50:]:  # Keep last 50 actions
                     f.write(f"- {action}\n")
+        except PermissionError as e:
+            logger.error(f"Permission denied saving action history: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving action history: {e}")
         except Exception as e:
             logger.error(f"Could not save action history: {e}")
 
@@ -125,6 +149,13 @@ Retrospective Agent Commands:
 
     def show_resource(self, resource_type: str):
         """Show resource content"""
+        if not isinstance(resource_type, str):
+            print("Error: resource_type must be a string")
+            return
+        if not resource_type.strip():
+            print("Error: resource_type cannot be empty")
+            return
+            
         try:
             if resource_type == "best-practices":
                 path = self.template_paths["best-practices"]
@@ -142,6 +173,12 @@ Retrospective Agent Commands:
                     print(f.read())
             else:
                 print(f"Resource file not found: {path}")
+        except FileNotFoundError:
+            print(f"Resource file not found: {resource_type}")
+        except PermissionError as e:
+            print(f"Permission denied accessing resource {resource_type}: {e}")
+        except UnicodeDecodeError as e:
+            print(f"Unicode decode error in resource {resource_type}: {e}")
         except Exception as e:
             logger.error(f"Error reading resource {resource_type}: {e}")
 
@@ -172,6 +209,12 @@ Retrospective Agent Commands:
             raise TypeError("sprint_name must be a string")
         if not isinstance(team_size, int):
             raise TypeError("team_size must be an integer")
+        if not sprint_name.strip():
+            raise ValueError("sprint_name cannot be empty")
+        if team_size <= 0:
+            raise ValueError("team_size must be positive")
+        if team_size > 50:
+            raise ValueError("team_size cannot exceed 50")
             
         logger.info(f"Conducting retrospective for {sprint_name}")
 
@@ -278,6 +321,12 @@ Retrospective Agent Commands:
         # Input validation
         if feedback_list is not None and not isinstance(feedback_list, list):
             raise TypeError("feedback_list must be a list")
+        if feedback_list is not None:
+            for i, feedback in enumerate(feedback_list):
+                if not isinstance(feedback, str):
+                    raise TypeError(f"feedback_list[{i}] must be a string")
+                if not feedback.strip():
+                    raise ValueError(f"feedback_list[{i}] cannot be empty")
             
         if feedback_list is None:
             feedback_list = [
@@ -521,6 +570,8 @@ Retrospective Agent Commands:
         # Input validation
         if not isinstance(sprint_name, str):
             raise TypeError("sprint_name must be a string")
+        if not sprint_name.strip():
+            raise ValueError("sprint_name cannot be empty")
             
         logger.info(f"Tracking improvements for {sprint_name}")
 
@@ -601,6 +652,14 @@ Retrospective Agent Commands:
 
     def export_report(self, format_type: str = "md", report_data: Optional[Dict] = None):
         """Export retrospective report in specified format."""
+        # Input validation
+        if not isinstance(format_type, str):
+            raise TypeError("format_type must be a string")
+        if format_type not in ["md", "csv", "json"]:
+            raise ValueError("format_type must be one of: md, csv, json")
+        if report_data is not None and not isinstance(report_data, dict):
+            raise TypeError("report_data must be a dictionary")
+            
         if not report_data:
             report_data = {
                 "report_type": "Retrospective Report",
@@ -622,6 +681,10 @@ Retrospective Agent Commands:
                 self._export_json(report_data)
             else:
                 print(f"Unsupported format: {format_type}")
+        except PermissionError as e:
+            logger.error(f"Permission denied exporting report: {e}")
+        except OSError as e:
+            logger.error(f"OS error exporting report: {e}")
         except Exception as e:
             logger.error(f"Error exporting report: {e}")
 
@@ -657,33 +720,54 @@ Retrospective Agent Commands:
 {chr(10).join([f"- {action}" for action in self.action_history[-5:]])}
 """
 
-        with open(output_file, "w") as f:
-            f.write(content)
-        print(f"Report export saved to: {output_file}")
+        try:
+            with open(output_file, "w") as f:
+                f.write(content)
+            print(f"Report export saved to: {output_file}")
+        except PermissionError as e:
+            logger.error(f"Permission denied saving markdown report: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving markdown report: {e}")
+        except Exception as e:
+            logger.error(f"Error saving markdown report: {e}")
 
     def _export_csv(self, report_data: Dict):
         """Export report data as CSV."""
         output_file = f"retrospective_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 
-        with open(output_file, "w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(["Metric", "Value"])
-            writer.writerow(["Sprint Name", report_data.get("sprint_name", "N/A")])
-            writer.writerow(["Status", report_data.get("status", "N/A")])
-            writer.writerow(["Total Actions", report_data.get("total_actions", 0)])
-            writer.writerow(["Completion Rate", report_data.get("completion_rate", "N/A")])
-            writer.writerow(["Team Satisfaction", report_data.get("team_satisfaction", "N/A")])
+        try:
+            with open(output_file, "w", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow(["Metric", "Value"])
+                writer.writerow(["Sprint Name", report_data.get("sprint_name", "N/A")])
+                writer.writerow(["Status", report_data.get("status", "N/A")])
+                writer.writerow(["Total Actions", report_data.get("total_actions", 0)])
+                writer.writerow(["Completion Rate", report_data.get("completion_rate", "N/A")])
+                writer.writerow(["Team Satisfaction", report_data.get("team_satisfaction", "N/A")])
 
-        print(f"Report export saved to: {output_file}")
+            print(f"Report export saved to: {output_file}")
+        except PermissionError as e:
+            logger.error(f"Permission denied saving CSV report: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving CSV report: {e}")
+        except Exception as e:
+            logger.error(f"Error saving CSV report: {e}")
 
     def _export_json(self, report_data: Dict):
         """Export report data as JSON."""
         output_file = f"retrospective_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
 
-        with open(output_file, "w") as f:
-            json.dump(report_data, f, indent=2)
+        try:
+            with open(output_file, "w") as f:
+                json.dump(report_data, f, indent=2)
 
-        print(f"Report export saved to: {output_file}")
+            print(f"Report export saved to: {output_file}")
+        except PermissionError as e:
+            logger.error(f"Permission denied saving JSON report: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving JSON report: {e}")
+        except Exception as e:
+            logger.error(f"Error saving JSON report: {e}")
 
     def test_resource_completeness(self):
         """Test if all required resources are available."""
@@ -773,26 +857,50 @@ Retrospective Agent Commands:
 
     def on_retro_feedback(self, event):
         """Handle retro feedback event from other agents."""
-        logger.info(f"Retro feedback event received: {event}")
-        feedback_list = event.get("feedback_list", [])
-        self.summarize_retro(feedback_list)
+        try:
+            if not isinstance(event, dict):
+                logger.error("Invalid event format: event must be a dictionary")
+                return
+            logger.info(f"Retro feedback event received: {event}")
+            feedback_list = event.get("feedback_list", [])
+            if not isinstance(feedback_list, list):
+                logger.error("Invalid feedback_list format: must be a list")
+                return
+            self.summarize_retro(feedback_list)
+        except Exception as e:
+            logger.error(f"Error handling retro feedback event: {e}")
 
     def on_generate_actions(self, event):
         """Handle generate actions event from other agents."""
-        logger.info(f"Generate actions event received: {event}")
-        feedback_list = event.get("feedback_list", [])
-        self.generate_retro_actions(feedback_list)
+        try:
+            if not isinstance(event, dict):
+                logger.error("Invalid event format: event must be a dictionary")
+                return
+            logger.info(f"Generate actions event received: {event}")
+            feedback_list = event.get("feedback_list", [])
+            if not isinstance(feedback_list, list):
+                logger.error("Invalid feedback_list format: must be a list")
+                return
+            self.generate_retro_actions(feedback_list)
+        except Exception as e:
+            logger.error(f"Error handling generate actions event: {e}")
 
     def on_feedback_sentiment_analyzed(self, event):
         """Handle feedback sentiment analysis from other agents."""
-        sentiment = event.get("sentiment", "")
-        motivatie = event.get("motivatie", "")
-        feedback = event.get("feedback", "")
-        if sentiment == "negatief":
-            prompt = f"Bedenk 2 concrete verbeteracties op basis van deze negatieve feedback: '{feedback}'. Motivatie: {motivatie}. Geef alleen de acties als JSON."
-            structured_output = '{"verbeteracties": ["actie 1", "actie 2"]}'
-            result = ask_openai(prompt, structured_output=structured_output)
-            logger.info(f"[Retrospective][LLM Verbeteracties]: {result}")
+        try:
+            if not isinstance(event, dict):
+                logger.error("Invalid event format: event must be a dictionary")
+                return
+            sentiment = event.get("sentiment", "")
+            motivatie = event.get("motivatie", "")
+            feedback = event.get("feedback", "")
+            if sentiment == "negatief":
+                prompt = f"Bedenk 2 concrete verbeteracties op basis van deze negatieve feedback: '{feedback}'. Motivatie: {motivatie}. Geef alleen de acties als JSON."
+                structured_output = '{"verbeteracties": ["actie 1", "actie 2"]}'
+                result = ask_openai(prompt, structured_output=structured_output)
+                logger.info(f"[Retrospective][LLM Verbeteracties]: {result}")
+        except Exception as e:
+            logger.error(f"Error handling feedback sentiment analyzed event: {e}")
 
     def run(self):
         """Run the agent and listen for events."""
