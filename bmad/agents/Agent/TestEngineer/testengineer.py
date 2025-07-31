@@ -27,6 +27,7 @@ logger = logging.getLogger(__name__)
 
 class TestEngineerAgent:
     def __init__(self):
+        self.agent_name = "TestEngineerAgent"
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
@@ -170,6 +171,13 @@ TestEngineer Agent Commands:
         logger.info(f"Test results: {result}")
         return result
 
+    def validate_input(self, component_name: str, test_type: str):
+        """Validate input parameters for test generation."""
+        if not component_name or not isinstance(component_name, str):
+            raise ValueError("Component name must be a non-empty string")
+        if test_type not in ["unit", "integration", "e2e"]:
+            raise ValueError("Test type must be unit, integration, or e2e")
+
     def generate_tests(self, component_name: str = "TestComponent", test_type: str = "unit") -> Dict[str, Any]:
         """
         Generate tests for a component or feature.
@@ -182,6 +190,8 @@ TestEngineer Agent Commands:
             Dict containing test generation results
         """
         try:
+            # Validate input parameters
+            self.validate_input(component_name, test_type)
             logger.info(f"Generating {test_type} tests for component: {component_name}")
             
             # Record start time for performance monitoring
@@ -291,15 +301,19 @@ def test_{component_name.lower()}_e2e():
                 test_data = self.run_tests()
             else:
                 test_data = self.run_tests()
+        
+        # Validate format type
+        if format_type not in ["md", "json"]:
+            raise ValueError("Format type must be 'md' or 'json'")
+        
         try:
             if format_type == "md":
                 self._export_markdown(test_data)
             elif format_type == "json":
                 self._export_json(test_data)
-            else:
-                print(f"Unsupported format: {format_type}")
         except Exception as e:
             logger.error(f"Error exporting report: {e}")
+            raise
 
     def _export_markdown(self, test_data: Dict):
         template_path = self.template_paths["test-report-md"]
@@ -338,20 +352,37 @@ def test_{component_name.lower()}_e2e():
                 print(f"  - {resource}")
         else:
             print("All resources are available!")
+    
+    def get_status(self) -> Dict[str, Any]:
+        """Get the current status of the TestEngineer agent."""
+        return {
+            "agent_name": self.agent_name,
+            "test_history_count": len(self.test_history),
+            "coverage_history_count": len(self.coverage_history),
+            "last_test": self.test_history[-1] if self.test_history else None,
+            "last_coverage": self.coverage_history[-1] if self.coverage_history else None,
+            "status": "active"
+        }
 
     def collaborate_example(self):
-        logger.info("Starting collaboration example...")
-        publish("test_generation_requested", {
-            "agent": "TestEngineerAgent",
-            "function_description": "def add(a, b): return a + b",
-            "context": "Eenvoudige optelfunctie"
-        })
-        test_result = self.run_tests()
-        publish("tests_completed", test_result)
+        """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         try:
-            send_slack_message(f"[TestEngineer] Tests afgerond: {test_result}")
+            logger.info("Starting collaboration example...")
+            publish("test_generation_requested", {
+                "agent": "TestEngineerAgent",
+                "function_description": "def add(a, b): return a + b",
+                "context": "Eenvoudige optelfunctie"
+            })
+            test_result = self.run_tests()
+            publish("tests_completed", test_result)
+            try:
+                send_slack_message(f"[TestEngineer] Tests afgerond: {test_result}")
+            except Exception as e:
+                logger.warning(f"Could not send Slack notification: {e}")
+            print("Collaboration example completed successfully.")
         except Exception as e:
-            logger.warning(f"Could not send Slack notification: {e}")
+            logger.error(f"Collaboration example failed: {e}")
+            print(f"❌ Error in collaboration: {e}")
 
     def handle_tests_requested(self, event):
         logger.info("[TestEngineer] Tests gestart...")
@@ -364,20 +395,43 @@ def test_{component_name.lower()}_e2e():
         function_description = event.get("function_description", "Onbekende functie")
         context = event.get("context", "")
         prompt = f"Schrijf Python unittests voor de volgende functie: {function_description}. Context: {context}. Gebruik pytest."
-        result = ask_openai(prompt)
-        logger.info(f"[TestEngineer][LLM Tests automatisch]: {result}")
+        
         try:
-            send_slack_message(f"[TestEngineer][LLM Tests automatisch]: {result}")
+            result = ask_openai(prompt)
+            logger.info(f"[TestEngineer][LLM Tests automatisch]: {result}")
+            try:
+                send_slack_message(f"[TestEngineer][LLM Tests automatisch]: {result}")
+            except Exception as e:
+                logger.warning(f"Could not send Slack notification: {e}")
+            return result
         except Exception as e:
-            logger.warning(f"Could not send Slack notification: {e}")
+            logger.error(f"Failed to generate tests with LLM: {e}")
+            error_result = f"Error generating tests: {e}"
+            logger.info(f"[TestEngineer][LLM Tests Error]: {error_result}")
+            return error_result
 
     def run(self):
+        """Main event loop for the agent."""
         def sync_handler(event):
             asyncio.run(self.handle_test_generation_requested(event))
         subscribe("test_generation_requested", sync_handler)
         subscribe("tests_requested", self.handle_tests_requested)
         logger.info("TestEngineerAgent ready and listening for events...")
-        self.collaborate_example()
+        print("🎯 TestEngineer Agent is running...")
+        print("Listening for events: test_generation_requested, tests_requested")
+        print("Press Ctrl+C to stop")
+        
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            print("\n🛑 TestEngineer Agent stopped.")
+    
+    @classmethod
+    def run_agent(cls):
+        """Class method to run the TestEngineer agent."""
+        agent = cls()
+        agent.run()
 
 def main():
     parser = argparse.ArgumentParser(description="TestEngineer Agent CLI")
