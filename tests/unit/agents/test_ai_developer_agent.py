@@ -446,9 +446,8 @@ class TestAiDeveloperAgent:
 
     def test_export_report_invalid_format(self, agent, capsys):
         """Test export_report method with invalid format."""
-        agent.export_report("invalid")
-        captured = capsys.readouterr()
-        assert "Unsupported format" in captured.out
+        with pytest.raises(AiValidationError, match="Format type must be one of: md, json"):
+            agent.export_report("invalid")
 
     def test_test_resource_completeness(self, agent, capsys):
         """Test test_resource_completeness method."""
@@ -525,4 +524,511 @@ class TestAiDeveloperAgent:
         """Test AiValidationError inheritance."""
         error = AiValidationError("Test error")
         assert isinstance(error, AiDevelopmentError)
-        assert isinstance(error, Exception) 
+        assert isinstance(error, Exception)
+
+    # Additional error handling and input validation tests
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_load_experiment_history_permission_error(self, mock_exists, mock_file, agent):
+        """Test experiment history loading with permission error."""
+        agent.experiment_history = []  # Reset history
+        agent._load_experiment_history()
+        assert len(agent.experiment_history) == 0
+
+    @patch('builtins.open', side_effect=UnicodeDecodeError("utf-8", b"", 0, 1, "invalid utf-8"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_load_experiment_history_unicode_error(self, mock_exists, mock_file, agent):
+        """Test experiment history loading with unicode error."""
+        agent.experiment_history = []  # Reset history
+        agent._load_experiment_history()
+        assert len(agent.experiment_history) == 0
+
+    @patch('builtins.open', side_effect=OSError("OS error"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_load_experiment_history_os_error(self, mock_exists, mock_file, agent):
+        """Test experiment history loading with OS error."""
+        agent.experiment_history = []  # Reset history
+        agent._load_experiment_history()
+        assert len(agent.experiment_history) == 0
+
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    @patch('pathlib.Path.mkdir')
+    @patch('pathlib.Path.exists', return_value=False)
+    def test_save_experiment_history_permission_error(self, mock_exists, mock_mkdir, mock_file, agent):
+        """Test experiment history saving with permission error."""
+        agent._save_experiment_history()
+
+    @patch('builtins.open', side_effect=OSError("OS error"))
+    @patch('pathlib.Path.mkdir')
+    @patch('pathlib.Path.exists', return_value=False)
+    def test_save_experiment_history_os_error(self, mock_exists, mock_mkdir, mock_file, agent):
+        """Test experiment history saving with OS error."""
+        agent._save_experiment_history()
+
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_load_model_history_permission_error(self, mock_exists, mock_file, agent):
+        """Test model history loading with permission error."""
+        agent.model_history = []  # Reset history
+        agent._load_model_history()
+        assert len(agent.model_history) == 0
+
+    @patch('builtins.open', side_effect=UnicodeDecodeError("utf-8", b"", 0, 1, "invalid utf-8"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_load_model_history_unicode_error(self, mock_exists, mock_file, agent):
+        """Test model history loading with unicode error."""
+        agent.model_history = []  # Reset history
+        agent._load_model_history()
+        assert len(agent.model_history) == 0
+
+    @patch('builtins.open', side_effect=OSError("OS error"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_load_model_history_os_error(self, mock_exists, mock_file, agent):
+        """Test model history loading with OS error."""
+        agent.model_history = []  # Reset history
+        agent._load_model_history()
+        assert len(agent.model_history) == 0
+
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    @patch('pathlib.Path.mkdir')
+    @patch('pathlib.Path.exists', return_value=False)
+    def test_save_model_history_permission_error(self, mock_exists, mock_mkdir, mock_file, agent):
+        """Test model history saving with permission error."""
+        agent._save_model_history()
+
+    @patch('builtins.open', side_effect=OSError("OS error"))
+    @patch('pathlib.Path.mkdir')
+    @patch('pathlib.Path.exists', return_value=False)
+    def test_save_model_history_os_error(self, mock_exists, mock_mkdir, mock_file, agent):
+        """Test model history saving with OS error."""
+        agent._save_model_history()
+
+    def test_show_resource_invalid_type(self, agent, capsys):
+        """Test show_resource method with invalid type."""
+        with pytest.raises(AiValidationError, match="Resource type must be a string"):
+            agent.show_resource(123)
+
+    def test_show_resource_empty_type(self, agent, capsys):
+        """Test show_resource method with empty type."""
+        with pytest.raises(AiValidationError, match="Resource type cannot be empty"):
+            agent.show_resource("")
+
+    @patch('builtins.open', side_effect=FileNotFoundError("File not found"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_show_resource_file_not_found(self, mock_exists, mock_file, agent, capsys):
+        """Test show_resource method with file not found."""
+        agent.show_resource("best-practices")
+        captured = capsys.readouterr()
+        assert "Resource file not found: best-practices" in captured.out
+
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_show_resource_permission_error(self, mock_exists, mock_file, agent, capsys):
+        """Test show_resource method with permission error."""
+        agent.show_resource("best-practices")
+        captured = capsys.readouterr()
+        assert "Permission denied accessing resource: best-practices" in captured.out
+
+    @patch('builtins.open', side_effect=UnicodeDecodeError("utf-8", b"", 0, 1, "invalid utf-8"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_show_resource_unicode_error(self, mock_exists, mock_file, agent, capsys):
+        """Test show_resource method with unicode error."""
+        agent.show_resource("best-practices")
+        captured = capsys.readouterr()
+        assert "Error reading resource file encoding: best-practices" in captured.out
+
+    def test_export_report_invalid_format_type(self, agent):
+        """Test export_report method with invalid format type."""
+        with pytest.raises(AiValidationError, match="Format type must be a string"):
+            agent.export_report(123)
+
+    def test_export_report_invalid_format_value(self, agent):
+        """Test export_report method with invalid format value."""
+        with pytest.raises(AiValidationError, match="Format type must be one of: md, json"):
+            agent.export_report("csv")
+
+    def test_export_report_invalid_data_type(self, agent):
+        """Test export_report method with invalid data type."""
+        with pytest.raises(AiValidationError, match="Report data must be a dictionary"):
+            agent.export_report("md", "invalid_data")
+
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    def test_export_report_permission_error(self, mock_file, agent):
+        """Test export_report method with permission error."""
+        agent.export_report("md")
+
+    @patch('builtins.open', side_effect=OSError("OS error"))
+    def test_export_report_os_error(self, mock_file, agent):
+        """Test export_report method with OS error."""
+        agent.export_report("md")
+
+    def test_handle_ai_development_requested_invalid_event_type(self, agent):
+        """Test handle_ai_development_requested with invalid event type."""
+        agent.handle_ai_development_requested("invalid_event")
+
+    def test_handle_ai_development_completed_invalid_event_type(self, agent):
+        """Test handle_ai_development_completed with invalid event type."""
+        import asyncio
+        asyncio.run(agent.handle_ai_development_completed("invalid_event"))
+
+
+class TestAiDeveloperAgentCLI:
+    @patch('sys.argv', ['aidev.py', 'help'])
+    @patch('builtins.print')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_help(self, mock_get_context, mock_publish, mock_save_context, mock_print):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'show_help') as mock_show_help:
+                main()
+                mock_show_help.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'build-pipeline'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_build_pipeline(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'build_pipeline', return_value={"result": "ok"}) as mock_build_pipeline:
+                main()
+                mock_build_pipeline.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'prompt-template'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_prompt_template(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'prompt_template', return_value={"result": "ok"}) as mock_prompt_template:
+                main()
+                mock_prompt_template.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'vector-search'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_vector_search(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'vector_search', return_value={"result": "ok"}) as mock_vector_search:
+                main()
+                mock_vector_search.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'ai-endpoint'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_ai_endpoint(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'ai_endpoint', return_value={"result": "ok"}) as mock_ai_endpoint:
+                main()
+                mock_ai_endpoint.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'evaluate'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_evaluate(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'evaluate', return_value={"result": "ok"}) as mock_evaluate:
+                main()
+                mock_evaluate.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'experiment-log'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_experiment_log(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'experiment_log', return_value={"result": "ok"}) as mock_experiment_log:
+                main()
+                mock_experiment_log.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'monitoring'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_monitoring(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'monitoring', return_value={"result": "ok"}) as mock_monitoring:
+                main()
+                mock_monitoring.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'doc'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_doc(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'doc', return_value={"result": "ok"}) as mock_doc:
+                main()
+                mock_doc.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'review'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_review(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'review', return_value={"result": "ok"}) as mock_review:
+                main()
+                mock_review.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'blockers'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_blockers(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'blockers', return_value={"result": "ok"}) as mock_blockers:
+                main()
+                mock_blockers.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'build-etl-pipeline'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_build_etl_pipeline(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'build_etl_pipeline', return_value={"result": "ok"}) as mock_build_etl_pipeline:
+                main()
+                mock_build_etl_pipeline.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'deploy-model'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_deploy_model(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'deploy_model', return_value={"result": "ok"}) as mock_deploy_model:
+                main()
+                mock_deploy_model.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'version-model'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_version_model(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'version_model', return_value={"result": "ok"}) as mock_version_model:
+                main()
+                mock_version_model.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'auto-evaluate'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_auto_evaluate(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'auto_evaluate', return_value={"result": "ok"}) as mock_auto_evaluate:
+                main()
+                mock_auto_evaluate.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'bias-check'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_bias_check(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'bias_check', return_value={"result": "ok"}) as mock_bias_check:
+                main()
+                mock_bias_check.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'explain'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_explain(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'explain', return_value={"result": "ok"}) as mock_explain:
+                main()
+                mock_explain.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'model-card'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_model_card(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'model_card', return_value={"result": "ok"}) as mock_model_card:
+                main()
+                mock_model_card.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'prompt-eval'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_prompt_eval(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'prompt_eval', return_value={"result": "ok"}) as mock_prompt_eval:
+                main()
+                mock_prompt_eval.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'retrain'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_retrain(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'retrain', return_value={"result": "ok"}) as mock_retrain:
+                main()
+                mock_retrain.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'show-experiment-history'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_show_experiment_history(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'show_experiment_history', return_value={"result": "ok"}) as mock_show_experiment_history:
+                main()
+                mock_show_experiment_history.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'show-model-history'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_show_model_history(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'show_model_history', return_value={"result": "ok"}) as mock_show_model_history:
+                main()
+                mock_show_model_history.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'show-best-practices'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_show_best_practices(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'show_resource', return_value={"result": "ok"}) as mock_show_resource:
+                main()
+                mock_show_resource.assert_called_once_with("best-practices")
+
+    @patch('sys.argv', ['aidev.py', 'show-changelog'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_show_changelog(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'show_resource', return_value={"result": "ok"}) as mock_show_resource:
+                main()
+                mock_show_resource.assert_called_once_with("changelog")
+
+    @patch('sys.argv', ['aidev.py', 'export-report'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_export_report(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'export_report', return_value={"result": "ok"}) as mock_export_report:
+                main()
+                mock_export_report.assert_called_once_with("md")
+
+    @patch('sys.argv', ['aidev.py', 'export-report', '--format', 'json'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_export_report_json(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'export_report', return_value={"result": "ok"}) as mock_export_report:
+                main()
+                mock_export_report.assert_called_once_with("json")
+
+    @patch('sys.argv', ['aidev.py', 'test'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_test(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'test_resource_completeness', return_value={"result": "ok"}) as mock_test_resource_completeness:
+                main()
+                mock_test_resource_completeness.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'collaborate'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_collaborate(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'collaborate_example', return_value={"result": "ok"}) as mock_collaborate_example:
+                main()
+                mock_collaborate_example.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'run'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_run(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'run', return_value={"result": "ok"}) as mock_run:
+                main()
+                mock_run.assert_called_once()
+
+    @patch('sys.argv', ['aidev.py', 'unknown-command'])
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
+    @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
+    def test_cli_unknown_command(self, mock_get_context, mock_publish, mock_save_context, capsys):
+        from bmad.agents.Agent.AiDeveloper.aidev import main
+        with patch('sys.exit') as mock_exit:
+            main()
+            # argparse calls sys.exit(2) for invalid arguments, so we expect at least one call
+            assert mock_exit.called 

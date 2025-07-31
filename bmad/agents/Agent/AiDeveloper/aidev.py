@@ -178,6 +178,7 @@ class AiDeveloperAgent:
         return list(set(recommendations))  # Remove duplicates
 
     def _load_experiment_history(self):
+        """Load experiment history from file with improved error handling."""
         try:
             if self.data_paths["experiment-history"].exists():
                 with open(self.data_paths["experiment-history"]) as f:
@@ -186,19 +187,33 @@ class AiDeveloperAgent:
                     for line in lines:
                         if line.strip().startswith("- "):
                             self.experiment_history.append(line.strip()[2:])
+        except FileNotFoundError:
+            logger.info("Experiment history file not found, starting with empty history")
+        except PermissionError as e:
+            logger.warning(f"Permission denied accessing experiment history: {e}")
+        except UnicodeDecodeError as e:
+            logger.warning(f"Unicode decode error in experiment history: {e}")
+        except OSError as e:
+            logger.warning(f"OS error loading experiment history: {e}")
         except Exception as e:
             logger.warning(f"Could not load experiment history: {e}")
 
     def _save_experiment_history(self):
+        """Save experiment history to file with improved error handling."""
         try:
             self.data_paths["experiment-history"].parent.mkdir(parents=True, exist_ok=True)
             with open(self.data_paths["experiment-history"], "w") as f:
                 f.write("# Experiment History\n\n")
                 f.writelines(f"- {exp}\n" for exp in self.experiment_history[-50:])
+        except PermissionError as e:
+            logger.error(f"Permission denied saving experiment history: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving experiment history: {e}")
         except Exception as e:
             logger.error(f"Could not save experiment history: {e}")
 
     def _load_model_history(self):
+        """Load model history from file with improved error handling."""
         try:
             if self.data_paths["model-history"].exists():
                 with open(self.data_paths["model-history"]) as f:
@@ -207,15 +222,28 @@ class AiDeveloperAgent:
                     for line in lines:
                         if line.strip().startswith("- "):
                             self.model_history.append(line.strip()[2:])
+        except FileNotFoundError:
+            logger.info("Model history file not found, starting with empty history")
+        except PermissionError as e:
+            logger.warning(f"Permission denied accessing model history: {e}")
+        except UnicodeDecodeError as e:
+            logger.warning(f"Unicode decode error in model history: {e}")
+        except OSError as e:
+            logger.warning(f"OS error loading model history: {e}")
         except Exception as e:
             logger.warning(f"Could not load model history: {e}")
 
     def _save_model_history(self):
+        """Save model history to file with improved error handling."""
         try:
             self.data_paths["model-history"].parent.mkdir(parents=True, exist_ok=True)
             with open(self.data_paths["model-history"], "w") as f:
                 f.write("# Model History\n\n")
                 f.writelines(f"- {model}\n" for model in self.model_history[-50:])
+        except PermissionError as e:
+            logger.error(f"Permission denied saving model history: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving model history: {e}")
         except Exception as e:
             logger.error(f"Could not save model history: {e}")
 
@@ -253,6 +281,14 @@ AiDeveloper Agent Commands:
         print(help_text)
 
     def show_resource(self, resource_type: str):
+        """Show resource content with improved input validation and error handling."""
+        # Input validation
+        if not isinstance(resource_type, str):
+            raise AiValidationError("Resource type must be a string")
+        
+        if not resource_type or not resource_type.strip():
+            raise AiValidationError("Resource type cannot be empty")
+        
         try:
             if resource_type == "best-practices":
                 path = self.template_paths["best-practices"]
@@ -267,13 +303,26 @@ AiDeveloper Agent Commands:
             else:
                 print(f"Unknown resource type: {resource_type}")
                 return
+            
             if path.exists():
                 with open(path) as f:
                     print(f.read())
             else:
                 print(f"Resource file not found: {path}")
+        except FileNotFoundError:
+            print(f"Resource file not found: {resource_type}")
+        except PermissionError as e:
+            logger.error(f"Permission denied accessing resource {resource_type}: {e}")
+            print(f"Permission denied accessing resource: {resource_type}")
+        except UnicodeDecodeError as e:
+            logger.error(f"Unicode decode error in resource {resource_type}: {e}")
+            print(f"Error reading resource file encoding: {resource_type}")
+        except OSError as e:
+            logger.error(f"OS error reading resource {resource_type}: {e}")
+            print(f"Error accessing resource: {resource_type}")
         except Exception as e:
             logger.error(f"Error reading resource {resource_type}: {e}")
+            print(f"Error reading resource: {resource_type}")
 
     def show_experiment_history(self):
         if not self.experiment_history:
@@ -294,6 +343,17 @@ AiDeveloper Agent Commands:
             print(f"{i}. {model}")
 
     def export_report(self, format_type: str = "md", report_data: Optional[Dict] = None):
+        """Export report with improved input validation and error handling."""
+        # Input validation
+        if not isinstance(format_type, str):
+            raise AiValidationError("Format type must be a string")
+        
+        if format_type not in ["md", "json"]:
+            raise AiValidationError("Format type must be one of: md, json")
+        
+        if report_data is not None and not isinstance(report_data, dict):
+            raise AiValidationError("Report data must be a dictionary")
+        
         if not report_data:
             report_data = {
                 "model": "Sentiment Classifier v2",
@@ -312,12 +372,18 @@ AiDeveloper Agent Commands:
                 self._export_markdown(report_data)
             elif format_type == "json":
                 self._export_json(report_data)
-            else:
-                print(f"Unsupported format: {format_type}")
+        except PermissionError as e:
+            logger.error(f"Permission denied exporting report: {e}")
+            print(f"Permission denied exporting report: {e}")
+        except OSError as e:
+            logger.error(f"OS error exporting report: {e}")
+            print(f"Error exporting report: {e}")
         except Exception as e:
             logger.error(f"Error exporting report: {e}")
+            print(f"Error exporting report: {e}")
 
     def _export_markdown(self, report_data: Dict):
+        """Export report as markdown with improved error handling."""
         output_file = f"ai_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
 
         content = f"""# AI Developer Report
@@ -341,17 +407,37 @@ AiDeveloper Agent Commands:
 - Inference Latency: {report_data.get('inference_latency', 'N/A')}ms
 """
 
-        with open(output_file, "w") as f:
-            f.write(content)
-        print(f"Report export saved to: {output_file}")
+        try:
+            with open(output_file, "w") as f:
+                f.write(content)
+            print(f"Report export saved to: {output_file}")
+        except PermissionError as e:
+            logger.error(f"Permission denied saving markdown report: {e}")
+            print(f"Permission denied saving report: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving markdown report: {e}")
+            print(f"Error saving report: {e}")
+        except Exception as e:
+            logger.error(f"Error saving markdown report: {e}")
+            print(f"Error saving report: {e}")
 
     def _export_json(self, report_data: Dict):
+        """Export report as JSON with improved error handling."""
         output_file = f"ai_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
-
-        with open(output_file, "w") as f:
-            json.dump(report_data, f, indent=2)
-
-        print(f"Report export saved to: {output_file}")
+        
+        try:
+            with open(output_file, "w") as f:
+                json.dump(report_data, f, indent=2)
+            print(f"Report export saved to: {output_file}")
+        except PermissionError as e:
+            logger.error(f"Permission denied saving JSON report: {e}")
+            print(f"Permission denied saving report: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving JSON report: {e}")
+            print(f"Error saving report: {e}")
+        except Exception as e:
+            logger.error(f"Error saving JSON report: {e}")
+            print(f"Error saving report: {e}")
 
     def test_resource_completeness(self):
         print("Testing resource completeness...")
@@ -410,12 +496,28 @@ AiDeveloper Agent Commands:
         print(f"Opgehaalde context: {context}")
 
     def handle_ai_development_requested(self, event):
+        """Handle AI development requested event with improved input validation."""
+        # Input validation
+        if not isinstance(event, dict):
+            logger.warning("Invalid event type for AI development requested event")
+            return
+        
         logger.info(f"AI development requested: {event}")
-        event.get("task", "Sentiment Analysis Model")
+        task = event.get("task", "Sentiment Analysis Model")
+        print(f"🚀 Starting AI development task: {task}")
         self.build_pipeline()
 
     async def handle_ai_development_completed(self, event):
+        """Handle AI development completed event with improved input validation."""
+        # Input validation
+        if not isinstance(event, dict):
+            logger.warning("Invalid event type for AI development completed event")
+            return
+        
         logger.info(f"AI development completed: {event}")
+        status = event.get("status", "unknown")
+        accuracy = event.get("accuracy", 0.0)
+        print(f"✅ AI development completed with status: {status}, accuracy: {accuracy}%")
 
         # Evaluate policy
         try:
@@ -838,6 +940,7 @@ AiDeveloper Agent Commands:
         )
 
 def main():
+    """Main CLI function with improved error handling."""
     parser = argparse.ArgumentParser(description="AiDeveloper Agent CLI")
     parser.add_argument("command", nargs="?", default="help",
                        choices=["help", "build-pipeline", "prompt-template", "vector-search", "ai-endpoint",
@@ -848,66 +951,82 @@ def main():
                                "show-changelog", "export-report", "test", "collaborate", "run"])
     parser.add_argument("--format", choices=["md", "json"], default="md", help="Export format")
 
-    args = parser.parse_args()
+    try:
+        args = parser.parse_args()
+    except SystemExit:
+        print("Invalid command or arguments. Use 'help' for available commands.")
+        sys.exit(1)
+        return
 
     agent = AiDeveloperAgent()
 
-    if args.command == "help":
-        agent.show_help()
-    elif args.command == "build-pipeline":
-        agent.build_pipeline()
-    elif args.command == "prompt-template":
-        agent.prompt_template()
-    elif args.command == "vector-search":
-        agent.vector_search()
-    elif args.command == "ai-endpoint":
-        agent.ai_endpoint()
-    elif args.command == "evaluate":
-        agent.evaluate()
-    elif args.command == "experiment-log":
-        agent.experiment_log()
-    elif args.command == "monitoring":
-        agent.monitoring()
-    elif args.command == "doc":
-        agent.doc()
-    elif args.command == "review":
-        agent.review()
-    elif args.command == "blockers":
-        agent.blockers()
-    elif args.command == "build-etl-pipeline":
-        agent.build_etl_pipeline()
-    elif args.command == "deploy-model":
-        agent.deploy_model()
-    elif args.command == "version-model":
-        agent.version_model()
-    elif args.command == "auto-evaluate":
-        agent.auto_evaluate()
-    elif args.command == "bias-check":
-        agent.bias_check()
-    elif args.command == "explain":
-        agent.explain()
-    elif args.command == "model-card":
-        agent.model_card()
-    elif args.command == "prompt-eval":
-        agent.prompt_eval()
-    elif args.command == "retrain":
-        agent.retrain()
-    elif args.command == "show-experiment-history":
-        agent.show_experiment_history()
-    elif args.command == "show-model-history":
-        agent.show_model_history()
-    elif args.command == "show-best-practices":
-        agent.show_resource("best-practices")
-    elif args.command == "show-changelog":
-        agent.show_resource("changelog")
-    elif args.command == "export-report":
-        agent.export_report(args.format)
-    elif args.command == "test":
-        agent.test_resource_completeness()
-    elif args.command == "collaborate":
-        agent.collaborate_example()
-    elif args.command == "run":
-        agent.run()
+    try:
+        if args.command == "help":
+            agent.show_help()
+        elif args.command == "build-pipeline":
+            agent.build_pipeline()
+        elif args.command == "prompt-template":
+            agent.prompt_template()
+        elif args.command == "vector-search":
+            agent.vector_search()
+        elif args.command == "ai-endpoint":
+            agent.ai_endpoint()
+        elif args.command == "evaluate":
+            agent.evaluate()
+        elif args.command == "experiment-log":
+            agent.experiment_log()
+        elif args.command == "monitoring":
+            agent.monitoring()
+        elif args.command == "doc":
+            agent.doc()
+        elif args.command == "review":
+            agent.review()
+        elif args.command == "blockers":
+            agent.blockers()
+        elif args.command == "build-etl-pipeline":
+            agent.build_etl_pipeline()
+        elif args.command == "deploy-model":
+            agent.deploy_model()
+        elif args.command == "version-model":
+            agent.version_model()
+        elif args.command == "auto-evaluate":
+            agent.auto_evaluate()
+        elif args.command == "bias-check":
+            agent.bias_check()
+        elif args.command == "explain":
+            agent.explain()
+        elif args.command == "model-card":
+            agent.model_card()
+        elif args.command == "prompt-eval":
+            agent.prompt_eval()
+        elif args.command == "retrain":
+            agent.retrain()
+        elif args.command == "show-experiment-history":
+            agent.show_experiment_history()
+        elif args.command == "show-model-history":
+            agent.show_model_history()
+        elif args.command == "show-best-practices":
+            agent.show_resource("best-practices")
+        elif args.command == "show-changelog":
+            agent.show_resource("changelog")
+        elif args.command == "export-report":
+            agent.export_report(args.format)
+        elif args.command == "test":
+            agent.test_resource_completeness()
+        elif args.command == "collaborate":
+            agent.collaborate_example()
+        elif args.command == "run":
+            agent.run()
+        else:
+            print(f"Unknown command: {args.command}")
+            print("Use 'help' for available commands.")
+            sys.exit(1)
+            return
+    except Exception as e:
+        logger.error(f"Error executing command '{args.command}': {e}")
+        print(f"Error: {e}")
+        sys.exit(1)
+        return
 
 if __name__ == "__main__":
     main()
