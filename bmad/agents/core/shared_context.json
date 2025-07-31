@@ -1,7 +1,7 @@
 {
   "events": [
     {
-      "timestamp": "2025-07-31T12:13:00.708653",
+      "timestamp": "2025-07-31T12:47:54.630766",
       "event": "test_topic",
       "data": {
         "type": "test",
@@ -9,21 +9,21 @@
       }
     },
     {
-      "timestamp": "2025-07-31T12:13:21.301317",
+      "timestamp": "2025-07-31T12:48:15.104727",
       "event": "tests_requested",
       "data": {
         "desc": "Tests uitvoeren"
       }
     },
     {
-      "timestamp": "2025-07-31T12:13:23.311664",
+      "timestamp": "2025-07-31T12:48:17.113363",
       "event": "deployment_completed",
       "data": {
         "desc": "Deployment afgerond"
       }
     },
     {
-      "timestamp": "2025-07-31T12:13:32.885367",
+      "timestamp": "2025-07-31T12:48:26.657538",
       "event": "documentation_completed",
       "data": {
         "status": "success",
@@ -35,30 +35,30 @@
       }
     },
     {
-      "timestamp": "2025-07-31T12:13:45.392997",
+      "timestamp": "2025-07-31T12:48:39.150662",
       "event": "feedback_collected",
       "data": {
         "desc": "Feedback verzameld"
       }
     },
     {
-      "timestamp": "2025-07-31T12:13:46.400402",
+      "timestamp": "2025-07-31T12:48:40.156396",
       "event": "trends_analyzed",
       "data": {
         "desc": "Trends geanalyseerd"
       }
     },
     {
-      "timestamp": "2025-07-31T12:13:51.487909",
+      "timestamp": "2025-07-31T12:48:45.229660",
       "event": "component_build_requested",
       "data": {
         "agent": "FrontendDeveloperAgent",
         "component_name": "Button",
-        "timestamp": "2025-07-31T12:13:51.487783"
+        "timestamp": "2025-07-31T12:48:45.229567"
       }
     },
     {
-      "timestamp": "2025-07-31T12:13:51.488957",
+      "timestamp": "2025-07-31T12:48:45.230323",
       "event": "component_build_completed",
       "data": {
         "name": "Button",
@@ -66,12 +66,12 @@
         "status": "created",
         "accessibility_score": 95,
         "performance_score": 88,
-        "timestamp": "2025-07-31T12:13:51.488552",
+        "timestamp": "2025-07-31T12:48:45.230004",
         "agent": "FrontendDeveloperAgent"
       }
     },
     {
-      "timestamp": "2025-07-31T12:13:51.489421",
+      "timestamp": "2025-07-31T12:48:45.230522",
       "event": "accessibility_check_completed",
       "data": {
         "component": "Button",
@@ -88,21 +88,21 @@
             "description": "Missing alt text on image"
           }
         ],
-        "timestamp": "2025-07-31T12:13:51.488835",
+        "timestamp": "2025-07-31T12:48:45.230230",
         "agent": "FrontendDeveloperAgent"
       }
     },
     {
-      "timestamp": "2025-07-31T12:13:52.964711",
+      "timestamp": "2025-07-31T12:48:46.685274",
       "event": "component_build_requested",
       "data": {
         "agent": "FrontendDeveloperAgent",
         "component_name": "Button",
-        "timestamp": "2025-07-31T12:13:52.964386"
+        "timestamp": "2025-07-31T12:48:46.685121"
       }
     },
     {
-      "timestamp": "2025-07-31T12:13:55.985580",
+      "timestamp": "2025-07-31T12:48:49.703837",
       "event": "component_build_completed",
       "data": {
         "name": "Button",
@@ -110,12 +110,12 @@
         "status": "created",
         "accessibility_score": 95,
         "performance_score": 88,
-        "timestamp": "2025-07-31T12:13:54.977725",
+        "timestamp": "2025-07-31T12:48:48.697062",
         "agent": "FrontendDeveloperAgent"
       }
     },
     {
-      "timestamp": "2025-07-31T12:13:56.006256",
+      "timestamp": "2025-07-31T12:48:49.719706",
       "event": "accessibility_check_completed",
       "data": {
         "component": "Button",
@@ -132,12 +132,12 @@
             "description": "Missing alt text on image"
           }
         ],
-        "timestamp": "2025-07-31T12:13:55.985189",
+        "timestamp": "2025-07-31T12:48:49.702911",
         "agent": "FrontendDeveloperAgent"
       }
     },
     {
-      "timestamp": "2025-07-31T12:14:27.091692",
+      "timestamp": "2025-07-31T12:49:20.692512",
       "event": "new_task",
       "data": {
         "event_type": "new_task",
@@ -145,7 +145,7 @@
       }
     },
     {
-      "timestamp": "2025-07-31T12:14:27.092930",
+      "timestamp": "2025-07-31T12:49:20.692916",
       "event": "user_story_requested",
       "data": {
         "event_type": "user_story_requested",
@@ -153,7 +153,7 @@
       }
     },
     {
-      "timestamp": "2025-07-31T12:14:27.093984",
+      "timestamp": "2025-07-31T12:49:20.693257",
       "event": "test_generation_requested",
       "data": {
         "event_type": "test_generation_requested",
@@ -161,69 +161,16 @@
       }
     },
     {
-      "timestamp": "2025-07-31T12:14:36.201678",
-      "event": "backlog_updated",
-      "data": {
-        "status": "success",
-        "agent": "ProductOwner"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T12:15:22.224128",
-      "event": "security_scan_requested",
-      "data": {
-        "agent": "SecurityDeveloperAgent",
-        "target": "BMAD Application",
-        "timestamp": "2025-07-31T12:15:22.223467"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T12:15:24.233932",
-      "event": "security_scan_completed",
-      "data": {
-        "status": "success",
-        "agent": "SecurityDeveloperAgent",
-        "security_score": 78,
-        "vulnerabilities_found": 4
-      }
-    },
-    {
-      "timestamp": "2025-07-31T12:15:26.347920",
-      "event": "security_scan_requested",
-      "data": {
-        "agent": "SecurityDeveloperAgent",
-        "target": "BMAD Application",
-        "timestamp": "2025-07-31T12:15:26.347782"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T12:15:30.368689",
-      "event": "security_scan_completed",
-      "data": {
-        "status": "success",
-        "agent": "SecurityDeveloperAgent",
-        "security_score": 78,
-        "vulnerabilities_found": 4
-      }
-    },
-    {
-      "timestamp": "2025-07-31T12:15:33.901915",
-      "event": "security_findings_reported",
-      "data": {
-        "desc": "Security bevindingen gerapporteerd"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T12:15:39.491962",
+      "timestamp": "2025-07-31T12:50:23.042350",
       "event": "design_requested",
       "data": {
         "agent": "UXUIDesignerAgent",
         "task": "Create Shadcn Button Component",
-        "timestamp": "2025-07-31T12:15:39.491435"
+        "timestamp": "2025-07-31T12:50:23.041151"
       }
     },
     {
-      "timestamp": "2025-07-31T12:15:40.500434",
+      "timestamp": "2025-07-31T12:50:24.051170",
       "event": "design_completed",
       "data": {
         "status": "success",
@@ -233,46 +180,10 @@
       }
     },
     {
-      "timestamp": "2025-07-31T12:15:41.394588",
+      "timestamp": "2025-07-31T12:50:24.734759",
       "event": "test_event",
       "data": {
         "data": "test"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T12:21:53.941190",
-      "event": "ai_development_requested",
-      "data": {
-        "agent": "AiDeveloperAgent",
-        "task": "Sentiment Analysis Model",
-        "timestamp": "2025-07-31T12:21:53.940766"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T12:21:53.943572",
-      "event": "ai_development_completed",
-      "data": {
-        "status": "success",
-        "agent": "AiDeveloperAgent",
-        "accuracy": 91.0
-      }
-    },
-    {
-      "timestamp": "2025-07-31T12:21:54.229423",
-      "event": "ai_development_requested",
-      "data": {
-        "agent": "AiDeveloperAgent",
-        "task": "Sentiment Analysis Model",
-        "timestamp": "2025-07-31T12:21:54.229307"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T12:21:54.232723",
-      "event": "ai_development_completed",
-      "data": {
-        "status": "success",
-        "agent": "AiDeveloperAgent",
-        "accuracy": 91.0
       }
     }
   ]
