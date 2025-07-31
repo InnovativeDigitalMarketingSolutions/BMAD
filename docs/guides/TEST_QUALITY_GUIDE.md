@@ -20,6 +20,44 @@ Dit document dient als handleiding voor het oplossen van test problemen op een k
 - **METHODE**: Proper mocking van externe dependencies
 - **RESULTAAT**: Tests falen alleen bij echte regressies
 
+### 4. Behoud van Bestaande Tests (KRITIEK)
+- **VERBODEN**: Bestaande tests aanpassen of verwijderen
+- **TOEGESTAAN**: Nieuwe tests toevoegen voor nieuwe functionaliteit
+- **VERPLICHT**: Als implementatie verandert, pas de implementatie aan om tests te laten slagen
+- **PATTERN**: "Implementation follows tests, not tests follow implementation"
+
+### 5. Test Expectations vs Implementation
+- **PROBLEEM**: Tests falen omdat implementatie is veranderd
+- **OPLOSSING**: Pas implementatie aan om test expectations te vervullen
+- **METHODE**: 
+  1. Analyseer wat de test verwacht
+  2. Pas implementatie aan om die verwachting te vervullen
+  3. Voeg nieuwe tests toe voor nieuwe functionaliteit
+  4. Verwijder NOOIT bestaande tests
+
+### 6. Implementatie Wijzigingen die Tests Breken (KRITIEK)
+- **PROBLEEM**: Implementatie is uitgebreid/verbeterd maar bestaande tests falen
+- **OPLOSSING**: Behoud backward compatibility in implementatie
+- **METHODE**:
+  1. **ANALYSEER**: Welke test expectations zijn gebroken?
+  2. **BEHOUD**: Originele functionaliteit naast nieuwe functionaliteit
+  3. **EXTEND**: Implementatie met nieuwe features zonder bestaande te breken
+  4. **TEST**: Voeg nieuwe tests toe voor nieuwe features
+  5. **DOCUMENT**: Waarom backward compatibility belangrijk is
+
+**VOORBEELD**:
+```python
+# FOUT: Implementatie veranderen om nieuwe features toe te voegen
+def method(self):
+    return {"new_field": "value"}  # Breakt bestaande tests
+
+# GOED: Backward compatibility behouden
+def method(self):
+    result = {"original_field": "original_value"}  # Behoud origineel
+    result.update({"new_field": "value"})  # Voeg nieuw toe
+    return result
+```
+
 ## Mocking Strategieën
 
 ### 1. Pragmatische Mocking (Aanbevolen voor Complexe API Calls)
