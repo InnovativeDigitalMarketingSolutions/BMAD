@@ -131,6 +131,7 @@ class SecurityDeveloperAgent:
             raise SecurityValidationError(f"Unsupported compliance framework: {framework}")
 
     def _load_scan_history(self):
+        """Load scan history from file with improved error handling."""
         try:
             if self.data_paths["scan-history"].exists():
                 with open(self.data_paths["scan-history"]) as f:
@@ -139,19 +140,33 @@ class SecurityDeveloperAgent:
                     for line in lines:
                         if line.strip().startswith("- "):
                             self.scan_history.append(line.strip()[2:])
+        except FileNotFoundError:
+            logger.info("Scan history file not found, starting with empty history")
+        except PermissionError as e:
+            logger.warning(f"Permission denied accessing scan history: {e}")
+        except UnicodeDecodeError as e:
+            logger.warning(f"Unicode decode error in scan history: {e}")
+        except OSError as e:
+            logger.warning(f"OS error loading scan history: {e}")
         except Exception as e:
             logger.warning(f"Could not load scan history: {e}")
 
     def _save_scan_history(self):
+        """Save scan history to file with improved error handling."""
         try:
             self.data_paths["scan-history"].parent.mkdir(parents=True, exist_ok=True)
             with open(self.data_paths["scan-history"], "w") as f:
                 f.write("# Security Scan History\n\n")
                 f.writelines(f"- {scan}\n" for scan in self.scan_history[-50:])
+        except PermissionError as e:
+            logger.error(f"Permission denied saving scan history: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving scan history: {e}")
         except Exception as e:
             logger.error(f"Could not save scan history: {e}")
 
     def _load_incident_history(self):
+        """Load incident history from file with improved error handling."""
         try:
             if self.data_paths["incident-history"].exists():
                 with open(self.data_paths["incident-history"]) as f:
@@ -160,15 +175,28 @@ class SecurityDeveloperAgent:
                     for line in lines:
                         if line.strip().startswith("- "):
                             self.incident_history.append(line.strip()[2:])
+        except FileNotFoundError:
+            logger.info("Incident history file not found, starting with empty history")
+        except PermissionError as e:
+            logger.warning(f"Permission denied accessing incident history: {e}")
+        except UnicodeDecodeError as e:
+            logger.warning(f"Unicode decode error in incident history: {e}")
+        except OSError as e:
+            logger.warning(f"OS error loading incident history: {e}")
         except Exception as e:
             logger.warning(f"Could not load incident history: {e}")
 
     def _save_incident_history(self):
+        """Save incident history to file with improved error handling."""
         try:
             self.data_paths["incident-history"].parent.mkdir(parents=True, exist_ok=True)
             with open(self.data_paths["incident-history"], "w") as f:
                 f.write("# Security Incident History\n\n")
                 f.writelines(f"- {incident}\n" for incident in self.incident_history[-50:])
+        except PermissionError as e:
+            logger.error(f"Permission denied saving incident history: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving incident history: {e}")
         except Exception as e:
             logger.error(f"Could not save incident history: {e}")
 
@@ -359,10 +387,15 @@ Advanced features:
         print(help_text)
 
     def show_resource(self, resource_type: str):
-        """Show security resources."""
+        """Show security resources with improved input validation and error handling."""
+        # Input validation
+        if not isinstance(resource_type, str):
+            raise SecurityValidationError("Resource type must be a string")
+        
+        if not resource_type or not resource_type.strip():
+            raise SecurityValidationError("Resource type cannot be empty")
+        
         try:
-            self._validate_input(resource_type, str, "resource_type")
-            
             if resource_type == "best-practices":
                 resource_path = self.template_paths["best-practices"]
             elif resource_type == "changelog":
@@ -381,9 +414,20 @@ Advanced features:
                 print(content)
             else:
                 print(f"Resource file not found: {resource_path}")
-                
-        except SecurityValidationError as e:
-            print(f"Validation error: {e}")
+        except FileNotFoundError:
+            print(f"Resource file not found: {resource_type}")
+        except PermissionError as e:
+            logger.error(f"Permission denied accessing resource {resource_type}: {e}")
+            print(f"Permission denied accessing resource: {resource_type}")
+        except UnicodeDecodeError as e:
+            logger.error(f"Unicode decode error in resource {resource_type}: {e}")
+            print(f"Error reading resource file encoding: {resource_type}")
+        except OSError as e:
+            logger.error(f"OS error reading resource {resource_type}: {e}")
+            print(f"Error accessing resource: {resource_type}")
+        except Exception as e:
+            logger.error(f"Error reading resource {resource_type}: {e}")
+            print(f"Error reading resource: {resource_type}")
 
     def show_scan_history(self):
         """Show scan history."""
@@ -742,13 +786,18 @@ Advanced features:
             raise SecurityError(f"Security recommendations generation failed: {e}")
 
     def export_report(self, format_type: str = "md", report_data: Optional[Dict] = None):
-        """Export security report in specified format."""
+        """Export security report with improved input validation and error handling."""
+        # Input validation
+        if not isinstance(format_type, str):
+            raise SecurityValidationError("Format type must be a string")
+        
+        if format_type not in ["md", "json"]:
+            raise SecurityValidationError("Format type must be one of: md, json")
+        
+        if report_data is not None and not isinstance(report_data, dict):
+            raise SecurityValidationError("Report data must be a dictionary")
+        
         try:
-            self._validate_input(format_type, str, "format_type")
-            
-            if format_type not in ["md", "json"]:
-                raise SecurityValidationError(f"Unsupported format: {format_type}")
-            
             if report_data is None:
                 # Generate default report data
                 report_data = {
@@ -763,16 +812,18 @@ Advanced features:
                 self._export_markdown(report_data)
             elif format_type == "json":
                 self._export_json(report_data)
-                
-        except SecurityValidationError as e:
-            logger.error(f"Security validation error: {e}")
-            raise
+        except PermissionError as e:
+            logger.error(f"Permission denied exporting report: {e}")
+            print(f"Permission denied exporting report: {e}")
+        except OSError as e:
+            logger.error(f"OS error exporting report: {e}")
+            print(f"Error exporting report: {e}")
         except Exception as e:
             logger.error(f"Error exporting report: {e}")
-            raise SecurityError(f"Report export failed: {e}")
+            print(f"Error exporting report: {e}")
 
     def _export_markdown(self, report_data: Dict):
-        """Export report in Markdown format."""
+        """Export report in Markdown format with improved error handling."""
         report_content = f"""# Security Report
 
 ## Agent: {report_data.get('agent', 'Unknown')}
@@ -793,20 +844,40 @@ Advanced features:
         for entry in report_data.get('incident_history', []):
             report_content += f"- {entry}\n"
         
-        # Save to file
-        report_path = Path(f"security_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md")
-        with open(report_path, 'w') as f:
-            f.write(report_content)
-        
-        print(f"Report export saved to: {report_path}")
+        try:
+            # Save to file
+            report_path = Path(f"security_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md")
+            with open(report_path, 'w') as f:
+                f.write(report_content)
+            
+            print(f"Report export saved to: {report_path}")
+        except PermissionError as e:
+            logger.error(f"Permission denied saving markdown report: {e}")
+            print(f"Permission denied saving report: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving markdown report: {e}")
+            print(f"Error saving report: {e}")
+        except Exception as e:
+            logger.error(f"Error saving markdown report: {e}")
+            print(f"Error saving report: {e}")
 
     def _export_json(self, report_data: Dict):
-        """Export report in JSON format."""
-        report_path = Path(f"security_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
-        with open(report_path, 'w') as f:
-            json.dump(report_data, f, indent=2)
-        
-        print(f"Report export saved to: {report_path}")
+        """Export report in JSON format with improved error handling."""
+        try:
+            report_path = Path(f"security_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json")
+            with open(report_path, 'w') as f:
+                json.dump(report_data, f, indent=2)
+            
+            print(f"Report export saved to: {report_path}")
+        except PermissionError as e:
+            logger.error(f"Permission denied saving JSON report: {e}")
+            print(f"Permission denied saving report: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving JSON report: {e}")
+            print(f"Error saving report: {e}")
+        except Exception as e:
+            logger.error(f"Error saving JSON report: {e}")
+            print(f"Error saving report: {e}")
 
     def test_resource_completeness(self):
         """Test resource completeness."""
@@ -863,12 +934,28 @@ Advanced features:
         print(f"Opgehaalde context: {context}")
 
     def handle_security_scan_requested(self, event):
+        """Handle security scan requested event with improved input validation."""
+        # Input validation
+        if not isinstance(event, dict):
+            logger.warning("Invalid event type for security scan requested event")
+            return
+        
         logger.info(f"Security scan requested: {event}")
         target = event.get("target", "application")
+        print(f"🔒 Starting security scan for target: {target}")
         self.run_security_scan(target)
 
     async def handle_security_scan_completed(self, event):
+        """Handle security scan completed event with improved input validation."""
+        # Input validation
+        if not isinstance(event, dict):
+            logger.warning("Invalid event type for security scan completed event")
+            return
+        
         logger.info(f"Security scan completed: {event}")
+        status = event.get("status", "unknown")
+        security_score = event.get("security_score", 0.0)
+        print(f"✅ Security scan completed with status: {status}, score: {security_score}%")
 
         # Evaluate policy
         try:
