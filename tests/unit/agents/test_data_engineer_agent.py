@@ -227,12 +227,11 @@ class TestDataEngineerAgent:
         assert "Report export saved to:" in captured.out
         assert ".json" in captured.out
 
-    def test_export_report_invalid_format(self, agent, capsys):
+    def test_export_report_invalid_format(self, agent):
         """Test export_report method with invalid format."""
         test_data = {"pipeline_name": "Test Pipeline", "status": "active"}
-        agent.export_report("invalid", test_data)
-        captured = capsys.readouterr()
-        assert "Unsupported format" in captured.out
+        with pytest.raises(ValueError, match="format_type must be one of: md, csv, json"):
+            agent.export_report("invalid", test_data)
 
     def test_test_resource_completeness(self, agent, capsys):
         """Test test_resource_completeness method."""
@@ -308,3 +307,378 @@ class TestDataEngineerAgent:
         assert explanation_result is not None
         assert build_result is not None
         assert monitor_result is not None 
+
+    # Additional error handling and input validation tests
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_load_pipeline_history_permission_error(self, mock_exists, mock_file, agent):
+        """Test pipeline history loading with permission error."""
+        agent.pipeline_history = []  # Reset history
+        agent._load_pipeline_history()
+        assert len(agent.pipeline_history) == 0
+
+    @patch('builtins.open', side_effect=UnicodeDecodeError("utf-8", b"", 0, 1, "invalid utf-8"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_load_pipeline_history_unicode_error(self, mock_exists, mock_file, agent):
+        """Test pipeline history loading with unicode error."""
+        agent.pipeline_history = []  # Reset history
+        agent._load_pipeline_history()
+        assert len(agent.pipeline_history) == 0
+
+    @patch('builtins.open', side_effect=OSError("OS error"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_load_pipeline_history_os_error(self, mock_exists, mock_file, agent):
+        """Test pipeline history loading with OS error."""
+        agent.pipeline_history = []  # Reset history
+        agent._load_pipeline_history()
+        assert len(agent.pipeline_history) == 0
+
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    @patch('pathlib.Path.mkdir')
+    @patch('pathlib.Path.exists', return_value=False)
+    def test_save_pipeline_history_permission_error(self, mock_exists, mock_mkdir, mock_file, agent):
+        """Test saving pipeline history with permission error."""
+        agent.pipeline_history = ["Pipeline 1", "Pipeline 2"]
+        agent._save_pipeline_history()
+
+    @patch('builtins.open', side_effect=OSError("OS error"))
+    @patch('pathlib.Path.mkdir')
+    @patch('pathlib.Path.exists', return_value=False)
+    def test_save_pipeline_history_os_error(self, mock_exists, mock_mkdir, mock_file, agent):
+        """Test saving pipeline history with OS error."""
+        agent.pipeline_history = ["Pipeline 1", "Pipeline 2"]
+        agent._save_pipeline_history()
+
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_load_quality_history_permission_error(self, mock_exists, mock_file, agent):
+        """Test quality history loading with permission error."""
+        agent.quality_history = []  # Reset history
+        agent._load_quality_history()
+        assert len(agent.quality_history) == 0
+
+    @patch('builtins.open', side_effect=UnicodeDecodeError("utf-8", b"", 0, 1, "invalid utf-8"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_load_quality_history_unicode_error(self, mock_exists, mock_file, agent):
+        """Test quality history loading with unicode error."""
+        agent.quality_history = []  # Reset history
+        agent._load_quality_history()
+        assert len(agent.quality_history) == 0
+
+    @patch('builtins.open', side_effect=OSError("OS error"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_load_quality_history_os_error(self, mock_exists, mock_file, agent):
+        """Test quality history loading with OS error."""
+        agent.quality_history = []  # Reset history
+        agent._load_quality_history()
+        assert len(agent.quality_history) == 0
+
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    @patch('pathlib.Path.mkdir')
+    @patch('pathlib.Path.exists', return_value=False)
+    def test_save_quality_history_permission_error(self, mock_exists, mock_mkdir, mock_file, agent):
+        """Test saving quality history with permission error."""
+        agent.quality_history = ["Quality 1", "Quality 2"]
+        agent._save_quality_history()
+
+    @patch('builtins.open', side_effect=OSError("OS error"))
+    @patch('pathlib.Path.mkdir')
+    @patch('pathlib.Path.exists', return_value=False)
+    def test_save_quality_history_os_error(self, mock_exists, mock_mkdir, mock_file, agent):
+        """Test saving quality history with OS error."""
+        agent.quality_history = ["Quality 1", "Quality 2"]
+        agent._save_quality_history()
+
+    def test_show_resource_invalid_type(self, agent, capsys):
+        """Test show_resource method with invalid resource type."""
+        agent.show_resource(123)  # Invalid type
+        captured = capsys.readouterr()
+        assert "Error: resource_type must be a string" in captured.out
+
+    def test_show_resource_empty_type(self, agent, capsys):
+        """Test show_resource method with empty resource type."""
+        agent.show_resource("")  # Empty string
+        captured = capsys.readouterr()
+        assert "Error: resource_type cannot be empty" in captured.out
+
+    @patch('builtins.open', side_effect=FileNotFoundError("File not found"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_show_resource_file_not_found(self, mock_exists, mock_file, agent, capsys):
+        """Test show_resource method when file not found."""
+        agent.show_resource("best-practices")
+        captured = capsys.readouterr()
+        assert "Resource file not found: best-practices" in captured.out
+
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_show_resource_permission_error(self, mock_exists, mock_file, agent, capsys):
+        """Test show_resource method with permission error."""
+        agent.show_resource("best-practices")
+        captured = capsys.readouterr()
+        assert "Permission denied accessing resource best-practices" in captured.out
+
+    @patch('builtins.open', side_effect=UnicodeDecodeError("utf-8", b"", 0, 1, "invalid utf-8"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_show_resource_unicode_error(self, mock_exists, mock_file, agent, capsys):
+        """Test show_resource method with unicode error."""
+        agent.show_resource("best-practices")
+        captured = capsys.readouterr()
+        assert "Unicode decode error in resource best-practices" in captured.out
+
+    def test_data_quality_check_invalid_data_summary_type(self, agent):
+        """Test data_quality_check with invalid data summary type."""
+        with pytest.raises(TypeError, match="data_summary must be a string"):
+            agent.data_quality_check(123)
+
+    def test_data_quality_check_empty_data_summary(self, agent):
+        """Test data_quality_check with empty data summary."""
+        with pytest.raises(ValueError, match="data_summary cannot be empty"):
+            agent.data_quality_check("")
+
+    def test_explain_pipeline_invalid_pipeline_code_type(self, agent):
+        """Test explain_pipeline with invalid pipeline code type."""
+        with pytest.raises(TypeError, match="pipeline_code must be a string"):
+            agent.explain_pipeline(123)
+
+    def test_explain_pipeline_empty_pipeline_code(self, agent):
+        """Test explain_pipeline with empty pipeline code."""
+        with pytest.raises(ValueError, match="pipeline_code cannot be empty"):
+            agent.explain_pipeline("")
+
+    def test_build_pipeline_invalid_pipeline_name_type(self, agent):
+        """Test build_pipeline with invalid pipeline name type."""
+        with pytest.raises(TypeError, match="pipeline_name must be a string"):
+            agent.build_pipeline(123)
+
+    def test_build_pipeline_empty_pipeline_name(self, agent):
+        """Test build_pipeline with empty pipeline name."""
+        with pytest.raises(ValueError, match="pipeline_name cannot be empty"):
+            agent.build_pipeline("")
+
+    def test_monitor_pipeline_invalid_pipeline_id_type(self, agent):
+        """Test monitor_pipeline with invalid pipeline id type."""
+        with pytest.raises(TypeError, match="pipeline_id must be a string"):
+            agent.monitor_pipeline(123)
+
+    def test_monitor_pipeline_empty_pipeline_id(self, agent):
+        """Test monitor_pipeline with empty pipeline id."""
+        with pytest.raises(ValueError, match="pipeline_id cannot be empty"):
+            agent.monitor_pipeline("")
+
+    def test_export_report_invalid_format_type(self, agent):
+        """Test export_report with invalid format type."""
+        with pytest.raises(TypeError, match="format_type must be a string"):
+            agent.export_report(123)
+
+    def test_export_report_invalid_format_value(self, agent):
+        """Test export_report with invalid format value."""
+        with pytest.raises(ValueError, match="format_type must be one of: md, csv, json"):
+            agent.export_report("xml")
+
+    def test_export_report_invalid_report_data_type(self, agent):
+        """Test export_report with invalid report data type."""
+        with pytest.raises(TypeError, match="report_data must be a dictionary"):
+            agent.export_report("md", "invalid")
+
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    def test_export_markdown_permission_error(self, mock_file, agent):
+        """Test _export_markdown with permission error."""
+        test_data = {"pipeline_name": "Test Pipeline", "status": "active"}
+        agent._export_markdown(test_data)
+
+    @patch('builtins.open', side_effect=OSError("OS error"))
+    def test_export_markdown_os_error(self, mock_file, agent):
+        """Test _export_markdown with OS error."""
+        test_data = {"pipeline_name": "Test Pipeline", "status": "active"}
+        agent._export_markdown(test_data)
+
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    def test_export_csv_permission_error(self, mock_file, agent):
+        """Test _export_csv with permission error."""
+        test_data = {"pipeline_name": "Test Pipeline", "status": "active"}
+        agent._export_csv(test_data)
+
+    @patch('builtins.open', side_effect=OSError("OS error"))
+    def test_export_csv_os_error(self, mock_file, agent):
+        """Test _export_csv with OS error."""
+        test_data = {"pipeline_name": "Test Pipeline", "status": "active"}
+        agent._export_csv(test_data)
+
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    def test_export_json_permission_error(self, mock_file, agent):
+        """Test _export_json with permission error."""
+        test_data = {"pipeline_name": "Test Pipeline", "status": "active"}
+        agent._export_json(test_data)
+
+    @patch('builtins.open', side_effect=OSError("OS error"))
+    def test_export_json_os_error(self, mock_file, agent):
+        """Test _export_json with OS error."""
+        test_data = {"pipeline_name": "Test Pipeline", "status": "active"}
+        agent._export_json(test_data)
+
+    def test_handle_data_quality_check_requested_invalid_event_type(self, agent):
+        """Test handle_data_quality_check_requested with invalid event type."""
+        agent.handle_data_quality_check_requested("invalid event")  # Should handle gracefully
+
+    def test_handle_explain_pipeline_invalid_event_type(self, agent):
+        """Test handle_explain_pipeline with invalid event type."""
+        agent.handle_explain_pipeline("invalid event")  # Should handle gracefully 
+
+
+class TestDataEngineerAgentCLI:
+    @patch('sys.argv', ['dataengineer.py', 'help'])
+    @patch('builtins.print')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.save_context')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.publish')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.get_context', return_value={"status": "active"})
+    def test_cli_help(self, mock_get_context, mock_publish, mock_save_context, mock_print):
+        from bmad.agents.Agent.DataEngineer.dataengineer import main
+        with patch('bmad.agents.Agent.DataEngineer.dataengineer.DataEngineerAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'show_help') as mock_show_help:
+                main()
+                mock_show_help.assert_called_once()
+
+    @patch('sys.argv', ['dataengineer.py', 'data-quality-check', '--data-summary', 'Test data'])
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.save_context')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.publish')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.get_context', return_value={"status": "active"})
+    def test_cli_data_quality_check(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.DataEngineer.dataengineer import main
+        with patch('bmad.agents.Agent.DataEngineer.dataengineer.DataEngineerAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'data_quality_check', return_value={"result": "ok"}) as mock_data_quality_check:
+                main()
+                mock_data_quality_check.assert_called_once_with('Test data')
+
+    @patch('sys.argv', ['dataengineer.py', 'explain-pipeline', '--pipeline-code', 'Test pipeline'])
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.save_context')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.publish')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.get_context', return_value={"status": "active"})
+    def test_cli_explain_pipeline(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.DataEngineer.dataengineer import main
+        with patch('bmad.agents.Agent.DataEngineer.dataengineer.DataEngineerAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'explain_pipeline', return_value={"result": "ok"}) as mock_explain_pipeline:
+                main()
+                mock_explain_pipeline.assert_called_once_with('Test pipeline')
+
+    @patch('sys.argv', ['dataengineer.py', 'build-pipeline', '--pipeline-name', 'Test Pipeline'])
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.save_context')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.publish')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.get_context', return_value={"status": "active"})
+    def test_cli_build_pipeline(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.DataEngineer.dataengineer import main
+        with patch('bmad.agents.Agent.DataEngineer.dataengineer.DataEngineerAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'build_pipeline', return_value={"result": "ok"}) as mock_build_pipeline:
+                main()
+                mock_build_pipeline.assert_called_once_with('Test Pipeline')
+
+    @patch('sys.argv', ['dataengineer.py', 'monitor-pipeline', '--pipeline-id', 'pipeline_001'])
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.save_context')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.publish')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.get_context', return_value={"status": "active"})
+    def test_cli_monitor_pipeline(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.DataEngineer.dataengineer import main
+        with patch('bmad.agents.Agent.DataEngineer.dataengineer.DataEngineerAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'monitor_pipeline', return_value={"result": "ok"}) as mock_monitor_pipeline:
+                main()
+                mock_monitor_pipeline.assert_called_once_with('pipeline_001')
+
+    @patch('sys.argv', ['dataengineer.py', 'show-pipeline-history'])
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.save_context')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.publish')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.get_context', return_value={"status": "active"})
+    def test_cli_show_pipeline_history(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.DataEngineer.dataengineer import main
+        with patch('bmad.agents.Agent.DataEngineer.dataengineer.DataEngineerAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'show_pipeline_history') as mock_show_pipeline_history:
+                main()
+                mock_show_pipeline_history.assert_called_once()
+
+    @patch('sys.argv', ['dataengineer.py', 'show-quality-history'])
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.save_context')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.publish')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.get_context', return_value={"status": "active"})
+    def test_cli_show_quality_history(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.DataEngineer.dataengineer import main
+        with patch('bmad.agents.Agent.DataEngineer.dataengineer.DataEngineerAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'show_quality_history') as mock_show_quality_history:
+                main()
+                mock_show_quality_history.assert_called_once()
+
+    @patch('sys.argv', ['dataengineer.py', 'show-best-practices'])
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.save_context')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.publish')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.get_context', return_value={"status": "active"})
+    def test_cli_show_best_practices(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.DataEngineer.dataengineer import main
+        with patch('bmad.agents.Agent.DataEngineer.dataengineer.DataEngineerAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'show_resource') as mock_show_resource:
+                main()
+                mock_show_resource.assert_called_once_with('best-practices')
+
+    @patch('sys.argv', ['dataengineer.py', 'show-changelog'])
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.save_context')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.publish')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.get_context', return_value={"status": "active"})
+    def test_cli_show_changelog(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.DataEngineer.dataengineer import main
+        with patch('bmad.agents.Agent.DataEngineer.dataengineer.DataEngineerAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'show_resource') as mock_show_resource:
+                main()
+                mock_show_resource.assert_called_once_with('changelog')
+
+    @patch('sys.argv', ['dataengineer.py', 'export-report', '--format', 'json'])
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.save_context')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.publish')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.get_context', return_value={"status": "active"})
+    def test_cli_export_report(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.DataEngineer.dataengineer import main
+        with patch('bmad.agents.Agent.DataEngineer.dataengineer.DataEngineerAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'export_report') as mock_export_report:
+                main()
+                mock_export_report.assert_called_once_with('json')
+
+    @patch('sys.argv', ['dataengineer.py', 'test'])
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.save_context')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.publish')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.get_context', return_value={"status": "active"})
+    def test_cli_test(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.DataEngineer.dataengineer import main
+        with patch('bmad.agents.Agent.DataEngineer.dataengineer.DataEngineerAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'test_resource_completeness') as mock_test_resource_completeness:
+                main()
+                mock_test_resource_completeness.assert_called_once()
+
+    @patch('sys.argv', ['dataengineer.py', 'collaborate'])
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.save_context')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.publish')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.get_context', return_value={"status": "active"})
+    def test_cli_collaborate(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.DataEngineer.dataengineer import main
+        with patch('bmad.agents.Agent.DataEngineer.dataengineer.DataEngineerAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'collaborate_example') as mock_collaborate_example:
+                main()
+                mock_collaborate_example.assert_called_once()
+
+    @patch('sys.argv', ['dataengineer.py', 'run'])
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.save_context')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.publish')
+    @patch('bmad.agents.Agent.DataEngineer.dataengineer.get_context', return_value={"status": "active"})
+    def test_cli_run(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.DataEngineer.dataengineer import main
+        with patch('bmad.agents.Agent.DataEngineer.dataengineer.DataEngineerAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'run') as mock_run:
+                main()
+                mock_run.assert_called_once() 
