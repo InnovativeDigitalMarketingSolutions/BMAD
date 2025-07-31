@@ -1090,6 +1090,30 @@
         "event_type": "test_generation_requested",
         "function_description": "Feature test"
       }
+    },
+    {
+      "timestamp": "2025-07-31T10:01:11.574021",
+      "event": "new_task",
+      "data": {
+        "event_type": "new_task",
+        "task_desc": "Nieuwe feature ontwikkelen"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T10:01:11.581269",
+      "event": "user_story_requested",
+      "data": {
+        "event_type": "user_story_requested",
+        "requirement": "Feature requirement"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T10:01:11.587092",
+      "event": "test_generation_requested",
+      "data": {
+        "event_type": "test_generation_requested",
+        "function_description": "Feature test"
+      }
     }
   ]
 }
