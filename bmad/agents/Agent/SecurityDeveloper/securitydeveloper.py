@@ -9,7 +9,7 @@ import logging
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List, Union
 
 from bmad.agents.core.agent.agent_performance_monitor import (
     MetricType,
@@ -25,6 +25,14 @@ from integrations.slack.slack_notify import send_slack_message
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
+
+class SecurityError(Exception):
+    """Custom exception for security-related errors."""
+    pass
+
+class SecurityValidationError(SecurityError):
+    """Exception for security validation failures."""
+    pass
 
 class SecurityDeveloperAgent:
     def __init__(self):
@@ -56,6 +64,48 @@ class SecurityDeveloperAgent:
         self.incident_history = []
         self._load_scan_history()
         self._load_incident_history()
+
+        # Security-specific attributes
+        self.security_thresholds = {
+            "critical": 9.0,
+            "high": 7.0,
+            "medium": 4.0,
+            "low": 0.0
+        }
+        self.active_threats = []
+        self.security_policies = {}
+
+    def _validate_input(self, value: Any, expected_type: type, param_name: str) -> None:
+        """Validate input parameters with type checking."""
+        if not isinstance(value, expected_type):
+            raise SecurityValidationError(
+                f"Invalid type for {param_name}: expected {expected_type.__name__}, got {type(value).__name__}"
+            )
+
+    def _validate_security_target(self, target: str) -> None:
+        """Validate security scan target."""
+        self._validate_input(target, str, "target")
+        if not target or target.strip() == "":
+            raise SecurityValidationError("Security target cannot be empty")
+        
+        # Validate target format
+        allowed_targets = ["application", "api", "database", "network", "infrastructure"]
+        if target.lower() not in allowed_targets:
+            logger.warning(f"Unusual security target: {target}")
+
+    def _validate_vulnerability_data(self, vulnerability_data: Dict[str, Any]) -> None:
+        """Validate vulnerability assessment data."""
+        self._validate_input(vulnerability_data, dict, "vulnerability_data")
+        
+        required_fields = ["severity", "description", "cwe"]
+        for field in required_fields:
+            if field not in vulnerability_data:
+                raise SecurityValidationError(f"Missing required field: {field}")
+        
+        # Validate severity levels
+        valid_severities = ["critical", "high", "medium", "low"]
+        if vulnerability_data.get("severity") not in valid_severities:
+            raise SecurityValidationError(f"Invalid severity level: {vulnerability_data.get('severity')}")
 
     def _load_scan_history(self):
         try:
@@ -99,6 +149,51 @@ class SecurityDeveloperAgent:
         except Exception as e:
             logger.error(f"Could not save incident history: {e}")
 
+    def _record_security_metric(self, metric_name: str, value: float, unit: str = "%") -> None:
+        """Record security-specific performance metrics."""
+        try:
+            self.monitor._record_metric("SecurityDeveloper", MetricType.SUCCESS_RATE, value, unit)
+            logger.info(f"Security metric recorded: {metric_name} = {value}{unit}")
+        except Exception as e:
+            logger.error(f"Failed to record security metric: {e}")
+
+    def _assess_threat_level(self, vulnerabilities: List[Dict[str, Any]]) -> str:
+        """Assess overall threat level based on vulnerabilities."""
+        if not vulnerabilities:
+            return "low"
+        
+        max_severity = "low"
+        severity_scores = {"critical": 4, "high": 3, "medium": 2, "low": 1}
+        
+        for vuln in vulnerabilities:
+            severity = vuln.get("severity", "low")
+            if severity_scores.get(severity, 0) > severity_scores.get(max_severity, 0):
+                max_severity = severity
+        
+        return max_severity
+
+    def _generate_security_recommendations(self, vulnerabilities: List[Dict[str, Any]], threat_level: str) -> List[str]:
+        """Generate security recommendations based on vulnerabilities and threat level."""
+        recommendations = []
+        
+        # Base recommendations
+        recommendations.append("Implement comprehensive input validation")
+        recommendations.append("Enable security headers (HSTS, CSP, X-Frame-Options)")
+        recommendations.append("Use parameterized queries to prevent SQL injection")
+        recommendations.append("Implement proper output encoding")
+        
+        # Threat level specific recommendations
+        if threat_level in ["critical", "high"]:
+            recommendations.append("Immediate security review required")
+            recommendations.append("Consider implementing additional authentication layers")
+            recommendations.append("Enable real-time threat monitoring")
+        
+        if threat_level == "critical":
+            recommendations.append("Emergency security patch deployment recommended")
+            recommendations.append("Consider temporary service suspension")
+        
+        return recommendations
+
     def show_help(self):
         help_text = """
 SecurityDeveloper Agent Commands:
@@ -116,11 +211,15 @@ SecurityDeveloper Agent Commands:
   export-report [format]  - Export report (md, json)
   test                    - Test resource completeness
   collaborate             - Demonstrate collaboration
+  threat-assessment       - Assess current threat level
+  security-recommendations - Generate security recommendations
         """
         print(help_text)
 
     def show_resource(self, resource_type: str):
         try:
+            self._validate_input(resource_type, str, "resource_type")
+            
             if resource_type == "best-practices":
                 path = self.template_paths["best-practices"]
             elif resource_type == "changelog":
@@ -132,6 +231,7 @@ SecurityDeveloper Agent Commands:
             else:
                 print(f"Unknown resource type: {resource_type}")
                 return
+                
             if path.exists():
                 with open(path) as f:
                     print(f.read())
@@ -160,56 +260,68 @@ SecurityDeveloper Agent Commands:
 
     def run_security_scan(self, target: str = "application") -> Dict[str, Any]:
         """Run comprehensive security scan on target."""
-        logger.info(f"Running security scan on: {target}")
+        try:
+            self._validate_security_target(target)
+            logger.info(f"Running security scan on: {target}")
 
-        # Simulate security scan
-        time.sleep(2)
+            # Simulate security scan
+            time.sleep(2)
 
-        scan_result = {
-            "target": target,
-            "scan_type": "comprehensive",
-            "timestamp": datetime.now().isoformat(),
-            "vulnerabilities": {
-                "critical": 2,
-                "high": 5,
-                "medium": 8,
-                "low": 12
-            },
-            "compliance": {
-                "owasp_top_10": "85% compliant",
-                "gdpr": "92% compliant",
-                "sox": "88% compliant"
-            },
-            "security_score": 78,
-            "recommendations": [
-                "Update dependencies to latest versions",
-                "Implement proper input validation",
-                "Add rate limiting to API endpoints",
-                "Enable security headers"
-            ],
-            "agent": "SecurityDeveloperAgent"
-        }
+            scan_result = {
+                "target": target,
+                "scan_type": "comprehensive",
+                "timestamp": datetime.now().isoformat(),
+                "vulnerabilities": {
+                    "critical": 2,
+                    "high": 5,
+                    "medium": 8,
+                    "low": 12
+                },
+                "compliance": {
+                    "owasp_top_10": "85% compliant",
+                    "gdpr": "92% compliant",
+                    "sox": "88% compliant"
+                },
+                "security_score": 78,
+                "recommendations": [
+                    "Update dependencies to latest versions",
+                    "Implement proper input validation",
+                    "Add rate limiting to API endpoints",
+                    "Enable security headers"
+                ],
+                "agent": "SecurityDeveloperAgent"
+            }
 
-        # Log performance metrics
-        self.monitor._record_metric("SecurityDeveloper", MetricType.SUCCESS_RATE, scan_result["security_score"], "%")
+            # Record performance metrics
+            self._record_security_metric("security_scan_score", scan_result["security_score"])
+            self._record_security_metric("vulnerabilities_found", sum(scan_result["vulnerabilities"].values()))
 
-        # Add to scan history
-        scan_entry = f"{datetime.now().isoformat()}: Security scan completed on {target} with {scan_result['security_score']}% security score"
-        self.scan_history.append(scan_entry)
-        self._save_scan_history()
+            # Add to scan history
+            scan_entry = f"{datetime.now().isoformat()}: Security scan completed on {target} with {scan_result['security_score']}% security score"
+            self.scan_history.append(scan_entry)
+            self._save_scan_history()
 
-        logger.info(f"Security scan completed: {scan_result}")
-        return scan_result
+            logger.info(f"Security scan completed: {scan_result}")
+            return scan_result
+            
+        except SecurityValidationError as e:
+            logger.error(f"Security validation error: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Security scan failed: {e}")
+            self._record_security_metric("security_scan_failure", 1, "count")
+            raise SecurityError(f"Security scan failed: {e}")
 
     def vulnerability_assessment(self, component: str = "API") -> Dict[str, Any]:
         """Perform detailed vulnerability assessment."""
-        logger.info(f"Performing vulnerability assessment on: {component}")
+        try:
+            self._validate_input(component, str, "component")
+            if not component or component.strip() == "":
+                raise SecurityValidationError("Component cannot be empty")
+                
+            logger.info(f"Performing vulnerability assessment on: {component}")
 
-        assessment = {
-            "component": component,
-            "assessment_type": "detailed",
-            "timestamp": datetime.now().isoformat(),
-            "vulnerabilities": [
+            vulnerabilities = [
                 {
                     "id": "CVE-2024-001",
                     "severity": "high",
@@ -224,80 +336,192 @@ SecurityDeveloper Agent Commands:
                     "cwe": "CWE-79",
                     "recommendation": "Implement proper output encoding"
                 }
-            ],
-            "risk_score": 7.5,
-            "mitigation_plan": [
-                "Implement input validation",
-                "Add output encoding",
-                "Update security headers",
-                "Conduct penetration testing"
-            ],
-            "agent": "SecurityDeveloperAgent"
-        }
+            ]
 
-        # Log performance metrics
-        self.monitor._record_metric("SecurityDeveloper", MetricType.SUCCESS_RATE, 85, "%")
+            # Validate vulnerability data
+            for vuln in vulnerabilities:
+                self._validate_vulnerability_data(vuln)
 
-        logger.info(f"Vulnerability assessment completed: {assessment}")
-        return assessment
+            threat_level = self._assess_threat_level(vulnerabilities)
+            recommendations = self._generate_security_recommendations(vulnerabilities, threat_level)
 
-    def compliance_check(self, framework: str = "OWASP") -> Dict[str, Any]:
-        """Check compliance with security frameworks."""
-        logger.info(f"Checking compliance with: {framework}")
-
-        compliance_result = {
-            "framework": framework,
-            "check_date": datetime.now().isoformat(),
-            "overall_compliance": "85%",
-            "categories": {
-                "authentication": "90%",
-                "authorization": "85%",
-                "data_protection": "80%",
-                "input_validation": "75%",
-                "output_encoding": "90%"
-            },
-            "gaps": [
-                "Missing multi-factor authentication",
-                "Insufficient session management",
-                "Weak password policies"
-            ],
-            "recommendations": [
-                "Implement MFA for all user accounts",
-                "Enhance session timeout policies",
-                "Strengthen password requirements"
-            ],
-            "agent": "SecurityDeveloperAgent"
-        }
-
-        # Log performance metrics
-        self.monitor._record_metric("SecurityDeveloper", MetricType.SUCCESS_RATE, 85, "%")
-
-        logger.info(f"Compliance check completed: {compliance_result}")
-        return compliance_result
-
-    def export_report(self, format_type: str = "md", report_data: Optional[Dict] = None):
-        if not report_data:
-            report_data = {
-                "report_type": "Security Assessment",
-                "target": "BMAD Application",
-                "security_score": 78,
-                "vulnerabilities_found": 27,
-                "compliance_score": 85,
-                "critical_issues": 2,
-                "high_issues": 5,
+            assessment = {
+                "component": component,
+                "assessment_type": "detailed",
                 "timestamp": datetime.now().isoformat(),
+                "vulnerabilities": vulnerabilities,
+                "threat_level": threat_level,
+                "risk_score": 7.5,
+                "mitigation_plan": recommendations,
                 "agent": "SecurityDeveloperAgent"
             }
 
+            # Record performance metrics
+            self._record_security_metric("vulnerability_assessment_score", 85)
+            self._record_security_metric("threat_level", {"critical": 4, "high": 3, "medium": 2, "low": 1}.get(threat_level, 1))
+
+            logger.info(f"Vulnerability assessment completed: {assessment}")
+            return assessment
+            
+        except SecurityValidationError as e:
+            logger.error(f"Security validation error: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Vulnerability assessment failed: {e}")
+            self._record_security_metric("vulnerability_assessment_failure", 1, "count")
+            raise SecurityError(f"Vulnerability assessment failed: {e}")
+
+    def compliance_check(self, framework: str = "OWASP") -> Dict[str, Any]:
+        """Check compliance with security frameworks."""
         try:
+            self._validate_input(framework, str, "framework")
+            if not framework or framework.strip() == "":
+                raise SecurityValidationError("Framework cannot be empty")
+                
+            logger.info(f"Checking compliance with: {framework}")
+
+            compliance_result = {
+                "framework": framework,
+                "check_date": datetime.now().isoformat(),
+                "overall_compliance": "85%",
+                "categories": {
+                    "authentication": "90%",
+                    "authorization": "85%",
+                    "data_protection": "80%",
+                    "input_validation": "75%",
+                    "output_encoding": "90%"
+                },
+                "gaps": [
+                    "Missing multi-factor authentication",
+                    "Insufficient session management",
+                    "Weak password policies"
+                ],
+                "recommendations": [
+                    "Implement MFA for all user accounts",
+                    "Enhance session timeout policies",
+                    "Strengthen password requirements"
+                ],
+                "agent": "SecurityDeveloperAgent"
+            }
+
+            # Record performance metrics
+            self._record_security_metric("compliance_score", 85)
+            self._record_security_metric("compliance_gaps", len(compliance_result["gaps"]))
+
+            logger.info(f"Compliance check completed: {compliance_result}")
+            return compliance_result
+            
+        except SecurityValidationError as e:
+            logger.error(f"Security validation error: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Compliance check failed: {e}")
+            self._record_security_metric("compliance_check_failure", 1, "count")
+            raise SecurityError(f"Compliance check failed: {e}")
+
+    def threat_assessment(self) -> Dict[str, Any]:
+        """Assess current threat level and active threats."""
+        try:
+            threat_assessment = {
+                "timestamp": datetime.now().isoformat(),
+                "overall_threat_level": "medium",
+                "active_threats": len(self.active_threats),
+                "threat_categories": {
+                    "network": 2,
+                    "application": 3,
+                    "data": 1,
+                    "infrastructure": 0
+                },
+                "recommendations": [
+                    "Enable real-time threat monitoring",
+                    "Implement automated threat response",
+                    "Conduct regular security audits"
+                ],
+                "agent": "SecurityDeveloperAgent"
+            }
+
+            self._record_security_metric("threat_assessment_score", 75)
+            return threat_assessment
+            
+        except Exception as e:
+            logger.error(f"Threat assessment failed: {e}")
+            raise SecurityError(f"Threat assessment failed: {e}")
+
+    def generate_security_recommendations(self, context: Dict[str, Any] = None) -> List[str]:
+        """Generate comprehensive security recommendations."""
+        try:
+            if context is None:
+                context = {}
+            
+            self._validate_input(context, dict, "context")
+            
+            recommendations = [
+                "Implement comprehensive input validation",
+                "Enable security headers (HSTS, CSP, X-Frame-Options)",
+                "Use parameterized queries to prevent SQL injection",
+                "Implement proper output encoding",
+                "Enable multi-factor authentication",
+                "Implement rate limiting",
+                "Regular security audits and penetration testing",
+                "Keep all dependencies updated",
+                "Implement proper logging and monitoring",
+                "Use HTTPS for all communications"
+            ]
+
+            # Context-specific recommendations
+            if context.get("has_user_input"):
+                recommendations.append("Implement strict input validation rules")
+                recommendations.append("Use whitelist approach for allowed characters")
+            
+            if context.get("has_database"):
+                recommendations.append("Use database connection pooling")
+                recommendations.append("Implement database access logging")
+            
+            if context.get("has_api"):
+                recommendations.append("Implement API rate limiting")
+                recommendations.append("Use API authentication tokens")
+                recommendations.append("Implement API versioning")
+
+            self._record_security_metric("recommendations_generated", len(recommendations))
+            return recommendations
+            
+        except SecurityValidationError as e:
+            logger.error(f"Security validation error: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Security recommendations generation failed: {e}")
+            raise SecurityError(f"Security recommendations generation failed: {e}")
+
+    def export_report(self, format_type: str = "md", report_data: Optional[Dict] = None):
+        try:
+            self._validate_input(format_type, str, "format_type")
+            if format_type not in ["md", "json"]:
+                raise SecurityValidationError(f"Unsupported format: {format_type}")
+                
+            if not report_data:
+                report_data = {
+                    "report_type": "Security Assessment",
+                    "target": "BMAD Application",
+                    "security_score": 78,
+                    "vulnerabilities_found": 27,
+                    "compliance_score": 85,
+                    "critical_issues": 2,
+                    "high_issues": 5,
+                    "timestamp": datetime.now().isoformat(),
+                    "agent": "SecurityDeveloperAgent"
+                }
+
             if format_type == "md":
                 self._export_markdown(report_data)
             elif format_type == "json":
                 self._export_json(report_data)
-            else:
-                print(f"Unsupported format: {format_type}")
+                
+        except SecurityValidationError as e:
+            logger.error(f"Security validation error: {e}")
+            raise
         except Exception as e:
             logger.error(f"Error exporting report: {e}")
+            raise SecurityError(f"Report export failed: {e}")
 
     def _export_markdown(self, report_data: Dict):
         output_file = f"security_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
@@ -479,7 +703,8 @@ def main():
                        choices=["help", "security-review", "summarize-incidents", "run-security-scan",
                                "vulnerability-assessment", "compliance-check", "incident-report",
                                "show-scan-history", "show-incident-history", "show-best-practices",
-                               "show-changelog", "export-report", "test", "collaborate", "run"])
+                               "show-changelog", "export-report", "test", "collaborate", "run",
+                               "threat-assessment", "security-recommendations"])
     parser.add_argument("--format", choices=["md", "json"], default="md", help="Export format")
     parser.add_argument("--code", help="Code snippet for security review")
     parser.add_argument("--incidents", nargs="+", help="List of incidents to summarize")
@@ -530,6 +755,29 @@ def main():
         agent.collaborate_example()
     elif args.command == "run":
         agent.run()
+    elif args.command == "threat-assessment":
+        result = agent.threat_assessment()
+        print(json.dumps(result, indent=2))
+    elif args.command == "security-recommendations":
+        context = {}
+        if args.code:
+            context["code_snippet"] = args.code
+        if args.target == "application":
+            context["has_api"] = True
+        if args.target == "database":
+            context["has_database"] = True
+        if args.target == "api":
+            context["has_api"] = True
+        if args.target == "network":
+            context["has_network"] = True
+        if args.target == "infrastructure":
+            context["has_infrastructure"] = True
+        if args.code and "user_input" in args.code.lower():
+            context["has_user_input"] = True
+
+        recommendations = agent.generate_security_recommendations(context)
+        print("\n".join(recommendations))
+
 
 if __name__ == "__main__":
     # Subscribe to events

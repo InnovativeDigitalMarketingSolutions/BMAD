@@ -1,13 +1,5 @@
 # Rollback History
 
-- **Grafana**: Visualization and dashboards
-- **AlertManager**: Alert routing and management
-- **Jaeger**: Distributed tracing for debugging
-- **ELK Stack**: Log aggregation and analysis
-- 2025-07-30T21:26:03.589880: Release 1.3.0 rolled back due to High error rate
-- 2025-07-30T21:26:11.089246: Release 123 rolled back due to reason
-- 2025-07-30T21:27:06.802728: Release rolled back - 1.3.0 - High error rate
-- 2025-07-30T21:27:14.327569: Release rolled back - 1.3.0 - High error rate
 - 2025-07-30T21:27:43.993650: Release rolled back - 1.3.0 - High error rate
 - 2025-07-30T21:27:51.480335: Release rolled back - 1.3.0 - High error rate
 - 2025-07-30T21:28:14.370892: Release rolled back - 1.3.0 - High error rate
@@ -50,3 +42,11 @@
 - 2025-07-31T09:03:16.212152: Release rolled back - 1.3.0 - High error rate
 - 2025-07-31T09:06:16.663370: Release rolled back - 1.3.0 - High error rate
 - 2025-07-31T09:06:24.042911: Release rolled back - 1.3.0 - High error rate
+- 2025-07-31T10:06:07.503852: Release rolled back - 1.3.0 - High error rate
+- 2025-07-31T10:06:14.934785: Release rolled back - 1.3.0 - High error rate
+- 2025-07-31T10:12:53.529922: Release rolled back - 1.3.0 - High error rate
+- 2025-07-31T10:13:00.947063: Release rolled back - 1.3.0 - High error rate
+- 2025-07-31T10:19:41.440507: Release rolled back - 1.3.0 - High error rate
+- 2025-07-31T10:19:48.832411: Release rolled back - 1.3.0 - High error rate
+- 2025-07-31T10:45:29.524694: Release rolled back - 1.3.0 - High error rate
+- 2025-07-31T10:45:36.997116: Release rolled back - 1.3.0 - High error rate

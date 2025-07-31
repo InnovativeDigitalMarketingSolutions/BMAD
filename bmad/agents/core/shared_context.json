@@ -1,7 +1,7 @@
 {
   "events": [
     {
-      "timestamp": "2025-07-31T08:14:22.212726",
+      "timestamp": "2025-07-31T10:43:42.900966",
       "event": "test_topic",
       "data": {
         "type": "test",
@@ -9,21 +9,21 @@
       }
     },
     {
-      "timestamp": "2025-07-31T08:14:50.817204",
+      "timestamp": "2025-07-31T10:44:11.377803",
       "event": "tests_requested",
       "data": {
         "desc": "Tests uitvoeren"
       }
     },
     {
-      "timestamp": "2025-07-31T08:14:52.824012",
+      "timestamp": "2025-07-31T10:44:13.384070",
       "event": "deployment_completed",
       "data": {
         "desc": "Deployment afgerond"
       }
     },
     {
-      "timestamp": "2025-07-31T08:15:02.379334",
+      "timestamp": "2025-07-31T10:44:23.152344",
       "event": "documentation_completed",
       "data": {
         "status": "success",
@@ -35,21 +35,133 @@
       }
     },
     {
-      "timestamp": "2025-07-31T08:15:14.863680",
+      "timestamp": "2025-07-31T10:44:35.690231",
       "event": "feedback_collected",
       "data": {
         "desc": "Feedback verzameld"
       }
     },
     {
-      "timestamp": "2025-07-31T08:15:15.872888",
+      "timestamp": "2025-07-31T10:44:36.695813",
       "event": "trends_analyzed",
       "data": {
         "desc": "Trends geanalyseerd"
       }
     },
     {
-      "timestamp": "2025-07-31T08:15:50.336027",
+      "timestamp": "2025-07-31T10:44:41.783643",
+      "event": "component_build_requested",
+      "data": {
+        "agent": "FrontendDeveloperAgent",
+        "component_name": "Button",
+        "timestamp": "2025-07-31T10:44:41.783524"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T10:44:41.784516",
+      "event": "component_build_completed",
+      "data": {
+        "name": "Button",
+        "type": "React/Next.js",
+        "status": "created",
+        "accessibility_score": 95,
+        "performance_score": 88,
+        "timestamp": "2025-07-31T10:44:41.784207",
+        "agent": "FrontendDeveloperAgent"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T10:44:41.784678",
+      "event": "accessibility_check_completed",
+      "data": {
+        "component": "Button",
+        "score": 95,
+        "issues": [
+          {
+            "type": "contrast",
+            "severity": "low",
+            "description": "Button text contrast could be improved"
+          },
+          {
+            "type": "alt-text",
+            "severity": "medium",
+            "description": "Missing alt text on image"
+          }
+        ],
+        "timestamp": "2025-07-31T10:44:41.784427",
+        "agent": "FrontendDeveloperAgent"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T10:44:43.244283",
+      "event": "component_build_requested",
+      "data": {
+        "agent": "FrontendDeveloperAgent",
+        "component_name": "Button",
+        "timestamp": "2025-07-31T10:44:43.244188"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T10:44:46.264562",
+      "event": "component_build_completed",
+      "data": {
+        "name": "Button",
+        "type": "React/Next.js",
+        "status": "created",
+        "accessibility_score": 95,
+        "performance_score": 88,
+        "timestamp": "2025-07-31T10:44:45.258930",
+        "agent": "FrontendDeveloperAgent"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T10:44:46.283877",
+      "event": "accessibility_check_completed",
+      "data": {
+        "component": "Button",
+        "score": 95,
+        "issues": [
+          {
+            "type": "contrast",
+            "severity": "low",
+            "description": "Button text contrast could be improved"
+          },
+          {
+            "type": "alt-text",
+            "severity": "medium",
+            "description": "Missing alt text on image"
+          }
+        ],
+        "timestamp": "2025-07-31T10:44:46.263881",
+        "agent": "FrontendDeveloperAgent"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T10:45:14.098128",
+      "event": "new_task",
+      "data": {
+        "event_type": "new_task",
+        "task_desc": "Nieuwe feature ontwikkelen"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T10:45:14.098617",
+      "event": "user_story_requested",
+      "data": {
+        "event_type": "user_story_requested",
+        "requirement": "Feature requirement"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T10:45:14.099314",
+      "event": "test_generation_requested",
+      "data": {
+        "event_type": "test_generation_requested",
+        "function_description": "Feature test"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T10:45:23.182790",
       "event": "backlog_updated",
       "data": {
         "status": "success",
@@ -57,23 +169,61 @@
       }
     },
     {
-      "timestamp": "2025-07-31T08:16:41.747627",
+      "timestamp": "2025-07-31T10:46:09.222134",
+      "event": "security_scan_requested",
+      "data": {
+        "agent": "SecurityDeveloperAgent",
+        "target": "BMAD Application",
+        "timestamp": "2025-07-31T10:46:09.221555"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T10:46:11.232783",
+      "event": "security_scan_completed",
+      "data": {
+        "status": "success",
+        "agent": "SecurityDeveloperAgent",
+        "security_score": 78,
+        "vulnerabilities_found": 4
+      }
+    },
+    {
+      "timestamp": "2025-07-31T10:46:13.343644",
+      "event": "security_scan_requested",
+      "data": {
+        "agent": "SecurityDeveloperAgent",
+        "target": "BMAD Application",
+        "timestamp": "2025-07-31T10:46:13.343562"
+      }
+    },
+    {
+      "timestamp": "2025-07-31T10:46:17.360622",
+      "event": "security_scan_completed",
+      "data": {
+        "status": "success",
+        "agent": "SecurityDeveloperAgent",
+        "security_score": 78,
+        "vulnerabilities_found": 4
+      }
+    },
+    {
+      "timestamp": "2025-07-31T10:46:20.839659",
       "event": "security_findings_reported",
       "data": {
         "desc": "Security bevindingen gerapporteerd"
       }
     },
     {
-      "timestamp": "2025-07-31T08:16:47.176753",
+      "timestamp": "2025-07-31T10:46:26.420645",
       "event": "design_requested",
       "data": {
         "agent": "UXUIDesignerAgent",
         "task": "Create Shadcn Button Component",
-        "timestamp": "2025-07-31T08:16:47.176651"
+        "timestamp": "2025-07-31T10:46:26.420370"
       }
     },
     {
-      "timestamp": "2025-07-31T08:16:48.184811",
+      "timestamp": "2025-07-31T10:46:27.428531",
       "event": "design_completed",
       "data": {
         "status": "success",
@@ -83,1036 +233,55 @@
       }
     },
     {
-      "timestamp": "2025-07-31T08:16:49.078412",
+      "timestamp": "2025-07-31T10:46:28.153172",
       "event": "test_event",
       "data": {
         "data": "test"
       }
     },
     {
-      "timestamp": "2025-07-31T08:37:06.775144",
-      "event": "tests_requested",
+      "timestamp": "2025-07-31T10:47:50.659074",
+      "event": "security_scan_requested",
       "data": {
-        "desc": "Tests uitvoeren"
+        "agent": "SecurityDeveloperAgent",
+        "target": "BMAD Application",
+        "timestamp": "2025-07-31T10:47:50.658591"
       }
     },
     {
-      "timestamp": "2025-07-31T08:37:08.785480",
-      "event": "deployment_completed",
-      "data": {
-        "desc": "Deployment afgerond"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:37:18.362414",
-      "event": "documentation_completed",
+      "timestamp": "2025-07-31T10:47:52.669303",
+      "event": "security_scan_completed",
       "data": {
         "status": "success",
-        "agent": "DocumentationAgent",
-        "docs_created": 3,
-        "api_docs": 1,
-        "user_guides": 1,
-        "figma_docs": 1
+        "agent": "SecurityDeveloperAgent",
+        "security_score": 78,
+        "vulnerabilities_found": 4
       }
     },
     {
-      "timestamp": "2025-07-31T08:37:31.070269",
-      "event": "feedback_collected",
+      "timestamp": "2025-07-31T10:47:54.977387",
+      "event": "security_scan_requested",
       "data": {
-        "desc": "Feedback verzameld"
+        "agent": "SecurityDeveloperAgent",
+        "target": "BMAD Application",
+        "timestamp": "2025-07-31T10:47:54.977042"
       }
     },
     {
-      "timestamp": "2025-07-31T08:37:32.078814",
-      "event": "trends_analyzed",
-      "data": {
-        "desc": "Trends geanalyseerd"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:38:06.492921",
-      "event": "backlog_updated",
+      "timestamp": "2025-07-31T10:47:58.991973",
+      "event": "security_scan_completed",
       "data": {
         "status": "success",
-        "agent": "ProductOwner"
+        "agent": "SecurityDeveloperAgent",
+        "security_score": 78,
+        "vulnerabilities_found": 4
       }
     },
     {
-      "timestamp": "2025-07-31T08:38:57.919908",
+      "timestamp": "2025-07-31T10:48:02.634833",
       "event": "security_findings_reported",
       "data": {
         "desc": "Security bevindingen gerapporteerd"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:39:05.110873",
-      "event": "design_requested",
-      "data": {
-        "agent": "UXUIDesignerAgent",
-        "task": "Create Shadcn Button Component",
-        "timestamp": "2025-07-31T08:39:05.109642"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:39:06.121095",
-      "event": "design_completed",
-      "data": {
-        "status": "success",
-        "agent": "UXUIDesignerAgent",
-        "component": "Button",
-        "accessibility_score": 98
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:41:56.485972",
-      "event": "tests_requested",
-      "data": {
-        "desc": "Tests uitvoeren"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:41:58.498358",
-      "event": "deployment_completed",
-      "data": {
-        "desc": "Deployment afgerond"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:42:08.053519",
-      "event": "documentation_completed",
-      "data": {
-        "status": "success",
-        "agent": "DocumentationAgent",
-        "docs_created": 3,
-        "api_docs": 1,
-        "user_guides": 1,
-        "figma_docs": 1
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:42:20.587221",
-      "event": "feedback_collected",
-      "data": {
-        "desc": "Feedback verzameld"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:42:21.597173",
-      "event": "trends_analyzed",
-      "data": {
-        "desc": "Trends geanalyseerd"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:42:55.936483",
-      "event": "backlog_updated",
-      "data": {
-        "status": "success",
-        "agent": "ProductOwner"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:43:47.240386",
-      "event": "security_findings_reported",
-      "data": {
-        "desc": "Security bevindingen gerapporteerd"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:43:52.969370",
-      "event": "design_requested",
-      "data": {
-        "agent": "UXUIDesignerAgent",
-        "task": "Create Shadcn Button Component",
-        "timestamp": "2025-07-31T08:43:52.969189"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:43:53.983063",
-      "event": "design_completed",
-      "data": {
-        "status": "success",
-        "agent": "UXUIDesignerAgent",
-        "component": "Button",
-        "accessibility_score": 98
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:56:40.519280",
-      "event": "component_build_requested",
-      "data": {
-        "agent": "FrontendDeveloperAgent",
-        "component_name": "Button",
-        "timestamp": "2025-07-31T08:56:40.518731"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:56:40.520542",
-      "event": "component_build_completed",
-      "data": {
-        "name": "Button",
-        "type": "React/Next.js",
-        "status": "created",
-        "accessibility_score": 95,
-        "performance_score": 88,
-        "timestamp": "2025-07-31T08:56:40.520293",
-        "agent": "FrontendDeveloperAgent"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:56:40.521142",
-      "event": "accessibility_check_completed",
-      "data": {
-        "component": "Button",
-        "score": 95,
-        "issues": [
-          {
-            "type": "contrast",
-            "severity": "low",
-            "description": "Button text contrast could be improved"
-          },
-          {
-            "type": "alt-text",
-            "severity": "medium",
-            "description": "Missing alt text on image"
-          }
-        ],
-        "timestamp": "2025-07-31T08:56:40.520468",
-        "agent": "FrontendDeveloperAgent"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:56:42.038598",
-      "event": "component_build_requested",
-      "data": {
-        "agent": "FrontendDeveloperAgent",
-        "component_name": "Button",
-        "timestamp": "2025-07-31T08:56:42.038452"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:56:45.053584",
-      "event": "component_build_completed",
-      "data": {
-        "name": "Button",
-        "type": "React/Next.js",
-        "status": "created",
-        "accessibility_score": 95,
-        "performance_score": 88,
-        "timestamp": "2025-07-31T08:56:44.049556",
-        "agent": "FrontendDeveloperAgent"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:56:45.061065",
-      "event": "accessibility_check_completed",
-      "data": {
-        "component": "Button",
-        "score": 95,
-        "issues": [
-          {
-            "type": "contrast",
-            "severity": "low",
-            "description": "Button text contrast could be improved"
-          },
-          {
-            "type": "alt-text",
-            "severity": "medium",
-            "description": "Missing alt text on image"
-          }
-        ],
-        "timestamp": "2025-07-31T08:56:45.053188",
-        "agent": "FrontendDeveloperAgent"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:57:16.291280",
-      "event": "component_build_requested",
-      "data": {
-        "agent": "FrontendDeveloperAgent",
-        "component_name": "Button",
-        "timestamp": "2025-07-31T08:57:16.290689"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:57:16.293875",
-      "event": "component_build_completed",
-      "data": {
-        "name": "Button",
-        "type": "React/Next.js",
-        "status": "created",
-        "accessibility_score": 95,
-        "performance_score": 88,
-        "timestamp": "2025-07-31T08:57:16.293548",
-        "agent": "FrontendDeveloperAgent"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:57:16.295634",
-      "event": "accessibility_check_completed",
-      "data": {
-        "component": "Button",
-        "score": 95,
-        "issues": [
-          {
-            "type": "contrast",
-            "severity": "low",
-            "description": "Button text contrast could be improved"
-          },
-          {
-            "type": "alt-text",
-            "severity": "medium",
-            "description": "Missing alt text on image"
-          }
-        ],
-        "timestamp": "2025-07-31T08:57:16.293778",
-        "agent": "FrontendDeveloperAgent"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:57:17.805881",
-      "event": "component_build_requested",
-      "data": {
-        "agent": "FrontendDeveloperAgent",
-        "component_name": "Button",
-        "timestamp": "2025-07-31T08:57:17.805725"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:57:20.824201",
-      "event": "component_build_completed",
-      "data": {
-        "name": "Button",
-        "type": "React/Next.js",
-        "status": "created",
-        "accessibility_score": 95,
-        "performance_score": 88,
-        "timestamp": "2025-07-31T08:57:19.818374",
-        "agent": "FrontendDeveloperAgent"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:57:20.844310",
-      "event": "accessibility_check_completed",
-      "data": {
-        "component": "Button",
-        "score": 95,
-        "issues": [
-          {
-            "type": "contrast",
-            "severity": "low",
-            "description": "Button text contrast could be improved"
-          },
-          {
-            "type": "alt-text",
-            "severity": "medium",
-            "description": "Missing alt text on image"
-          }
-        ],
-        "timestamp": "2025-07-31T08:57:20.823698",
-        "agent": "FrontendDeveloperAgent"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:58:21.365387",
-      "event": "tests_requested",
-      "data": {
-        "desc": "Tests uitvoeren"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:58:23.377588",
-      "event": "deployment_completed",
-      "data": {
-        "desc": "Deployment afgerond"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:58:32.970515",
-      "event": "documentation_completed",
-      "data": {
-        "status": "success",
-        "agent": "DocumentationAgent",
-        "docs_created": 3,
-        "api_docs": 1,
-        "user_guides": 1,
-        "figma_docs": 1
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:58:46.514496",
-      "event": "feedback_collected",
-      "data": {
-        "desc": "Feedback verzameld"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:58:47.527292",
-      "event": "trends_analyzed",
-      "data": {
-        "desc": "Trends geanalyseerd"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:58:52.625976",
-      "event": "component_build_requested",
-      "data": {
-        "agent": "FrontendDeveloperAgent",
-        "component_name": "Button",
-        "timestamp": "2025-07-31T08:58:52.625831"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:58:52.628956",
-      "event": "component_build_completed",
-      "data": {
-        "name": "Button",
-        "type": "React/Next.js",
-        "status": "created",
-        "accessibility_score": 95,
-        "performance_score": 88,
-        "timestamp": "2025-07-31T08:58:52.628278",
-        "agent": "FrontendDeveloperAgent"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:58:52.631425",
-      "event": "accessibility_check_completed",
-      "data": {
-        "component": "Button",
-        "score": 95,
-        "issues": [
-          {
-            "type": "contrast",
-            "severity": "low",
-            "description": "Button text contrast could be improved"
-          },
-          {
-            "type": "alt-text",
-            "severity": "medium",
-            "description": "Missing alt text on image"
-          }
-        ],
-        "timestamp": "2025-07-31T08:58:52.628540",
-        "agent": "FrontendDeveloperAgent"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:58:54.103267",
-      "event": "component_build_requested",
-      "data": {
-        "agent": "FrontendDeveloperAgent",
-        "component_name": "Button",
-        "timestamp": "2025-07-31T08:58:54.103095"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:58:57.117450",
-      "event": "component_build_completed",
-      "data": {
-        "name": "Button",
-        "type": "React/Next.js",
-        "status": "created",
-        "accessibility_score": 95,
-        "performance_score": 88,
-        "timestamp": "2025-07-31T08:58:56.113645",
-        "agent": "FrontendDeveloperAgent"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:58:57.165998",
-      "event": "accessibility_check_completed",
-      "data": {
-        "component": "Button",
-        "score": 95,
-        "issues": [
-          {
-            "type": "contrast",
-            "severity": "low",
-            "description": "Button text contrast could be improved"
-          },
-          {
-            "type": "alt-text",
-            "severity": "medium",
-            "description": "Missing alt text on image"
-          }
-        ],
-        "timestamp": "2025-07-31T08:58:57.116980",
-        "agent": "FrontendDeveloperAgent"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T08:59:21.972262",
-      "event": "backlog_updated",
-      "data": {
-        "status": "success",
-        "agent": "ProductOwner"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:00:13.281511",
-      "event": "security_findings_reported",
-      "data": {
-        "desc": "Security bevindingen gerapporteerd"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:00:18.860617",
-      "event": "design_requested",
-      "data": {
-        "agent": "UXUIDesignerAgent",
-        "task": "Create Shadcn Button Component",
-        "timestamp": "2025-07-31T09:00:18.859354"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:00:19.870355",
-      "event": "design_completed",
-      "data": {
-        "status": "success",
-        "agent": "UXUIDesignerAgent",
-        "component": "Button",
-        "accessibility_score": 98
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:02:02.806220",
-      "event": "tests_requested",
-      "data": {
-        "desc": "Tests uitvoeren"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:02:04.819942",
-      "event": "deployment_completed",
-      "data": {
-        "desc": "Deployment afgerond"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:02:14.417404",
-      "event": "documentation_completed",
-      "data": {
-        "status": "success",
-        "agent": "DocumentationAgent",
-        "docs_created": 3,
-        "api_docs": 1,
-        "user_guides": 1,
-        "figma_docs": 1
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:02:26.976313",
-      "event": "feedback_collected",
-      "data": {
-        "desc": "Feedback verzameld"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:02:27.987593",
-      "event": "trends_analyzed",
-      "data": {
-        "desc": "Trends geanalyseerd"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:02:33.089796",
-      "event": "component_build_requested",
-      "data": {
-        "agent": "FrontendDeveloperAgent",
-        "component_name": "Button",
-        "timestamp": "2025-07-31T09:02:33.089625"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:02:33.093500",
-      "event": "component_build_completed",
-      "data": {
-        "name": "Button",
-        "type": "React/Next.js",
-        "status": "created",
-        "accessibility_score": 95,
-        "performance_score": 88,
-        "timestamp": "2025-07-31T09:02:33.092998",
-        "agent": "FrontendDeveloperAgent"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:02:33.096590",
-      "event": "accessibility_check_completed",
-      "data": {
-        "component": "Button",
-        "score": 95,
-        "issues": [
-          {
-            "type": "contrast",
-            "severity": "low",
-            "description": "Button text contrast could be improved"
-          },
-          {
-            "type": "alt-text",
-            "severity": "medium",
-            "description": "Missing alt text on image"
-          }
-        ],
-        "timestamp": "2025-07-31T09:02:33.093321",
-        "agent": "FrontendDeveloperAgent"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:02:34.612735",
-      "event": "component_build_requested",
-      "data": {
-        "agent": "FrontendDeveloperAgent",
-        "component_name": "Button",
-        "timestamp": "2025-07-31T09:02:34.612500"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:02:37.633634",
-      "event": "component_build_completed",
-      "data": {
-        "name": "Button",
-        "type": "React/Next.js",
-        "status": "created",
-        "accessibility_score": 95,
-        "performance_score": 88,
-        "timestamp": "2025-07-31T09:02:36.628444",
-        "agent": "FrontendDeveloperAgent"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:02:37.666904",
-      "event": "accessibility_check_completed",
-      "data": {
-        "component": "Button",
-        "score": 95,
-        "issues": [
-          {
-            "type": "contrast",
-            "severity": "low",
-            "description": "Button text contrast could be improved"
-          },
-          {
-            "type": "alt-text",
-            "severity": "medium",
-            "description": "Missing alt text on image"
-          }
-        ],
-        "timestamp": "2025-07-31T09:02:37.632847",
-        "agent": "FrontendDeveloperAgent"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:03:02.434342",
-      "event": "backlog_updated",
-      "data": {
-        "status": "success",
-        "agent": "ProductOwner"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:03:53.908071",
-      "event": "security_findings_reported",
-      "data": {
-        "desc": "Security bevindingen gerapporteerd"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:03:59.450256",
-      "event": "design_requested",
-      "data": {
-        "agent": "UXUIDesignerAgent",
-        "task": "Create Shadcn Button Component",
-        "timestamp": "2025-07-31T09:03:59.449167"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:04:00.461566",
-      "event": "design_completed",
-      "data": {
-        "status": "success",
-        "agent": "UXUIDesignerAgent",
-        "component": "Button",
-        "accessibility_score": 98
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:05:10.728057",
-      "event": "tests_requested",
-      "data": {
-        "desc": "Tests uitvoeren"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:05:12.742870",
-      "event": "deployment_completed",
-      "data": {
-        "desc": "Deployment afgerond"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:05:22.325635",
-      "event": "documentation_completed",
-      "data": {
-        "status": "success",
-        "agent": "DocumentationAgent",
-        "docs_created": 3,
-        "api_docs": 1,
-        "user_guides": 1,
-        "figma_docs": 1
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:05:34.935384",
-      "event": "feedback_collected",
-      "data": {
-        "desc": "Feedback verzameld"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:05:35.947037",
-      "event": "trends_analyzed",
-      "data": {
-        "desc": "Trends geanalyseerd"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:05:41.042737",
-      "event": "component_build_requested",
-      "data": {
-        "agent": "FrontendDeveloperAgent",
-        "component_name": "Button",
-        "timestamp": "2025-07-31T09:05:41.042559"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:05:41.047424",
-      "event": "component_build_completed",
-      "data": {
-        "name": "Button",
-        "type": "React/Next.js",
-        "status": "created",
-        "accessibility_score": 95,
-        "performance_score": 88,
-        "timestamp": "2025-07-31T09:05:41.046784",
-        "agent": "FrontendDeveloperAgent"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:05:41.051074",
-      "event": "accessibility_check_completed",
-      "data": {
-        "component": "Button",
-        "score": 95,
-        "issues": [
-          {
-            "type": "contrast",
-            "severity": "low",
-            "description": "Button text contrast could be improved"
-          },
-          {
-            "type": "alt-text",
-            "severity": "medium",
-            "description": "Missing alt text on image"
-          }
-        ],
-        "timestamp": "2025-07-31T09:05:41.047204",
-        "agent": "FrontendDeveloperAgent"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:05:42.521701",
-      "event": "component_build_requested",
-      "data": {
-        "agent": "FrontendDeveloperAgent",
-        "component_name": "Button",
-        "timestamp": "2025-07-31T09:05:42.521457"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:05:45.544132",
-      "event": "component_build_completed",
-      "data": {
-        "name": "Button",
-        "type": "React/Next.js",
-        "status": "created",
-        "accessibility_score": 95,
-        "performance_score": 88,
-        "timestamp": "2025-07-31T09:05:44.537630",
-        "agent": "FrontendDeveloperAgent"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:05:45.570806",
-      "event": "accessibility_check_completed",
-      "data": {
-        "component": "Button",
-        "score": 95,
-        "issues": [
-          {
-            "type": "contrast",
-            "severity": "low",
-            "description": "Button text contrast could be improved"
-          },
-          {
-            "type": "alt-text",
-            "severity": "medium",
-            "description": "Missing alt text on image"
-          }
-        ],
-        "timestamp": "2025-07-31T09:05:45.543596",
-        "agent": "FrontendDeveloperAgent"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:06:10.306112",
-      "event": "backlog_updated",
-      "data": {
-        "status": "success",
-        "agent": "ProductOwner"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:07:01.710746",
-      "event": "security_findings_reported",
-      "data": {
-        "desc": "Security bevindingen gerapporteerd"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:07:07.259445",
-      "event": "design_requested",
-      "data": {
-        "agent": "UXUIDesignerAgent",
-        "task": "Create Shadcn Button Component",
-        "timestamp": "2025-07-31T09:07:07.258144"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:07:08.271509",
-      "event": "design_completed",
-      "data": {
-        "status": "success",
-        "agent": "UXUIDesignerAgent",
-        "component": "Button",
-        "accessibility_score": 98
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:19:02.644838",
-      "event": "new_task",
-      "data": {
-        "event_type": "new_task",
-        "task_desc": "Nieuwe feature ontwikkelen"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:19:02.651230",
-      "event": "user_story_requested",
-      "data": {
-        "event_type": "user_story_requested",
-        "requirement": "Feature requirement"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:19:02.656735",
-      "event": "test_generation_requested",
-      "data": {
-        "event_type": "test_generation_requested",
-        "function_description": "Feature test"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:21:11.742282",
-      "event": "new_task",
-      "data": {
-        "event_type": "new_task",
-        "task_desc": "Nieuwe feature ontwikkelen"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:21:11.746989",
-      "event": "user_story_requested",
-      "data": {
-        "event_type": "user_story_requested",
-        "requirement": "Feature requirement"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:21:11.751452",
-      "event": "test_generation_requested",
-      "data": {
-        "event_type": "test_generation_requested",
-        "function_description": "Feature test"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:22:27.754545",
-      "event": "new_task",
-      "data": {
-        "event_type": "new_task",
-        "task_desc": "Nieuwe feature ontwikkelen"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:22:27.761156",
-      "event": "user_story_requested",
-      "data": {
-        "event_type": "user_story_requested",
-        "requirement": "Feature requirement"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:22:27.767381",
-      "event": "test_generation_requested",
-      "data": {
-        "event_type": "test_generation_requested",
-        "function_description": "Feature test"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:23:15.249512",
-      "event": "new_task",
-      "data": {
-        "event_type": "new_task",
-        "task_desc": "Nieuwe feature ontwikkelen"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:23:15.254595",
-      "event": "user_story_requested",
-      "data": {
-        "event_type": "user_story_requested",
-        "requirement": "Feature requirement"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:23:15.258828",
-      "event": "test_generation_requested",
-      "data": {
-        "event_type": "test_generation_requested",
-        "function_description": "Feature test"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:26:55.377816",
-      "event": "new_task",
-      "data": {
-        "event_type": "new_task",
-        "task_desc": "Nieuwe feature ontwikkelen"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:26:55.383988",
-      "event": "user_story_requested",
-      "data": {
-        "event_type": "user_story_requested",
-        "requirement": "Feature requirement"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:26:55.389560",
-      "event": "test_generation_requested",
-      "data": {
-        "event_type": "test_generation_requested",
-        "function_description": "Feature test"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:28:25.520862",
-      "event": "new_task",
-      "data": {
-        "event_type": "new_task",
-        "task_desc": "Nieuwe feature ontwikkelen"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:28:25.526776",
-      "event": "user_story_requested",
-      "data": {
-        "event_type": "user_story_requested",
-        "requirement": "Feature requirement"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:28:25.532300",
-      "event": "test_generation_requested",
-      "data": {
-        "event_type": "test_generation_requested",
-        "function_description": "Feature test"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:39:08.774236",
-      "event": "new_task",
-      "data": {
-        "event_type": "new_task",
-        "task_desc": "Nieuwe feature ontwikkelen"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:39:08.780680",
-      "event": "user_story_requested",
-      "data": {
-        "event_type": "user_story_requested",
-        "requirement": "Feature requirement"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:39:08.785892",
-      "event": "test_generation_requested",
-      "data": {
-        "event_type": "test_generation_requested",
-        "function_description": "Feature test"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:47:49.615875",
-      "event": "new_task",
-      "data": {
-        "event_type": "new_task",
-        "task_desc": "Nieuwe feature ontwikkelen"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:47:49.622789",
-      "event": "user_story_requested",
-      "data": {
-        "event_type": "user_story_requested",
-        "requirement": "Feature requirement"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T09:47:49.628737",
-      "event": "test_generation_requested",
-      "data": {
-        "event_type": "test_generation_requested",
-        "function_description": "Feature test"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T10:01:11.574021",
-      "event": "new_task",
-      "data": {
-        "event_type": "new_task",
-        "task_desc": "Nieuwe feature ontwikkelen"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T10:01:11.581269",
-      "event": "user_story_requested",
-      "data": {
-        "event_type": "user_story_requested",
-        "requirement": "Feature requirement"
-      }
-    },
-    {
-      "timestamp": "2025-07-31T10:01:11.587092",
-      "event": "test_generation_requested",
-      "data": {
-        "event_type": "test_generation_requested",
-        "function_description": "Feature test"
       }
     }
   ]
