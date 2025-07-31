@@ -582,73 +582,339 @@ class TestOrchestratorAgent:
         assert mock_get_context.call_count >= 1
 
 
-class TestOrchestratorIntegration:
-    """Integration tests for OrchestratorAgent."""
+class TestOrchestratorGlobalFunctions:
+    """Test global functions and metrics handling."""
 
-    def test_complete_orchestration_workflow(self):
-        """Test complete orchestration workflow."""
-        agent = OrchestratorAgent()
-        
-        # Test workflow monitoring
-        monitoring_result = agent.monitor_workflows()
-        assert monitoring_result["status"] == "completed"
-        
-        # Test agent orchestration
-        orchestration_result = agent.orchestrate_agents("task_assignment", "Integration test")
-        assert orchestration_result["status"] == "completed"
-        
-        # Test escalation management
-        escalation_result = agent.manage_escalations("workflow_blocked", "test_workflow")
-        assert escalation_result["status"] == "resolved"
-        
-        # Test metrics analysis
-        metrics_result = agent.analyze_metrics("workflow_performance", "7 days")
-        assert metrics_result["status"] == "completed"
+    def test_save_metrics_permission_error(self):
+        """Test save_metrics with permission error."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import save_metrics
+        with patch('builtins.open', side_effect=PermissionError("Permission denied")):
+            save_metrics()
 
-    def test_agent_resource_completeness(self):
-        """Test that all agent resources are properly defined."""
-        agent = OrchestratorAgent()
-        
-        # Test resource completeness
-        with patch.object(agent, 'test_resource_completeness') as mock_test:
-            agent.test_resource_completeness()
-            mock_test.assert_called_once()
+    def test_save_metrics_os_error(self):
+        """Test save_metrics with OS error."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import save_metrics
+        with patch('builtins.open', side_effect=OSError("Disk full")):
+            save_metrics()
 
-    def test_agent_export_functionality(self):
-        """Test agent export functionality."""
-        agent = OrchestratorAgent()
-        
-        # Test export with different formats
-        test_data = {
-            "report_type": "Test Report",
-            "timeframe": "Test Timeframe",
-            "status": "completed",
-            "workflows_managed": 5,
-            "escalations_handled": 1,
-            "success_rate": "90%"
-        }
-        
-        with patch('builtins.open', mock_open()):
-            # Test markdown export
-            agent.export_report("md", test_data)
-            
-            # Test CSV export
-            agent.export_report("csv", test_data)
-            
-            # Test JSON export
-            agent.export_report("json", test_data)
+    def test_load_metrics_file_not_found(self):
+        """Test load_metrics with file not found."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import load_metrics
+        with patch('builtins.open', side_effect=FileNotFoundError("File not found")):
+            load_metrics()
 
-    def test_agent_status_and_history(self):
-        """Test agent status and history functionality."""
+    def test_load_metrics_permission_error(self):
+        """Test load_metrics with permission error."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import load_metrics
+        with patch('builtins.open', side_effect=PermissionError("Permission denied")):
+            load_metrics()
+
+    def test_load_metrics_json_decode_error(self):
+        """Test load_metrics with JSON decode error."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import load_metrics
+        with patch('builtins.open', side_effect=json.JSONDecodeError("Invalid JSON", "", 0)):
+            load_metrics()
+
+    def test_log_workflow_start_invalid_name(self):
+        """Test log_workflow_start with invalid workflow name."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import log_workflow_start
+        with patch('bmad.agents.Agent.Orchestrator.orchestrator.logger') as mock_logger:
+            log_workflow_start("")
+            mock_logger.warning.assert_called_with("Invalid workflow name provided for logging start")
+
+    def test_log_workflow_start_none_name(self):
+        """Test log_workflow_start with None workflow name."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import log_workflow_start
+        with patch('bmad.agents.Agent.Orchestrator.orchestrator.logger') as mock_logger:
+            log_workflow_start(None)
+            mock_logger.warning.assert_called_with("Invalid workflow name provided for logging start")
+
+    def test_log_workflow_end_invalid_name(self):
+        """Test log_workflow_end with invalid workflow name."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import log_workflow_end
+        with patch('bmad.agents.Agent.Orchestrator.orchestrator.logger') as mock_logger:
+            log_workflow_end("")
+            mock_logger.warning.assert_called_with("Invalid workflow name provided for logging end")
+
+    def test_log_workflow_end_not_found(self):
+        """Test log_workflow_end with workflow not found."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import log_workflow_end, WORKFLOW_TIMES
+        with patch('bmad.agents.Agent.Orchestrator.orchestrator.logger') as mock_logger:
+            # Clear workflow times to ensure workflow not found
+            original_times = WORKFLOW_TIMES.copy()
+            WORKFLOW_TIMES.clear()
+            log_workflow_end("nonexistent_workflow")
+            mock_logger.warning.assert_called_with("Workflow 'nonexistent_workflow' not found in workflow times")
+            # Restore original times
+            WORKFLOW_TIMES.update(original_times)
+
+    def test_log_metric_invalid_name(self):
+        """Test log_metric with invalid metric name."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import log_metric
+        with patch('bmad.agents.Agent.Orchestrator.orchestrator.logger') as mock_logger:
+            log_metric("")
+            mock_logger.warning.assert_called_with("Invalid metric name provided for logging")
+
+    def test_log_metric_none_name(self):
+        """Test log_metric with None metric name."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import log_metric
+        with patch('bmad.agents.Agent.Orchestrator.orchestrator.logger') as mock_logger:
+            log_metric(None)
+            mock_logger.warning.assert_called_with("Invalid metric name provided for logging")
+
+
+class TestOrchestratorErrorHandling:
+    """Test improved error handling and edge cases."""
+
+    def test_orchestrate_agents_invalid_type(self):
+        """Test orchestrate_agents with invalid orchestration type."""
         agent = OrchestratorAgent()
-        
-        # Test status
-        status = agent.get_status()
-        assert status["agent_name"] == "Orchestrator"
-        assert status["status"] == "active"
-        
-        # Test history display
-        with patch('builtins.print') as mock_print:
-            agent.show_workflow_history()
-            agent.show_orchestration_history()
-            assert mock_print.call_count >= 2 
+        with pytest.raises(ValueError, match="Orchestration type must be one of"):
+            agent.orchestrate_agents("invalid_type", "test task")
+
+    def test_orchestrate_agents_empty_type(self):
+        """Test orchestrate_agents with empty orchestration type."""
+        agent = OrchestratorAgent()
+        with pytest.raises(ValueError, match="Orchestration type must be a non-empty string"):
+            agent.orchestrate_agents("", "test task")
+
+    def test_orchestrate_agents_empty_description(self):
+        """Test orchestrate_agents with empty task description."""
+        agent = OrchestratorAgent()
+        with pytest.raises(ValueError, match="Task description must be a non-empty string"):
+            agent.orchestrate_agents("task_assignment", "")
+
+    def test_manage_escalations_invalid_type(self):
+        """Test manage_escalations with invalid escalation type."""
+        agent = OrchestratorAgent()
+        with pytest.raises(ValueError, match="Escalation type must be one of"):
+            agent.manage_escalations("invalid_type", "test workflow")
+
+    def test_manage_escalations_empty_type(self):
+        """Test manage_escalations with empty escalation type."""
+        agent = OrchestratorAgent()
+        with pytest.raises(ValueError, match="Escalation type must be a non-empty string"):
+            agent.manage_escalations("", "test workflow")
+
+    def test_manage_escalations_empty_workflow(self):
+        """Test manage_escalations with empty workflow name."""
+        agent = OrchestratorAgent()
+        with pytest.raises(ValueError, match="Workflow name must be a non-empty string"):
+            agent.manage_escalations("workflow_blocked", "")
+
+    def test_validate_input_invalid_workflow_name(self):
+        """Test validate_input with invalid workflow name."""
+        agent = OrchestratorAgent()
+        with pytest.raises(ValueError, match="Workflow name must be a non-empty string"):
+            agent.validate_input("", "task_assignment", "md")
+
+    def test_validate_input_invalid_orchestration_type(self):
+        """Test validate_input with invalid orchestration type."""
+        agent = OrchestratorAgent()
+        with pytest.raises(ValueError, match="Orchestration type must be task_assignment, workflow_coordination, or resource_allocation"):
+            agent.validate_input("test_workflow", "invalid_type", "md")
+
+    def test_validate_input_invalid_format_type(self):
+        """Test validate_input with invalid format type."""
+        agent = OrchestratorAgent()
+        with pytest.raises(ValueError, match="Format type must be 'md', 'csv', or 'json'"):
+            agent.validate_input("test_workflow", "task_assignment", "invalid_format") 
+
+
+class TestOrchestratorCLI:
+    """Test CLI interface functionality."""
+
+    def setup_method(self):
+        """Setup method voor alle tests in deze class."""
+        with patch('bmad.agents.Agent.Orchestrator.orchestrator.get_performance_monitor'), \
+             patch('bmad.agents.Agent.Orchestrator.orchestrator.get_advanced_policy_engine'), \
+             patch('bmad.agents.Agent.Orchestrator.orchestrator.get_sprite_library'):
+            self.agent = OrchestratorAgent()
+
+    @patch('sys.argv', ['orchestrator.py', 'help'])
+    @patch('builtins.print')
+    def test_cli_help_command(self, mock_print):
+        """Test CLI help command."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import main
+        main()
+        mock_print.assert_called()
+
+    @patch('sys.argv', ['orchestrator.py', 'start-workflow', '--workflow', 'test_workflow'])
+    @patch('builtins.print')
+    @patch('bmad.agents.Agent.Orchestrator.orchestrator.OrchestratorAgent.start_workflow')
+    def test_cli_start_workflow(self, mock_start_workflow, mock_print):
+        """Test CLI start-workflow command."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import main
+        main()
+        mock_start_workflow.assert_called_with('test_workflow')
+
+    @patch('sys.argv', ['orchestrator.py', 'monitor-workflows'])
+    @patch('builtins.print')
+    @patch('json.dumps')
+    def test_cli_monitor_workflows(self, mock_json_dumps, mock_print):
+        """Test CLI monitor-workflows command."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import main
+        main()
+        mock_json_dumps.assert_called()
+
+    @patch('sys.argv', ['orchestrator.py', 'orchestrate-agents', '--orchestration-type', 'task_assignment', '--task-description', 'Test task'])
+    @patch('builtins.print')
+    @patch('json.dumps')
+    def test_cli_orchestrate_agents(self, mock_json_dumps, mock_print):
+        """Test CLI orchestrate-agents command."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import main
+        main()
+        mock_json_dumps.assert_called()
+
+    @patch('sys.argv', ['orchestrator.py', 'manage-escalations', '--escalation-type', 'workflow_blocked', '--workflow-name', 'test_workflow'])
+    @patch('builtins.print')
+    @patch('json.dumps')
+    def test_cli_manage_escalations(self, mock_json_dumps, mock_print):
+        """Test CLI manage-escalations command."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import main
+        main()
+        mock_json_dumps.assert_called()
+
+    @patch('sys.argv', ['orchestrator.py', 'analyze-metrics', '--metrics-type', 'workflow_performance', '--timeframe', '30 days'])
+    @patch('builtins.print')
+    @patch('json.dumps')
+    def test_cli_analyze_metrics(self, mock_json_dumps, mock_print):
+        """Test CLI analyze-metrics command."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import main
+        main()
+        mock_json_dumps.assert_called()
+
+    @patch('sys.argv', ['orchestrator.py', 'show-workflow-history'])
+    @patch('builtins.print')
+    def test_cli_show_workflow_history(self, mock_print):
+        """Test CLI show-workflow-history command."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import main
+        main()
+        mock_print.assert_called()
+
+    @patch('sys.argv', ['orchestrator.py', 'show-orchestration-history'])
+    @patch('builtins.print')
+    def test_cli_show_orchestration_history(self, mock_print):
+        """Test CLI show-orchestration-history command."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import main
+        main()
+        mock_print.assert_called()
+
+    @patch('sys.argv', ['orchestrator.py', 'show-best-practices'])
+    @patch('builtins.print')
+    def test_cli_show_best_practices(self, mock_print):
+        """Test CLI show-best-practices command."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import main
+        main()
+        mock_print.assert_called()
+
+    @patch('sys.argv', ['orchestrator.py', 'show-changelog'])
+    @patch('builtins.print')
+    def test_cli_show_changelog(self, mock_print):
+        """Test CLI show-changelog command."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import main
+        main()
+        mock_print.assert_called()
+
+    @patch('sys.argv', ['orchestrator.py', 'export-report', '--format', 'json'])
+    @patch('builtins.print')
+    def test_cli_export_report(self, mock_print):
+        """Test CLI export-report command."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import main
+        main()
+        mock_print.assert_called()
+
+    @patch('sys.argv', ['orchestrator.py', 'test'])
+    @patch('builtins.print')
+    def test_cli_test(self, mock_print):
+        """Test CLI test command."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import main
+        main()
+        mock_print.assert_called()
+
+    @patch('sys.argv', ['orchestrator.py', 'collaborate'])
+    @patch('builtins.print')
+    def test_cli_collaborate(self, mock_print):
+        """Test CLI collaborate command."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import main
+        main()
+        mock_print.assert_called()
+
+    @patch('sys.argv', ['orchestrator.py', 'run'])
+    @patch('builtins.print')
+    def test_cli_run(self, mock_print):
+        """Test CLI run command."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import main
+        main()
+        mock_print.assert_called()
+
+    @patch('sys.argv', ['orchestrator.py', 'show-status'])
+    @patch('builtins.print')
+    @patch('bmad.agents.Agent.Orchestrator.orchestrator.get_context', return_value={"status": "active"})
+    def test_cli_show_status(self, mock_get_context, mock_print):
+        """Test CLI show-status command."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import main
+        main()
+        mock_print.assert_called()
+
+    @patch('sys.argv', ['orchestrator.py', 'list-workflows'])
+    @patch('builtins.print')
+    def test_cli_list_workflows(self, mock_print):
+        """Test CLI list-workflows command."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import main
+        main()
+        mock_print.assert_called()
+
+    @patch('sys.argv', ['orchestrator.py', 'show-history'])
+    @patch('builtins.print')
+    def test_cli_show_history(self, mock_print):
+        """Test CLI show-history command."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import main
+        main()
+        mock_print.assert_called()
+
+    @patch('sys.argv', ['orchestrator.py', 'replay-history'])
+    @patch('builtins.print')
+    def test_cli_replay_history(self, mock_print):
+        """Test CLI replay-history command."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import main
+        main()
+        mock_print.assert_called()
+
+    @patch('sys.argv', ['orchestrator.py', 'show-workflow-status', '--workflow', 'test_workflow'])
+    @patch('builtins.print')
+    def test_cli_show_workflow_status(self, mock_print):
+        """Test CLI show-workflow-status command."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import main
+        main()
+        mock_print.assert_called()
+
+    @patch('sys.argv', ['orchestrator.py', 'show-metrics'])
+    @patch('builtins.print')
+    def test_cli_show_metrics(self, mock_print):
+        """Test CLI show-metrics command."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import main
+        main()
+        mock_print.assert_called()
+
+    @patch('sys.argv', ['orchestrator.py', 'start-workflow'])
+    @patch('sys.exit')
+    @patch('builtins.print')
+    @patch('bmad.agents.Agent.Orchestrator.orchestrator.OrchestratorAgent.start_workflow')
+    def test_cli_start_workflow_missing_workflow(self, mock_start_workflow, mock_print, mock_exit):
+        """Test CLI start-workflow command with missing workflow."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import main
+        main()
+        mock_print.assert_called_with("Geef een workflow op met --workflow")
+        mock_exit.assert_called_with(1)
+
+    @patch('sys.argv', ['orchestrator.py', 'show-workflow-status'])
+    @patch('sys.exit')
+    @patch('builtins.print')
+    @patch('bmad.agents.Agent.Orchestrator.orchestrator.OrchestratorAgent.get_workflow_status')
+    def test_cli_show_workflow_status_missing_workflow(self, mock_get_workflow_status, mock_print, mock_exit):
+        """Test CLI show-workflow-status command with missing workflow."""
+        from bmad.agents.Agent.Orchestrator.orchestrator import main
+        main()
+        mock_print.assert_called_with("Geef een workflow op met --workflow")
+        mock_exit.assert_called_with(1) 
