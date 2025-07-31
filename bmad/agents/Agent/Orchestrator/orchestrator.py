@@ -53,16 +53,32 @@ METRICS_PATH = "metrics.json"
 EVENT_LOG_PATH = "event_log.json"
 
 def save_metrics():
-    with open(METRICS_PATH, "w", encoding="utf-8") as f:
-        json.dump(METRICS, f, indent=2)
+    """Save metrics to file with improved error handling."""
+    try:
+        with open(METRICS_PATH, "w", encoding="utf-8") as f:
+            json.dump(METRICS, f, indent=2)
+    except PermissionError:
+        logger.error("Permission denied saving metrics file")
+    except OSError as e:
+        logger.error(f"OS error saving metrics: {e}")
+    except Exception as e:
+        logger.error(f"Could not save metrics: {e}")
 
 def load_metrics():
+    """Load metrics from file with improved error handling."""
     global METRICS
     try:
         with open(METRICS_PATH, encoding="utf-8") as f:
-            METRICS.update(json.load(f))
-    except Exception:
-        pass
+            loaded_metrics = json.load(f)
+            METRICS.update(loaded_metrics)
+    except FileNotFoundError:
+        logger.info("Metrics file not found, starting with default metrics")
+    except PermissionError:
+        logger.warning("Permission denied accessing metrics file")
+    except json.JSONDecodeError:
+        logger.error("Metrics file contains invalid JSON, starting with default metrics")
+    except Exception as e:
+        logger.warning(f"Could not load metrics: {e}")
 
 load_metrics()
 
@@ -79,17 +95,34 @@ _metrics_thread = None
 WORKFLOW_TIMES = {}  # workflow_name -> {'start': timestamp, 'end': timestamp}
 
 def log_workflow_start(workflow_name):
+    """Log workflow start with input validation."""
+    if not workflow_name or not isinstance(workflow_name, str):
+        logger.warning("Invalid workflow name provided for logging start")
+        return
     WORKFLOW_TIMES[workflow_name] = {"start": time.time(), "end": None}
 
 def log_workflow_end(workflow_name):
+    """Log workflow end with improved error handling."""
+    if not workflow_name or not isinstance(workflow_name, str):
+        logger.warning("Invalid workflow name provided for logging end")
+        return
     if workflow_name in WORKFLOW_TIMES:
         WORKFLOW_TIMES[workflow_name]["end"] = time.time()
         duration = WORKFLOW_TIMES[workflow_name]["end"] - WORKFLOW_TIMES[workflow_name]["start"]
         METRICS.setdefault("workflow_durations", {})[workflow_name] = duration
-        save_metrics()
-        logging.info(f"[Metrics] Workflow '{workflow_name}' duurde {duration:.1f} seconden.")
+        try:
+            save_metrics()
+            logging.info(f"[Metrics] Workflow '{workflow_name}' duurde {duration:.1f} seconden.")
+        except Exception as e:
+            logger.error(f"Could not save metrics for workflow '{workflow_name}': {e}")
+    else:
+        logger.warning(f"Workflow '{workflow_name}' not found in workflow times")
 
 def log_metric(metric_name):
+    """Log metric with input validation."""
+    if not metric_name or not isinstance(metric_name, str):
+        logger.warning("Invalid metric name provided for logging")
+        return
     if metric_name in METRICS:
         METRICS[metric_name] += 1
         logging.info(f"[Metrics] {metric_name}: {METRICS[metric_name]}")
@@ -373,11 +406,18 @@ Orchestrator Agent Commands:
         return monitoring_result
 
     def orchestrate_agents(self, orchestration_type: str = "task_assignment", task_description: str = "Feature development") -> Dict[str, Any]:
-        """Orchestrate agent activities with enhanced functionality."""
-        # Validate input
-        self.validate_input("orchestration", orchestration_type)
+        """Orchestrate agents for task execution with input validation."""
+        # Input validation
+        if not orchestration_type or not isinstance(orchestration_type, str):
+            raise ValueError("Orchestration type must be a non-empty string")
+        if not task_description or not isinstance(task_description, str):
+            raise ValueError("Task description must be a non-empty string")
+            
+        valid_orchestration_types = ["task_assignment", "workflow_coordination", "resource_allocation"]
+        if orchestration_type not in valid_orchestration_types:
+            raise ValueError(f"Orchestration type must be one of: {', '.join(valid_orchestration_types)}")
         
-        logger.info(f"Orchestrating agents for {orchestration_type}")
+        logger.info(f"Orchestrating agents for {orchestration_type}: {task_description}")
 
         # Simulate agent orchestration
         time.sleep(1)
@@ -466,8 +506,18 @@ Orchestrator Agent Commands:
         return orchestration_result
 
     def manage_escalations(self, escalation_type: str = "workflow_blocked", workflow_name: str = "feature_delivery") -> Dict[str, Any]:
-        """Manage workflow escalations with enhanced functionality."""
-        logger.info(f"Managing escalation: {escalation_type}")
+        """Manage escalations with input validation."""
+        # Input validation
+        if not escalation_type or not isinstance(escalation_type, str):
+            raise ValueError("Escalation type must be a non-empty string")
+        if not workflow_name or not isinstance(workflow_name, str):
+            raise ValueError("Workflow name must be a non-empty string")
+            
+        valid_escalation_types = ["workflow_blocked", "agent_failure", "resource_shortage", "deadline_missed"]
+        if escalation_type not in valid_escalation_types:
+            raise ValueError(f"Escalation type must be one of: {', '.join(valid_escalation_types)}")
+        
+        logger.info(f"Managing escalation: {escalation_type} for workflow: {workflow_name}")
 
         # Simulate escalation management
         time.sleep(1)
@@ -1119,6 +1169,7 @@ def main():
         if not args.workflow:
             print("Geef een workflow op met --workflow")
             sys.exit(1)
+            return
         agent.start_workflow(args.workflow)
     elif args.command == "monitor-workflows":
         result = agent.monitor_workflows()
@@ -1160,6 +1211,7 @@ def main():
         if not args.workflow:
             print("Geef een workflow op met --workflow")
             sys.exit(1)
+            return
         status = agent.get_workflow_status(args.workflow)
         print(f"Status van workflow '{args.workflow}': {status}")
     elif args.command == "show-metrics":
