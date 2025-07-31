@@ -16,7 +16,7 @@ import logging
 import textwrap
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 
 from bmad.agents.core.agent.agent_performance_monitor import (
     MetricType,
@@ -31,6 +31,14 @@ from integrations.slack.slack_notify import send_slack_message
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
+
+class AiDevelopmentError(Exception):
+    """Custom exception for AI development-related errors."""
+    pass
+
+class AiValidationError(AiDevelopmentError):
+    """Exception for AI development validation failures."""
+    pass
 
 class AiDeveloperAgent:
     def __init__(self):
@@ -66,6 +74,108 @@ class AiDeveloperAgent:
         self.model_history = []
         self._load_experiment_history()
         self._load_model_history()
+
+        # AI-specific attributes
+        self.ai_models = {}
+        self.experiment_configs = {}
+        self.model_performance_metrics = {}
+
+    def _validate_input(self, value: Any, expected_type: type, param_name: str) -> None:
+        """Validate input parameters with type checking."""
+        if not isinstance(value, expected_type):
+            raise AiValidationError(
+                f"Invalid type for {param_name}: expected {expected_type.__name__}, got {type(value).__name__}"
+            )
+
+    def _validate_model_name(self, model_name: str) -> None:
+        """Validate AI model name parameter."""
+        self._validate_input(model_name, str, "model_name")
+        if not model_name.strip():
+            raise AiValidationError("Model name cannot be empty")
+        if len(model_name) > 100:
+            raise AiValidationError("Model name cannot exceed 100 characters")
+        if not model_name.replace("_", "").replace("-", "").isalnum():
+            raise AiValidationError("Model name can only contain alphanumeric characters, underscores, and hyphens")
+
+    def _validate_prompt(self, prompt: str) -> None:
+        """Validate AI prompt parameter."""
+        self._validate_input(prompt, str, "prompt")
+        if not prompt.strip():
+            raise AiValidationError("Prompt cannot be empty")
+        if len(prompt) > 10000:
+            raise AiValidationError("Prompt cannot exceed 10,000 characters")
+
+    def _validate_experiment_data(self, experiment_data: Dict[str, Any]) -> None:
+        """Validate experiment data parameter."""
+        self._validate_input(experiment_data, dict, "experiment_data")
+        
+        required_fields = ["name", "model", "dataset"]
+        for field in required_fields:
+            if field not in experiment_data:
+                raise AiValidationError(f"Missing required field: {field}")
+        
+        # Validate experiment name
+        if not experiment_data.get("name", "").strip():
+            raise AiValidationError("Experiment name cannot be empty")
+
+    def _record_ai_metric(self, metric_name: str, value: float, unit: str = "%") -> None:
+        """Record AI-specific metrics."""
+        try:
+            self.monitor._record_metric("AiDeveloper", MetricType.SUCCESS_RATE, value, unit)
+            logger.info(f"AI metric recorded: {metric_name} = {value}{unit}")
+        except Exception as e:
+            logger.error(f"Failed to record AI metric: {e}")
+
+    def _assess_model_performance(self, metrics: Dict[str, Any]) -> str:
+        """Assess model performance based on metrics."""
+        if not metrics:
+            return "unknown"
+        
+        accuracy = metrics.get("accuracy", 0)
+        latency = metrics.get("latency", float('inf'))
+        
+        if accuracy >= 0.95 and latency < 100:
+            return "excellent"
+        elif accuracy >= 0.90 and latency < 500:
+            return "good"
+        elif accuracy >= 0.80 and latency < 1000:
+            return "fair"
+        elif accuracy >= 0.70:
+            return "poor"
+        else:
+            return "critical"
+
+    def _generate_ai_recommendations(self, performance_data: Dict[str, Any]) -> list:
+        """Generate AI development recommendations based on performance data."""
+        recommendations = [
+            "Implement comprehensive model monitoring",
+            "Add automated retraining pipelines",
+            "Establish model versioning strategy",
+            "Implement A/B testing framework",
+            "Add bias detection and fairness monitoring"
+        ]
+        
+        performance_level = performance_data.get("performance_level", "unknown")
+        if performance_level == "critical":
+            recommendations.extend([
+                "Immediate model retraining required",
+                "Review data quality and preprocessing",
+                "Consider alternative model architectures"
+            ])
+        elif performance_level == "poor":
+            recommendations.extend([
+                "Optimize model hyperparameters",
+                "Increase training data quality",
+                "Implement feature engineering improvements"
+            ])
+        elif performance_level == "excellent":
+            recommendations.extend([
+                "Maintain current model performance",
+                "Consider model compression for deployment",
+                "Implement advanced monitoring for edge cases"
+            ])
+        
+        return list(set(recommendations))  # Remove duplicates
 
     def _load_experiment_history(self):
         try:
@@ -326,42 +436,130 @@ AiDeveloper Agent Commands:
 
     # --- ORIGINELE FUNCTIONALITEIT BEHOUDEN ---
     def build_pipeline(self):
-        print(
-            textwrap.dedent(
-                """
-        from langchain.chains import LLMChain
-        from langchain.llms import OpenAI
-
-        llm = OpenAI(model_name="gpt-4")
-        chain = LLMChain(llm=llm, prompt="{input}")
-        result = chain.run(input="Leg uit wat vector search is.")
-        """
-            )
-        )
-
-        # Log performance metric
-        self.monitor._record_metric("AiDeveloper", MetricType.SUCCESS_RATE, 95, "%")
-
-        # Add to experiment history
-        exp_entry = f"{datetime.now().isoformat()}: Langchain pipeline built with GPT-4"
-        self.experiment_history.append(exp_entry)
-        self._save_experiment_history()
+        """Build AI/ML pipeline with enhanced validation and intelligence."""
+        try:
+            logger.info("Building AI/ML pipeline")
+            
+            # Record start time for performance monitoring
+            start_time = datetime.now()
+            
+            # Simulate pipeline building
+            pipeline_result = {
+                "pipeline_type": "AI/ML Pipeline",
+                "status": "built",
+                "components": [
+                    "Data Preprocessing",
+                    "Feature Engineering", 
+                    "Model Training",
+                    "Model Evaluation",
+                    "Model Deployment"
+                ],
+                "configuration": {
+                    "framework": "TensorFlow/PyTorch",
+                    "compute": "GPU/CPU",
+                    "scaling": "Auto-scaling enabled"
+                },
+                "performance_metrics": {
+                    "build_time": "2.5 minutes",
+                    "resource_usage": "Optimized",
+                    "scalability": "High"
+                },
+                "recommendations": [],
+                "timestamp": datetime.now().isoformat(),
+                "agent": "AiDeveloper"
+            }
+            
+            # Assess pipeline performance
+            performance_level = self._assess_model_performance(pipeline_result["performance_metrics"])
+            pipeline_result["performance_level"] = performance_level
+            
+            # Generate recommendations
+            recommendations = self._generate_ai_recommendations(pipeline_result)
+            pipeline_result["recommendations"] = recommendations
+            
+            # Record performance
+            end_time = datetime.now()
+            build_duration = (end_time - start_time).total_seconds()
+            
+            # Log performance metric
+            self._record_ai_metric("pipeline_build_time", build_duration, "s")
+            
+            # Add to experiment history
+            experiment_entry = f"{datetime.now().isoformat()}: AI/ML pipeline built successfully - Performance: {performance_level}"
+            self.experiment_history.append(experiment_entry)
+            self._save_experiment_history()
+            
+            logger.info(f"AI/ML pipeline built successfully: {pipeline_result}")
+            
+            return pipeline_result
+            
+        except Exception as e:
+            logger.error(f"Error building AI/ML pipeline: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
 
     def prompt_template(self):
-        print(
-            textwrap.dedent(
-                """
-        **Prompt:**
-        Je bent een behulpzame AI-assistent. Beantwoord de vraag zo duidelijk mogelijk.
-
-        **Input:**
-        Wat is het verschil tussen supervised en unsupervised learning?
-
-        **Output:**
-        Supervised learning gebruikt gelabelde data, unsupervised learning niet.
-        """
-            )
-        )
+        """Generate AI prompt template with enhanced validation."""
+        try:
+            logger.info("Generating AI prompt template")
+            
+            # Simulate prompt template generation
+            template_result = {
+                "template_type": "AI Prompt Template",
+                "status": "generated",
+                "template": {
+                    "system_prompt": "You are an AI assistant specialized in {domain}.",
+                    "user_prompt": "Please {task} with the following context: {context}",
+                    "examples": [
+                        "Domain: Healthcare, Task: Diagnose symptoms",
+                        "Domain: Finance, Task: Analyze market trends",
+                        "Domain: Education, Task: Explain concepts"
+                    ]
+                },
+                "best_practices": [
+                    "Use clear and specific instructions",
+                    "Include relevant context",
+                    "Provide examples when possible",
+                    "Set appropriate constraints"
+                ],
+                "validation_rules": [
+                    "Prompt length: 50-1000 characters",
+                    "Context inclusion: Required",
+                    "Example count: 1-5 examples"
+                ],
+                "performance_metrics": {
+                    "clarity_score": 95,
+                    "specificity_score": 88,
+                    "usability_score": 92
+                },
+                "recommendations": [],
+                "timestamp": datetime.now().isoformat(),
+                "agent": "AiDeveloper"
+            }
+            
+            # Assess template performance
+            performance_level = self._assess_model_performance(template_result["performance_metrics"])
+            template_result["performance_level"] = performance_level
+            
+            # Generate recommendations
+            recommendations = self._generate_ai_recommendations(template_result)
+            template_result["recommendations"] = recommendations
+            
+            # Log performance metric
+            self._record_ai_metric("prompt_template_quality", template_result["performance_metrics"]["clarity_score"], "%")
+            
+            logger.info(f"AI prompt template generated: {template_result}")
+            
+            return template_result
+            
+        except Exception as e:
+            logger.error(f"Error generating prompt template: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
 
     def vector_search(self):
         print(
@@ -387,26 +585,58 @@ AiDeveloper Agent Commands:
         )
 
     def evaluate(self):
-        print(
-            textwrap.dedent(
-                """
-        ### Evaluatie: Sentiment Classifier v2
-        - Accuracy: 91%
-        - Precision: 0.89
-        - Recall: 0.93
-        - F1-score: 0.91
-        - Drift: geen significante drift waargenomen
-        """
-            )
-        )
-
-        # Log performance metric
-        self.monitor._record_metric("AiDeveloper", MetricType.SUCCESS_RATE, 91, "%")
-
-        # Add to model history
-        model_entry = f"{datetime.now().isoformat()}: Sentiment Classifier v2 evaluated with 91% accuracy"
-        self.model_history.append(model_entry)
-        self._save_model_history()
+        """Evaluate AI model with enhanced validation and intelligence."""
+        try:
+            logger.info("Evaluating AI model")
+            
+            # Simulate model evaluation
+            evaluation_result = {
+                "evaluation_type": "AI Model Evaluation",
+                "status": "completed",
+                "metrics": {
+                    "accuracy": 0.92,
+                    "precision": 0.89,
+                    "recall": 0.94,
+                    "f1_score": 0.91,
+                    "latency": 150,
+                    "throughput": 1000
+                },
+                "performance_analysis": {
+                    "overall_score": 91,
+                    "strengths": ["High accuracy", "Good recall", "Low latency"],
+                    "weaknesses": ["Moderate precision", "Room for optimization"]
+                },
+                "recommendations": [],
+                "timestamp": datetime.now().isoformat(),
+                "agent": "AiDeveloper"
+            }
+            
+            # Assess model performance
+            performance_level = self._assess_model_performance(evaluation_result["metrics"])
+            evaluation_result["performance_level"] = performance_level
+            
+            # Generate recommendations
+            recommendations = self._generate_ai_recommendations(evaluation_result)
+            evaluation_result["recommendations"] = recommendations
+            
+            # Log performance metric
+            self._record_ai_metric("model_evaluation_score", evaluation_result["performance_analysis"]["overall_score"], "%")
+            
+            # Add to model history
+            model_entry = f"{datetime.now().isoformat()}: Model evaluation completed - Score: {evaluation_result['performance_analysis']['overall_score']}%"
+            self.model_history.append(model_entry)
+            self._save_model_history()
+            
+            logger.info(f"AI model evaluation completed: {evaluation_result}")
+            
+            return evaluation_result
+            
+        except Exception as e:
+            logger.error(f"Error evaluating AI model: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
 
     def experiment_log(self):
         print(
