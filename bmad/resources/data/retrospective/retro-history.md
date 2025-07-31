@@ -1,13 +1,5 @@
 # Retrospective History
 
-- 2025-07-31T08:59:37.728826: Retrospective completed - Sprint 16
-- 2025-07-31T08:59:43.663776: Retrospective completed - Sprint 16
-- 2025-07-31T09:03:18.254795: Retrospective completed - Sprint 16
-- 2025-07-31T09:03:24.174358: Retrospective completed - Sprint 16
-- 2025-07-31T09:06:26.104493: Retrospective completed - Sprint 16
-- 2025-07-31T09:06:32.027726: Retrospective completed - Sprint 16
-- 2025-07-31T10:06:17.003665: Retrospective completed - Sprint 16
-- 2025-07-31T10:06:23.047487: Retrospective completed - Sprint 16
 - 2025-07-31T10:13:02.977294: Retrospective completed - Sprint 16
 - 2025-07-31T10:13:08.932968: Retrospective completed - Sprint 16
 - 2025-07-31T10:19:50.865810: Retrospective completed - Sprint 16
@@ -50,3 +42,11 @@
 - 2025-07-31T13:38:07.149400: Retrospective completed - Sprint 16
 - 2025-07-31T13:46:01.722997: Retrospective completed - Sprint 16
 - 2025-07-31T13:46:07.711194: Retrospective completed - Sprint 16
+- 2025-07-31T13:53:51.662837: Retrospective completed - Sprint 16
+- 2025-07-31T13:53:57.630792: Retrospective completed - Sprint 16
+- 2025-07-31T14:07:33.024440: Retrospective completed - Sprint 16
+- 2025-07-31T14:07:38.986998: Retrospective completed - Sprint 16
+- 2025-07-31T14:13:51.948750: Retrospective completed - Sprint 16
+- 2025-07-31T14:13:57.929637: Retrospective completed - Sprint 16
+- 2025-07-31T14:57:07.238263: Retrospective completed - Sprint 16
+- 2025-07-31T14:57:13.226417: Retrospective completed - Sprint 16

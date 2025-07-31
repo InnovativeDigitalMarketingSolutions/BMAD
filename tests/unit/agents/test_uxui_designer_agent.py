@@ -889,8 +889,16 @@ class TestUXUIDesignerAgentCLI:
     def test_cli_run(self, mock_get_context, mock_publish, mock_save_context, mock_print):
         """Test CLI run command."""
         from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
-        main()
-        mock_print.assert_called()
+        
+        # Mock the agent instance methods to prevent real API calls
+        with patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.UXUIDesignerAgent') as mock_agent_class:
+            # Create a mock agent instance
+            mock_agent = mock_agent_class.return_value
+            
+            # Mock the run method to prevent real execution
+            with patch.object(mock_agent, 'run') as mock_run:
+                main()
+                mock_run.assert_called_once()
 
     @patch('sys.argv', ['uxuidesigner.py', 'design-feedback'])
     @patch('sys.exit')
