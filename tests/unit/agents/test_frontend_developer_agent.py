@@ -4,638 +4,555 @@ Aims to increase coverage from 19% to 70%+.
 """
 
 import pytest
+import asyncio
 from unittest.mock import patch, MagicMock, mock_open
 import json
-import tempfile
-import os
+import time
 from datetime import datetime
-from pathlib import Path
 
 from bmad.agents.Agent.FrontendDeveloper.frontenddeveloper import FrontendDeveloperAgent
 
 
-class TestFrontendDeveloperAgentInitialization:
-    """Test FrontendDeveloperAgent initialization and basic setup."""
-
-    def setup_method(self):
-        """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_performance_monitor'), \
-             patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_advanced_policy_engine'), \
-             patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_sprite_library'):
-            self.agent = FrontendDeveloperAgent()
-            # Mock missing attributes
-            self.agent.data_paths = {
-                "component-history": Path("/tmp/component-history.md"),
-                "performance-history": Path("/tmp/performance-history.md"),
-                "changelog": Path("/tmp/changelog.md")
-            }
-            self.agent.template_paths = {
-                "best-practices": Path("/tmp/best-practices.md"),
-                "accessibility-checklist": Path("/tmp/accessibility-checklist.md"),
-                "performance-report": Path("/tmp/performance-report.md")
-            }
+class TestFrontendDeveloperAgent:
+    """Test suite for FrontendDeveloperAgent."""
 
     def test_agent_initialization(self):
-        """Test basic agent initialization."""
-        assert self.agent.agent_name == "FrontendDeveloper"
-        assert isinstance(self.agent.component_history, list)
-        assert isinstance(self.agent.performance_history, list)
-        assert not self.agent._services_initialized
-        assert not self.agent._resources_loaded
-        assert not self.agent._policy_engine_initialized
-        assert not self.agent._message_bus_initialized
+        """Test agent initialization and attributes."""
+        agent = FrontendDeveloperAgent()
+        
+        assert hasattr(agent, 'agent_name')
+        assert agent.agent_name == "FrontendDeveloper"
+        assert hasattr(agent, 'component_history')
+        assert hasattr(agent, 'performance_history')
+        assert hasattr(agent, 'template_paths')
+        assert hasattr(agent, 'data_paths')
+        assert isinstance(agent.component_history, list)
+        assert isinstance(agent.performance_history, list)
+        assert isinstance(agent.template_paths, dict)
+        assert isinstance(agent.data_paths, dict)
 
-    def test_show_help(self):
-        """Test show_help functionality."""
-        with patch('builtins.print') as mock_print:
-            self.agent.show_help()
-            mock_print.assert_called()
+    @patch('builtins.open', new_callable=mock_open, read_data="# Component History\n\n- Component 1\n- Component 2")
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_load_component_history_success(self, mock_exists, mock_file):
+        """Test successful loading of component history."""
+        agent = FrontendDeveloperAgent()
+        # Clear history that was loaded during initialization
+        agent.component_history = []
+        agent._load_component_history()
+        
+        assert len(agent.component_history) == 2
+        assert "Component 1" in agent.component_history
+        assert "Component 2" in agent.component_history
 
-    def test_show_resource(self):
-        """Test show_resource functionality."""
-        with patch('builtins.print') as mock_print, \
-             patch('pathlib.Path.exists', return_value=True), \
-             patch('builtins.open', mock_open(read_data="Test content")):
-            self.agent.show_resource("best-practices")
-            mock_print.assert_called()
+    @patch('pathlib.Path.exists', return_value=False)
+    def test_load_component_history_file_not_found(self, mock_exists):
+        """Test loading component history when file doesn't exist."""
+        agent = FrontendDeveloperAgent()
+        agent.component_history = []
+        agent._load_component_history()
+        
+        assert len(agent.component_history) == 0
 
-    def test_show_component_history(self):
-        """Test show_component_history functionality."""
-        with patch('builtins.print') as mock_print:
-            self.agent.show_component_history()
-            mock_print.assert_called()
+    @patch('builtins.open', new_callable=mock_open, read_data="# Performance History\n\n- Performance 1\n- Performance 2")
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_load_performance_history_success(self, mock_exists, mock_file):
+        """Test successful loading of performance history."""
+        agent = FrontendDeveloperAgent()
+        # Clear history that was loaded during initialization
+        agent.performance_history = []
+        agent._load_performance_history()
+        
+        assert len(agent.performance_history) == 2
+        assert "Performance 1" in agent.performance_history
+        assert "Performance 2" in agent.performance_history
 
-    def test_show_performance(self):
-        """Test show_performance functionality."""
-        with patch('builtins.print') as mock_print:
-            self.agent.show_performance()
-            mock_print.assert_called()
+    @patch('pathlib.Path.exists', return_value=False)
+    def test_load_performance_history_file_not_found(self, mock_exists):
+        """Test loading performance history when file doesn't exist."""
+        agent = FrontendDeveloperAgent()
+        agent.performance_history = []
+        agent._load_performance_history()
+        
+        assert len(agent.performance_history) == 0
 
-    def test_test_resource_completeness(self):
-        """Test test_resource_completeness functionality."""
-        with patch('builtins.print') as mock_print, \
-             patch('pathlib.Path.exists', return_value=True):
-            self.agent.test_resource_completeness()
-            mock_print.assert_called()
+    @patch('builtins.open', new_callable=mock_open)
+    @patch('pathlib.Path.mkdir')
+    def test_save_component_history(self, mock_mkdir, mock_file):
+        """Test saving component history."""
+        agent = FrontendDeveloperAgent()
+        agent.component_history = ["Component 1", "Component 2"]
+        agent._save_component_history()
+        
+        # Check that open was called for saving (not just loading)
+        save_calls = [call for call in mock_file.call_args_list if 'w' in str(call)]
+        assert len(save_calls) > 0
+        mock_mkdir.assert_called_once()
 
+    @patch('builtins.open', new_callable=mock_open)
+    @patch('pathlib.Path.mkdir')
+    def test_save_performance_history(self, mock_mkdir, mock_file):
+        """Test saving performance history."""
+        agent = FrontendDeveloperAgent()
+        agent.performance_history = ["Performance 1", "Performance 2"]
+        agent._save_performance_history()
+        
+        # Check that open was called for saving (not just loading)
+        save_calls = [call for call in mock_file.call_args_list if 'w' in str(call)]
+        assert len(save_calls) > 0
+        mock_mkdir.assert_called_once()
 
-class TestFrontendDeveloperAgentComponentBuilding:
-    """Test component building functionality."""
+    def test_show_help(self, capsys):
+        """Test show_help method."""
+        agent = FrontendDeveloperAgent()
+        agent.show_help()
+        
+        captured = capsys.readouterr()
+        assert "FrontendDeveloper Agent Commands:" in captured.out
+        assert "help" in captured.out
+        assert "build-component" in captured.out
 
-    def setup_method(self):
-        """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_performance_monitor') as mock_monitor, \
-             patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_advanced_policy_engine'), \
-             patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_sprite_library'):
-            self.agent = FrontendDeveloperAgent()
-            self.mock_monitor = mock_monitor.return_value
-            # Mock missing attributes
-            self.agent.data_paths = {
-                "component-history": Path("/tmp/component-history.md"),
-                "performance-history": Path("/tmp/performance-history.md"),
-                "changelog": Path("/tmp/changelog.md")
-            }
-            self.agent.template_paths = {
-                "best-practices": Path("/tmp/best-practices.md"),
-                "accessibility-checklist": Path("/tmp/accessibility-checklist.md"),
-                "performance-report": Path("/tmp/performance-report.md")
-            }
-            # Mock monitor attribute
-            self.agent.monitor = self.mock_monitor
+    @patch('builtins.open', new_callable=mock_open, read_data="Best practices content")
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_show_resource_best_practices(self, mock_exists, mock_file, capsys):
+        """Test show_resource with best practices."""
+        agent = FrontendDeveloperAgent()
+        agent.show_resource("best-practices")
+        
+        captured = capsys.readouterr()
+        assert "Best practices content" in captured.out
 
-    def test_build_shadcn_component(self):
-        """Test build_shadcn_component functionality."""
-        with patch('time.sleep'):
-            result = self.agent.build_shadcn_component("TestButton")
-            
-            assert result["component"] == "TestButton"
-            assert result["type"] == "Shadcn/ui"
-            assert "variants" in result
-            assert "sizes" in result
-            assert "accessibility_features" in result
-            assert result["status"] == "created"
-            assert "accessibility_score" in result
-            assert "performance_score" in result
-            assert "timestamp" in result
-            assert result["agent"] == "FrontendDeveloperAgent"
+    @patch('pathlib.Path.exists', return_value=False)
+    def test_show_resource_not_found(self, mock_exists, capsys):
+        """Test show_resource when file doesn't exist."""
+        agent = FrontendDeveloperAgent()
+        agent.show_resource("best-practices")
+        
+        captured = capsys.readouterr()
+        assert "Resource file not found" in captured.out
 
-    def test_build_component(self):
-        """Test build_component functionality."""
-        with patch('time.sleep'):
-            result = self.agent.build_component("TestComponent")
-            
-            assert result["name"] == "TestComponent"
-            assert result["type"] == "React/Next.js"
-            assert result["status"] == "created"
-            assert "accessibility_score" in result
-            assert "performance_score" in result
-            assert "timestamp" in result
-            assert result["agent"] == "FrontendDeveloperAgent"
+    def test_show_component_history_empty(self, capsys):
+        """Test show_component_history when history is empty."""
+        agent = FrontendDeveloperAgent()
+        agent.component_history = []
+        agent.show_component_history()
+        
+        captured = capsys.readouterr()
+        assert "No component history available" in captured.out
 
-    def test_run_accessibility_check(self):
-        """Test run_accessibility_check functionality."""
-        with patch('time.sleep'):
-            result = self.agent.run_accessibility_check("TestComponent")
-            
-            assert result["component"] == "TestComponent"
-            assert "score" in result
-            assert "issues" in result
-            assert isinstance(result["issues"], list)
-            assert "timestamp" in result
-            assert result["agent"] == "FrontendDeveloperAgent"
+    def test_show_component_history_with_data(self, capsys):
+        """Test show_component_history with data."""
+        agent = FrontendDeveloperAgent()
+        agent.component_history = ["Component 1", "Component 2", "Component 3"]
+        agent.show_component_history()
+        
+        captured = capsys.readouterr()
+        assert "Component History:" in captured.out
+        assert "Component 1" in captured.out
 
+    def test_show_performance_empty(self, capsys):
+        """Test show_performance when history is empty."""
+        agent = FrontendDeveloperAgent()
+        agent.performance_history = []
+        agent.show_performance()
+        
+        captured = capsys.readouterr()
+        assert "No performance history available" in captured.out
 
-class TestFrontendDeveloperAgentExport:
-    """Test export functionality."""
+    def test_show_performance_with_data(self, capsys):
+        """Test show_performance with data."""
+        agent = FrontendDeveloperAgent()
+        agent.performance_history = ["Performance 1", "Performance 2", "Performance 3"]
+        agent.show_performance()
+        
+        captured = capsys.readouterr()
+        assert "Performance History:" in captured.out
+        assert "Performance 1" in captured.out
 
-    def setup_method(self):
-        """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_performance_monitor'), \
-             patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_advanced_policy_engine'), \
-             patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_sprite_library'):
-            self.agent = FrontendDeveloperAgent()
-            # Mock missing attributes
-            self.agent.data_paths = {
-                "component-history": Path("/tmp/component-history.md"),
-                "performance-history": Path("/tmp/performance-history.md"),
-                "changelog": Path("/tmp/changelog.md")
-            }
-            self.agent.template_paths = {
-                "best-practices": Path("/tmp/best-practices.md"),
-                "accessibility-checklist": Path("/tmp/accessibility-checklist.md"),
-                "performance-report": Path("/tmp/performance-report.md")
-            }
+    def test_validate_input_valid(self):
+        """Test validate_input with valid parameters."""
+        agent = FrontendDeveloperAgent()
+        # Should not raise any exception
+        agent.validate_input("TestComponent")
+        agent.validate_input("TestComponent", "md")
+        agent.validate_input("TestComponent", "json")
 
-    def test_export_component_markdown(self):
+    def test_validate_input_invalid_component_name(self):
+        """Test validate_input with invalid component name."""
+        agent = FrontendDeveloperAgent()
+        with pytest.raises(ValueError, match="Component name must be a non-empty string"):
+            agent.validate_input("")
+        with pytest.raises(ValueError, match="Component name must be a non-empty string"):
+            agent.validate_input(None)
+
+    def test_validate_input_invalid_format_type(self):
+        """Test validate_input with invalid format type."""
+        agent = FrontendDeveloperAgent()
+        with pytest.raises(ValueError, match="Format type must be 'md' or 'json'"):
+            agent.validate_input("TestComponent", "invalid")
+
+    @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.time.sleep')
+    def test_build_shadcn_component(self, mock_sleep):
+        """Test build_shadcn_component method."""
+        agent = FrontendDeveloperAgent()
+        # Initialize services to avoid monitor error
+        agent._ensure_services_initialized()
+        result = agent.build_shadcn_component("TestButton")
+        
+        assert isinstance(result, dict)
+        assert result["component"] == "TestButton"
+        assert result["type"] == "Shadcn/ui"
+        assert "variants" in result
+        assert "sizes" in result
+        assert "accessibility_features" in result
+        assert "accessibility_score" in result
+        assert "performance_score" in result
+        assert len(agent.component_history) > 0
+
+    @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.time.sleep')
+    def test_build_component(self, mock_sleep):
+        """Test build_component method."""
+        agent = FrontendDeveloperAgent()
+        # Initialize services to avoid monitor error
+        agent._ensure_services_initialized()
+        result = agent.build_component("TestButton")
+        
+        assert isinstance(result, dict)
+        assert result["name"] == "TestButton"
+        assert result["type"] == "React/Next.js"
+        assert "accessibility_score" in result
+        assert "performance_score" in result
+        assert len(agent.component_history) > 0
+
+    @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.time.sleep')
+    def test_run_accessibility_check(self, mock_sleep):
+        """Test run_accessibility_check method."""
+        agent = FrontendDeveloperAgent()
+        # Initialize services to avoid monitor error
+        agent._ensure_services_initialized()
+        result = agent.run_accessibility_check("TestButton")
+        
+        assert isinstance(result, dict)
+        assert result["component"] == "TestButton"
+        assert "score" in result
+        assert "issues" in result
+        assert isinstance(result["issues"], list)
+
+    @patch('builtins.open', new_callable=mock_open)
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_export_component_md(self, mock_exists, mock_file, capsys):
         """Test export_component with markdown format."""
-        component_data = {
-            "name": "TestComponent",
-            "type": "React/Next.js",
-            "status": "created"
-        }
+        agent = FrontendDeveloperAgent()
+        component_data = {"name": "TestButton", "type": "React", "accessibility_score": 95}
+        agent.export_component("md", component_data)
         
-        with patch('builtins.print') as mock_print, \
-             patch('pathlib.Path.exists', return_value=True), \
-             patch('builtins.open', mock_open()), \
-             patch('pathlib.Path.mkdir'):
-            self.agent.export_component("md", component_data)
-            # The function may not call print directly, so we just check it doesn't raise an error
-            assert True
+        captured = capsys.readouterr()
+        assert "Component export saved to:" in captured.out
 
-    def test_export_component_json(self):
+    @patch('builtins.open', new_callable=mock_open)
+    def test_export_component_json(self, mock_file, capsys):
         """Test export_component with JSON format."""
-        component_data = {
-            "name": "TestComponent",
-            "type": "React/Next.js",
-            "status": "created"
-        }
+        agent = FrontendDeveloperAgent()
+        component_data = {"name": "TestButton", "type": "React", "accessibility_score": 95}
+        agent.export_component("json", component_data)
         
-        with patch('builtins.print') as mock_print:
-            self.agent.export_component("json", component_data)
-            mock_print.assert_called()
+        captured = capsys.readouterr()
+        assert "Component export saved to:" in captured.out
 
-    def test_export_component_unsupported_format(self):
-        """Test export_component with unsupported format."""
-        component_data = {"name": "TestComponent"}
+    def test_export_component_invalid_format(self):
+        """Test export_component with invalid format."""
+        agent = FrontendDeveloperAgent()
+        component_data = {"name": "TestButton", "type": "React", "accessibility_score": 95}
         
-        with patch('builtins.print') as mock_print:
-            self.agent.export_component("xml", component_data)
-            mock_print.assert_called_with("Unsupported format: xml")
+        with pytest.raises(ValueError, match="Format type must be 'md' or 'json'"):
+            agent.export_component("invalid", component_data)
 
-    def test_export_component_no_data_with_history(self):
-        """Test export_component without data but with history."""
-        self.agent.component_history = ["2024-01-01: TestComponent - Status: created"]
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_test_resource_completeness_all_available(self, mock_exists, capsys):
+        """Test test_resource_completeness when all resources are available."""
+        agent = FrontendDeveloperAgent()
+        agent.test_resource_completeness()
         
-        with patch.object(self.agent, 'build_component') as mock_build, \
-             patch('builtins.print'):
-            mock_build.return_value = {"name": "TestComponent"}
-            self.agent.export_component("md")
-            mock_build.assert_called_with("TestComponent")
+        captured = capsys.readouterr()
+        assert "All resources are available!" in captured.out
 
-    def test_export_component_no_data_no_history(self):
-        """Test export_component without data and no history."""
-        with patch.object(self.agent, 'build_component') as mock_build, \
-             patch('builtins.print'):
-            mock_build.return_value = {"name": "DefaultComponent"}
-            self.agent.export_component("md")
-            mock_build.assert_called()
-
-
-class TestFrontendDeveloperAgentFileOperations:
-    """Test file operations and history management."""
-
-    def setup_method(self):
-        """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_performance_monitor'), \
-             patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_advanced_policy_engine'), \
-             patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_sprite_library'):
-            self.agent = FrontendDeveloperAgent()
-            # Mock missing attributes
-            self.agent.data_paths = {
-                "component-history": Path("/tmp/component-history.md"),
-                "performance-history": Path("/tmp/performance-history.md"),
-                "changelog": Path("/tmp/changelog.md")
-            }
-            self.agent.template_paths = {
-                "best-practices": Path("/tmp/best-practices.md"),
-                "accessibility-checklist": Path("/tmp/accessibility-checklist.md"),
-                "performance-report": Path("/tmp/performance-report.md")
-            }
-
-    def test_load_component_history(self):
-        """Test _load_component_history functionality."""
-        mock_data = "# Component History\n\n- Component1\n- Component2"
+    @patch('pathlib.Path.exists', return_value=False)
+    def test_test_resource_completeness_missing_resources(self, mock_exists, capsys):
+        """Test test_resource_completeness when resources are missing."""
+        agent = FrontendDeveloperAgent()
+        agent.test_resource_completeness()
         
-        with patch('pathlib.Path.exists', return_value=True), \
-             patch('builtins.open', mock_open(read_data=mock_data)):
-            self.agent._load_component_history()
-            assert len(self.agent.component_history) == 2
-            assert "Component1" in self.agent.component_history[0]
-            assert "Component2" in self.agent.component_history[1]
+        captured = capsys.readouterr()
+        assert "Missing resources:" in captured.out
 
-    def test_load_component_history_file_not_found(self):
-        """Test _load_component_history when file doesn't exist."""
-        with patch('pathlib.Path.exists', return_value=False):
-            self.agent._load_component_history()
-            assert self.agent.component_history == []
-
-    def test_save_component_history(self):
-        """Test _save_component_history functionality."""
-        self.agent.component_history = ["Component1", "Component2"]
+    def test_get_status(self):
+        """Test get_status method."""
+        agent = FrontendDeveloperAgent()
+        agent.component_history = ["Component 1", "Component 2"]
+        agent.performance_history = ["Performance 1"]
         
-        with patch('pathlib.Path.mkdir'), \
-             patch('builtins.open', mock_open()) as mock_file:
-            self.agent._save_component_history()
-            mock_file.assert_called_once()
-
-    def test_load_performance_history(self):
-        """Test _load_performance_history functionality."""
-        mock_data = "# Performance History\n\n- Performance1\n- Performance2"
+        status = agent.get_status()
         
-        with patch('pathlib.Path.exists', return_value=True), \
-             patch('builtins.open', mock_open(read_data=mock_data)):
-            self.agent._load_performance_history()
-            assert len(self.agent.performance_history) == 2
-            assert "Performance1" in self.agent.performance_history[0]
-            assert "Performance2" in self.agent.performance_history[1]
+        assert status["agent_name"] == "FrontendDeveloper"
+        assert status["component_history_count"] == 2
+        assert status["performance_history_count"] == 1
+        assert status["last_component"] == "Component 2"
+        assert status["last_performance"] == "Performance 1"
+        assert status["status"] == "active"
+        assert "services_initialized" in status
+        assert "resources_loaded" in status
 
-    def test_load_performance_history_file_not_found(self):
-        """Test _load_performance_history when file doesn't exist."""
-        with patch('pathlib.Path.exists', return_value=False):
-            self.agent._load_performance_history()
-            assert self.agent.performance_history == []
-
-    def test_save_performance_history(self):
-        """Test _save_performance_history functionality."""
-        self.agent.performance_history = ["Performance1", "Performance2"]
+    @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.time.sleep')
+    def test_collaborate_example(self, mock_sleep, capsys):
+        """Test collaborate_example method."""
+        agent = FrontendDeveloperAgent()
+        # Initialize services to avoid monitor error
+        agent._ensure_services_initialized()
+        agent.collaborate_example()
         
-        with patch('pathlib.Path.mkdir'), \
-             patch('builtins.open', mock_open()) as mock_file:
-            self.agent._save_performance_history()
-            mock_file.assert_called_once()
-
-
-class TestFrontendDeveloperAgentLLMIntegration:
-    """Test LLM integration functionality."""
-
-    def setup_method(self):
-        """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_performance_monitor'), \
-             patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_advanced_policy_engine'), \
-             patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_sprite_library'):
-            self.agent = FrontendDeveloperAgent()
-
-    def test_code_review(self):
-        """Test code_review functionality."""
-        with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.ask_openai') as mock_llm:
-            # Verbeterde mock return value met meer realistische structuur
-            mock_llm.return_value = {
-                "feedback": "Code review feedback",
-                "suggestions": ["Use semantic HTML", "Add accessibility attributes"],
-                "score": 8.5
-            }
-            
-            result = self.agent.code_review("const button = <Button>Click me</Button>")
-            
-            # Check dat de LLM werd aangeroepen
-            mock_llm.assert_called_once()
-            # Check dat het resultaat de verwachte structuur heeft
-            assert isinstance(result, dict)
-            assert "feedback" in result
-
-    def test_bug_root_cause(self):
-        """Test bug_root_cause functionality."""
-        with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.ask_openai') as mock_llm:
-            # Verbeterde mock return value met meer realistische structuur
-            mock_llm.return_value = {
-                "root_cause": "Array is undefined before map operation",
-                "solution": "Add null check before calling map",
-                "prevention": "Use optional chaining or default values"
-            }
-            
-            result = self.agent.bug_root_cause("Error: Cannot read property 'map' of undefined")
-            
-            # Check dat de LLM werd aangeroepen
-            mock_llm.assert_called_once()
-            # Check dat het resultaat de verwachte structuur heeft
-            assert isinstance(result, dict)
-            assert "root_cause" in result
-
-
-class TestFrontendDeveloperAgentFigmaIntegration:
-    """Test Figma integration functionality."""
-
-    def setup_method(self):
-        """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_performance_monitor'), \
-             patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_advanced_policy_engine'), \
-             patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_sprite_library'):
-            self.agent = FrontendDeveloperAgent()
-
-    def test_parse_figma_components(self):
-        """Test parse_figma_components functionality."""
-        with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.FigmaClient') as mock_figma:
-            mock_client = MagicMock()
-            mock_client.get_file.return_value = {
-                "document": {
-                    "children": [
-                        {
-                            "id": "1",
-                            "name": "Button",
-                            "type": "COMPONENT"
-                        }
-                    ]
-                }
-            }
-            mock_figma.return_value = mock_client
-            
-            result = self.agent.parse_figma_components("test_file_id")
-            
-            assert "components" in result
-            assert "file_id" in result
-            assert result["file_id"] == "test_file_id"
-            mock_client.get_file.assert_called_once_with("test_file_id")
-
-    def test_generate_nextjs_component(self):
-        """Test generate_nextjs_component functionality."""
-        component_data = {
-            "name": "Button",
-            "type": "COMPONENT",
-            "properties": {"color": "blue", "size": "medium"}
-        }
-        
-        with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.ask_openai') as mock_llm:
-            mock_llm.return_value = "export const Button = () => { return <button>Click me</button> }"
-            
-            result = self.agent.generate_nextjs_component(component_data, "Button")
-            
-            assert "export const Button" in result
-            mock_llm.assert_called_once()
-
-    def test_generate_components_from_figma(self):
-        """Test generate_components_from_figma functionality."""
-        with patch.object(self.agent, 'parse_figma_components') as mock_parse, \
-             patch.object(self.agent, 'generate_nextjs_component') as mock_generate, \
-             patch('pathlib.Path.mkdir'), \
-             patch('builtins.open', mock_open()), \
-             patch('builtins.print'):
-            
-            mock_parse.return_value = {
-                "components": [
-                    {"name": "Button", "type": "COMPONENT", "id": "1"}
-                ],
-                "file_id": "test_file_id",
-                "file_name": "test_file.fig"
-            }
-            mock_generate.return_value = "export const Button = () => { return <button>Click me</button> }"
-            
-            result = self.agent.generate_components_from_figma("test_file_id", "test_output")
-            
-            assert "generated_components" in result
-            assert "file_id" in result
-            assert result["file_id"] == "test_file_id"
-            mock_parse.assert_called_once_with("test_file_id")
-
-
-class TestFrontendDeveloperAgentEventHandlers:
-    """Test event handler functionality."""
-
-    def setup_method(self):
-        """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_performance_monitor') as mock_monitor, \
-             patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_advanced_policy_engine'), \
-             patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_sprite_library'):
-            self.agent = FrontendDeveloperAgent()
-            self.mock_monitor = mock_monitor.return_value
-            # Mock missing attributes
-            self.agent.data_paths = {
-                "component-history": Path("/tmp/component-history.md"),
-                "performance-history": Path("/tmp/performance-history.md"),
-                "changelog": Path("/tmp/changelog.md")
-            }
-            self.agent.template_paths = {
-                "best-practices": Path("/tmp/best-practices.md"),
-                "accessibility-checklist": Path("/tmp/accessibility-checklist.md"),
-                "performance-report": Path("/tmp/performance-report.md")
-            }
-            # Mock monitor attribute
-            self.agent.monitor = self.mock_monitor
+        captured = capsys.readouterr()
+        assert "Collaboration example completed successfully." in captured.out
 
     def test_handle_component_build_requested(self):
-        """Test handle_component_build_requested functionality."""
-        event = {"component_name": "TestButton", "type": "shadcn"}
+        """Test handle_component_build_requested method."""
+        agent = FrontendDeveloperAgent()
+        # Initialize services to avoid monitor error
+        agent._ensure_services_initialized()
+        event = {"component_name": "TestButton"}
+        agent.handle_component_build_requested(event)
         
-        with patch.object(self.agent, 'build_component') as mock_build:
-            mock_build.return_value = {"component": "TestButton", "status": "created"}
-            
-            self.agent.handle_component_build_requested(event)
-            
-            mock_build.assert_called_once_with("TestButton")
+        # Should call build_component
+        assert len(agent.component_history) > 0
 
-    def test_handle_component_build_completed(self):
-        """Test handle_component_build_completed functionality."""
-        event = {"component": "TestButton", "status": "completed"}
+    @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.ask_openai')
+    def test_code_review_success(self, mock_llm):
+        """Test code_review with success."""
+        mock_llm.return_value = "Good code review"
         
-        with patch('builtins.print') as mock_print, \
-             patch.object(self.agent, 'policy_engine', MagicMock(), create=True):
-            # Handle async method properly
-            import asyncio
-            asyncio.run(self.agent.handle_component_build_completed(event))
-            # The function may not call print directly, so we just check it doesn't raise an error
-            assert True
+        agent = FrontendDeveloperAgent()
+        result = agent.code_review("const test = 'hello';")
+        
+        assert result == "Good code review"
+        assert mock_llm.called
 
-    def test_on_figma_design_feedback(self):
-        """Test on_figma_design_feedback event handler."""
-        # Add the missing method
-        def on_figma_design_feedback(self, event):
-            print(f"Design feedback received: {event}")
+    @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.ask_openai')
+    def test_code_review_error(self, mock_llm):
+        """Test code_review with error."""
+        mock_llm.side_effect = Exception("LLM error")
         
-        self.agent.on_figma_design_feedback = on_figma_design_feedback.__get__(self.agent)
+        agent = FrontendDeveloperAgent()
+        result = agent.code_review("const test = 'hello';")
         
-        event = {"feedback": "Design feedback", "component": "Button"}
-        
-        with patch('builtins.print') as mock_print:
-            self.agent.on_figma_design_feedback(event)
-            mock_print.assert_called()
+        assert "Error performing code review" in result
 
-    def test_on_figma_components_generated(self):
-        """Test on_figma_components_generated event handler."""
-        # Add the missing method
-        def on_figma_components_generated(self, event):
-            print(f"Components generated: {event}")
-        
-        self.agent.on_figma_components_generated = on_figma_components_generated.__get__(self.agent)
-        
-        event = {"components": ["Button", "Input"], "file_id": "test_file"}
-        
-        with patch('builtins.print') as mock_print:
-            self.agent.on_figma_components_generated(event)
-            mock_print.assert_called()
+    def test_code_review_invalid_input(self):
+        """Test code_review with invalid input."""
+        agent = FrontendDeveloperAgent()
+        with pytest.raises(ValueError, match="Code snippet must be a non-empty string"):
+            agent.code_review("")
+        with pytest.raises(ValueError, match="Code snippet must be a non-empty string"):
+            agent.code_review(None)
 
-    def test_on_figma_analysis_completed(self):
-        """Test on_figma_analysis_completed event handler."""
-        # Add the missing method
-        def on_figma_analysis_completed(self, event):
-            print(f"Analysis completed: {event}")
+    @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.ask_openai')
+    def test_bug_root_cause_success(self, mock_llm):
+        """Test bug_root_cause with success."""
+        mock_llm.return_value = "Bug analysis result"
         
-        self.agent.on_figma_analysis_completed = on_figma_analysis_completed.__get__(self.agent)
+        agent = FrontendDeveloperAgent()
+        result = agent.bug_root_cause("Error: Cannot read property of undefined")
         
-        event = {"analysis": "Analysis complete", "file_id": "test_file"}
+        assert result == "Bug analysis result"
+        assert mock_llm.called
+
+    @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.ask_openai')
+    def test_bug_root_cause_error(self, mock_llm):
+        """Test bug_root_cause with error."""
+        mock_llm.side_effect = Exception("LLM error")
         
-        with patch('builtins.print') as mock_print:
-            self.agent.on_figma_analysis_completed(event)
-            mock_print.assert_called()
+        agent = FrontendDeveloperAgent()
+        result = agent.bug_root_cause("Error: Cannot read property of undefined")
+        
+        assert "Error analyzing bug root cause" in result
 
+    def test_bug_root_cause_invalid_input(self):
+        """Test bug_root_cause with invalid input."""
+        agent = FrontendDeveloperAgent()
+        with pytest.raises(ValueError, match="Error log must be a non-empty string"):
+            agent.bug_root_cause("")
+        with pytest.raises(ValueError, match="Error log must be a non-empty string"):
+            agent.bug_root_cause(None)
 
-class TestFrontendDeveloperAgentCollaboration:
-    """Test collaboration functionality."""
-
-    def setup_method(self):
-        """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_performance_monitor') as mock_monitor, \
-             patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_advanced_policy_engine'), \
-             patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_sprite_library'):
-            self.agent = FrontendDeveloperAgent()
-            self.mock_monitor = mock_monitor.return_value
-            # Mock missing attributes
-            self.agent.data_paths = {
-                "component-history": Path("/tmp/component-history.md"),
-                "performance-history": Path("/tmp/performance-history.md"),
-                "changelog": Path("/tmp/changelog.md")
+    @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.FigmaClient')
+    def test_parse_figma_components_success(self, mock_figma_client):
+        """Test parse_figma_components with success."""
+        mock_client = MagicMock()
+        mock_figma_client.return_value = mock_client
+        mock_client.get_file.return_value = {"name": "Test File"}
+        mock_client.get_components.return_value = {
+            "meta": {
+                "components": {
+                    "comp1": {
+                        "name": "Button",
+                        "description": "A button component",
+                        "key": "key1",
+                        "created_at": "2023-01-01",
+                        "updated_at": "2023-01-02"
+                    }
+                }
             }
-            self.agent.template_paths = {
-                "best-practices": Path("/tmp/best-practices.md"),
-                "accessibility-checklist": Path("/tmp/accessibility-checklist.md"),
-                "performance-report": Path("/tmp/performance-report.md")
+        }
+        
+        agent = FrontendDeveloperAgent()
+        result = agent.parse_figma_components("test_file_id")
+        
+        assert result["file_name"] == "Test File"
+        assert result["file_id"] == "test_file_id"
+        assert len(result["components"]) == 1
+        assert result["total_components"] == 1
+
+    @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.FigmaClient')
+    def test_parse_figma_components_error(self, mock_figma_client):
+        """Test parse_figma_components with error."""
+        mock_figma_client.side_effect = Exception("Figma API error")
+        
+        agent = FrontendDeveloperAgent()
+        result = agent.parse_figma_components("test_file_id")
+        
+        assert "error" in result
+        assert "Figma API error" in result["error"]
+
+    @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.ask_openai')
+    def test_generate_nextjs_component_success(self, mock_llm):
+        """Test generate_nextjs_component with success."""
+        mock_llm.return_value = "export const TestComponent = () => { return <div>Test</div>; };"
+        
+        agent = FrontendDeveloperAgent()
+        component_data = {"name": "Button", "description": "A button component"}
+        result = agent.generate_nextjs_component(component_data, "TestComponent")
+        
+        assert "export const TestComponent" in result
+        assert mock_llm.called
+
+    @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.ask_openai')
+    def test_generate_nextjs_component_error(self, mock_llm):
+        """Test generate_nextjs_component with error."""
+        mock_llm.side_effect = Exception("LLM error")
+        
+        agent = FrontendDeveloperAgent()
+        component_data = {"name": "Button", "description": "A button component"}
+        result = agent.generate_nextjs_component(component_data, "TestComponent")
+        
+        assert "Error generating component" in result
+
+    @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.FigmaClient')
+    @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.ask_openai')
+    def test_generate_components_from_figma_success(self, mock_llm, mock_figma_client):
+        """Test generate_components_from_figma with success."""
+        mock_client = MagicMock()
+        mock_figma_client.return_value = mock_client
+        mock_client.get_file.return_value = {"name": "Test File"}
+        mock_client.get_components.return_value = {
+            "meta": {
+                "components": {
+                    "comp1": {
+                        "name": "Button",
+                        "description": "A button component",
+                        "key": "key1",
+                        "created_at": "2023-01-01",
+                        "updated_at": "2023-01-02"
+                    }
+                }
             }
-            # Mock monitor attribute
-            self.agent.monitor = self.mock_monitor
+        }
+        mock_llm.return_value = "export const Button = () => { return <button>Button</button>; };"
+        
+        agent = FrontendDeveloperAgent()
+        result = agent.generate_components_from_figma("test_file_id", "components")
+        
+        assert result["file_name"] == "Test File"
+        assert result["file_id"] == "test_file_id"
+        assert len(result["generated_components"]) == 1
+        assert result["total_generated"] == 1
 
-    def test_collaborate_example(self):
-        """Test collaborate_example functionality."""
-        with patch('builtins.print') as mock_print, \
-             patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.publish', create=True) as mock_publish:
-            self.agent.collaborate_example()
-            # The function may not call print directly, so we just check it doesn't raise an error
-            assert True
-
-
-class TestFrontendDeveloperAgentRunMethod:
-    """Test run method functionality."""
-
-    def setup_method(self):
-        """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_performance_monitor') as mock_monitor, \
-             patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_advanced_policy_engine'), \
-             patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_sprite_library'):
-            self.agent = FrontendDeveloperAgent()
-            self.mock_monitor = mock_monitor.return_value
-            # Mock missing attributes
-            self.agent.data_paths = {
-                "component-history": Path("/tmp/component-history.md"),
-                "performance-history": Path("/tmp/performance-history.md"),
-                "changelog": Path("/tmp/changelog.md")
-            }
-            self.agent.template_paths = {
-                "best-practices": Path("/tmp/best-practices.md"),
-                "accessibility-checklist": Path("/tmp/accessibility-checklist.md"),
-                "performance-report": Path("/tmp/performance-report.md")
-            }
-            # Mock monitor attribute
-            self.agent.monitor = self.mock_monitor
+    @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.FigmaClient')
+    def test_generate_components_from_figma_error(self, mock_figma_client):
+        """Test generate_components_from_figma with error."""
+        mock_figma_client.side_effect = Exception("Figma API error")
+        
+        agent = FrontendDeveloperAgent()
+        result = agent.generate_components_from_figma("test_file_id", "components")
+        
+        assert "error" in result
+        assert "Figma API error" in result["error"]
 
     def test_run_method(self):
-        """Test run method functionality."""
-        import bmad.agents.Agent.FrontendDeveloper.frontenddeveloper as fe_module
-        fe_module.publish = lambda *args, **kwargs: None
-        with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.subscribe', create=True) as mock_subscribe, \
-             patch('builtins.print'):
-            self.agent.run()
-            assert True
-        del fe_module.publish
+        """Test run method."""
+        agent = FrontendDeveloperAgent()
+        # Initialize services to avoid monitor error
+        agent._ensure_services_initialized()
+        agent.run()
+        
+        # Just check that it doesn't raise an error
+        assert True
 
-
-class TestFrontendDeveloperAgentErrorHandling:
-    """Test error handling scenarios."""
-
-    def setup_method(self):
-        """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_performance_monitor'), \
-             patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_advanced_policy_engine'), \
-             patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_sprite_library'):
-            self.agent = FrontendDeveloperAgent()
-
-    def test_agent_error_handling(self):
-        """Test agent error handling."""
-        with patch.object(self.agent, 'run') as mock_run:
-            mock_run.side_effect = Exception("Test error")
+    def test_run_agent_class_method(self):
+        """Test run_agent class method."""
+        with patch.object(FrontendDeveloperAgent, 'run') as mock_run:
+            FrontendDeveloperAgent.run_agent()
             
-            # Should not raise exception
-            try:
-                self.agent.run()
-            except Exception:
-                pass  # Expected behavior
+            assert mock_run.called
 
 
-class TestFrontendDeveloperAgentIntegration:
-    """Test integration scenarios."""
+class TestFrontendDeveloperIntegration:
+    """Integration tests for FrontendDeveloperAgent."""
 
-    def setup_method(self):
-        """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_performance_monitor'), \
-             patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_advanced_policy_engine'), \
-             patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_sprite_library'):
-            self.agent = FrontendDeveloperAgent()
+    @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_performance_monitor')
+    @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_advanced_policy_engine')
+    @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_sprite_library')
+    @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.time.sleep')
+    def test_complete_component_build_workflow(self, mock_sleep, mock_sprite, mock_policy, mock_monitor):
+        """Test complete component build workflow."""
+        agent = FrontendDeveloperAgent()
+        # Initialize services to avoid monitor error
+        agent._ensure_services_initialized()
+        
+        # Test input validation
+        with pytest.raises(ValueError):
+            agent.build_component("")
+        
+        # Test valid component build
+        result = agent.build_component("TestComponent")
+        assert result["name"] == "TestComponent"
+        assert result["type"] == "React/Next.js"
+        
+        # Test accessibility check
+        accessibility_result = agent.run_accessibility_check("TestComponent")
+        assert accessibility_result["component"] == "TestComponent"
+        assert "score" in accessibility_result
+        
+        # Test status retrieval
+        status = agent.get_status()
+        assert status["agent_name"] == "FrontendDeveloper"
+        assert status["component_history_count"] > 0
 
-    def test_agent_complete_workflow(self):
-        """Test complete agent workflow."""
-        with patch.object(self.agent, 'build_shadcn_component') as mock_build, \
-             patch.object(self.agent, 'run_accessibility_check') as mock_accessibility, \
-             patch.object(self.agent, 'export_component') as mock_export, \
-             patch('builtins.print'):
-            
-            mock_build.return_value = {"component": "TestButton", "status": "created"}
-            mock_accessibility.return_value = {"component": "TestButton", "score": 95}
-            
-            # Execute workflow
-            component = self.agent.build_shadcn_component("TestButton")
-            accessibility = self.agent.run_accessibility_check("TestButton")
-            self.agent.export_component("md", component)
-            
-            assert component["component"] == "TestButton"
-            assert accessibility["component"] == "TestButton"
-            mock_build.assert_called_once()
-            mock_accessibility.assert_called_once()
-            mock_export.assert_called_once()
-
-    def test_agent_llm_integration(self):
-        """Test LLM integration workflow."""
-        with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.ask_openai') as mock_llm:
-            mock_llm.return_value = "Generated code"
-            
-            code_review = self.agent.code_review("test code")
-            bug_analysis = self.agent.bug_root_cause("test error")
-            
-            assert code_review == "Generated code"
-            assert bug_analysis == "Generated code"
-            assert mock_llm.call_count == 2 
+    @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_performance_monitor')
+    @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_advanced_policy_engine')
+    @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_sprite_library')
+    def test_agent_resource_completeness(self, mock_sprite, mock_policy, mock_monitor):
+        """Test agent resource completeness."""
+        agent = FrontendDeveloperAgent()
+        
+        # Test that agent has all required attributes
+        assert hasattr(agent, 'agent_name')
+        assert hasattr(agent, 'component_history')
+        assert hasattr(agent, 'performance_history')
+        assert hasattr(agent, 'template_paths')
+        assert hasattr(agent, 'data_paths')
+        
+        # Test that agent has all required methods
+        assert hasattr(agent, 'show_help')
+        assert hasattr(agent, 'build_component')
+        assert hasattr(agent, 'run_accessibility_check')
+        assert hasattr(agent, 'export_component')
+        assert hasattr(agent, 'get_status')
+        assert hasattr(agent, 'collaborate_example')
+        assert hasattr(agent, 'validate_input') 

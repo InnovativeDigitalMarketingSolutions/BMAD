@@ -182,6 +182,15 @@ development/
 # Temporary report files (auto-generated during testing)
 docs/reports/temporary/
 TestApp_config_*.json
+*_report_*.json
+*_report_*.csv
+*_report_*.md
+*_audit_*.json
+*_audit_*.csv
+*_audit_*.md
+accessibility_audit_*.json
+accessibility_audit_*.csv
+accessibility_audit_*.md
 
 # Cache directories
 .ruff_cache/

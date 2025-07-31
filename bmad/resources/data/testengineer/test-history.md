@@ -1,33 +1,5 @@
 # Test History
 
-- 2025-07-30T21:52:42.297504: 2/4 tests succesvol
-- 2025-07-30T22:04:33.289333: 2/4 tests succesvol
-- 2025-07-30T22:04:35.244731: 2/4 tests succesvol
-- 2025-07-30T22:09:53.159009: 2/4 tests succesvol
-- 2025-07-30T22:09:55.127984: 2/4 tests succesvol
-- 2025-07-30T22:22:47.521778: 2/4 tests succesvol
-- 2025-07-30T22:22:49.498736: 2/4 tests succesvol
-- 2025-07-30T22:31:03.458139: 2/4 tests succesvol
-- 2025-07-30T22:31:05.430199: 2/4 tests succesvol
-- 2025-07-30T22:36:15.881819: 2/4 tests succesvol
-- 2025-07-30T22:36:17.827344: 2/4 tests succesvol
-- 2025-07-30T22:44:43.197400: 2/4 tests succesvol
-- 2025-07-30T22:44:45.156736: 2/4 tests succesvol
-- 2025-07-31T07:43:49.420825: 2/4 tests succesvol
-- 2025-07-31T07:43:51.035034: 2/4 tests succesvol
-- 2025-07-31T07:50:38.423762: 2/4 tests succesvol
-- 2025-07-31T07:50:40.043087: 2/4 tests succesvol
-- 2025-07-31T07:53:48.411993: 2/4 tests succesvol
-- 2025-07-31T07:53:50.372834: 2/4 tests succesvol
-- 2025-07-31T08:07:40.987002: 2/4 tests succesvol
-- 2025-07-31T08:07:42.970071: 2/4 tests succesvol
-- 2025-07-31T08:14:03.400942: 2/4 tests succesvol
-- 2025-07-31T08:14:05.358876: 2/4 tests succesvol
-- 2025-07-31T08:34:08.241535: 2/4 tests succesvol
-- Generated unit tests for TestComponent in 0.00s
-- Generated integration tests for TestComponent in 0.00s
-- Generated e2e tests for TestComponent in 0.00s
-- 2025-07-31T08:34:08.261289: 2/4 tests succesvol
 - 2025-07-31T08:34:08.262500: 2/4 tests succesvol
 - 2025-07-31T08:35:41.797680: 2/4 tests succesvol
 - Generated unit tests for TestComponent in 0.00s
@@ -49,4 +21,32 @@
 - Generated e2e tests for TestComponent in 0.00s
 - 2025-07-31T08:39:00.027085: 2/4 tests succesvol
 - 2025-07-31T08:39:00.030390: 2/4 tests succesvol
+- Generated unit tests for TestComponent in 0.00s
+- 2025-07-31T08:43:49.313085: 2/4 tests succesvol
+- Generated unit tests for TestComponent in 0.00s
+- Generated integration tests for TestComponent in 0.00s
+- Generated e2e tests for TestComponent in 0.00s
+- 2025-07-31T08:43:49.350777: 2/4 tests succesvol
+- 2025-07-31T08:43:49.353618: 2/4 tests succesvol
+- Generated unit tests for TestComponent in 0.00s
+- 2025-07-31T09:00:15.347348: 2/4 tests succesvol
+- Generated unit tests for TestComponent in 0.00s
+- Generated integration tests for TestComponent in 0.00s
+- Generated e2e tests for TestComponent in 0.00s
+- 2025-07-31T09:00:15.383631: 2/4 tests succesvol
+- 2025-07-31T09:00:15.386485: 2/4 tests succesvol
+- Generated unit tests for TestComponent in 0.00s
+- 2025-07-31T09:03:55.978571: 2/4 tests succesvol
+- Generated unit tests for TestComponent in 0.00s
+- Generated integration tests for TestComponent in 0.00s
+- Generated e2e tests for TestComponent in 0.00s
+- 2025-07-31T09:03:56.015295: 2/4 tests succesvol
+- 2025-07-31T09:03:56.018152: 2/4 tests succesvol
+- Generated unit tests for TestComponent in 0.00s
+- 2025-07-31T09:07:03.781657: 2/4 tests succesvol
+- Generated unit tests for TestComponent in 0.00s
+- Generated integration tests for TestComponent in 0.00s
+- Generated e2e tests for TestComponent in 0.00s
+- 2025-07-31T09:07:03.817873: 2/4 tests succesvol
+- 2025-07-31T09:07:03.820400: 2/4 tests succesvol
 - Generated unit tests for TestComponent in 0.00s
