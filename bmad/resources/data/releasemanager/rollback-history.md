@@ -1,13 +1,5 @@
 # Rollback History
 
-- **Comprehensive Testing**: More comprehensive testing strategies
-- **Risk Assessment**: Better risk assessment procedures
-- **Kubernetes Rollbacks**: Kubernetes native rollback capabilities
-- **Database Rollbacks**: Database rollback procedures
-- **Configuration Rollbacks**: Configuration management rollbacks
-- **Infrastructure Rollbacks**: Infrastructure rollback tools
-- **Application Rollbacks**: Application-level rollback mechanisms
-- **Prometheus**: Metrics collection and alerting
 - **Grafana**: Visualization and dashboards
 - **AlertManager**: Alert routing and management
 - **Jaeger**: Distributed tracing for debugging
@@ -50,3 +42,11 @@
 - 2025-07-31T08:16:04.092291: Release rolled back - 1.3.0 - High error rate
 - 2025-07-31T08:38:12.844040: Release rolled back - 1.3.0 - High error rate
 - 2025-07-31T08:38:20.211147: Release rolled back - 1.3.0 - High error rate
+- 2025-07-31T08:43:02.278994: Release rolled back - 1.3.0 - High error rate
+- 2025-07-31T08:43:09.641946: Release rolled back - 1.3.0 - High error rate
+- 2025-07-31T08:59:28.352547: Release rolled back - 1.3.0 - High error rate
+- 2025-07-31T08:59:35.678773: Release rolled back - 1.3.0 - High error rate
+- 2025-07-31T09:03:08.782615: Release rolled back - 1.3.0 - High error rate
+- 2025-07-31T09:03:16.212152: Release rolled back - 1.3.0 - High error rate
+- 2025-07-31T09:06:16.663370: Release rolled back - 1.3.0 - High error rate
+- 2025-07-31T09:06:24.042911: Release rolled back - 1.3.0 - High error rate
