@@ -138,21 +138,21 @@ def test_internal_logic(self, mock_save, mock_publish, agent):
 ```
 
 ### 4. Third-Party Integration Mocking
-**PROBLEEM**: Complexe third-party dependencies (psycopg2, Auth0, Stripe) zijn moeilijk te mocken
+**PROBLEEM**: Complexe third-party dependencies (psycopg2, Auth0, Stripe, boto3, google.cloud) zijn moeilijk te mocken
 **OPLOSSING**: Pragmatische mocking van hele methoden
 
 ```python
-# VOOR: Complexe psycopg2 mocking
-@patch('integrations.postgresql.postgresql_client.ThreadedConnectionPool')
-@patch('integrations.postgresql.postgresql_client.psycopg2')
-def test_complex_mocking(self, mock_psycopg2, mock_pool):
+# VOOR: Complexe boto3/Stripe mocking
+@patch('integrations.storage.storage_client.boto3')
+@patch('integrations.stripe.stripe_client.stripe')
+def test_complex_mocking(self, mock_stripe, mock_boto3):
     # Complex setup...
 
 # NA: Pragmatische mocking
-with patch.object(PostgreSQLClient, 'execute_query') as mock_execute:
-    mock_execute.return_value = {"success": True, "data": [{"id": 1}]}
-    result = client.execute_query("SELECT * FROM test")
-    self.assertTrue(result["success"])
+with patch.object(StorageClient, 'upload_file') as mock_upload:
+    mock_upload.return_value = UploadResult(success=True, ...)
+    result = client.upload_file("test.txt")
+    self.assertTrue(result.success)
 ```
 
 **VOORDELEN**:
@@ -161,6 +161,29 @@ with patch.object(PostgreSQLClient, 'execute_query') as mock_execute:
 - Test method invocation
 - Geen externe dependencies
 - Consistent met guide principes
+
+### 5. Storage Integration Mocking (LESSONS LEARNED 2025-08-01)
+**PROBLEEM**: boto3 en google.cloud storage zijn niet beschikbaar in test environment
+**OPLOSSING**: Mock de hele client initialization en method calls
+
+```python
+# VOOR: Direct boto3 mocking (faalt)
+with patch('integrations.storage.storage_client.boto3') as mock_boto3:
+    # AttributeError: module has no attribute 'boto3'
+
+# NA: Pragmatische mocking van hele methods
+with patch.object(StorageClient, '_initialize_provider'):
+    with patch.object(StorageClient, '_validate_file', return_value=True):
+        with patch.object(StorageClient, '_calculate_checksum', return_value="test_checksum"):
+            client = StorageClient(config)
+            result = client.upload_file("test.txt")
+```
+
+**PATTERNS TOEGEPAST**:
+- Mock `_initialize_provider` om dependency issues te voorkomen
+- Mock validation methods met return values
+- Test dataclass creation en basic functionality
+- Focus op workflow tests in plaats van low-level API calls
 
 ## Veelvoorkomende Problemen en Oplossingen
 
