@@ -232,6 +232,13 @@ class TestIntegratedWorkflowCLI:
             "AgentStatus": {"name": "AgentStatus", "type": "component"}
         }
         
+        # Mock component test result
+        mock_component_result = {
+            "status": "passed",
+            "performance_metrics": {"duration": 0.0}
+        }
+        self.mock_orchestrator.run_component_tests = AsyncMock(return_value=mock_component_result)
+        
         # Mock OpenRouter client
         mock_openrouter_client = MagicMock()
         mock_response = MagicMock()
@@ -242,11 +249,38 @@ class TestIntegratedWorkflowCLI:
         self.mock_orchestrator.openrouter_client = mock_openrouter_client
         
         # Mock other integrations
-        self.mock_orchestrator.tracer = MagicMock()
-        self.mock_orchestrator.policy_engine = MagicMock()
-        self.mock_orchestrator.advanced_policy_engine = MagicMock()
-        self.mock_orchestrator.langgraph_orchestrator = MagicMock()
-        self.mock_orchestrator.prefect_orchestrator = MagicMock()
+        mock_tracer = MagicMock()
+        mock_span = MagicMock()
+        mock_span.set_attribute = MagicMock()
+        mock_tracer.start_span.return_value.__enter__ = MagicMock(return_value=mock_span)
+        mock_tracer.start_span.return_value.__exit__ = MagicMock(return_value=None)
+        self.mock_orchestrator.tracer = mock_tracer
+        
+        mock_policy_engine = MagicMock()
+        mock_policy_result = MagicMock()
+        mock_policy_result.allowed = True
+        mock_policy_engine.evaluate_policy = AsyncMock(return_value=mock_policy_result)
+        self.mock_orchestrator.policy_engine = mock_policy_engine
+        
+        mock_advanced_policy_engine = MagicMock()
+        mock_advanced_result = MagicMock()
+        mock_advanced_result.allowed = True
+        mock_advanced_policy_engine.evaluate_policy = AsyncMock(return_value=mock_advanced_result)
+        self.mock_orchestrator.advanced_policy_engine = mock_advanced_policy_engine
+        
+        mock_langgraph_orchestrator = MagicMock()
+        mock_workflow_result = MagicMock()
+        mock_workflow_result.duration = 0.5
+        mock_workflow_result.status = "completed"
+        mock_langgraph_orchestrator.execute_workflow = AsyncMock(return_value=mock_workflow_result)
+        self.mock_orchestrator.langgraph_orchestrator = mock_langgraph_orchestrator
+        
+        mock_prefect_orchestrator = MagicMock()
+        mock_flow_result = MagicMock()
+        mock_flow_result.duration = 0.5
+        mock_flow_result.status = "completed"
+        mock_prefect_orchestrator.execute_flow = AsyncMock(return_value=mock_flow_result)
+        self.mock_orchestrator.prefect_orchestrator = mock_prefect_orchestrator
         
         await self.cli.test_integrations()
         
@@ -295,6 +329,13 @@ class TestIntegratedWorkflowCLI:
         self.mock_orchestrator.get_component_sprites.return_value = {
             "AgentStatus": {"name": "AgentStatus", "type": "component"}
         }
+        
+        # Mock component test result
+        mock_component_result = {
+            "status": "passed",
+            "performance_metrics": {"duration": 0.0}
+        }
+        self.mock_orchestrator.run_component_tests = AsyncMock(return_value=mock_component_result)
         
         # Mock OpenRouter client with failure
         mock_openrouter_client = MagicMock()
