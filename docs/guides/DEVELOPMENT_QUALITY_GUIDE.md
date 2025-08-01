@@ -1,5 +1,6 @@
 # BMAD Development Quality Guide
 
+
 ## Overzicht
 Dit document dient als handleiding voor het ontwikkelen van hoogwaardige, robuuste en onderhoudbare code binnen het BMAD project. Het bevat best practices, patterns en lessons learned uit de agent optimalisatie processen.
 
@@ -10,17 +11,39 @@ Dit document dient als handleiding voor het ontwikkelen van hoogwaardige, robuus
 - **NIET**: Quick fixes implementeren zonder echte verbeteringen
 - **WEL**: Echte bugs oplossen, architectuur verbeteren, edge cases afhandelen
 
-### 2. Geen Code Verwijderen
-- **VERBODEN**: Code of functionaliteit verwijderen om problemen op te lossen
-- **TOEGESTAAN**: Code vervangen, uitbreiden, of verbeteren
-- **VERPLICHT**: Documenteren waarom wijzigingen nodig zijn
+### 2. Code Behoud en Uitbreiding
+- **❌ NOOIT**: Code zomaar verwijderen zonder analyse
+- **✅ WEL**: Code uitbreiden en verbeteren
+- **✅ WEL**: Oude code vervangen met nieuwe, verbeterde code
+- **✅ WEL**: Functionaliteit behouden en uitbreiden
 
-### 3. Backward Compatibility
+### 3. Test-Driven Quality Assurance
+- **Doel**: Tests valideren systeemkwaliteit, niet alleen functionaliteit
+- **Proces**: 
+  1. Analyseer eerst de rootcause van falende tests
+  2. Implementeer kwalitatieve oplossingen
+  3. Fix tests niet om simpelweg te laten slagen
+  4. Zorg dat oplossingen de systeemkwaliteit verbeteren
+
+### 4. Test Coverage en Validatie
+- **Na elke implementatie**: Tests opstellen voor het nieuwe onderdeel
+- **Na elk afgerond onderdeel**: 
+  1. Test of alles goed werkt
+  2. Controleer testcoverage (doel: >80%)
+  3. Vul tests aan waar nodig
+  4. Commit en push
+
+### 5. Consistentie en Lessons Learned
+- **Gebruik**: `test_quality_guide.md` en `development_quality_guide.md`
+- **Update**: Deze guides regelmatig met lessons learned
+- **Toepassing**: Zorg dat oplossingen consistent worden toegepast
+
+### 6. Backward Compatibility
 - **DOEL**: Behoud van bestaande functionaliteit naast nieuwe features
 - **METHODE**: Extend implementatie zonder bestaande functionaliteit te breken
 - **PATTERN**: Voeg nieuwe velden toe aan bestaande return structures
 
-### 4. Comprehensive Error Handling
+### 7. Comprehensive Error Handling
 - **DOEL**: Robuuste error handling met specifieke exception types
 - **METHODE**: Custom exceptions voor verschillende error types
 - **PATTERN**: Graceful degradation en informative error messages
