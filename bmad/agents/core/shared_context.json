@@ -14917,6 +14917,22 @@
         "component": "Button",
         "accessibility_score": 98
       }
+    },
+    {
+      "timestamp": "2025-08-01T09:38:51.264477",
+      "event": "quality_gates_passed",
+      "data": {
+        "result": {
+          "all_gates_passed": true
+        }
+      }
+    },
+    {
+      "timestamp": "2025-08-01T09:38:51.322587",
+      "event": "quality_gates_failed",
+      "data": {
+        "reason": "Quality thresholds not met"
+      }
     }
   ]
 }
