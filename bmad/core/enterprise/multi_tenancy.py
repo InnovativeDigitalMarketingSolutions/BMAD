@@ -259,6 +259,56 @@ class TenantManager:
         }
         return defaults.get(plan, defaults["basic"])
 
+    def get_tenant_summary(self, tenant_id: str) -> Dict[str, Any]:
+        """Get comprehensive tenant summary including subscription and user data."""
+        tenant = self.get_tenant(tenant_id)
+        if not tenant:
+            return {"success": False, "error": "Tenant not found"}
+        
+        # Get subscription data
+        subscription_data = None
+        try:
+            from .billing import billing_manager
+            subscription = billing_manager.get_subscription_by_tenant(tenant_id)
+            if subscription:
+                subscription_data = {
+                    "id": subscription.id,
+                    "plan_id": subscription.plan_id,
+                    "status": subscription.status.value,
+                    "billing_period": subscription.billing_period.value
+                }
+        except ImportError:
+            subscription_data = None
+        
+        # Get user data
+        user_data = None
+        try:
+            from .user_management import user_manager
+            users = user_manager.list_users_by_tenant(tenant_id)
+            user_data = {
+                "total_users": len(users),
+                "active_users": len([u for u in users if u.status.value == "active"]),
+                "admin_users": len([u for u in users if "admin" in u.role_ids])
+            }
+        except ImportError:
+            user_data = None
+        
+        summary = {
+            "tenant_id": tenant_id,
+            "name": tenant.name,
+            "domain": tenant.domain,
+            "plan": tenant.plan,
+            "status": tenant.status,
+            "created_at": tenant.created_at.isoformat(),
+            "updated_at": tenant.updated_at.isoformat(),
+            "features": tenant.features,
+            "limits": tenant.limits,
+            "subscription": subscription_data,
+            "users": user_data
+        }
+        
+        return {"success": True, "summary": summary}
+
 
 # Global tenant manager instance
 tenant_manager = TenantManager() 

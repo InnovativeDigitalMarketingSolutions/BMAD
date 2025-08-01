@@ -570,6 +570,85 @@ class BillingManager:
                 return subscription
         return None
 
+    def generate_invoice(self, tenant_id: str, subscription_id: str) -> Dict[str, Any]:
+        """Generate an invoice for a subscription."""
+        subscription = self.get_subscription(subscription_id)
+        if not subscription or subscription.tenant_id != tenant_id:
+            return {"success": False, "error": "Subscription not found"}
+        
+        plan = self.get_plan(subscription.plan_id)
+        if not plan:
+            return {"success": False, "error": "Plan not found"}
+        
+        # Calculate amount based on billing period
+        amount = plan.price_monthly if subscription.billing_period == BillingPeriod.MONTHLY else plan.price_yearly
+        
+        invoice = {
+            "id": str(uuid.uuid4()),
+            "subscription_id": subscription_id,
+            "tenant_id": tenant_id,
+            "amount": amount,
+            "currency": "USD",
+            "status": "pending",
+            "created_at": datetime.utcnow().isoformat(),
+            "due_date": subscription.current_period_end.isoformat(),
+            "plan_name": plan.name,
+            "billing_period": subscription.billing_period.value
+        }
+        
+        logger.info(f"Generated invoice for subscription {subscription_id}")
+        return {"success": True, "invoice": invoice}
+
+    def get_billing_summary(self, tenant_id: str) -> Dict[str, Any]:
+        """Get comprehensive billing summary for a tenant."""
+        subscription = self.get_subscription_by_tenant(tenant_id)
+        if not subscription:
+            return {"success": False, "error": "No active subscription found"}
+        
+        plan = self.get_plan(subscription.plan_id)
+        if not plan:
+            return {"success": False, "error": "Plan not found"}
+        
+        # Get usage data if UsageTracker is available
+        usage_data = {}
+        try:
+            from .billing import usage_tracker
+            current_usage = usage_tracker.get_current_month_usage(tenant_id, "api_calls")
+            usage_data = {
+                "api_calls": current_usage,
+                "limit": plan.limits.get("api_calls", "unlimited")
+            }
+        except ImportError:
+            usage_data = {"api_calls": 0, "limit": "unknown"}
+        
+        summary = {
+            "tenant_id": tenant_id,
+            "subscription": {
+                "id": subscription.id,
+                "plan_id": subscription.plan_id,
+                "plan_name": plan.name,
+                "status": subscription.status.value,
+                "billing_period": subscription.billing_period.value,
+                "current_period_start": subscription.current_period_start.isoformat(),
+                "current_period_end": subscription.current_period_end.isoformat(),
+                "amount": plan.price_monthly if subscription.billing_period == BillingPeriod.MONTHLY else plan.price_yearly
+            },
+            "usage": usage_data,
+            "features": plan.features,
+            "limits": plan.limits
+        }
+        
+        return {"success": True, "summary": summary}
+
+    def track_usage(self, tenant_id: str, metric: str, value: int = 1) -> Dict[str, Any]:
+        """Track usage for a tenant (delegates to UsageTracker)."""
+        try:
+            from .billing import usage_tracker
+            usage_tracker.record_usage(tenant_id, metric, value)
+            return {"success": True, "usage_recorded": True}
+        except ImportError:
+            return {"success": False, "error": "UsageTracker not available"}
+
 
 class UsageTracker:
     """Tracks usage metrics for billing."""

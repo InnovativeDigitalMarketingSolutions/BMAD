@@ -372,9 +372,10 @@ class AccessControlManager:
         rules = []
         for rule in self.access_rules.values():
             if (rule.resource == resource and 
-                rule.action == action and 
                 rule.is_active):
-                rules.append(rule)
+                # Check if action matches or if rule allows all actions
+                if rule.action == action or rule.action == "*":
+                    rules.append(rule)
         return rules
     
     def check_access(self, user_id: str, resource: str, action: str,
@@ -397,8 +398,12 @@ class AccessControlManager:
         """Evaluate rule conditions."""
         conditions = rule.conditions
         
-        # Check minimum role requirement
-        if "min_role" in conditions:
+        # Check role requirement (support both "role" and "min_role")
+        if "role" in conditions:
+            required_role = conditions["role"]
+            if user_role != required_role:
+                return False
+        elif "min_role" in conditions:
             min_role = conditions["min_role"]
             if not self._role_satisfies_minimum(user_role, min_role):
                 return False
