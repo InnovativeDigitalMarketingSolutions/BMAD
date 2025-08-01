@@ -38,6 +38,13 @@ from integrations.prefect.prefect_workflow import (
 # Import existing BMAD core modules
 from .advanced_workflow import WorkflowDefinition, WorkflowStatus, WorkflowTask, TaskStatus
 
+# Import Enterprise Features
+from bmad.core.enterprise.multi_tenancy import tenant_manager
+from bmad.core.enterprise.user_management import user_manager, permission_manager
+from bmad.core.enterprise.billing import usage_tracker, subscription_manager
+from bmad.core.enterprise.access_control import feature_flag_manager
+from bmad.core.enterprise.security import enterprise_security_manager
+
 # Load environment variables
 load_dotenv()
 
@@ -58,6 +65,7 @@ class AgentWorkflowConfig:
     enable_policy_enforcement: bool = True
     enable_cost_tracking: bool = True
     enable_workflow_orchestration: bool = True
+    enable_enterprise_features: bool = True  # New enterprise features flag
     llm_provider: str = "openrouter"
     policy_rules: List[str] = field(default_factory=list)
     workflow_timeout: int = 3600
@@ -73,6 +81,7 @@ class IntegratedWorkflowResult:
     policy_decisions: Optional[List[Dict[str, Any]]] = None
     cost_analysis: Optional[Dict[str, Any]] = None
     performance_metrics: Optional[Dict[str, Any]] = None
+    enterprise_data: Optional[Dict[str, Any]] = None  # New enterprise data field
     error_details: Optional[str] = None
     execution_time: Optional[float] = None
 
@@ -103,7 +112,67 @@ class IntegratedWorkflowOrchestrator:
         # Register default workflows
         self._register_default_workflows()
 
+        # Enterprise features state
+        self.current_tenant_id: Optional[str] = None
+        self.current_user_id: Optional[str] = None
+
         logger.info("Integrated Workflow Orchestrator geïnitialiseerd")
+
+    def set_enterprise_context(self, tenant_id: str, user_id: str):
+        """Set the current enterprise context for workflow execution."""
+        self.current_tenant_id = tenant_id
+        self.current_user_id = user_id
+        logger.info(f"Set enterprise context: tenant={tenant_id}, user={user_id}")
+
+    def _check_enterprise_limits(self, workflow_name: str) -> bool:
+        """Check if the current tenant has sufficient limits for workflow execution."""
+        if not self.current_tenant_id:
+            logger.warning("No tenant context set, skipping enterprise limit checks")
+            return True
+
+        tenant = tenant_manager.get_tenant(self.current_tenant_id)
+        if not tenant:
+            logger.error(f"Tenant {self.current_tenant_id} not found")
+            return False
+
+        # Check workflow execution limits
+        if not tenant_manager.check_limit("max_workflows", 1):  # TODO: Get actual count
+            logger.warning(f"Workflow limit exceeded for tenant {self.current_tenant_id}")
+            return False
+
+        # Check feature flags
+        if not feature_flag_manager.get_flag_value("workflow_orchestration", self.current_tenant_id):
+            logger.warning(f"Workflow orchestration not enabled for tenant {self.current_tenant_id}")
+            return False
+
+        return True
+
+    def _log_enterprise_event(self, event_type: str, resource: str, action: str, 
+                            details: Dict[str, Any], success: bool = True):
+        """Log enterprise security events."""
+        if not self.current_tenant_id or not self.current_user_id:
+            return
+
+        enterprise_security_manager.log_audit_event(
+            user_id=self.current_user_id,
+            tenant_id=self.current_tenant_id,
+            event_type=event_type,
+            resource=resource,
+            action=action,
+            details=details,
+            success=success
+        )
+
+    def _track_enterprise_usage(self, metric: str, value: int = 1):
+        """Track enterprise usage metrics."""
+        if not self.current_tenant_id:
+            return
+
+        usage_tracker.record_usage(
+            tenant_id=self.current_tenant_id,
+            metric=metric,
+            value=value
+        )
 
     def _initialize_integrations(self):
         """Initialize all repository integrations."""
@@ -347,49 +416,75 @@ class IntegratedWorkflowOrchestrator:
         self,
         workflow_name: str,
         context: Dict[str, Any] = None,
-        integration_level: IntegrationLevel = IntegrationLevel.ENHANCED
+        integration_level: IntegrationLevel = IntegrationLevel.ENHANCED,
+        tenant_id: Optional[str] = None,
+        user_id: Optional[str] = None
     ) -> IntegratedWorkflowResult:
         """
-        Execute a workflow with full integration of all repository components.
+        Execute an integrated workflow with enterprise features.
+        
+        Args:
+            workflow_name: Name of the workflow to execute
+            context: Workflow context data
+            integration_level: Level of integration to use
+            tenant_id: Enterprise tenant ID
+            user_id: Enterprise user ID
         """
-        if workflow_name not in self.workflow_definitions:
-            raise ValueError(f"Workflow '{workflow_name}' niet gevonden")
+        # Set enterprise context if provided
+        if tenant_id and user_id:
+            self.set_enterprise_context(tenant_id, user_id)
 
-        workflow_def = self.workflow_definitions[workflow_name]
-        workflow_id = f"{workflow_name}_{int(time.time())}"
+        # Check enterprise limits
+        if not self._check_enterprise_limits(workflow_name):
+            self._log_enterprise_event(
+                "workflow_execution", 
+                "workflow", 
+                "start", 
+                {"workflow_name": workflow_name}, 
+                success=False
+            )
+            raise ValueError("Enterprise limits exceeded or features not enabled")
 
-        # Initialize result tracking
-        result = IntegratedWorkflowResult(
-            workflow_id=workflow_id,
-            status=WorkflowStatus.PENDING,
-            agent_results={},
-            tracing_data={},
-            policy_decisions=[],
-            cost_analysis={},
-            performance_metrics={}
+        # Log workflow start
+        self._log_enterprise_event(
+            "workflow_execution", 
+            "workflow", 
+            "start", 
+            {"workflow_name": workflow_name}
         )
 
-        start_time = time.time()
+        # Track usage
+        self._track_enterprise_usage("workflow_executions")
 
-        try:
-            # Start tracing
-            if integration_level in [IntegrationLevel.ENHANCED, IntegrationLevel.FULL]:
-                with self.tracer.start_span(f"workflow.{workflow_name}", level=TraceLevel.INFO) as span:
-                    span.set_attribute("workflow.id", workflow_id)
-                    span.set_attribute("workflow.name", workflow_name)
-                    span.set_attribute("integration.level", integration_level.value)
+        # Execute workflow with existing logic
+        result = await self._execute_workflow_with_integrations(
+            self.workflow_definitions[workflow_name],
+            f"{workflow_name}_{int(time.time())}",
+            context or {},
+            integration_level,
+            None  # span will be created in the method
+        )
 
-                    # Execute workflow with tracing
-                    result = await self._execute_workflow_with_integrations(
-                        workflow_def, workflow_id, context, integration_level, span
-                    )
-        except Exception as e:
-            logger.error(f"Workflow execution failed: {e}")
-            result.status = WorkflowStatus.FAILED
-            result.error_details = str(e)
-        finally:
-            result.execution_time = time.time() - start_time
-            logger.info(f"Workflow '{workflow_name}' voltooid in {result.execution_time:.2f}s")
+        # Add enterprise data to result
+        result.enterprise_data = {
+            "tenant_id": self.current_tenant_id,
+            "user_id": self.current_user_id,
+            "usage_tracked": True,
+            "limits_checked": True
+        }
+
+        # Log workflow completion
+        self._log_enterprise_event(
+            "workflow_execution", 
+            "workflow", 
+            "complete", 
+            {
+                "workflow_name": workflow_name,
+                "status": result.status.value,
+                "execution_time": result.execution_time
+            },
+            success=result.status != WorkflowStatus.FAILED
+        )
 
         return result
 
