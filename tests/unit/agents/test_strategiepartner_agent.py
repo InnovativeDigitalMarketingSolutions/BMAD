@@ -356,6 +356,7 @@ class TestStrategiePartnerAgent:
     @patch('bmad.agents.Agent.StrategiePartner.strategiepartner.publish')
     def test_collaborate_example_success(self, mock_publish, agent):
         """Test successful collaboration example."""
+        import asyncio
         with patch.object(agent, 'develop_strategy') as mock_develop, \
              patch.object(agent, 'analyze_market') as mock_analyze, \
              patch.object(agent, 'competitive_analysis') as mock_competitive, \
@@ -364,7 +365,7 @@ class TestStrategiePartnerAgent:
              patch.object(agent, 'create_roadmap') as mock_roadmap, \
              patch.object(agent, 'calculate_roi') as mock_roi, \
              patch.object(agent, 'business_model_canvas') as mock_canvas:
-            agent.collaborate_example()
+            asyncio.run(agent.collaborate_example())
             
             mock_publish.assert_called()
             mock_develop.assert_called()
