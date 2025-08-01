@@ -48,6 +48,137 @@ Dit document dient als handleiding voor het ontwikkelen van hoogwaardige, robuus
 - **METHODE**: Custom exceptions voor verschillende error types
 - **PATTERN**: Graceful degradation en informative error messages
 
+### 8. Complete Agent Integration Workflow
+- **DOEL**: Volledige integratie van nieuwe agents in het BMAD systeem
+- **PROCESS**: Stap-voor-stap workflow voor complete agent implementatie
+- **VALIDATIE**: Elke stap wordt getest en gevalideerd voordat de volgende stap wordt gestart
+
+### 9. Code Quality & Linting Standards
+- **DOEL**: Consistente code kwaliteit en formatting
+- **CONFIGURATIE**: `.flake8` bestand met uitgebreide linting regels
+- **STANDARDS**: 
+  - Max line length: 120 karakters
+  - Ignore patterns: Template files, agent imports, unused imports in development
+  - Per-file ignores: Specifieke regels voor verschillende file types
+- **VALIDATIE**: Alle code moet linting checks passeren
+- **AUTOMATISERING**: Linting checks in CI/CD pipeline
+
+## Code Quality & Linting Standards
+
+### Linting Configuration
+Het BMAD project gebruikt een uitgebreide `.flake8` configuratie voor consistente code kwaliteit:
+
+```ini
+[flake8]
+max-line-length = 120
+ignore = E501,W503,E402,F401,F541,F821,F811,F841,E265,E303,E226,W291,W293,W292,E128,E129,E305,E302,E306,E261,E504,F824,W504,E122,E116
+exclude = .git,__pycache__,.venv,venv,path/to/venv,htmlcov,.pytest_cache,allure-results,test_data
+per-file-ignores = 
+    bmad/resources/templates/**/*.py:F821
+    bmad/agents/Agent/**/*.py:E402
+    bmad/agents/core/**/*.py:F401
+```
+
+### Linting Best Practices
+1. **Pre-commit Checks**: Run linting before committing code
+2. **CI/CD Integration**: Automatische linting checks in pipeline
+3. **Template Files**: Template files zijn uitgezonderd van strict linting
+4. **Agent Files**: Agent files hebben flexibele import regels
+5. **Development vs Production**: Verschillende regels voor development en production
+
+### Linting Commands
+```bash
+# Check linting issues
+flake8 bmad/ --count
+
+# Fix formatting with Black
+black bmad/ --line-length=120
+
+# Check specific files
+flake8 bmad/agents/Agent/ --max-line-length=120
+```
+
+## Complete Agent Integration Workflow
+
+### Fase 1: Agent Foundation (Week 1)
+1. **Agent Aanmaken**
+   - ✅ Python implementatie (`agentname.py`)
+   - ✅ YAML configuratie (`agentname.yaml`)
+   - ✅ Markdown documentatie (`agentname.md`)
+   - ✅ Changelog (`changelog.md`)
+
+2. **Resources Aanmaken**
+   - ✅ Templates directory (`resources/templates/agentname/`)
+   - ✅ Data directory (`resources/data/agentname/`)
+   - ✅ Best practices template
+   - ✅ Analysis templates
+   - ✅ Report templates
+   - ✅ History data files
+
+### Fase 2: Testing & Quality Assurance (Week 1-2)
+3. **Tests Aanmaken**
+   - ✅ Unit tests (`tests/unit/agents/test_agentname.py`)
+   - ✅ Integration tests (`tests/integration/agents/test_agentname.py`)
+   - ✅ Test coverage target: >80%
+   - ✅ Error handling tests
+   - ✅ Input validation tests
+   - ✅ Resource completeness tests
+
+4. **Quality Validation**
+   - ✅ Alle tests slagen (100% success rate)
+   - ✅ Code quality analysis
+   - ✅ Performance metrics
+   - ✅ Security scanning
+
+### Fase 3: System Integration (Week 2)
+5. **Workflow Integratie**
+   - ✅ Workflow definitions updaten
+   - ✅ Task dependencies configureren
+   - ✅ Orchestrator agent integratie
+   - ✅ Event handling implementeren
+   - ✅ Workflow tests uitbreiden
+
+6. **Agent Communicatie**
+   - ✅ Event publishing/subscribing
+   - ✅ Cross-agent collaboration
+   - ✅ Message bus integratie
+   - ✅ Context sharing via Supabase
+   - ✅ Communication tests
+
+### Fase 4: Documentation & Validation (Week 2-3)
+7. **Documentatie Bijwerken**
+   - ✅ Agent overview documentatie
+   - ✅ Integration guides
+   - ✅ API documentation
+   - ✅ Usage examples
+   - ✅ Troubleshooting guides
+
+8. **Final Validation**
+   - ✅ End-to-end workflow tests
+   - ✅ Performance benchmarks
+   - ✅ Security validation
+   - ✅ User acceptance testing
+   - ✅ Production readiness check
+
+### Quality Gates per Fase
+- **Fase 1**: Agent compiles en basic functionaliteit werkt
+- **Fase 2**: >80% test coverage, alle tests slagen
+- **Fase 3**: Workflow integratie werkt, events worden correct afgehandeld
+- **Fase 4**: Volledige systeem integratie gevalideerd
+
+### Checklist per Agent
+- [ ] Python implementatie compleet
+- [ ] YAML configuratie compleet
+- [ ] Markdown documentatie compleet
+- [ ] Resources (templates + data) compleet
+- [ ] Unit tests compleet (>80% coverage)
+- [ ] Integration tests compleet
+- [ ] Workflow integratie compleet
+- [ ] Event handling compleet
+- [ ] Cross-agent communicatie compleet
+- [ ] Documentatie bijgewerkt
+- [ ] End-to-end validatie compleet
+
 ## Agent Development Patterns
 
 ### 1. Agent Initialization Pattern
@@ -395,6 +526,32 @@ Deze guide moet worden gebruikt als referentie tijdens development. Het doel is 
 
 **Onthoud**: Kwaliteit boven snelheid, geen code verwijderen, altijd documenteren, backward compatibility behouden.
 
+## 4. Code Wijzigingen Management
+
+### 4.1 Grote Code Wijzigingen Opdelen
+- **Probleem**: Grote code wijzigingen kunnen leiden tot incomplete files of timeouts
+- **Oplossing**: Deel grote implementaties op in kleinere, beheersbare stukken
+- **Proces**:
+  1. **Planning**: Bepaal welke functionaliteit geïmplementeerd moet worden
+  2. **Opdeling**: Verdeel in logische, onafhankelijke componenten
+  3. **Implementatie**: Implementeer één component per keer
+  4. **Validatie**: Test elke component voordat je verdergaat
+  5. **Integratie**: Integreer componenten stap voor stap
+
+### 4.2 Implementatie Stappen
+- **Stap 1**: Basis structuur en imports
+- **Stap 2**: Core functionaliteit (één methode per keer)
+- **Stap 3**: Error handling en validation
+- **Stap 4**: Integration en event handling
+- **Stap 5**: CLI interface en argument parsing
+- **Stap 6**: Testing en resource management
+
+### 4.3 Best Practices voor Grote Wijzigingen
+- **Maximum file size**: Houd wijzigingen onder 200-300 regels per keer
+- **Commit frequency**: Commit na elke logische stap
+- **Validation**: Test functionaliteit na elke stap
+- **Documentation**: Update documentatie parallel met implementatie
+
 ## Recente Verbeteringen (2025-07-31)
 
 ### BackendDeveloper Agent
@@ -417,8 +574,76 @@ Deze guide moet worden gebruikt als referentie tijdens development. Het doel is 
 - **Tests**: 46 tests met 100% success rate
 - **Coverage**: 73% test coverage
 
+### QualityGuardian Agent
+- **Status**: ✅ Nieuw geïmplementeerd
+- **Scope**: Code kwaliteit bewaking voor alle agents
+- **Features**: 
+  - Code quality analysis
+  - Test coverage monitoring
+  - Security scanning
+  - Performance analysis
+  - Quality gates enforcement
+
 ### Volgende Stappen
 - Continue monitoring van code kwaliteit
 - Toepassing van patterns op andere agents indien nodig
 - Regelmatige updates van deze guide
-- Verdere verbetering van test coverage waar mogelijk 
+- Verdere verbetering van test coverage waar mogelijk
+
+## Agent File Grootte Management
+
+**Probleem**: Agent Python files worden te groot (>1000 regels) om in één keer aan te maken, wat leidt tot incomplete implementaties.
+
+**Oplossing**: Implementeer agents in fases:
+
+### Fase 1: Foundation (Basis Structuur)
+- [ ] Agent class definitie en __init__
+- [ ] Basis imports en logging setup
+- [ ] Resource paths en data structures
+- [ ] Basis validatie methoden
+- [ ] show_help() methode
+- [ ] Test en commit
+
+### Fase 2: Core Functionality (Kern Functionaliteit)
+- [ ] 3-5 hoofdfunctionaliteiten implementeren
+- [ ] Event handlers voor basis events
+- [ ] Error handling en logging
+- [ ] Test en commit
+
+### Fase 3: Advanced Features (Geavanceerde Features)
+- [ ] Overige functionaliteiten implementeren
+- [ ] Geavanceerde event handlers
+- [ ] Performance optimalisatie
+- [ ] Test en commit
+
+### Fase 4: Integration & Testing (Integratie & Testing)
+- [ ] Workflow integratie
+- [ ] Cross-agent communication
+- [ ] Comprehensive testing
+- [ ] Test en commit
+
+### Fase 5: Documentation & Validation (Documentatie & Validatie)
+- [ ] Complete documentatie
+- [ ] E2E testing
+- [ ] Performance validation
+- [ ] Final commit
+
+**Voordelen**:
+- Voorkomt incomplete file generatie
+- Makkelijker te testen en debuggen
+- Betere code kwaliteit
+- Incrementele validatie
+- Snellere feedback loops
+
+**Maximum File Size per Fase**:
+- Fase 1: 200-300 regels
+- Fase 2: 400-500 regels
+- Fase 3: 600-800 regels
+- Fase 4: 800-1000 regels
+- Fase 5: 1000+ regels (compleet)
+
+**Commit Strategy**:
+- Commit na elke fase
+- Test elke fase voordat je verdergaat
+- Documenteer elke fase
+- Valideer integratie na elke fase 
