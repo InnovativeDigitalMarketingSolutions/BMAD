@@ -9,7 +9,7 @@ import os
 import sys
 import tempfile
 import unittest
-from datetime import datetime
+from datetime import datetime, UTC
 from pathlib import Path
 from unittest.mock import patch, MagicMock
 
@@ -224,8 +224,8 @@ class TestEnterpriseFeaturesE2E(unittest.TestCase):
         # 3. Generate security report
         security_report = self.security_manager.generate_security_report(
             tenant_id=tenant.id,
-            start_date=datetime(2025, 1, 1),
-            end_date=datetime(2025, 12, 31)
+            start_date=datetime(2025, 1, 1, tzinfo=UTC),
+            end_date=datetime(2025, 12, 31, tzinfo=UTC)
         )
         self.assertIsNotNone(security_report)
         self.assertIn("summary", security_report)

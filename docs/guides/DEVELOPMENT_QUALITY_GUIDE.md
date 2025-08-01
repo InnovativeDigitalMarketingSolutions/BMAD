@@ -63,6 +63,14 @@ Dit document dient als handleiding voor het ontwikkelen van hoogwaardige, robuus
 - **VALIDATIE**: Alle code moet linting checks passeren
 - **AUTOMATISERING**: Linting checks in CI/CD pipeline
 
+### 10. Third-Party Integration Standards
+- **DOEL**: Robuuste integratie van externe services
+- **PATTERN**: Conditionele imports met fallback mechanismen
+- **TESTING**: Pragmatische mocking strategie voor complexe dependencies
+- **ERROR HANDLING**: Comprehensive error handling met graceful degradation
+- **DOCUMENTATION**: Complete API documentation en integration guides
+- **VALIDATIE**: Alle integrations hebben comprehensive test suites
+
 ## Code Quality & Linting Standards
 
 ### Linting Configuration
