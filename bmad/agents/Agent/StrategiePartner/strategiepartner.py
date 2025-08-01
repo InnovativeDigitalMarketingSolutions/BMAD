@@ -789,6 +789,8 @@ StrategiePartner Agent Commands:
             
             # Re-validate refined idea
             refined_validation = self.validate_idea(refined_idea)
+            # Add original idea description to refined validation for epic creation
+            refined_validation["idea_description"] = refined_idea
             
             # Create refinement report
             result = {
@@ -1034,9 +1036,12 @@ StrategiePartner Agent Commands:
 
     def _generate_epic_structure(self, validated_idea: Dict[str, Any]) -> Dict[str, Any]:
         """Generate epic structure from validated idea."""
+        # Get idea description from validated idea or use default
+        idea_description = validated_idea.get("idea_description", "A validated idea ready for development")
+        
         return {
-            "epic_name": f"Epic: {validated_idea['idea_description'][:50]}...",
-            "epic_description": validated_idea["idea_description"],
+            "epic_name": f"Epic: {idea_description[:50]}...",
+            "epic_description": idea_description,
             "epic_goals": [
                 "Implement the proposed solution",
                 "Deliver value to target audience",
