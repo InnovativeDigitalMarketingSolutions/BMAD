@@ -98,6 +98,32 @@ Dit document consolideert alle planning documenten tot één master roadmap voor
 - [ ] Distributed tracing
 
 **Data Management**:
+
+#### 1.3 CLI Test Coverage Issues (Critical - Pending)
+**Timeline**: Week 2-3  
+**Status**: 🔄 In Progress - Paused  
+
+**Current Problem**:
+- [ ] CLI integration tests falen door complexe mocking issues
+- [ ] `test_test_integrations_success` faalt op OpenRouter import issues
+- [ ] Complexe externe API calls moeilijk te mocken
+- [ ] Pragmatische mocking strategie nodig volgens guide files
+
+**Root Cause Analysis**:
+- [ ] Import issues met `LLMConfig`, `TraceLevel`, `PolicyRequest` binnen `test_integrations` methode
+- [ ] Externe API calls (OpenRouter, OpenTelemetry, OPA) moeilijk te mocken
+- [ ] Test setup te complex voor wat het test
+
+**Proposed Solution**:
+- [ ] Implementeer pragmatische mocking van hele `test_integrations` methode
+- [ ] Volg guide files: "Pragmatische Mocking voor Complexe API Calls"
+- [ ] Test method invocation, niet interne logica
+- [ ] Vereenvoudig test assertions naar basis structuur checks
+
+**Next Steps**:
+- [ ] Resume CLI test fixes met pragmatische mocking approach
+- [ ] Update guide files met lessons learned over CLI testing
+- [ ] Document best practices voor complexe integration testing
 - [ ] Database per service pattern
 - [ ] Event sourcing implementation
 - [ ] Saga pattern for distributed transactions
