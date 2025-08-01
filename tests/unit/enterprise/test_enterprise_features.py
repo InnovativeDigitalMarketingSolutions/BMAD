@@ -8,7 +8,7 @@ import pytest
 import json
 import tempfile
 import shutil
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from unittest.mock import patch, MagicMock
 from pathlib import Path
 
@@ -321,7 +321,7 @@ class TestBilling:
         assert usage == 8
         
         # Get usage for specific period
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         start_date = now - timedelta(days=1)
         usage = usage_tracker_instance.get_usage("tenant123", "api_calls", start_date, now)
         assert usage == 8

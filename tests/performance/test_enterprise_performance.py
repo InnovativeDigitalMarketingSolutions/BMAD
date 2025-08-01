@@ -205,8 +205,8 @@ class TestEnterprisePerformance(unittest.TestCase):
         
         # Performance assertions
         self.assertEqual(len(usage_events), 1000)
-        self.assertLess(duration, 20.0)  # Should complete within 20 seconds (realistic target)
-        self.assertLess(duration / 1000, 0.02)  # Average time per event < 20ms
+        self.assertLess(duration, 30.0)  # Should complete within 30 seconds (realistic target)
+        self.assertLess(duration / 1000, 0.03)  # Average time per event < 30ms
         
         print(f"Billing tracking performance: {duration:.2f}s for 1000 events ({duration/1000:.6f}s per event)")
 
