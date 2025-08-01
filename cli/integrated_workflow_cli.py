@@ -241,6 +241,7 @@ class IntegratedWorkflowCLI:
                 )
 
                 print(f"   ✅ OpenRouter: {response.content}")
+                print(f"   ⏱️  Duration: {response.duration:.1f}s")
                 print(f"   💰 Cost: ${response.cost:.4f}")
 
             except Exception as e:
@@ -301,6 +302,7 @@ class IntegratedWorkflowCLI:
                 {"test": True}
             )
             print("   ✅ LangGraph: Workflow execution working")
+            print(f"   ⏱️  Duration: {workflow_result.duration:.1f}s")
             print(f"   🔄 Result: {workflow_result.status}")
 
         except Exception as e:
@@ -392,7 +394,8 @@ class IntegratedWorkflowCLI:
                 print("✅ Component test passed!")
                 print(f"   ⏱️  Duration: {result.get('performance_metrics', {}).get('duration', 0):.2f}s")
             else:
-                print(f"❌ Component test failed: {result.get('error', 'Unknown error')}")
+                print("❌ Component test failed!")
+                print(f"💥 Error: {result.get('error', 'Unknown error')}")
 
             # Show detailed results
             if result.get("details"):
@@ -407,6 +410,7 @@ class IntegratedWorkflowCLI:
 
         except Exception as e:
             print("❌ Component test failed!")
+            print(f"💥 Error: {str(e)}")
 
     def export_sprite_report(self, format: str = "json", output_file: Optional[str] = None):
         """Export sprite test report."""
@@ -419,7 +423,7 @@ class IntegratedWorkflowCLI:
             if output_file:
                 with open(output_file, "w") as f:
                     f.write(report)
-                print(f"✅ Report exported to: {output_file}")
+                print(f"✅ Sprite report exported to: {output_file}")
             else:
                 print(report)
 
@@ -431,6 +435,7 @@ class IntegratedWorkflowCLI:
     async def start_performance_monitoring(self, interval: float = 5.0):
         """Start performance monitoring."""
         print("📊 Starting performance monitoring...")
+        print(f"⏱️  Monitoring interval: {interval}s")
 
         try:
             self.orchestrator.start_performance_monitoring(interval)
@@ -480,7 +485,7 @@ class IntegratedWorkflowCLI:
 
     async def show_agent_performance(self, agent_name: str):
         """Show performance metrics for a specific agent."""
-        print(f"🤖 Agent Performance: {agent_name}")
+        print(f"🤖 Agent Performance Summary: {agent_name}")
         print("=" * 50)
 
         try:
@@ -542,7 +547,7 @@ class IntegratedWorkflowCLI:
             if output_file:
                 with open(output_file, "w") as f:
                     f.write(data)
-                print(f"✅ Data exported to: {output_file}")
+                print(f"✅ Performance data exported to: {output_file}")
             else:
                 print(data)
 
