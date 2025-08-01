@@ -48,13 +48,13 @@ class QualityGuardianAgent:
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
         self.template_paths = {
             "best-practices": self.resource_base / "templates/qualityguardian/best-practices.md",
-            "quality-analysis": self.resource_base / "templates/qualityguardian/quality-analysis-template.md",
-            "security-scan": self.resource_base / "templates/qualityguardian/security-scan-template.md",
-            "performance-analysis": self.resource_base / "templates/qualityguardian/performance-analysis-template.md",
-            "quality-gate": self.resource_base / "templates/qualityguardian/quality-gate-template.md",
-            "quality-report": self.resource_base / "templates/qualityguardian/quality-report-template.md",
-            "improvement-suggestions": self.resource_base / "templates/qualityguardian/improvement-suggestions-template.md",
-            "standards-enforcement": self.resource_base / "templates/qualityguardian/standards-enforcement-template.md"
+            "quality-analysis": self.resource_base / "templates/qualityguardian/quality-analysis.md",
+            "security-scan": self.resource_base / "templates/qualityguardian/security-scan.md",
+            "performance-analysis": self.resource_base / "templates/qualityguardian/performance-analysis.md",
+            "quality-gate": self.resource_base / "templates/qualityguardian/quality-gate.md",
+            "quality-report": self.resource_base / "templates/qualityguardian/quality-report.md",
+            "improvement-suggestions": self.resource_base / "templates/qualityguardian/improvement-suggestions.md",
+            "standards-enforcement": self.resource_base / "templates/qualityguardian/standards-enforcement.md"
         }
         self.data_paths = {
             "changelog": self.resource_base / "data/qualityguardian/changelog.md",
@@ -857,26 +857,57 @@ QualityGuardian Agent Commands:
         else:
             print(f"\n✅ All resources are complete!")
 
-    def collaborate_example(self):
-        """Demonstrate collaboration with other agents."""
+    async def collaborate_example(self):
+        """Demonstrate collaboration with other agents with async optimization."""
         print("=== QualityGuardian Agent Collaboration Example ===\n")
         
-        # Simulate collaboration with TestEngineer
-        print("🤝 Collaborating with TestEngineer Agent...")
-        test_result = self.monitor_test_coverage(85)
-        print(f"📊 Test coverage result: {test_result['current_coverage']}%")
+        # Use asyncio.gather for parallel execution
+        tasks = [
+            self._async_monitor_test_coverage(85),
+            self._async_security_scan("*.py"),
+            self._async_quality_gate_check(deployment=True)
+        ]
         
-        # Simulate collaboration with SecurityDeveloper
-        print("🔒 Collaborating with SecurityDeveloper Agent...")
-        security_result = self.security_scan("*.py")
-        print(f"🛡️ Security scan result: {security_result['security_score']}%")
+        results = await asyncio.gather(*tasks, return_exceptions=True)
         
-        # Simulate collaboration with ReleaseManager
-        print("🚀 Collaborating with ReleaseManager Agent...")
-        gate_result = self.quality_gate_check(deployment=True)
-        print(f"✅ Quality gates result: {'PASS' if gate_result['all_gates_passed'] else 'FAIL'}")
+        # Process results
+        test_result, security_result, gate_result = results
         
-        print("\n✅ Collaboration example completed successfully!")
+        if isinstance(test_result, Exception):
+            print(f"❌ TestEngineer collaboration failed: {test_result}")
+        else:
+            print("🤝 Collaborating with TestEngineer Agent...")
+            print(f"📊 Test coverage result: {test_result['current_coverage']}%")
+        
+        if isinstance(security_result, Exception):
+            print(f"❌ SecurityDeveloper collaboration failed: {security_result}")
+        else:
+            print("🔒 Collaborating with SecurityDeveloper Agent...")
+            print(f"🛡️ Security scan result: {security_result['security_score']}%")
+        
+        if isinstance(gate_result, Exception):
+            print(f"❌ ReleaseManager collaboration failed: {gate_result}")
+        else:
+            print("🚀 Collaborating with ReleaseManager Agent...")
+            print(f"✅ Quality gates result: {'PASS' if gate_result['all_gates_passed'] else 'FAIL'}")
+        
+        print("\n✅ Async collaboration example completed successfully!")
+    
+    # Async wrapper methods for parallel execution
+    async def _async_monitor_test_coverage(self, threshold: int):
+        """Async wrapper for monitor_test_coverage."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.monitor_test_coverage, threshold)
+    
+    async def _async_security_scan(self, files: str):
+        """Async wrapper for security_scan."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.security_scan, files)
+    
+    async def _async_quality_gate_check(self, deployment: bool):
+        """Async wrapper for quality_gate_check."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.quality_gate_check, deployment)
 
     def on_test_completed(self, event):
         """Handle test completion events."""
