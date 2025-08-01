@@ -184,6 +184,8 @@ docs/reports/temporary/
 docs/reports/*-improvement-report.md
 docs/reports/*-analysis-report.md
 docs/reports/*-status-report.md
+docs/reports/*-test-report.md
+docs/reports/*-coverage-report.md
 TestApp_config_*.json
 *_report_*.json
 *_report_*.csv
