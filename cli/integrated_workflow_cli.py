@@ -342,24 +342,36 @@ class IntegratedWorkflowCLI:
 
     async def list_sprites(self):
         """List all available component sprites."""
+        print("🎨 BMAD Test Sprites")
+        print("=" * 50)
+        
         sprites = self.orchestrator.get_component_sprites()
 
         if not sprites:
-            print("❌ Geen sprites gevonden")
+            print("❌ Geen test sprites gevonden")
             return
 
-        print("🧪 Available Component Sprites")
-        print("=" * 50)
-
-        for i, sprite in enumerate(sprites, 1):
-            print(f"{i}. {sprite['name']}")
-            print(f"   📋 Type: {sprite['type']}")
-            print(f"   🧩 Component: {sprite['component_name']}")
-            print(f"   🔄 States: {sprite['states']}")
-            print(f"   ♿ Accessibility: {len(sprite['accessibility_checks'])} checks")
-            print(f"   🎨 Visual: {len(sprite['visual_checks'])} checks")
-            print(f"   🖱️  Interactions: {len(sprite['interaction_tests'])} tests")
-            print()
+        # Backward compatibility: support both list and dict formats
+        if isinstance(sprites, dict):
+            # Original format: dict with sprite IDs as keys
+            for sprite_id, sprite_data in sprites.items():
+                if isinstance(sprite_data, dict):
+                    sprite_name = sprite_data.get('name', sprite_id)
+                    sprite_type = sprite_data.get('type', 'unknown')
+                    print(f"🎨 {sprite_name} ({sprite_type})")
+                else:
+                    print(f"🎨 {sprite_id} ({sprite_data})")
+        else:
+            # New format: list of sprite objects
+            for i, sprite in enumerate(sprites, 1):
+                print(f"{i}. {sprite['name']}")
+                print(f"   📋 Type: {sprite['type']}")
+                print(f"   🧩 Component: {sprite['component_name']}")
+                print(f"   🔄 States: {sprite['states']}")
+                print(f"   ♿ Accessibility: {len(sprite['accessibility_checks'])} checks")
+                print(f"   🎨 Visual: {len(sprite['visual_checks'])} checks")
+                print(f"   🖱️  Interactions: {len(sprite['interaction_tests'])} tests")
+                print()
 
     async def test_component(self, component_name: str, test_type: str = "all"):
         """Test a specific component using sprites."""
