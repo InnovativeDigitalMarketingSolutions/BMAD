@@ -210,5 +210,26 @@ event_log.json
 metrics.json
 test_request.json
 
+# Enterprise data files (auto-generated during runtime)
+data/
+data/billing/
+data/usage/
+data/tenants/
+data/users/
+data/security/
+data/access_control/
+*.usage.json
+*.billing.json
+*.tenants.json
+*.users.json
+*.security.json
+*.access_control.json
+
+# Test data directories
+test_data/
+test_*/data/
+temp_data/
+temp_*/data/
+
 # Keep improvement reports
 !docs/reports/agent-improvements/*IMPROVEMENT_REPORT.md 

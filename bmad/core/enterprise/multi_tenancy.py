@@ -10,7 +10,7 @@ import json
 import logging
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from contextlib import contextmanager
 import threading
 
@@ -123,7 +123,7 @@ class TenantManager:
     def create_tenant(self, name: str, domain: str, plan: str = "basic") -> Tenant:
         """Create a new tenant."""
         tenant_id = str(uuid.uuid4())
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         
         # Default settings based on plan
         settings = self._get_default_settings(plan)
@@ -175,7 +175,7 @@ class TenantManager:
             tenant.limits = self._get_default_limits(tenant.plan)
             tenant.features = self._get_default_features(tenant.plan)
         
-        tenant.updated_at = datetime.utcnow()
+        tenant.updated_at = datetime.now(UTC)
         self._save_tenants()
         logger.info(f"Updated tenant: {tenant.name}")
         return tenant

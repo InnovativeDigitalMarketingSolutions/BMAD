@@ -1,9 +1,0 @@
-{
-  "answer": "Test user story",
-  "llm_confidence": 0.663,
-  "model": "unknown",
-  "usage": {
-    "total_tokens": 10
-  },
-  "cached": false
-}
