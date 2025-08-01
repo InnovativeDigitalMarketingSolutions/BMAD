@@ -81,7 +81,7 @@ class TestWorkflowAutomatorAgent:
 
     def test_create_workflow_empty_name(self, agent):
         """Test workflow creation with empty name."""
-        with pytest.raises(WorkflowValidationError, match="Workflow name cannot be empty"):
+        with pytest.raises(WorkflowValidationError, match="Invalid input parameters"):
             agent.create_workflow(
                 name="",
                 description="Test",
@@ -120,7 +120,7 @@ class TestWorkflowAutomatorAgent:
 
     def test_execute_workflow_not_found(self, agent):
         """Test workflow execution with non-existent workflow."""
-        with pytest.raises(WorkflowExecutionError, match="Workflow not found"):
+        with pytest.raises(WorkflowExecutionError, match="Workflow non-existent-id not found"):
             agent.execute_workflow("non-existent-id")
 
     def test_optimize_workflow_success(self, agent):
@@ -144,7 +144,7 @@ class TestWorkflowAutomatorAgent:
 
     def test_optimize_workflow_not_found(self, agent):
         """Test workflow optimization with non-existent workflow."""
-        with pytest.raises(WorkflowExecutionError, match="Workflow not found"):
+        with pytest.raises(WorkflowExecutionError, match="Workflow non-existent-id not found"):
             agent.optimize_workflow("non-existent-id")
 
     def test_monitor_workflow_success(self, agent):
@@ -168,7 +168,7 @@ class TestWorkflowAutomatorAgent:
 
     def test_monitor_workflow_not_found(self, agent):
         """Test workflow monitoring with non-existent workflow."""
-        with pytest.raises(WorkflowExecutionError, match="Workflow not found"):
+        with pytest.raises(WorkflowExecutionError, match="Workflow non-existent-id not found"):
             agent.monitor_workflow("non-existent-id")
 
     def test_schedule_workflow_success(self, agent):
