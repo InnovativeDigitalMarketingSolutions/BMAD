@@ -23,6 +23,10 @@ orch = OrchestratorAgent()
 # Enterprise Features Middleware
 def get_tenant_from_request():
     """Extract tenant from request headers or subdomain."""
+    # Development mode - always return dev tenant
+    if os.getenv("DEV_MODE") == "true":
+        return "dev_tenant"
+    
     tenant_id = request.headers.get('X-Tenant-ID')
     if not tenant_id:
         # Try to get from subdomain
@@ -37,6 +41,19 @@ def get_tenant_from_request():
 def require_auth(f):
     """Decorator to require authentication."""
     def decorated_function(*args, **kwargs):
+        # Development mode bypass
+        if os.getenv("DEV_MODE") == "true":
+            # Set development user and tenant
+            request.tenant_id = "dev_tenant"
+            request.user = type('User', (), {
+                'id': 'dev_user',
+                'email': 'dev@bmad.local',
+                'roles': ['admin'],
+                'permissions': ['*']  # All permissions in dev mode
+            })()
+            return f(*args, **kwargs)
+        
+        # Production authentication
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
             return jsonify({"error": "Authentication required"}), 401
@@ -48,15 +65,21 @@ def require_auth(f):
             return jsonify({"error": "Invalid token"}), 401
         
         return f(*args, **kwargs)
+    decorated_function.__name__ = f.__name__
     return decorated_function
 
 def require_permission(permission):
     """Decorator to require specific permission."""
     def decorator(f):
         def decorated_function(*args, **kwargs):
+            # Development mode bypass - admin has all permissions
+            if os.getenv("DEV_MODE") == "true":
+                return f(*args, **kwargs)
+            
             # TODO: Implement permission checking
             # For now, just pass through
             return f(*args, **kwargs)
+        decorated_function.__name__ = f.__name__
         return decorated_function
     return decorator
 
