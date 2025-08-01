@@ -1,0 +1,69 @@
+{
+  "86f35ba9-bce4-47a5-bbe9-2ca74fa4bd5c": {
+    "id": "86f35ba9-bce4-47a5-bbe9-2ca74fa4bd5c",
+    "name": "password_policy",
+    "description": "Password complexity and expiration requirements",
+    "policy_type": "password",
+    "rules": {
+      "min_length": 8,
+      "require_uppercase": true,
+      "require_lowercase": true,
+      "require_numbers": true,
+      "require_special_chars": true,
+      "max_age_days": 90,
+      "prevent_reuse": 5
+    },
+    "security_level": "medium",
+    "created_at": "2025-08-01T10:08:37.062421",
+    "updated_at": "2025-08-01T10:08:37.062421",
+    "is_active": true
+  },
+  "ddc6ebab-da43-4112-82ef-48a2854fb5af": {
+    "id": "ddc6ebab-da43-4112-82ef-48a2854fb5af",
+    "name": "session_policy",
+    "description": "Session management and timeout requirements",
+    "policy_type": "session",
+    "rules": {
+      "session_timeout_minutes": 30,
+      "max_concurrent_sessions": 5,
+      "require_https": true,
+      "secure_cookies": true
+    },
+    "security_level": "medium",
+    "created_at": "2025-08-01T10:08:37.062421",
+    "updated_at": "2025-08-01T10:08:37.062421",
+    "is_active": true
+  },
+  "8702156c-a1c7-4233-b97d-4b3f9fd7ee55": {
+    "id": "8702156c-a1c7-4233-b97d-4b3f9fd7ee55",
+    "name": "access_control_policy",
+    "description": "Access control and permission requirements",
+    "policy_type": "access_control",
+    "rules": {
+      "require_mfa": false,
+      "max_login_attempts": 5,
+      "lockout_duration_minutes": 15,
+      "require_approval_for_sensitive_actions": true
+    },
+    "security_level": "high",
+    "created_at": "2025-08-01T10:08:37.062421",
+    "updated_at": "2025-08-01T10:08:37.062421",
+    "is_active": true
+  },
+  "d7b142fc-a3b5-486a-890b-ae47d5a5563c": {
+    "id": "d7b142fc-a3b5-486a-890b-ae47d5a5563c",
+    "name": "data_protection_policy",
+    "description": "Data protection and encryption requirements",
+    "policy_type": "data_protection",
+    "rules": {
+      "encrypt_data_at_rest": true,
+      "encrypt_data_in_transit": true,
+      "data_retention_days": 2555,
+      "require_data_classification": true
+    },
+    "security_level": "critical",
+    "created_at": "2025-08-01T10:08:37.062421",
+    "updated_at": "2025-08-01T10:08:37.062421",
+    "is_active": true
+  }
+}
