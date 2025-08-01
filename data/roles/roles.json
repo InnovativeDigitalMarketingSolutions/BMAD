@@ -1,0 +1,56 @@
+{
+  "cdd41508-77b8-4592-85f0-fef36ef723a6": {
+    "id": "cdd41508-77b8-4592-85f0-fef36ef723a6",
+    "name": "admin",
+    "description": "Full system administrator",
+    "permissions": [
+      "view_agents",
+      "create_agents",
+      "edit_agents",
+      "delete_agents",
+      "execute_agents",
+      "view_workflows",
+      "create_workflows",
+      "edit_workflows",
+      "delete_workflows",
+      "execute_workflows",
+      "view_users",
+      "create_users",
+      "edit_users",
+      "delete_users",
+      "view_analytics",
+      "manage_system",
+      "view_logs",
+      "manage_billing"
+    ],
+    "created_at": "2025-08-01T10:08:37.049675",
+    "updated_at": "2025-08-01T10:08:37.049675",
+    "is_system": true
+  },
+  "04161ef7-68b9-426b-b073-892865dc2403": {
+    "id": "04161ef7-68b9-426b-b073-892865dc2403",
+    "name": "user",
+    "description": "Standard user",
+    "permissions": [
+      "view_agents",
+      "execute_agents",
+      "view_workflows",
+      "execute_workflows"
+    ],
+    "created_at": "2025-08-01T10:08:37.049675",
+    "updated_at": "2025-08-01T10:08:37.049675",
+    "is_system": true
+  },
+  "f338b6d0-0136-4a0c-a87b-fc7e73d358ab": {
+    "id": "f338b6d0-0136-4a0c-a87b-fc7e73d358ab",
+    "name": "viewer",
+    "description": "Read-only user",
+    "permissions": [
+      "view_agents",
+      "view_workflows"
+    ],
+    "created_at": "2025-08-01T10:08:37.049675",
+    "updated_at": "2025-08-01T10:08:37.049675",
+    "is_system": true
+  }
+}

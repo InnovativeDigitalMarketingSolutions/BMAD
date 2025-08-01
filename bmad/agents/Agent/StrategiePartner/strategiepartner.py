@@ -1200,56 +1200,114 @@ StrategiePartner Agent Commands:
             print("All resources are available!")
             return True
 
-    def collaborate_example(self):
-        """Demonstrate collaboration with other agents."""
-        logger.info("Starting collaboration example...")
+    async def collaborate_example(self):
+        """Demonstrate collaboration with other agents with async optimization."""
+        logger.info("Starting async collaboration example...")
 
         try:
-            # Develop strategy
-            strategy_result = self.develop_strategy("Digital Transformation Strategy")
+            # Use asyncio.gather for parallel execution of all operations
+            tasks = [
+                self._async_develop_strategy("Digital Transformation Strategy"),
+                self._async_analyze_market("Technology"),
+                self._async_competitive_analysis("Main Competitor"),
+                self._async_assess_risks("Digital Transformation"),
+                self._async_stakeholder_analysis("Digital Transformation Project"),
+                self._async_create_roadmap("Digital Transformation Strategy"),
+                self._async_calculate_roi("Digital Transformation Strategy"),
+                self._async_business_model_canvas()
+            ]
             
-            # Analyze market
-            market_result = self.analyze_market("Technology")
+            # Execute all tasks concurrently
+            results = await asyncio.gather(*tasks, return_exceptions=True)
             
-            # Competitive analysis
-            competitive_result = self.competitive_analysis("Main Competitor")
+            # Unpack results
+            strategy_result, market_result, competitive_result, risk_result, \
+            stakeholder_result, roadmap_result, roi_result, canvas_result = results
             
-            # Risk assessment
-            risk_result = self.assess_risks("Digital Transformation")
+            # Check for errors
+            for i, result in enumerate(results):
+                if isinstance(result, Exception):
+                    logger.error(f"Task {i} failed: {result}")
+                    raise result
             
-            # Stakeholder analysis
-            stakeholder_result = self.stakeholder_analysis("Digital Transformation Project")
+            # Publish events (can be done in parallel too)
+            publish_tasks = [
+                self._async_publish_event("strategy_developed", strategy_result),
+                self._async_publish_event("market_analyzed", market_result),
+                self._async_publish_event("competitive_analysis_completed", competitive_result),
+                self._async_publish_event("risk_assessment_completed", risk_result),
+                self._async_publish_event("stakeholder_analysis_completed", stakeholder_result),
+                self._async_publish_event("roadmap_created", roadmap_result),
+                self._async_publish_event("roi_calculated", roi_result),
+                self._async_publish_event("business_model_canvas_generated", canvas_result)
+            ]
             
-            # Create roadmap
-            roadmap_result = self.create_roadmap("Digital Transformation Strategy")
-            
-            # Calculate ROI
-            roi_result = self.calculate_roi("Digital Transformation Strategy")
-            
-            # Generate business model canvas
-            canvas_result = self.business_model_canvas()
-            
-            # Publish events
-            publish("strategy_developed", strategy_result)
-            publish("market_analyzed", market_result)
-            publish("competitive_analysis_completed", competitive_result)
-            publish("risk_assessment_completed", risk_result)
-            publish("stakeholder_analysis_completed", stakeholder_result)
-            publish("roadmap_created", roadmap_result)
-            publish("roi_calculated", roi_result)
-            publish("business_model_canvas_generated", canvas_result)
+            await asyncio.gather(*publish_tasks, return_exceptions=True)
 
-            # Notify via Slack
+            # Notify via Slack (async)
             try:
-                send_slack_message(f"Strategy '{strategy_result['strategy_name']}' developed with {roi_result['roi_percentage']} ROI")
+                await self._async_send_slack_message(
+                    f"Strategy '{strategy_result['strategy_name']}' developed with {roi_result['roi_percentage']} ROI"
+                )
             except Exception as e:
                 logger.warning(f"Could not send Slack notification: {e}")
 
-            logger.info("Collaboration example completed successfully")
+            logger.info("Async collaboration example completed successfully")
             
         except Exception as e:
-            logger.error(f"Error in collaboration example: {e}")
-            raise StrategyError(f"Collaboration example failed: {e}")
+            logger.error(f"Error in async collaboration example: {e}")
+            raise StrategyError(f"Async collaboration example failed: {e}")
+    
+    # Async wrapper methods for parallel execution
+    async def _async_develop_strategy(self, strategy_name: str):
+        """Async wrapper for develop_strategy."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.develop_strategy, strategy_name)
+    
+    async def _async_analyze_market(self, sector: str):
+        """Async wrapper for analyze_market."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.analyze_market, sector)
+    
+    async def _async_competitive_analysis(self, competitor: str):
+        """Async wrapper for competitive_analysis."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.competitive_analysis, competitor)
+    
+    async def _async_assess_risks(self, strategy: str):
+        """Async wrapper for assess_risks."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.assess_risks, strategy)
+    
+    async def _async_stakeholder_analysis(self, project: str):
+        """Async wrapper for stakeholder_analysis."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.stakeholder_analysis, project)
+    
+    async def _async_create_roadmap(self, strategy: str):
+        """Async wrapper for create_roadmap."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.create_roadmap, strategy)
+    
+    async def _async_calculate_roi(self, strategy: str):
+        """Async wrapper for calculate_roi."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.calculate_roi, strategy)
+    
+    async def _async_business_model_canvas(self):
+        """Async wrapper for business_model_canvas."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.business_model_canvas)
+    
+    async def _async_publish_event(self, event_type: str, data: Dict[str, Any]):
+        """Async wrapper for publish."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, publish, event_type, data)
+    
+    async def _async_send_slack_message(self, message: str):
+        """Async wrapper for send_slack_message."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, send_slack_message, message)
 
     def handle_alignment_check_completed(self, event):
         """Handle alignment check completed event."""
