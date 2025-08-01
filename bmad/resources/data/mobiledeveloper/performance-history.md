@@ -1,9 +1,5 @@
 # Mobile Performance History
 
-- 2025-07-31T16:38:29.409146: Performance optimized - TestApp (battery)
-- 2025-07-31T16:38:41.538562: Performance optimized - WorkflowApp (general)
-- 2025-07-31T16:49:58.277093: Performance optimized - TestApp (general)
-- 2025-07-31T16:49:59.287065: Performance optimized - TestApp (memory)
 - 2025-07-31T16:50:00.293628: Performance optimized - TestApp (battery)
 - 2025-07-31T16:50:12.424559: Performance optimized - WorkflowApp (general)
 - 2025-07-31T17:06:38.758498: Performance optimized - TestApp (general)
@@ -50,3 +46,7 @@
 - 2025-08-01T16:17:46.524843: Performance optimized - TestApp (memory)
 - 2025-08-01T16:17:47.533205: Performance optimized - TestApp (battery)
 - 2025-08-01T16:17:59.656272: Performance optimized - WorkflowApp (general)
+- 2025-08-01T18:40:59.568787: Performance optimized - TestApp (general)
+- 2025-08-01T18:41:00.576395: Performance optimized - TestApp (memory)
+- 2025-08-01T18:41:01.584003: Performance optimized - TestApp (battery)
+- 2025-08-01T18:41:13.683054: Performance optimized - WorkflowApp (general)

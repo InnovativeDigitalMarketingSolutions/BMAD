@@ -1,7 +1,5 @@
 # Retrospective History
 
-- 2025-07-31T14:57:07.238263: Retrospective completed - Sprint 16
-- 2025-07-31T14:57:13.226417: Retrospective completed - Sprint 16
 - 2025-07-31T15:20:35.213596: Retrospective completed - Sprint 16
 - 2025-07-31T15:20:41.172852: Retrospective completed - Sprint 16
 - 2025-07-31T15:33:10.141662: Retrospective completed - Sprint 16
@@ -50,3 +48,5 @@
 - 2025-08-01T15:57:25.669973: Retrospective completed - Sprint 16
 - 2025-08-01T16:18:44.874675: Retrospective completed - Sprint 16
 - 2025-08-01T16:18:50.909485: Retrospective completed - Sprint 16
+- 2025-08-01T18:41:58.618064: Retrospective completed - Sprint 16
+- 2025-08-01T18:42:04.693205: Retrospective completed - Sprint 16

@@ -27,3 +27,6 @@
 - 2025-08-01T16:16:41.794527: GET /api/v1/users - Status: created
 - 2025-08-01T16:16:42.886134: GET /api/v1/users - Status: created
 - 2025-08-01T16:16:45.905732: GET /api/v1/users - Status: created
+- 2025-08-01T18:39:56.220188: GET /api/v1/users - Status: created
+- 2025-08-01T18:39:57.280482: GET /api/v1/users - Status: created
+- 2025-08-01T18:40:00.298157: GET /api/v1/users - Status: created
