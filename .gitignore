@@ -242,5 +242,10 @@ temp_*/data/
 # Agent runtime data files (auto-generated during testing)
 bmad/agents/core/shared_context.json
 
+# Agent history files (auto-generated during runtime)
+bmad/resources/data/*/history.md
+bmad/resources/data/*/*-history.md
+*-history.md
+
 # Policy files (auto-updated during testing)
 policies/*.json 

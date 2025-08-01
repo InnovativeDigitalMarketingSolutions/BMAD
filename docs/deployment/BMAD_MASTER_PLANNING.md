@@ -69,9 +69,70 @@ Dit document consolideert alle planning documenten tot één master roadmap voor
 - [x] CDN integration
 - [x] **Integration Requirements Check**: Verify cloud provider accounts and API keys
 
-#### 1.2 Production Infrastructure (Critical)
-**Timeline**: Weeks 3-5  
+#### 1.2 Microservices Architecture Implementation (Critical)
+**Timeline**: Weeks 3-4  
 **Status**: 📋 Planned  
+
+**Current State Analysis**:
+- [x] Modular components exist (agents, integrations, core)
+- [x] Monolithic architecture (all components in single application)
+- [ ] Microservices separation needed
+- [ ] Service boundaries definition required
+- [ ] Inter-service communication needed
+
+**Service Decomposition**:
+- [ ] **Agent Service**: Separate agent management and execution
+- [ ] **Integration Service**: External service integrations
+- [ ] **Context Service**: Enhanced context management
+- [ ] **Workflow Service**: Workflow orchestration
+- [ ] **API Gateway**: Centralized API management
+- [ ] **Authentication Service**: Auth0 integration service
+- [ ] **Notification Service**: Email, Slack, webhook notifications
+
+**Inter-Service Communication**:
+- [ ] Message queue implementation (Redis/RabbitMQ)
+- [ ] Event-driven architecture
+- [ ] Service discovery
+- [ ] Load balancing
+- [ ] Circuit breaker patterns
+- [ ] Distributed tracing
+
+**Data Management**:
+
+#### 1.3 CLI Test Coverage Issues (Critical - Pending)
+**Timeline**: Week 2-3  
+**Status**: 🔄 In Progress - Paused  
+
+**Current Problem**:
+- [ ] CLI integration tests falen door complexe mocking issues
+- [ ] `test_test_integrations_success` faalt op OpenRouter import issues
+- [ ] Complexe externe API calls moeilijk te mocken
+- [ ] Pragmatische mocking strategie nodig volgens guide files
+
+**Root Cause Analysis**:
+- [ ] Import issues met `LLMConfig`, `TraceLevel`, `PolicyRequest` binnen `test_integrations` methode
+- [ ] Externe API calls (OpenRouter, OpenTelemetry, OPA) moeilijk te mocken
+- [ ] Test setup te complex voor wat het test
+
+**Proposed Solution**:
+- [ ] Implementeer pragmatische mocking van hele `test_integrations` methode
+- [ ] Volg guide files: "Pragmatische Mocking voor Complexe API Calls"
+- [ ] Test method invocation, niet interne logica
+- [ ] Vereenvoudig test assertions naar basis structuur checks
+
+**Next Steps**:
+- [ ] Resume CLI test fixes met pragmatische mocking approach
+- [ ] Update guide files met lessons learned over CLI testing
+- [ ] Document best practices voor complexe integration testing
+- [ ] Database per service pattern
+- [ ] Event sourcing implementation
+- [ ] Saga pattern for distributed transactions
+- [ ] Data consistency strategies
+- [ ] Backup and recovery per service
+
+#### 1.3 Production Infrastructure (Critical)
+**Timeline**: Weeks 5-6  
+**Status**: 📋 Planned
 
 **Docker Containerization**:
 - [ ] Multi-stage Docker builds
