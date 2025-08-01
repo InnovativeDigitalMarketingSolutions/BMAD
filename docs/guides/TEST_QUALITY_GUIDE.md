@@ -780,4 +780,27 @@ def test_cli_run(self, mock_get_context, mock_publish, mock_save_context, mock_p
 - [ ] Mocking strategy geïmplementeerd
 - [ ] Test documentation compleet
 - [ ] CI/CD integration compleet
-- [ ] Regression test suite compleet 
+- [ ] Regression test suite compleet
+
+## Repository Management Best Practices
+
+### Temporary Files Management
+- **Principe**: Houd GitHub repository clean van temporary files
+- **Best Practice**: Voeg temporary files direct toe aan .gitignore
+- **Pattern**: `docs/reports/*-improvement-report.md`, `docs/reports/*-analysis-report.md`
+- **Workflow**: 
+  1. Maak temporary report/document
+  2. Voeg pattern toe aan .gitignore
+  3. Commit .gitignore wijziging
+  4. Verwijder temporary file uit repository indien al gecommit
+- **Voordelen**: 
+  - Schone repository
+  - Geen accidental commits van temporary files
+  - Betere focus op permanente documentatie
+
+### Test Report Management
+- **Temporary Reports**: Auto-generated tijdens testing
+- **Permanent Reports**: Enterprise implementation, architecture docs
+- **Pattern**: `*-improvement-report.md`, `*-analysis-report.md`, `*-test-report.md`
+- **Cleanup**: Regelmatige cleanup van temporary files
+- **Documentation**: Update guides met lessons learned 
