@@ -28,6 +28,9 @@ commands:
   - create-roadmap: Maak strategische roadmap
   - calculate-roi: Bereken ROI van strategie
   - business-model-canvas: Maak business model canvas
+  - validate-idea: Valideer en verfijn vage ideeën tot concrete plannen
+  - refine-idea: Verfijn idee op basis van aanvullende informatie
+  - create-epic-from-idea: Maak epic van gevalideerd idee voor ProductOwner en Scrummaster
   - show-strategy-history: Toon strategie historie
   - show-market-data: Toon marktdata
   - show-competitive-data: Toon competitive data
