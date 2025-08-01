@@ -19,7 +19,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.
 
 from bmad.core.enterprise.multi_tenancy import TenantManager
 from bmad.core.enterprise.user_management import UserManager, RoleManager, PermissionManager
-from bmad.core.enterprise.billing import BillingManager
+from bmad.core.enterprise.billing import BillingManager, UsageTracker
 from bmad.core.enterprise.access_control import AccessControlManager
 from bmad.core.enterprise.security import EnterpriseSecurityManager
 
@@ -37,6 +37,7 @@ class TestEnterprisePerformance(unittest.TestCase):
         self.billing_manager = BillingManager(storage_path=self.test_data_dir)
         self.access_control_manager = AccessControlManager(storage_path=self.test_data_dir)
         self.security_manager = EnterpriseSecurityManager(storage_path=self.test_data_dir)
+        self.usage_tracker = UsageTracker(storage_path=self.test_data_dir)
 
     def tearDown(self):
         """Clean up test environment."""
@@ -196,13 +197,16 @@ class TestEnterprisePerformance(unittest.TestCase):
             )
             usage_events.append(usage)
         
+        # Flush any pending usage records
+        self.usage_tracker.flush()
+        
         end_time = time.time()
         duration = end_time - start_time
         
         # Performance assertions
         self.assertEqual(len(usage_events), 1000)
-        self.assertLess(duration, 70.0)  # Should complete within 70 seconds (realistic for file-based storage)
-        self.assertLess(duration / 1000, 0.07)  # Average time per event < 70ms
+        self.assertLess(duration, 20.0)  # Should complete within 20 seconds (realistic target)
+        self.assertLess(duration / 1000, 0.02)  # Average time per event < 20ms
         
         print(f"Billing tracking performance: {duration:.2f}s for 1000 events ({duration/1000:.6f}s per event)")
 

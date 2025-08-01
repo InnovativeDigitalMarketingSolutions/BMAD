@@ -1,9 +1,0 @@
-{
-  "answer": "Test response",
-  "llm_confidence": 0.675,
-  "model": "unknown",
-  "usage": {
-    "total_tokens": 0
-  },
-  "cached": false
-}

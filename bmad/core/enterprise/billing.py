@@ -656,6 +656,8 @@ class UsageTracker:
     def __init__(self, storage_path: str = "data/usage"):
         self.storage_path = storage_path
         self.usage_records: List[UsageRecord] = []
+        self._pending_saves = 0
+        self._max_pending_saves = 10  # Save every 10 records
         self._load_usage()
     
     def _load_usage(self):
@@ -712,7 +714,13 @@ class UsageTracker:
         )
         
         self.usage_records.append(record)
-        self._save_usage()
+        self._pending_saves += 1
+        
+        # Only save to disk every N records for performance
+        if self._pending_saves >= self._max_pending_saves:
+            self._save_usage()
+            self._pending_saves = 0
+        
         logger.debug(f"Recorded usage: {metric}={value} for tenant {tenant_id}")
     
     def get_usage(self, tenant_id: str, metric: str, period_start: datetime,
@@ -732,6 +740,12 @@ class UsageTracker:
         now = datetime.now(UTC)
         period_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         return self.get_usage(tenant_id, metric, period_start, now)
+    
+    def flush(self):
+        """Flush any pending usage records to disk."""
+        if self._pending_saves > 0:
+            self._save_usage()
+            self._pending_saves = 0
 
 
 class SubscriptionManager:
