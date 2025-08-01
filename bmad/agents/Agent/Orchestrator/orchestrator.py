@@ -781,6 +781,9 @@ Orchestrator Agent Commands:
 
             # Manage escalations
             self.manage_escalations("workflow_blocked", "feature_delivery")
+            
+            # Quality gate check via QualityGuardian
+            self.manage_escalations("quality_gate_failed", "feature_development")
 
             # Publish completion
             publish("orchestration_completed", {
@@ -837,7 +840,7 @@ Orchestrator Agent Commands:
             raise ValueError("Task description must be a non-empty string")
         
         try:
-            prompt = f"Welke agent is het meest geschikt voor deze taak: '{task_desc}'? Kies uit: ProductOwner, Architect, TestEngineer, FeedbackAgent, DevOpsInfra, Retrospective. Geef alleen de agentnaam als JSON."
+            prompt = f"Welke agent is het meest geschikt voor deze taak: '{task_desc}'? Kies uit: ProductOwner, Architect, TestEngineer, QualityGuardian, FeedbackAgent, DevOpsInfra, Retrospective. Geef alleen de agentnaam als JSON."
             structured_output = '{"agent": "..."}'
             result = ask_openai(prompt, structured_output=structured_output)
             agent = result.get("agent")
@@ -1140,6 +1143,14 @@ def handle_tests_completed(event):
         # Hier kun je eventueel een event publiceren om de workflow terug te zetten
 
 subscribe("tests_completed", handle_tests_completed)
+
+def handle_quality_gate_check_requested(event):
+    """Handle quality gate check requested event."""
+    logger.info(f"Quality gate check requested: {event}")
+    # Trigger QualityGuardian agent
+    publish("qualityguardian_quality_gate_check", event)
+
+subscribe("quality_gate_check_requested", handle_quality_gate_check_requested)
 
 def main():
     parser = argparse.ArgumentParser(description="Orchestrator Agent CLI")

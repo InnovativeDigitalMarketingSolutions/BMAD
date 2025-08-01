@@ -52,6 +52,13 @@ def test_workflow_definition():
             agent="TestEngineer",
             command="run-tests",
             dependencies=["dev_1"]
+        ),
+        WorkflowTask(
+            id="quality_1",
+            name="Quality Gate Check",
+            agent="QualityGuardian",
+            command="quality-gate-check",
+            dependencies=["test_1"]
         )
     ]
     
@@ -63,9 +70,10 @@ def test_workflow_definition():
     
     # Test workflow definitie
     assert workflow_def.name == "frontend_development"
-    assert len(workflow_def.tasks) == 4
+    assert len(workflow_def.tasks) == 5
     assert workflow_def.tasks[0].id == "po_1"
     assert workflow_def.tasks[1].dependencies == ["po_1"]
+    assert workflow_def.tasks[4].agent == "QualityGuardian"
 
 def test_workflow_registration():
     """Test workflow registratie."""
@@ -279,6 +287,73 @@ def test_task_executor_registration():
     assert "CustomAgent" in orchestrator.task_executors
     assert orchestrator.task_executors["CustomAgent"] == custom_executor
 
+def test_qualityguardian_workflow_integration():
+    """Test QualityGuardian agent workflow integratie."""
+    orchestrator = IntegratedWorkflowOrchestrator()
+    
+    # Maak workflow met QualityGuardian integratie
+    tasks = [
+        WorkflowTask(
+            id="dev_1",
+            name="Develop Feature",
+            agent="FullstackDeveloper",
+            command="build-component"
+        ),
+        WorkflowTask(
+            id="test_1",
+            name="Run Tests",
+            agent="TestEngineer",
+            command="run-tests",
+            dependencies=["dev_1"]
+        ),
+        WorkflowTask(
+            id="quality_1",
+            name="Quality Analysis",
+            agent="QualityGuardian",
+            command="analyze-code-quality",
+            dependencies=["dev_1"]
+        ),
+        WorkflowTask(
+            id="security_1",
+            name="Security Scan",
+            agent="QualityGuardian",
+            command="security-scan",
+            dependencies=["dev_1"]
+        ),
+        WorkflowTask(
+            id="quality_gate_1",
+            name="Quality Gate Check",
+            agent="QualityGuardian",
+            command="quality-gate-check",
+            dependencies=["test_1", "quality_1", "security_1"]
+        )
+    ]
+    
+    workflow_def = WorkflowDefinition(
+        name="quality_assured_development",
+        description="Development workflow with quality assurance",
+        tasks=tasks
+    )
+    
+    # Test workflow definitie
+    assert workflow_def.name == "quality_assured_development"
+    assert len(workflow_def.tasks) == 5
+    
+    # Test QualityGuardian tasks
+    quality_tasks = [task for task in workflow_def.tasks if task.agent == "QualityGuardian"]
+    assert len(quality_tasks) == 3
+    
+    # Test dependencies
+    quality_gate_task = next(task for task in workflow_def.tasks if task.id == "quality_gate_1")
+    assert len(quality_gate_task.dependencies) == 3
+    assert "test_1" in quality_gate_task.dependencies
+    assert "quality_1" in quality_gate_task.dependencies
+    assert "security_1" in quality_gate_task.dependencies
+    
+    # Registreer workflow
+    orchestrator.register_workflow(workflow_def)
+    assert "quality_assured_development" in orchestrator.workflow_definitions
+
 if __name__ == "__main__":
     # Run tests
     print("🧪 Testing Advanced Workflow...")
@@ -308,6 +383,9 @@ if __name__ == "__main__":
         
         test_task_executor_registration()
         print("✅ Task executor registration test passed")
+        
+        test_qualityguardian_workflow_integration()
+        print("✅ QualityGuardian workflow integration test passed")
         
         # Async test
         asyncio.run(test_workflow_execution())
