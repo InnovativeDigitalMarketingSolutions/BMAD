@@ -1,1 +1,16 @@
-{}
+{
+  "test_sub": {
+    "id": "test_sub",
+    "tenant_id": "test_tenant",
+    "plan_id": "test_plan",
+    "status": "active",
+    "billing_period": "monthly",
+    "current_period_start": "2025-08-01T12:46:42",
+    "current_period_end": "2025-08-31T12:46:42",
+    "created_at": "2025-08-01T12:46:42.498382",
+    "updated_at": "2025-08-01T10:46:42.498413",
+    "cancelled_at": null,
+    "stripe_subscription_id": "sub_test123",
+    "metadata": {}
+  }
+}

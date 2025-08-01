@@ -8,10 +8,20 @@ for enterprise BMAD deployments.
 import uuid
 import json
 import logging
+import os
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 from enum import Enum
+
+# Import Stripe integration
+try:
+    from integrations.stripe.stripe_client import StripeClient, StripeConfig
+    STRIPE_AVAILABLE = True
+except ImportError:
+    STRIPE_AVAILABLE = False
+    StripeClient = None
+    StripeConfig = None
 
 logger = logging.getLogger(__name__)
 
@@ -144,6 +154,24 @@ class BillingManager:
         self.subscriptions: Dict[str, Subscription] = {}
         self._load_data()
         self._create_default_plans()
+        
+        # Initialize Stripe integration if available
+        self.stripe_client = None
+        if STRIPE_AVAILABLE:
+            stripe_api_key = os.getenv('STRIPE_API_KEY')
+            stripe_webhook_secret = os.getenv('STRIPE_WEBHOOK_SECRET')
+            
+            if stripe_api_key:
+                stripe_config = StripeConfig(
+                    api_key=stripe_api_key,
+                    webhook_secret=stripe_webhook_secret
+                )
+                self.stripe_client = StripeClient(stripe_config)
+                logger.info("Stripe integration enabled for billing")
+            else:
+                logger.info("Stripe API key not configured, using local billing only")
+        else:
+            logger.info("Stripe integration not available, using local billing only")
     
     def _load_data(self):
         """Load billing data from storage."""
@@ -342,6 +370,205 @@ class BillingManager:
         self._save_data()
         logger.info(f"Cancelled subscription: {subscription_id}")
         return True
+    
+    # Stripe Integration Methods
+    def create_stripe_customer(self, tenant_id: str, email: str, name: str) -> Dict[str, Any]:
+        """Create a Stripe customer for a tenant."""
+        if not self.stripe_client:
+            return {"success": False, "error": "Stripe not configured"}
+        
+        metadata = {"tenant_id": tenant_id}
+        result = self.stripe_client.create_customer(email, name, metadata)
+        
+        if result['success']:
+            # Store Stripe customer ID in tenant (requires tenant_manager import)
+            try:
+                from .multi_tenancy import tenant_manager
+                tenant_manager.update_tenant(tenant_id, {"stripe_customer_id": result['data']['id']})
+                logger.info(f"Created Stripe customer for tenant {tenant_id}")
+            except ImportError:
+                logger.warning("tenant_manager not available, cannot update tenant")
+        
+        return result
+    
+    def create_stripe_subscription(self, tenant_id: str, price_id: str, quantity: int = 1) -> Dict[str, Any]:
+        """Create a Stripe subscription for a tenant."""
+        if not self.stripe_client:
+            return {"success": False, "error": "Stripe not configured"}
+        
+        # Get tenant and Stripe customer ID
+        try:
+            from .multi_tenancy import tenant_manager
+            tenant = tenant_manager.get_tenant(tenant_id)
+            if not tenant:
+                return {"success": False, "error": "Tenant not found"}
+            
+            stripe_customer_id = tenant.get('stripe_customer_id')
+            if not stripe_customer_id:
+                return {"success": False, "error": "No Stripe customer ID for tenant"}
+        except ImportError:
+            return {"success": False, "error": "tenant_manager not available"}
+        
+        # Create Stripe subscription
+        metadata = {"tenant_id": tenant_id}
+        result = self.stripe_client.create_subscription(
+            stripe_customer_id, price_id, quantity, metadata
+        )
+        
+        if result['success']:
+            # Create local subscription record
+            subscription_data = {
+                "tenant_id": tenant_id,
+                "stripe_subscription_id": result['data']['id'],
+                "price_id": price_id,
+                "quantity": quantity,
+                "status": result['data']['status'],
+                "current_period_start": datetime.fromtimestamp(result['data']['current_period_start']),
+                "current_period_end": datetime.fromtimestamp(result['data']['current_period_end'])
+            }
+            
+            # Create local subscription using existing method
+            subscription_id = str(uuid.uuid4())
+            now = datetime.utcnow()
+            
+            subscription = Subscription(
+                id=subscription_id,
+                tenant_id=tenant_id,
+                plan_id=price_id,  # Use price_id as plan_id for Stripe
+                status=SubscriptionStatus.ACTIVE,
+                billing_period=BillingPeriod.MONTHLY,  # Default to monthly
+                current_period_start=subscription_data['current_period_start'],
+                current_period_end=subscription_data['current_period_end'],
+                created_at=now,
+                updated_at=now,
+                stripe_subscription_id=result['data']['id'],
+                metadata=subscription_data
+            )
+            
+            self.subscriptions[subscription_id] = subscription
+            self._save_data()
+            logger.info(f"Created Stripe subscription for tenant {tenant_id}")
+        
+        return result
+    
+    def cancel_stripe_subscription(self, tenant_id: str, cancel_at_period_end: bool = True) -> Dict[str, Any]:
+        """Cancel a Stripe subscription."""
+        if not self.stripe_client:
+            return {"success": False, "error": "Stripe not configured"}
+        
+        # Get subscription
+        subscription = self.get_subscription_by_tenant(tenant_id)
+        if not subscription:
+            return {"success": False, "error": "No subscription found for tenant"}
+        
+        stripe_subscription_id = subscription.stripe_subscription_id
+        if not stripe_subscription_id:
+            return {"success": False, "error": "No Stripe subscription ID"}
+        
+        # Cancel Stripe subscription
+        result = self.stripe_client.cancel_subscription(stripe_subscription_id, cancel_at_period_end)
+        
+        if result['success']:
+            # Update local subscription
+            subscription.status = SubscriptionStatus.CANCELLED if not cancel_at_period_end else SubscriptionStatus.ACTIVE
+            subscription.updated_at = datetime.utcnow()
+            self._save_data()
+            logger.info(f"Canceled Stripe subscription for tenant {tenant_id}")
+        
+        return result
+    
+    def get_stripe_billing_summary(self, tenant_id: str) -> Dict[str, Any]:
+        """Get comprehensive billing summary for a tenant from Stripe."""
+        if not self.stripe_client:
+            return {"success": False, "error": "Stripe not configured"}
+        
+        # Get tenant and Stripe customer ID
+        try:
+            from .multi_tenancy import tenant_manager
+            tenant = tenant_manager.get_tenant(tenant_id)
+            if not tenant:
+                return {"success": False, "error": "Tenant not found"}
+            
+            stripe_customer_id = tenant.get('stripe_customer_id')
+            if not stripe_customer_id:
+                return {"success": False, "error": "No Stripe customer ID for tenant"}
+        except ImportError:
+            return {"success": False, "error": "tenant_manager not available"}
+        
+        # Get Stripe customer summary
+        result = self.stripe_client.get_customer_summary(stripe_customer_id)
+        
+        if result['success']:
+            # Add local billing data
+            subscription = self.get_subscription_by_tenant(tenant_id)
+            result['local_subscription'] = subscription.to_dict() if subscription else None
+        
+        return result
+    
+    def handle_stripe_webhook(self, payload: bytes, sig_header: str) -> Dict[str, Any]:
+        """Handle Stripe webhook events."""
+        if not self.stripe_client:
+            return {"success": False, "error": "Stripe not configured"}
+        
+        # Construct webhook event
+        event_result = self.stripe_client.construct_webhook_event(payload, sig_header)
+        if not event_result['success']:
+            return event_result
+        
+        event = event_result['data']
+        
+        # Handle the event
+        result = self.stripe_client.handle_webhook_event(event)
+        
+        # Update local data based on event
+        if result['success']:
+            self._update_local_data_from_webhook(event)
+        
+        return result
+    
+    def _update_local_data_from_webhook(self, event: Dict[str, Any]):
+        """Update local data based on Stripe webhook event."""
+        event_type = event.get('type')
+        data = event.get('data', {}).get('object', {})
+        
+        if event_type == 'customer.subscription.updated':
+            # Update local subscription
+            stripe_subscription_id = data.get('id')
+            if stripe_subscription_id:
+                subscription = self._get_subscription_by_stripe_id(stripe_subscription_id)
+                if subscription:
+                    subscription.status = SubscriptionStatus(data.get('status', 'active'))
+                    subscription.current_period_start = datetime.fromtimestamp(data.get('current_period_start', 0))
+                    subscription.current_period_end = datetime.fromtimestamp(data.get('current_period_end', 0))
+                    subscription.updated_at = datetime.utcnow()
+                    self._save_data()
+        
+        elif event_type == 'invoice.payment_succeeded':
+            # Update subscription status
+            subscription_id = data.get('subscription')
+            if subscription_id:
+                subscription = self._get_subscription_by_stripe_id(subscription_id)
+                if subscription:
+                    subscription.status = SubscriptionStatus.ACTIVE
+                    subscription.updated_at = datetime.utcnow()
+                    self._save_data()
+        
+        elif event_type == 'invoice.payment_failed':
+            # Update subscription status
+            subscription_id = data.get('subscription')
+            if subscription_id:
+                subscription = self._get_subscription_by_stripe_id(subscription_id)
+                if subscription:
+                    subscription.status = SubscriptionStatus.PAST_DUE
+                    subscription.updated_at = datetime.utcnow()
+                    self._save_data()
+    
+    def _get_subscription_by_stripe_id(self, stripe_subscription_id: str) -> Optional[Subscription]:
+        """Get subscription by Stripe subscription ID."""
+        for subscription in self.subscriptions.values():
+            if subscription.stripe_subscription_id == stripe_subscription_id:
+                return subscription
+        return None
 
 
 class UsageTracker:

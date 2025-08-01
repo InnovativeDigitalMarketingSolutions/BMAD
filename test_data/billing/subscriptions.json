@@ -1,0 +1,44 @@
+{
+  "75fa150f-3014-4197-a988-84f934f48d61": {
+    "id": "75fa150f-3014-4197-a988-84f934f48d61",
+    "tenant_id": "test_tenant",
+    "plan_id": "ed9da825-7904-4377-b9a2-d60f60be080b",
+    "status": "active",
+    "billing_period": "monthly",
+    "current_period_start": "2025-08-01T10:42:24.387306",
+    "current_period_end": "2025-08-31T10:42:24.387306",
+    "created_at": "2025-08-01T10:42:24.387306",
+    "updated_at": "2025-08-01T10:42:24.387306",
+    "cancelled_at": null,
+    "stripe_subscription_id": null,
+    "metadata": {}
+  },
+  "48384c4d-9ffa-4ead-8f08-7bd5d1e5711e": {
+    "id": "48384c4d-9ffa-4ead-8f08-7bd5d1e5711e",
+    "tenant_id": "test_tenant",
+    "plan_id": "545b89ba-0f55-4cc7-bc64-e862ddf7b12e",
+    "status": "active",
+    "billing_period": "monthly",
+    "current_period_start": "2025-08-01T10:43:55.619321",
+    "current_period_end": "2025-08-31T10:43:55.619321",
+    "created_at": "2025-08-01T10:43:55.619321",
+    "updated_at": "2025-08-01T10:43:55.619321",
+    "cancelled_at": null,
+    "stripe_subscription_id": null,
+    "metadata": {}
+  },
+  "ec74e18d-2560-492d-9d03-1f79d429b1a6": {
+    "id": "ec74e18d-2560-492d-9d03-1f79d429b1a6",
+    "tenant_id": "test_tenant",
+    "plan_id": "986ba9c2-efb8-4756-8a2a-75df9ded24bd",
+    "status": "active",
+    "billing_period": "monthly",
+    "current_period_start": "2025-08-01T10:45:55.696534",
+    "current_period_end": "2025-08-31T10:45:55.696534",
+    "created_at": "2025-08-01T10:45:55.696534",
+    "updated_at": "2025-08-01T10:45:55.696534",
+    "cancelled_at": null,
+    "stripe_subscription_id": null,
+    "metadata": {}
+  }
+}
