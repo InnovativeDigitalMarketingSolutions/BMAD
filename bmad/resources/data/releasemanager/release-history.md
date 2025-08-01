@@ -1,9 +1,5 @@
 # Release History
 
-- 2025-07-31T16:32:59.442256: Release created - 1.3.0 - Feature release
-- 2025-07-31T16:33:02.451235: Release deployed - 1.3.0
-- 2025-07-31T16:34:58.027932: Release created - 1.3.0 - Feature release
-- 2025-07-31T16:35:01.043445: Release deployed - 1.3.0
 - 2025-07-31T16:35:05.414484: Release created - 1.3.0 - Feature release
 - 2025-07-31T16:35:08.423459: Release deployed - 1.3.0
 - 2025-07-31T16:39:05.274229: Release created - 1.3.0 - Feature release
@@ -50,3 +46,7 @@
 - 2025-08-01T16:18:34.576937: Release deployed - 1.3.0
 - 2025-08-01T16:18:37.744135: Release created - 1.3.0 - Feature release
 - 2025-08-01T16:18:40.755188: Release deployed - 1.3.0
+- 2025-08-01T18:41:45.503324: Release created - 1.3.0 - Feature release
+- 2025-08-01T18:41:48.516358: Release deployed - 1.3.0
+- 2025-08-01T18:41:51.541014: Release created - 1.3.0 - Feature release
+- 2025-08-01T18:41:54.546129: Release deployed - 1.3.0
