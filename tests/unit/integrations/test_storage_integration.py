@@ -49,6 +49,33 @@ class TestStorageConfig(unittest.TestCase):
         self.assertEqual(config.access_key, "test_key")
         self.assertTrue(config.enable_versioning)
         self.assertTrue(config.enable_encryption)
+    
+    def test_storage_config_defaults(self):
+        """Test StorageConfig default values."""
+        config = StorageConfig()
+        
+        self.assertEqual(config.provider, "aws")
+        self.assertEqual(config.region, "us-east-1")
+        self.assertTrue(config.enable_versioning)
+        self.assertTrue(config.enable_encryption)
+        self.assertFalse(config.enable_cdn)
+        self.assertEqual(config.max_file_size, 100 * 1024 * 1024)
+        self.assertEqual(config.backup_retention_days, 30)
+        self.assertFalse(config.compression_enabled)
+    
+    def test_storage_config_gcp(self):
+        """Test GCP storage configuration."""
+        config = StorageConfig(
+            provider="gcp",
+            bucket_name="test-bucket",
+            google_credentials_path="/path/to/credentials.json",
+            google_project_id="test-project"
+        )
+        
+        self.assertEqual(config.provider, "gcp")
+        self.assertEqual(config.bucket_name, "test-bucket")
+        self.assertEqual(config.google_credentials_path, "/path/to/credentials.json")
+        self.assertEqual(config.google_project_id, "test-project")
 
 
 class TestStorageClient(unittest.TestCase):
@@ -76,7 +103,6 @@ class TestStorageClient(unittest.TestCase):
     
     def test_storage_client_initialization(self):
         """Test StorageClient initialization."""
-        # Mock the entire client to avoid boto3 dependency issues
         with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
             with patch.object(StorageClient, '_initialize_provider') as mock_init:
                 mock_init.return_value = None
@@ -86,337 +112,817 @@ class TestStorageClient(unittest.TestCase):
                 self.assertEqual(client.config, self.config)
                 mock_init.assert_called_once()
     
+    def test_storage_client_initialization_boto3_unavailable(self):
+        """Test StorageClient initialization when boto3 is unavailable."""
+        with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', False):
+            with patch('integrations.storage.storage_client.logger') as mock_logger:
+                with self.assertRaises(ImportError):
+                    StorageClient(self.config)
+    
+    def test_initialize_provider_aws(self):
+        """Test AWS provider initialization."""
+        with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
+            with patch('integrations.storage.storage_client.boto3') as mock_boto3:
+                mock_s3 = MagicMock()
+                mock_boto3.client.return_value = mock_s3
+                
+                client = StorageClient(self.config)
+                
+                mock_boto3.client.assert_called_with(
+                    's3',
+                    aws_access_key_id='test_key',
+                    aws_secret_access_key='test_secret',
+                    region_name='us-east-1'
+                )
+    
+    def test_initialize_provider_gcp(self):
+        """Test GCP provider initialization."""
+        gcp_config = StorageConfig(
+            provider="gcp",
+            bucket_name="test-bucket",
+            google_credentials_path="/path/to/credentials.json"
+        )
+        
+        with patch('integrations.storage.storage_client.GOOGLE_CLOUD_AVAILABLE', True):
+            with patch('integrations.storage.storage_client.storage') as mock_storage:
+                mock_client = MagicMock()
+                mock_storage.Client.from_service_account_json.return_value = mock_client
+                
+                client = StorageClient(gcp_config)
+                
+                mock_storage.Client.from_service_account_json.assert_called_with(
+                    "/path/to/credentials.json"
+                )
+    
+    def test_generate_file_id(self):
+        """Test file ID generation."""
+        with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
+            with patch.object(StorageClient, '_initialize_provider'):
+                client = StorageClient(self.config)
+                
+                file_id = client._generate_file_id("test.txt")
+                self.assertIsInstance(file_id, str)
+                self.assertIn("test.txt", file_id)
+                
+                file_id_with_tenant = client._generate_file_id("test.txt", "tenant123")
+                self.assertIn("tenant123", file_id_with_tenant)
+    
+    def test_calculate_checksum(self):
+        """Test checksum calculation."""
+        with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
+            with patch.object(StorageClient, '_initialize_provider'):
+                client = StorageClient(self.config)
+                
+                checksum = client._calculate_checksum(self.test_file.name)
+                self.assertIsInstance(checksum, str)
+                # MD5 hash length is 32 characters
+                self.assertEqual(len(checksum), 32)
+    
+    def test_validate_file_success(self):
+        """Test successful file validation."""
+        with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
+            with patch.object(StorageClient, '_initialize_provider'):
+                client = StorageClient(self.config)
+                
+                result = client._validate_file(self.test_file.name)
+                self.assertTrue(result)
+    
+    def test_validate_file_not_exists(self):
+        """Test file validation for non-existent file."""
+        with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
+            with patch.object(StorageClient, '_initialize_provider'):
+                client = StorageClient(self.config)
+                
+                with self.assertRaises(FileNotFoundError):
+                    client._validate_file("non_existent_file.txt")
+    
+    def test_validate_file_too_large(self):
+        """Test file validation for oversized file."""
+        # Create a large config
+        large_config = StorageConfig(
+            provider="aws",
+            bucket_name="test-bucket",
+            max_file_size=1  # 1 byte limit
+        )
+        
+        with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
+            with patch.object(StorageClient, '_initialize_provider'):
+                client = StorageClient(large_config)
+                
+                with self.assertRaises(ValueError):
+                    client._validate_file(self.test_file.name)
+    
+    def test_validate_file_invalid_extension(self):
+        """Test file validation for invalid extension."""
+        config = StorageConfig(
+            provider="aws",
+            bucket_name="test-bucket",
+            allowed_extensions=["pdf", "doc"]
+        )
+        
+        with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
+            with patch.object(StorageClient, '_initialize_provider'):
+                client = StorageClient(config)
+                
+                with self.assertRaises(ValueError):
+                    client._validate_file(self.test_file.name)  # .txt file
+    
     def test_upload_file_success(self):
         """Test successful file upload."""
         with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
-            with patch.object(StorageClient, '_initialize_provider') as mock_init:
-                with patch.object(StorageClient, '_validate_file') as mock_validate:
-                    with patch.object(StorageClient, '_calculate_checksum') as mock_checksum:
+            with patch.object(StorageClient, '_initialize_provider'):
+                with patch.object(StorageClient, '_validate_file', return_value=True):
+                    with patch.object(StorageClient, '_calculate_checksum', return_value="test_checksum"):
                         with patch.object(StorageClient, '_upload_to_s3') as mock_upload:
-                            # Mock the entire upload_file method
-                            with patch.object(StorageClient, 'upload_file') as mock_upload_method:
-                                mock_upload_method.return_value = UploadResult(
-                                    success=True,
-                                    file_id="test_file_123",
-                                    file_url="https://test-bucket.s3.amazonaws.com/test_file_123",
-                                    size=16,
-                                    checksum="test_checksum",
-                                    version="1.0",
-                                    metadata=FileMetadata(
-                                        file_id="test_file_123",
-                                        filename="test.txt",
-                                        file_path="test_file_123",
-                                        size=16,
-                                        content_type="text/plain",
-                                        checksum="test_checksum",
-                                        version="1.0"
-                                    ),
-                                    upload_time=1.5
-                                )
-                                
-                                client = StorageClient(self.config)
-                                result = client.upload_file(
-                                    file_path=self.test_file.name,
-                                    tenant_id="test_tenant"
-                                )
-                                
-                                self.assertTrue(result.success)
-                                self.assertEqual(result.file_id, "test_file_123")
-                                self.assertEqual(result.size, 16)
-                                mock_upload_method.assert_called_once()
+                            mock_upload.return_value = {
+                                'file_id': 'test_file_123',
+                                'file_url': 'https://test-bucket.s3.amazonaws.com/test_file_123',
+                                'size': 17,
+                                'version': 'v1'
+                            }
+                            
+                            client = StorageClient(self.config)
+                            result = client.upload_file(
+                                self.test_file.name,
+                                tenant_id="tenant123",
+                                user_id="user456",
+                                tags={"type": "test"},
+                                is_public=True
+                            )
+                            
+                            self.assertTrue(result.success)
+                            self.assertEqual(result.file_id, 'test_file_123')
+                            self.assertEqual(result.size, 17)
+                            self.assertEqual(result.checksum, "test_checksum")
+                            self.assertEqual(result.metadata.tenant_id, "tenant123")
+                            self.assertEqual(result.metadata.user_id, "user456")
+                            self.assertTrue(result.metadata.is_public)
+    
+    def test_upload_file_validation_failure(self):
+        """Test file upload with validation failure."""
+        with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
+            with patch.object(StorageClient, '_initialize_provider'):
+                with patch.object(StorageClient, '_validate_file', return_value=False):
+                    client = StorageClient(self.config)
+                    
+                    result = client.upload_file(self.test_file.name)
+                    
+                    self.assertFalse(result.success)
+                    self.assertIsNotNone(result.error_message)
+    
+    def test_upload_file_s3_error(self):
+        """Test file upload with S3 error."""
+        with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
+            with patch.object(StorageClient, '_initialize_provider'):
+                with patch.object(StorageClient, '_validate_file', return_value=True):
+                    with patch.object(StorageClient, '_calculate_checksum', return_value="test_checksum"):
+                        with patch.object(StorageClient, '_upload_to_s3') as mock_upload:
+                            mock_upload.side_effect = Exception("S3 upload failed")
+                            
+                            client = StorageClient(self.config)
+                            result = client.upload_file(self.test_file.name)
+                            
+                            self.assertFalse(result.success)
+                            self.assertIn("S3 upload failed", result.error_message)
+    
+    def test_upload_to_s3_success(self):
+        """Test successful S3 upload."""
+        with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
+            with patch('integrations.storage.storage_client.boto3') as mock_boto3:
+                mock_s3 = MagicMock()
+                mock_boto3.client.return_value = mock_s3
+                
+                client = StorageClient(self.config)
+                
+                result = client._upload_to_s3(
+                    self.test_file.name,
+                    "test/path/file.txt",
+                    "text/plain",
+                    {"type": "test"},
+                    False
+                )
+                
+                mock_s3.upload_file.assert_called_once()
+                self.assertIn('file_id', result)
+                self.assertIn('file_url', result)
+    
+    def test_upload_to_gcp_success(self):
+        """Test successful GCP upload."""
+        gcp_config = StorageConfig(
+            provider="gcp",
+            bucket_name="test-bucket",
+            google_credentials_path="/path/to/credentials.json"
+        )
+        
+        with patch('integrations.storage.storage_client.GOOGLE_CLOUD_AVAILABLE', True):
+            with patch('integrations.storage.storage_client.storage') as mock_storage:
+                mock_client = MagicMock()
+                mock_bucket = MagicMock()
+                mock_blob = MagicMock()
+                mock_storage.Client.from_service_account_json.return_value = mock_client
+                mock_client.bucket.return_value = mock_bucket
+                mock_bucket.blob.return_value = mock_blob
+                
+                client = StorageClient(gcp_config)
+                
+                result = client._upload_to_gcp(
+                    self.test_file.name,
+                    "test/path/file.txt",
+                    "text/plain",
+                    {"type": "test"},
+                    False
+                )
+                
+                mock_blob.upload_from_filename.assert_called_once()
+                self.assertIn('file_id', result)
+                self.assertIn('file_url', result)
     
     def test_download_file_success(self):
         """Test successful file download."""
         with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
-            with patch.object(StorageClient, '_initialize_provider') as mock_init:
+            with patch.object(StorageClient, '_initialize_provider'):
                 with patch.object(StorageClient, '_download_from_s3') as mock_download:
-                    # Mock the entire download_file method
-                    with patch.object(StorageClient, 'download_file') as mock_download_method:
-                        mock_download_method.return_value = DownloadResult(
-                            success=True,
-                            file_path="/tmp/downloaded_file.txt",
-                            size=16,
-                            checksum="test_checksum",
-                            download_time=0.5
-                        )
-                        
-                        client = StorageClient(self.config)
-                        result = client.download_file(
-                            file_id="test_file_123",
-                            destination_path="/tmp/downloaded_file.txt"
-                        )
-                        
-                        self.assertTrue(result.success)
-                        self.assertEqual(result.size, 16)
-                        self.assertEqual(result.checksum, "test_checksum")
-                        mock_download_method.assert_called_once()
+                    mock_download.return_value = {
+                        'success': True,
+                        'file_path': '/tmp/downloaded_file.txt',
+                        'size': 17,
+                        'checksum': 'test_checksum'
+                    }
+                    
+                    client = StorageClient(self.config)
+                    result = client.download_file("test_file_123", "/tmp/downloaded_file.txt")
+                    
+                    self.assertTrue(result.success)
+                    self.assertEqual(result.file_path, '/tmp/downloaded_file.txt')
+                    self.assertEqual(result.size, 17)
+                    self.assertEqual(result.checksum, 'test_checksum')
+    
+    def test_download_file_not_found(self):
+        """Test file download for non-existent file."""
+        with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
+            with patch.object(StorageClient, '_initialize_provider'):
+                with patch.object(StorageClient, '_download_from_s3') as mock_download:
+                    mock_download.return_value = {
+                        'success': False,
+                        'error_message': 'File not found'
+                    }
+                    
+                    client = StorageClient(self.config)
+                    result = client.download_file("non_existent_file", "/tmp/downloaded_file.txt")
+                    
+                    self.assertFalse(result.success)
+                    self.assertIn("File not found", result.error_message)
+    
+    def test_download_from_s3_success(self):
+        """Test successful S3 download."""
+        with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
+            with patch('integrations.storage.storage_client.boto3') as mock_boto3:
+                mock_s3 = MagicMock()
+                mock_boto3.client.return_value = mock_s3
+                
+                client = StorageClient(self.config)
+                
+                result = client._download_from_s3("test_file_123", "/tmp/downloaded_file.txt")
+                
+                mock_s3.download_file.assert_called_once()
+                self.assertIn('success', result)
+                self.assertIn('file_path', result)
+    
+    def test_download_from_gcp_success(self):
+        """Test successful GCP download."""
+        gcp_config = StorageConfig(
+            provider="gcp",
+            bucket_name="test-bucket",
+            google_credentials_path="/path/to/credentials.json"
+        )
+        
+        with patch('integrations.storage.storage_client.GOOGLE_CLOUD_AVAILABLE', True):
+            with patch('integrations.storage.storage_client.storage') as mock_storage:
+                mock_client = MagicMock()
+                mock_bucket = MagicMock()
+                mock_blob = MagicMock()
+                mock_storage.Client.from_service_account_json.return_value = mock_client
+                mock_client.bucket.return_value = mock_bucket
+                mock_bucket.blob.return_value = mock_blob
+                
+                client = StorageClient(gcp_config)
+                
+                result = client._download_from_gcp("test_file_123", "/tmp/downloaded_file.txt")
+                
+                mock_blob.download_to_filename.assert_called_once()
+                self.assertIn('success', result)
+                self.assertIn('file_path', result)
     
     def test_delete_file_success(self):
         """Test successful file deletion."""
         with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
-            with patch.object(StorageClient, '_initialize_provider') as mock_init:
-                with patch.object(StorageClient, 'delete_file') as mock_delete:
-                    mock_delete.return_value = True
-                    
-                    client = StorageClient(self.config)
-                    result = client.delete_file("test_file_123")
-                    
-                    self.assertTrue(result)
-                    mock_delete.assert_called_once()
+            with patch('integrations.storage.storage_client.boto3') as mock_boto3:
+                mock_s3 = MagicMock()
+                mock_boto3.client.return_value = mock_s3
+                
+                client = StorageClient(self.config)
+                result = client.delete_file("test_file_123")
+                
+                mock_s3.delete_object.assert_called_once()
+                self.assertTrue(result)
+    
+    def test_delete_file_error(self):
+        """Test file deletion with error."""
+        with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
+            with patch('integrations.storage.storage_client.boto3') as mock_boto3:
+                mock_s3 = MagicMock()
+                mock_s3.delete_object.side_effect = Exception("Delete failed")
+                mock_boto3.client.return_value = mock_s3
+                
+                client = StorageClient(self.config)
+                result = client.delete_file("test_file_123")
+                
+                self.assertFalse(result)
     
     def test_list_files_success(self):
         """Test successful file listing."""
         with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
-            with patch.object(StorageClient, '_initialize_provider') as mock_init:
-                with patch.object(StorageClient, 'list_files') as mock_list:
-                    mock_files = [
-                        FileMetadata(
-                            file_id="file1.txt",
-                            filename="file1.txt",
-                            file_path="file1.txt",
-                            size=100,
-                            content_type="text/plain",
-                            checksum="checksum1",
-                            version="1.0"
-                        )
+            with patch('integrations.storage.storage_client.boto3') as mock_boto3:
+                mock_s3 = MagicMock()
+                mock_response = {
+                    'Contents': [
+                        {
+                            'Key': 'test/file1.txt',
+                            'Size': 100,
+                            'LastModified': datetime.now(UTC),
+                            'ETag': '"test_etag_1"'
+                        },
+                        {
+                            'Key': 'test/file2.txt',
+                            'Size': 200,
+                            'LastModified': datetime.now(UTC),
+                            'ETag': '"test_etag_2"'
+                        }
                     ]
-                    mock_list.return_value = mock_files
-                    
-                    client = StorageClient(self.config)
-                    result = client.list_files(tenant_id="test_tenant")
-                    
-                    self.assertEqual(len(result), 1)
-                    self.assertEqual(result[0].file_id, "file1.txt")
-                    mock_list.assert_called_once()
+                }
+                mock_s3.list_objects_v2.return_value = mock_response
+                mock_boto3.client.return_value = mock_s3
+                
+                client = StorageClient(self.config)
+                files = client.list_files(prefix="test/", tenant_id="tenant123")
+                
+                self.assertEqual(len(files), 2)
+                self.assertEqual(files[0].filename, 'file1.txt')
+                self.assertEqual(files[0].size, 100)
+                self.assertEqual(files[0].tenant_id, "tenant123")
+    
+    def test_list_files_empty(self):
+        """Test file listing with empty results."""
+        with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
+            with patch('integrations.storage.storage_client.boto3') as mock_boto3:
+                mock_s3 = MagicMock()
+                mock_s3.list_objects_v2.return_value = {}
+                mock_boto3.client.return_value = mock_s3
+                
+                client = StorageClient(self.config)
+                files = client.list_files(prefix="empty/")
+                
+                self.assertEqual(len(files), 0)
     
     def test_get_file_url_success(self):
-        """Test successful URL generation."""
+        """Test successful file URL generation."""
         with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
-            with patch.object(StorageClient, '_initialize_provider') as mock_init:
-                with patch.object(StorageClient, 'get_file_url') as mock_url:
-                    mock_url.return_value = "https://test-bucket.s3.amazonaws.com/test_file_123?signature=abc123"
-                    
-                    client = StorageClient(self.config)
-                    result = client.get_file_url("test_file_123", expires_in=3600)
-                    
-                    self.assertIn("https://", result)
-                    self.assertIn("test_file_123", result)
-                    mock_url.assert_called_once()
+            with patch('integrations.storage.storage_client.boto3') as mock_boto3:
+                mock_s3 = MagicMock()
+                mock_s3.generate_presigned_url.return_value = "https://presigned-url.com"
+                mock_boto3.client.return_value = mock_s3
+                
+                client = StorageClient(self.config)
+                url = client.get_file_url("test_file_123", expires_in=7200)
+                
+                mock_s3.generate_presigned_url.assert_called_once()
+                self.assertEqual(url, "https://presigned-url.com")
+    
+    def test_get_file_url_public(self):
+        """Test public file URL generation."""
+        with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
+            with patch.object(StorageClient, '_initialize_provider'):
+                client = StorageClient(self.config)
+                
+                # Mock the s3_client attribute
+                client.s3_client = MagicMock()
+                client.s3_client.generate_presigned_url.return_value = "https://test-bucket.s3.amazonaws.com/public_file_123"
+                
+                url = client.get_file_url("public_file_123")
+                
+                self.assertIn("test-bucket", url)
+                self.assertIn("public_file_123", url)
     
     def test_create_backup_success(self):
         """Test successful backup creation."""
         with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
-            with patch.object(StorageClient, '_initialize_provider') as mock_init:
-                with patch.object(StorageClient, 'create_backup') as mock_backup:
-                    mock_backup.return_value = True
-                    
-                    client = StorageClient(self.config)
-                    result = client.create_backup("test_file_123")
-                    
-                    self.assertTrue(result)
-                    mock_backup.assert_called_once()
+            with patch('integrations.storage.storage_client.boto3') as mock_boto3:
+                mock_s3 = MagicMock()
+                mock_boto3.client.return_value = mock_s3
+                
+                client = StorageClient(self.config)
+                result = client.create_backup("test_file_123")
+                
+                mock_s3.copy_object.assert_called_once()
+                self.assertTrue(result)
     
     def test_cleanup_old_backups_success(self):
         """Test successful backup cleanup."""
         with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
-            with patch.object(StorageClient, '_initialize_provider') as mock_init:
-                with patch.object(StorageClient, 'list_files') as mock_list:
-                    with patch.object(StorageClient, 'delete_file') as mock_delete:
-                        # Mock old backup files
-                        mock_files = [
-                            FileMetadata(
-                                file_id="file1.txt.backup_20240101_120000",
-                                filename="file1.txt.backup_20240101_120000",
-                                file_path="file1.txt.backup_20240101_120000",
-                                size=100,
-                                content_type="text/plain",
-                                checksum="checksum1",
-                                version="1.0",
-                                created_at=datetime(2024, 1, 1, 12, 0, 0, tzinfo=UTC)
-                            )
-                        ]
-                        mock_list.return_value = mock_files
-                        mock_delete.return_value = True
-                        
-                        # Mock the entire cleanup_old_backups method
-                        with patch.object(StorageClient, 'cleanup_old_backups') as mock_cleanup:
-                            mock_cleanup.return_value = 1
-                            
-                            client = StorageClient(self.config)
-                            result = client.cleanup_old_backups(days=30)
-                            
-                            self.assertEqual(result, 1)
-                            mock_cleanup.assert_called_once()
+            with patch('integrations.storage.storage_client.boto3') as mock_boto3:
+                mock_s3 = MagicMock()
+                mock_response = {
+                    'Contents': [
+                        {
+                            'Key': 'backups/old_file_20240101.txt',
+                            'LastModified': datetime(2024, 1, 1, tzinfo=UTC)
+                        },
+                        {
+                            'Key': 'backups/recent_file_20241201.txt',
+                            'LastModified': datetime(2024, 12, 1, tzinfo=UTC)
+                        }
+                    ]
+                }
+                mock_s3.list_objects_v2.return_value = mock_response
+                mock_boto3.client.return_value = mock_s3
+                
+                client = StorageClient(self.config)
+                deleted_count = client.cleanup_old_backups(days=30)
+                
+                # Should delete old backup from January
+                self.assertEqual(deleted_count, 1)
+                mock_s3.delete_object.assert_called_once()
     
     def test_get_metrics_success(self):
         """Test successful metrics retrieval."""
         with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
-            with patch.object(StorageClient, '_initialize_provider') as mock_init:
-                with patch.object(StorageClient, 'get_metrics') as mock_metrics:
-                    metrics = StorageMetrics(
-                        total_files=10,
-                        total_size=1024,
-                        upload_count=5,
-                        download_count=3
-                    )
-                    mock_metrics.return_value = metrics
-                    
-                    client = StorageClient(self.config)
-                    result = client.get_metrics()
-                    
-                    self.assertEqual(result.total_files, 10)
-                    self.assertEqual(result.total_size, 1024)
-                    self.assertEqual(result.upload_count, 5)
-                    mock_metrics.assert_called_once()
+            with patch.object(StorageClient, '_initialize_provider'):
+                client = StorageClient(self.config)
+                
+                metrics = client.get_metrics()
+                
+                self.assertIsInstance(metrics, StorageMetrics)
+                self.assertEqual(metrics.total_files, 0)
+                self.assertEqual(metrics.total_size, 0)
     
     def test_test_connection_success(self):
         """Test successful connection test."""
         with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
-            with patch.object(StorageClient, '_initialize_provider') as mock_init:
-                with patch.object(StorageClient, 'test_connection') as mock_test:
-                    mock_test.return_value = True
-                    
-                    client = StorageClient(self.config)
-                    result = client.test_connection()
-                    
-                    self.assertTrue(result)
-                    mock_test.assert_called_once()
+            with patch('integrations.storage.storage_client.boto3') as mock_boto3:
+                mock_s3 = MagicMock()
+                mock_boto3.client.return_value = mock_s3
+                
+                client = StorageClient(self.config)
+                result = client.test_connection()
+                
+                mock_s3.head_bucket.assert_called_once()
+                self.assertTrue(result)
+    
+    def test_test_connection_failure(self):
+        """Test connection test failure."""
+        with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
+            with patch('integrations.storage.storage_client.boto3') as mock_boto3:
+                mock_s3 = MagicMock()
+                mock_s3.head_bucket.side_effect = Exception("Connection failed")
+                mock_boto3.client.return_value = mock_s3
+                
+                client = StorageClient(self.config)
+                result = client.test_connection()
+                
+                self.assertFalse(result)
     
     def test_get_bucket_info_success(self):
         """Test successful bucket info retrieval."""
         with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
-            with patch.object(StorageClient, '_initialize_provider') as mock_init:
-                with patch.object(StorageClient, 'get_bucket_info') as mock_info:
-                    mock_info.return_value = {
-                        "provider": "aws",
-                        "bucket_name": "test-bucket",
-                        "region": "us-east-1",
-                        "versioning_enabled": True,
-                        "encryption_enabled": True
-                    }
-                    
-                    client = StorageClient(self.config)
-                    result = client.get_bucket_info()
-                    
-                    self.assertEqual(result["provider"], "aws")
-                    self.assertEqual(result["bucket_name"], "test-bucket")
-                    self.assertTrue(result["versioning_enabled"])
-                    mock_info.assert_called_once()
+            with patch('integrations.storage.storage_client.boto3') as mock_boto3:
+                mock_s3 = MagicMock()
+                mock_s3.head_bucket.return_value = {
+                    'ResponseMetadata': {'HTTPStatusCode': 200}
+                }
+                mock_boto3.client.return_value = mock_s3
+                
+                client = StorageClient(self.config)
+                info = client.get_bucket_info()
+                
+                self.assertIn('bucket_name', info)
+                self.assertIn('provider', info)
+                self.assertEqual(info['bucket_name'], 'test-bucket')
+                self.assertEqual(info['provider'], 'aws')
 
 
 class TestFileMetadata(unittest.TestCase):
-    """Test FileMetadata data class."""
+    """Test FileMetadata dataclass."""
     
     def test_file_metadata_creation(self):
         """Test FileMetadata creation."""
         metadata = FileMetadata(
-            file_id="test_file_123",
+            file_id="test_123",
             filename="test.txt",
-            file_path="test_file_123",
-            size=1024,
+            file_path="test/path/test.txt",
+            size=100,
             content_type="text/plain",
             checksum="test_checksum",
-            version="1.0",
-            tenant_id="test_tenant",
-            user_id="test_user",
-            tags={"category": "test", "priority": "high"},
+            version="v1",
+            tenant_id="tenant123",
+            user_id="user456",
+            tags={"type": "test"},
             created_at=datetime.now(UTC),
-            is_public=False,
-            access_level="private"
+            is_public=True,
+            access_level="public"
         )
         
-        self.assertEqual(metadata.file_id, "test_file_123")
+        self.assertEqual(metadata.file_id, "test_123")
         self.assertEqual(metadata.filename, "test.txt")
-        self.assertEqual(metadata.size, 1024)
-        self.assertEqual(metadata.tenant_id, "test_tenant")
-        self.assertEqual(metadata.tags["category"], "test")
+        self.assertEqual(metadata.size, 100)
+        self.assertEqual(metadata.tenant_id, "tenant123")
+        self.assertEqual(metadata.user_id, "user456")
+        self.assertTrue(metadata.is_public)
+        self.assertEqual(metadata.access_level, "public")
+    
+    def test_file_metadata_defaults(self):
+        """Test FileMetadata default values."""
+        metadata = FileMetadata(
+            file_id="test_123",
+            filename="test.txt",
+            file_path="test/path/test.txt",
+            size=100,
+            content_type="text/plain",
+            checksum="test_checksum",
+            version="v1"
+        )
+        
+        self.assertIsNone(metadata.tenant_id)
+        self.assertIsNone(metadata.user_id)
+        self.assertIsNone(metadata.tags)
         self.assertFalse(metadata.is_public)
         self.assertEqual(metadata.access_level, "private")
 
 
 class TestUploadResult(unittest.TestCase):
-    """Test UploadResult data class."""
+    """Test UploadResult dataclass."""
     
     def test_upload_result_creation(self):
         """Test UploadResult creation."""
         metadata = FileMetadata(
-            file_id="test_file_123",
+            file_id="test_123",
             filename="test.txt",
-            file_path="test_file_123",
-            size=1024,
+            file_path="test/path/test.txt",
+            size=100,
             content_type="text/plain",
             checksum="test_checksum",
-            version="1.0"
+            version="v1"
         )
         
         result = UploadResult(
             success=True,
-            file_id="test_file_123",
-            file_url="https://test-bucket.s3.amazonaws.com/test_file_123",
-            size=1024,
+            file_id="test_123",
+            file_url="https://test-bucket.s3.amazonaws.com/test_123",
+            size=100,
             checksum="test_checksum",
-            version="1.0",
+            version="v1",
             metadata=metadata,
             upload_time=1.5
         )
         
         self.assertTrue(result.success)
-        self.assertEqual(result.file_id, "test_file_123")
-        self.assertEqual(result.file_url, "https://test-bucket.s3.amazonaws.com/test_file_123")
-        self.assertEqual(result.size, 1024)
+        self.assertEqual(result.file_id, "test_123")
+        self.assertEqual(result.file_url, "https://test-bucket.s3.amazonaws.com/test_123")
+        self.assertEqual(result.size, 100)
         self.assertEqual(result.upload_time, 1.5)
         self.assertIsInstance(result.metadata, FileMetadata)
+    
+    def test_upload_result_with_error(self):
+        """Test UploadResult with error."""
+        result = UploadResult(
+            success=False,
+            file_id="test_123",
+            file_url="",
+            size=0,
+            checksum="",
+            version="v1",
+            metadata=None,
+            upload_time=0.0,
+            error_message="Upload failed"
+        )
+        
+        self.assertFalse(result.success)
+        self.assertEqual(result.error_message, "Upload failed")
 
 
 class TestDownloadResult(unittest.TestCase):
-    """Test DownloadResult data class."""
+    """Test DownloadResult dataclass."""
     
     def test_download_result_creation(self):
         """Test DownloadResult creation."""
         result = DownloadResult(
             success=True,
             file_path="/tmp/downloaded_file.txt",
-            size=1024,
+            size=100,
             checksum="test_checksum",
             download_time=0.5
         )
         
         self.assertTrue(result.success)
         self.assertEqual(result.file_path, "/tmp/downloaded_file.txt")
-        self.assertEqual(result.size, 1024)
+        self.assertEqual(result.size, 100)
         self.assertEqual(result.checksum, "test_checksum")
         self.assertEqual(result.download_time, 0.5)
+    
+    def test_download_result_with_error(self):
+        """Test DownloadResult with error."""
+        result = DownloadResult(
+            success=False,
+            file_path="",
+            size=0,
+            checksum="",
+            download_time=0.0,
+            error_message="Download failed"
+        )
+        
+        self.assertFalse(result.success)
+        self.assertEqual(result.error_message, "Download failed")
 
 
 class TestStorageMetrics(unittest.TestCase):
-    """Test StorageMetrics data class."""
+    """Test StorageMetrics dataclass."""
     
     def test_storage_metrics_creation(self):
         """Test StorageMetrics creation."""
-        metrics = StorageMetrics(
-            total_files=100,
-            total_size=1024000,
-            total_versions=50,
-            upload_count=25,
-            download_count=15,
-            delete_count=5,
-            error_count=2,
-            average_upload_time=1.5,
-            average_download_time=0.8,
-            last_upload=datetime.now(UTC),
-            last_download=datetime.now(UTC)
+        metrics = StorageMetrics()
+        
+        self.assertEqual(metrics.total_files, 0)
+        self.assertEqual(metrics.total_size, 0)
+        self.assertEqual(metrics.total_versions, 0)
+        self.assertEqual(metrics.upload_count, 0)
+        self.assertEqual(metrics.download_count, 0)
+        self.assertEqual(metrics.delete_count, 0)
+        self.assertEqual(metrics.error_count, 0)
+        self.assertEqual(metrics.average_upload_time, 0.0)
+        self.assertEqual(metrics.average_download_time, 0.0)
+        self.assertIsNone(metrics.last_upload)
+        self.assertIsNone(metrics.last_download)
+
+
+class TestStorageIntegrationWorkflows(unittest.TestCase):
+    """Test complete storage integration workflows."""
+    
+    def setUp(self):
+        """Set up test environment."""
+        self.config = StorageConfig(
+            provider="aws",
+            bucket_name="test-bucket",
+            region="us-east-1",
+            access_key="test_key",
+            secret_key="test_secret"
         )
         
-        self.assertEqual(metrics.total_files, 100)
-        self.assertEqual(metrics.total_size, 1024000)
-        self.assertEqual(metrics.total_versions, 50)
-        self.assertEqual(metrics.upload_count, 25)
-        self.assertEqual(metrics.download_count, 15)
-        self.assertEqual(metrics.average_upload_time, 1.5)
-        self.assertEqual(metrics.average_download_time, 0.8)
-        self.assertIsInstance(metrics.last_upload, datetime)
-        self.assertIsInstance(metrics.last_download, datetime)
+        # Create temporary test file
+        self.test_file = tempfile.NamedTemporaryFile(delete=False, suffix=".txt")
+        self.test_file.write(b"Test file content for workflow testing")
+        self.test_file.close()
+    
+    def tearDown(self):
+        """Clean up test environment."""
+        if os.path.exists(self.test_file.name):
+            os.unlink(self.test_file.name)
+    
+    def test_complete_upload_download_workflow(self):
+        """Test complete upload and download workflow."""
+        with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
+            with patch('integrations.storage.storage_client.boto3') as mock_boto3:
+                mock_s3 = MagicMock()
+                mock_boto3.client.return_value = mock_s3
+                
+                # Mock upload response
+                mock_s3.upload_file.return_value = None
+                
+                client = StorageClient(self.config)
+                
+                # Upload file
+                upload_result = client.upload_file(
+                    self.test_file.name,
+                    tenant_id="tenant123",
+                    user_id="user456",
+                    tags={"workflow": "test"}
+                )
+                
+                self.assertTrue(upload_result.success)
+                self.assertIsNotNone(upload_result.file_id)
+                
+                # Mock download response
+                mock_s3.download_file.return_value = None
+                
+                # Download file
+                download_path = "/tmp/downloaded_workflow_file.txt"
+                download_result = client.download_file(upload_result.file_id, download_path)
+                
+                self.assertTrue(download_result.success)
+                self.assertEqual(download_result.file_path, download_path)
+    
+    def test_file_versioning_workflow(self):
+        """Test file versioning workflow."""
+        with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
+            with patch('integrations.storage.storage_client.boto3') as mock_boto3:
+                mock_s3 = MagicMock()
+                mock_boto3.client.return_value = mock_s3
+                
+                client = StorageClient(self.config)
+                
+                # Upload initial version
+                upload_result1 = client.upload_file(self.test_file.name)
+                self.assertTrue(upload_result1.success)
+                
+                # Update file content
+                with open(self.test_file.name, 'wb') as f:
+                    f.write(b"Updated content")
+                
+                # Upload new version
+                upload_result2 = client.upload_file(self.test_file.name)
+                self.assertTrue(upload_result2.success)
+                
+                # Verify different versions
+                self.assertNotEqual(upload_result1.version, upload_result2.version)
+    
+    def test_multi_tenant_file_organization(self):
+        """Test multi-tenant file organization."""
+        with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
+            with patch('integrations.storage.storage_client.boto3') as mock_boto3:
+                mock_s3 = MagicMock()
+                mock_boto3.client.return_value = mock_s3
+                
+                client = StorageClient(self.config)
+                
+                # Upload files for different tenants
+                upload_result1 = client.upload_file(
+                    self.test_file.name,
+                    tenant_id="tenant1",
+                    user_id="user1"
+                )
+                
+                upload_result2 = client.upload_file(
+                    self.test_file.name,
+                    tenant_id="tenant2",
+                    user_id="user2"
+                )
+                
+                self.assertTrue(upload_result1.success)
+                self.assertTrue(upload_result2.success)
+                
+                # Verify tenant isolation
+                self.assertIn("tenant1", upload_result1.metadata.file_path)
+                self.assertIn("tenant2", upload_result2.metadata.file_path)
+    
+    def test_access_control_workflow(self):
+        """Test access control workflow."""
+        with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
+            with patch('integrations.storage.storage_client.boto3') as mock_boto3:
+                mock_s3 = MagicMock()
+                mock_boto3.client.return_value = mock_s3
+                
+                client = StorageClient(self.config)
+                
+                # Upload private file
+                private_result = client.upload_file(
+                    self.test_file.name,
+                    is_public=False
+                )
+                
+                # Upload public file
+                public_result = client.upload_file(
+                    self.test_file.name,
+                    is_public=True
+                )
+                
+                self.assertTrue(private_result.success)
+                self.assertTrue(public_result.success)
+                
+                # Verify access levels
+                self.assertFalse(private_result.metadata.is_public)
+                self.assertTrue(public_result.metadata.is_public)
+                self.assertEqual(private_result.metadata.access_level, "private")
+                self.assertEqual(public_result.metadata.access_level, "public")
+    
+    def test_backup_and_restore_workflow(self):
+        """Test backup and restore workflow."""
+        with patch('integrations.storage.storage_client.BOTO3_AVAILABLE', True):
+            with patch('integrations.storage.storage_client.boto3') as mock_boto3:
+                mock_s3 = MagicMock()
+                mock_boto3.client.return_value = mock_s3
+                
+                client = StorageClient(self.config)
+                
+                # Upload file
+                upload_result = client.upload_file(self.test_file.name)
+                self.assertTrue(upload_result.success)
+                
+                # Create backup
+                backup_result = client.create_backup(upload_result.file_id)
+                self.assertTrue(backup_result)
+                
+                # Cleanup old backups
+                cleanup_count = client.cleanup_old_backups(days=30)
+                self.assertIsInstance(cleanup_count, int)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     unittest.main() 
