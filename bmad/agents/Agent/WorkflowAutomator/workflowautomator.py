@@ -99,6 +99,9 @@ class WorkflowAutomatorAgent:
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
         
+        # Initialize logger
+        self.logger = logger
+        
         # Initialize workflow data structures
         self.workflows: Dict[str, Workflow] = {}
         self.execution_history: List[Dict[str, Any]] = []
@@ -133,6 +136,10 @@ class WorkflowAutomatorAgent:
     def _validate_input(self, data: Any) -> bool:
         """Validate input data."""
         if data is None:
+            return False
+        if isinstance(data, str) and data.strip() == "":
+            return False
+        if isinstance(data, list) and len(data) == 0:
             return False
         return True
     
@@ -233,6 +240,7 @@ class WorkflowAutomatorAgent:
   test               - Test resource completeness
   help               - Show this help message
         """
+        print(help_text)
         return help_text
     
     def create_workflow(self, name: str, description: str, agents: List[str], 
@@ -269,11 +277,11 @@ class WorkflowAutomatorAgent:
             
             self.workflows[workflow_id] = workflow
             
-            # Record metric
-            self.monitor.record_metric(
-                self.agent_name, 
-                MetricType.SUCCESS_RATE, 
-                100.0, 
+                        # Record metric
+            self.monitor._record_metric(
+                self.agent_name,
+                MetricType.SUCCESS_RATE,
+                100.0,
                 '%'
             )
             
@@ -753,7 +761,9 @@ class WorkflowAutomatorAgent:
     def show_workflow_history(self) -> str:
         """Show workflow execution history."""
         if not self.execution_history:
-            return "No workflow execution history available."
+            history_text = "No workflow execution history available."
+            print(history_text)
+            return history_text
         
         history_text = "📊 Workflow Execution History\n\n"
         
@@ -764,12 +774,15 @@ class WorkflowAutomatorAgent:
             history_text += f"- Success Rate: {entry.get('success_rate', 0):.1f}%\n"
             history_text += f"- Timestamp: {entry.get('timestamp', 'Unknown')}\n\n"
         
+        print(history_text)
         return history_text
     
     def show_performance_metrics(self) -> str:
         """Show workflow performance metrics."""
         if not self.execution_history:
-            return "No performance metrics available."
+            metrics_text = "No performance metrics available."
+            print(metrics_text)
+            return metrics_text
         
         # Calculate metrics
         total_executions = len(self.execution_history)
@@ -785,6 +798,7 @@ class WorkflowAutomatorAgent:
         metrics_text += f"- Active Workflows: {len([w for w in self.workflows.values() if w.status == WorkflowStatus.RUNNING])}\n"
         metrics_text += f"- Scheduled Workflows: {len(self.scheduled_workflows)}\n"
         
+        print(metrics_text)
         return metrics_text
     
     def show_automation_stats(self) -> str:
@@ -797,6 +811,7 @@ class WorkflowAutomatorAgent:
         stats_text += f"- Scheduled Workflows: {len(self.scheduled_workflows)}\n"
         stats_text += f"- Total Steps Executed: {sum(len(w.steps) for w in self.workflows.values())}\n"
         
+        print(stats_text)
         return stats_text
     
     def _subscribe_to_events(self) -> None:
