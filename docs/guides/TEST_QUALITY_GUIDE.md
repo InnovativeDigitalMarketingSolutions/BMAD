@@ -81,6 +81,105 @@ def method(self):
     return result
 ```
 
+### 7. Thread Safety Testing (KRITIEK)
+- **PROBLEEM**: Tests die vastlopen door recursive lock deadlocks of thread issues
+- **SYMPTOMEN**: 
+  - Tests die hangen zonder error
+  - Timeout errors
+  - Infinite loops
+  - Thread hanging zonder duidelijke oorzaak
+
+#### 7.1 Recursive Lock Deadlock Detection
+**PATROON**: Methode A verkrijgt lock en roept methode B aan die ook lock probeert te verkrijgen
+
+```python
+# ❌ PROBLEMATISCH PATROON
+def update_context(self, key, value, layer=None):
+    with CONTEXT_LOCK:
+        entry = self.get_context_entry(key, layer)  # Probeert ook LOCK te verkrijgen
+        # ... deadlock!
+
+def get_context_entry(self, key, layer=None):
+    with CONTEXT_LOCK:  # Deadlock! LOCK is al verkregen
+        # ...
+```
+
+#### 7.2 Kwalitatieve Oplossing
+**METHODE**: Directe implementatie zonder recursive lock calls
+
+```python
+# ✅ CORRECT PATROON
+def update_context(self, key, value, layer=None):
+    with CONTEXT_LOCK:
+        # Directe entry lookup zonder recursive lock
+        entry = None
+        if layer:
+            entry = self._layers[layer].get(key)
+        else:
+            for layer_enum in reversed(list(ContextLayer)):
+                entry = self._layers[layer_enum].get(key)
+                if entry and not self._is_expired(entry):
+                    break
+        # ...
+```
+
+#### 7.3 Test Environment Thread Management
+**PATROON**: Schakel background threads uit in test omgevingen
+
+```python
+# ✅ CORRECT PATROON
+class ThreadedManager:
+    def __init__(self, disable_background_threads: bool = False):
+        self._background_threads_enabled = not disable_background_threads
+        
+        if self._background_threads_enabled:
+            self._start_background_threads()
+
+# In tests
+manager = ThreadedManager(disable_background_threads=True)
+```
+
+#### 7.4 Debugging Thread Issues
+**METHODE**: Systematische aanpak voor het identificeren van thread problemen
+
+1. **Timeout Testing**: Gebruik `timeout` command voor tests die kunnen vastlopen
+   ```bash
+   timeout 10 python -m pytest test_file.py::test_method -v
+   ```
+
+2. **Isolation Testing**: Test elke operatie apart
+   ```python
+   def test_operation_a(self):
+       # Test alleen operatie A
+   
+   def test_operation_b(self):
+       # Test alleen operatie B
+   
+   def test_combined_operations(self):
+       # Test combinatie van operaties
+   ```
+
+3. **Lock Analysis**: Analyseer lock acquisition patterns
+   - Identificeer methoden die locks verkrijgen
+   - Zoek naar recursive lock calls
+   - Controleer lock ordering
+
+#### 7.5 Lesson Learned: Enhanced Context Manager
+**PROBLEEM**: `update_context` methode veroorzaakte recursive lock deadlock
+- **Root Cause**: `update_context` verkreeg `CONTEXT_LOCK` en riep `get_context_entry` aan
+- **Oplossing**: Directe entry lookup in plaats van `get_context_entry` aanroepen
+- **Resultaat**: Alle 33 tests slagen nu (100% success rate)
+- **Performance**: Tests uitgevoerd in 1.52 seconden
+
+#### 7.6 Thread Safety Testing Checklist
+- [ ] **Lock Analysis**: Analyseer alle lock acquisition patterns
+- [ ] **Recursive Calls**: Identificeer methoden die andere locked methoden aanroepen
+- [ ] **Test Isolation**: Schakel background threads uit in tests
+- [ ] **Timeout Testing**: Gebruik timeouts voor tests die kunnen vastlopen
+- [ ] **Resource Cleanup**: Zorg voor proper cleanup van threads
+- [ ] **Documentation**: Documenteer thread safety patterns
+- [ ] **Code Review**: Review thread safety in code reviews
+
 ## Mocking Strategieën
 
 ### 1. Pragmatische Mocking (Aanbevolen voor Complexe API Calls)
