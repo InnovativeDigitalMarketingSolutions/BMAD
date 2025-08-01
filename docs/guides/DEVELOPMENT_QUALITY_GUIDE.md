@@ -718,4 +718,18 @@ Deze guide moet worden gebruikt als referentie tijdens development. Het doel is 
 - **Stripe Tests**: Verbeter payment processing en error handling
 - **Mocking Strategy**: Gebruik altijd mocking voor externe dependencies
 - **Error Scenarios**: Test alle error scenarios en edge cases
-- **Performance Testing**: Include performance benchmarks waar relevant 
+- **Performance Testing**: Include performance benchmarks waar relevant
+
+### 4.6 Temporary Files Management
+- **Principe**: Houd GitHub repository clean van temporary files
+- **Best Practice**: Voeg temporary files direct toe aan .gitignore
+- **Pattern**: `docs/reports/*-improvement-report.md`, `docs/reports/*-analysis-report.md`
+- **Workflow**: 
+  1. Maak temporary report/document
+  2. Voeg pattern toe aan .gitignore
+  3. Commit .gitignore wijziging
+  4. Verwijder temporary file uit repository indien al gecommit
+- **Voordelen**: 
+  - Schone repository
+  - Geen accidental commits van temporary files
+  - Betere focus op permanente documentatie 
