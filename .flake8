@@ -1,0 +1,45 @@
+[flake8]
+max-line-length = 120
+ignore = 
+    E501,
+    W503,
+    E402,
+    F401,
+    F541,
+    F821,
+    F811,
+    F841,
+    E265,
+    E303,
+    E226,
+    W291,
+    W293,
+    W292,
+    E128,
+    E129,
+    E305,
+    E302,
+    E306,
+    E261,
+    E504,
+    F824,
+    W504,
+    E122,
+    E116
+exclude = 
+    .git,
+    __pycache__,
+    .venv,
+    venv,
+    path/to/venv,
+    htmlcov,
+    .pytest_cache,
+    allure-results,
+    test_data
+per-file-ignores =
+    # Template files can have undefined names
+    bmad/resources/templates/**/*.py:F821
+    # Agent files often have scattered imports
+    bmad/agents/Agent/**/*.py:E402
+    # Some files have unused imports for future use
+    bmad/agents/core/**/*.py:F401 
