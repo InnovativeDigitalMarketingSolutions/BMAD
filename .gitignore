@@ -237,4 +237,10 @@ temp_data/
 temp_*/data/
 
 # Keep improvement reports
-!docs/reports/agent-improvements/*IMPROVEMENT_REPORT.md 
+!docs/reports/agent-improvements/*IMPROVEMENT_REPORT.md
+
+# Agent runtime data files (auto-generated during testing)
+bmad/agents/core/shared_context.json
+
+# Policy files (auto-updated during testing)
+policies/*.json 
