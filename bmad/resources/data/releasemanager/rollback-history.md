@@ -1,7 +1,5 @@
 # Rollback History
 
-- 2025-07-31T13:37:51.673410: Release rolled back - 1.3.0 - High error rate
-- 2025-07-31T13:37:59.109279: Release rolled back - 1.3.0 - High error rate
 - 2025-07-31T13:45:52.162669: Release rolled back - 1.3.0 - High error rate
 - 2025-07-31T13:45:59.673675: Release rolled back - 1.3.0 - High error rate
 - 2025-07-31T13:53:42.120188: Release rolled back - 1.3.0 - High error rate
@@ -50,3 +48,5 @@
 - 2025-08-01T16:18:42.761000: Release rolled back - 1.3.0 - High error rate
 - 2025-08-01T18:41:50.520304: Release rolled back - 1.3.0 - High error rate
 - 2025-08-01T18:41:56.552188: Release rolled back - 1.3.0 - High error rate
+- 2025-08-01T19:14:14.336034: Release rolled back - 1.3.0 - High error rate
+- 2025-08-01T19:14:20.390085: Release rolled back - 1.3.0 - High error rate
