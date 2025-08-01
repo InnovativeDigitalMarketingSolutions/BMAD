@@ -181,6 +181,9 @@ development/
 
 # Temporary report files (auto-generated during testing)
 docs/reports/temporary/
+docs/reports/*-improvement-report.md
+docs/reports/*-analysis-report.md
+docs/reports/*-status-report.md
 TestApp_config_*.json
 *_report_*.json
 *_report_*.csv
