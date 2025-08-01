@@ -1,0 +1,270 @@
+{
+  "response_time_tests": [
+    {
+      "agent": "QualityGuardianAgent",
+      "method": "show_help",
+      "iterations": 10,
+      "avg_response_time_ms": 0.67,
+      "min_response_time_ms": 0.1,
+      "max_response_time_ms": 4.29,
+      "std_deviation_ms": 1.31,
+      "error_rate_percent": 0.0,
+      "throughput_ops_per_sec": 1486.76,
+      "performance_score": "excellent"
+    },
+    {
+      "agent": "QualityGuardianAgent",
+      "method": "test_resource_completeness",
+      "iterations": 10,
+      "avg_response_time_ms": 0.19,
+      "min_response_time_ms": 0.17,
+      "max_response_time_ms": 0.25,
+      "std_deviation_ms": 0.02,
+      "error_rate_percent": 0.0,
+      "throughput_ops_per_sec": 5386.29,
+      "performance_score": "excellent"
+    },
+    {
+      "agent": "QualityGuardianAgent",
+      "method": "collaborate_example",
+      "iterations": 10,
+      "avg_response_time_ms": 3014.7,
+      "min_response_time_ms": 3009.57,
+      "max_response_time_ms": 3022.7,
+      "std_deviation_ms": 3.93,
+      "error_rate_percent": 0.0,
+      "throughput_ops_per_sec": 0.33,
+      "performance_score": "needs_optimization"
+    },
+    {
+      "agent": "QualityGuardianAgent",
+      "method": "analyze_code_quality",
+      "iterations": 10,
+      "avg_response_time_ms": 1006.57,
+      "min_response_time_ms": 1004.3,
+      "max_response_time_ms": 1008.08,
+      "std_deviation_ms": 1.09,
+      "error_rate_percent": 0.0,
+      "throughput_ops_per_sec": 0.99,
+      "performance_score": "good"
+    },
+    {
+      "agent": "StrategiePartnerAgent",
+      "method": "show_help",
+      "iterations": 10,
+      "avg_response_time_ms": 9.12,
+      "min_response_time_ms": 5.36,
+      "max_response_time_ms": 31.4,
+      "std_deviation_ms": 8.0,
+      "error_rate_percent": 0.0,
+      "throughput_ops_per_sec": 109.71,
+      "performance_score": "excellent"
+    },
+    {
+      "agent": "StrategiePartnerAgent",
+      "method": "test_resource_completeness",
+      "iterations": 10,
+      "avg_response_time_ms": 5.2,
+      "min_response_time_ms": 4.69,
+      "max_response_time_ms": 6.27,
+      "std_deviation_ms": 0.47,
+      "error_rate_percent": 0.0,
+      "throughput_ops_per_sec": 192.4,
+      "performance_score": "excellent"
+    },
+    {
+      "agent": "StrategiePartnerAgent",
+      "method": "collaborate_example",
+      "iterations": 10,
+      "avg_response_time_ms": 8703.1,
+      "min_response_time_ms": 8651.96,
+      "max_response_time_ms": 8832.88,
+      "std_deviation_ms": 53.58,
+      "error_rate_percent": 0.0,
+      "throughput_ops_per_sec": 0.11,
+      "performance_score": "needs_optimization"
+    },
+    {
+      "agent": "StrategiePartnerAgent",
+      "method": "validate_idea",
+      "iterations": 10,
+      "avg_response_time_ms": 1015.24,
+      "min_response_time_ms": 1010.69,
+      "max_response_time_ms": 1020.92,
+      "std_deviation_ms": 3.63,
+      "error_rate_percent": 0.0,
+      "throughput_ops_per_sec": 0.98,
+      "performance_score": "good"
+    },
+    {
+      "agent": "WorkflowAutomatorAgent",
+      "method": "show_help",
+      "iterations": 10,
+      "avg_response_time_ms": 0.3,
+      "min_response_time_ms": 0.08,
+      "max_response_time_ms": 1.98,
+      "std_deviation_ms": 0.59,
+      "error_rate_percent": 0.0,
+      "throughput_ops_per_sec": 3318.54,
+      "performance_score": "excellent"
+    },
+    {
+      "agent": "WorkflowAutomatorAgent",
+      "method": "test_resource_completeness",
+      "iterations": 10,
+      "avg_response_time_ms": 0.34,
+      "min_response_time_ms": 0.22,
+      "max_response_time_ms": 0.78,
+      "std_deviation_ms": 0.17,
+      "error_rate_percent": 0.0,
+      "throughput_ops_per_sec": 2934.11,
+      "performance_score": "excellent"
+    },
+    {
+      "agent": "WorkflowAutomatorAgent",
+      "method": "collaborate_example",
+      "iterations": 10,
+      "avg_response_time_ms": 448.36,
+      "min_response_time_ms": 426.72,
+      "max_response_time_ms": 527.87,
+      "std_deviation_ms": 28.52,
+      "error_rate_percent": 0.0,
+      "throughput_ops_per_sec": 2.23,
+      "performance_score": "excellent"
+    },
+    {
+      "agent": "WorkflowAutomatorAgent",
+      "method": "create_workflow",
+      "iterations": 10,
+      "avg_response_time_ms": 0.74,
+      "min_response_time_ms": 0.2,
+      "max_response_time_ms": 1.78,
+      "std_deviation_ms": 0.53,
+      "error_rate_percent": 0.0,
+      "throughput_ops_per_sec": 1353.18,
+      "performance_score": "excellent"
+    },
+    {
+      "agent": "OrchestratorAgent",
+      "method": "show_help",
+      "iterations": 10,
+      "avg_response_time_ms": 2.29,
+      "min_response_time_ms": 0.6,
+      "max_response_time_ms": 9.78,
+      "std_deviation_ms": 2.74,
+      "error_rate_percent": 0.0,
+      "throughput_ops_per_sec": 437.34,
+      "performance_score": "excellent"
+    },
+    {
+      "agent": "OrchestratorAgent",
+      "method": "test_resource_completeness",
+      "iterations": 10,
+      "avg_response_time_ms": 2.28,
+      "min_response_time_ms": 0.38,
+      "max_response_time_ms": 4.47,
+      "std_deviation_ms": 1.49,
+      "error_rate_percent": 0.0,
+      "throughput_ops_per_sec": 437.87,
+      "performance_score": "excellent"
+    },
+    {
+      "agent": "OrchestratorAgent",
+      "method": "collaborate_example",
+      "iterations": 10,
+      "avg_response_time_ms": 3047.91,
+      "min_response_time_ms": 3024.7,
+      "max_response_time_ms": 3131.36,
+      "std_deviation_ms": 29.99,
+      "error_rate_percent": 0.0,
+      "throughput_ops_per_sec": 0.33,
+      "performance_score": "needs_optimization"
+    }
+  ],
+  "concurrent_load_tests": [
+    {
+      "agent": "QualityGuardianAgent",
+      "method": "analyze_code_quality",
+      "concurrent_users": 10,
+      "requests_per_user": 5,
+      "total_requests": 50,
+      "total_time_seconds": 5.05,
+      "avg_response_time_ms": 1007.82,
+      "throughput_ops_per_sec": 9.9,
+      "error_rate_percent": 0.0,
+      "performance_score": "good"
+    },
+    {
+      "agent": "StrategiePartnerAgent",
+      "method": "validate_idea",
+      "concurrent_users": 10,
+      "requests_per_user": 5,
+      "total_requests": 50,
+      "total_time_seconds": 5.53,
+      "avg_response_time_ms": 1102.88,
+      "throughput_ops_per_sec": 9.05,
+      "error_rate_percent": 0.0,
+      "performance_score": "good"
+    },
+    {
+      "agent": "WorkflowAutomatorAgent",
+      "method": "create_workflow",
+      "concurrent_users": 10,
+      "requests_per_user": 5,
+      "total_requests": 50,
+      "total_time_seconds": 0.01,
+      "avg_response_time_ms": 1.49,
+      "throughput_ops_per_sec": 4906.88,
+      "error_rate_percent": 0.0,
+      "performance_score": "excellent"
+    }
+  ],
+  "memory_usage_tests": [
+    {
+      "agent": "QualityGuardianAgent",
+      "method": "show_help",
+      "avg_memory_usage_mb": 0.0,
+      "max_memory_usage_mb": 0.03,
+      "memory_efficiency": "good"
+    },
+    {
+      "agent": "QualityGuardianAgent",
+      "method": "test_resource_completeness",
+      "avg_memory_usage_mb": 0.0,
+      "max_memory_usage_mb": 0.02,
+      "memory_efficiency": "good"
+    },
+    {
+      "agent": "QualityGuardianAgent",
+      "method": "collaborate_example",
+      "avg_memory_usage_mb": -5.45,
+      "max_memory_usage_mb": 0.09,
+      "memory_efficiency": "good"
+    },
+    {
+      "agent": "QualityGuardianAgent",
+      "method": "analyze_code_quality",
+      "avg_memory_usage_mb": 0.0,
+      "max_memory_usage_mb": 0.03,
+      "memory_efficiency": "good"
+    },
+    {
+      "agent": "StrategiePartnerAgent",
+      "method": "show_help",
+      "avg_memory_usage_mb": 0.11,
+      "max_memory_usage_mb": 1.02,
+      "memory_efficiency": "good"
+    }
+  ],
+  "summary": {
+    "total_tests": 15,
+    "avg_response_time_ms": 1150.47,
+    "max_response_time_ms": 8703.1,
+    "avg_error_rate_percent": 0.0,
+    "avg_throughput_ops_per_sec": 1641.94,
+    "performance_grade": "C",
+    "recommendations": [
+      "Optimize 5 slow methods (>1s response time)"
+    ]
+  }
+}
