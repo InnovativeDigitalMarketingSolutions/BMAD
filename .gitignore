@@ -181,6 +181,11 @@ development/
 
 # Temporary report files (auto-generated during testing)
 docs/reports/temporary/
+docs/reports/*-improvement-report.md
+docs/reports/*-analysis-report.md
+docs/reports/*-status-report.md
+docs/reports/*-test-report.md
+docs/reports/*-coverage-report.md
 TestApp_config_*.json
 *_report_*.json
 *_report_*.csv
@@ -232,4 +237,10 @@ temp_data/
 temp_*/data/
 
 # Keep improvement reports
-!docs/reports/agent-improvements/*IMPROVEMENT_REPORT.md 
+!docs/reports/agent-improvements/*IMPROVEMENT_REPORT.md
+
+# Agent runtime data files (auto-generated during testing)
+bmad/agents/core/shared_context.json
+
+# Policy files (auto-updated during testing)
+policies/*.json 

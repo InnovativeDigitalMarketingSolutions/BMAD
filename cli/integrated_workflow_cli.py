@@ -286,18 +286,8 @@ class IntegratedWorkflowCLI:
                 "advanced_access_control",
                 request
             )
-            print(f"   ✅ Advanced Access Control: {advanced_result.allowed}")
-            print(f"   📋 Rule: {advanced_result.rule_id}")
-            print(f"   📝 Reason: {advanced_result.reason}")
-            print(f"   📈 Severity: {advanced_result.severity.value}")
-
-            # Test resource management policy
-            resource_result = await self.orchestrator.advanced_policy_engine.evaluate_policy(
-                "advanced_resource_management",
-                request
-            )
-            print(f"   ✅ Resource Management: {resource_result.allowed}")
-            print(f"   📋 Rule: {resource_result.rule_id}")
+            print("   ✅ Advanced Policy Engine: Working")
+            print(f"   🔐 Result: {advanced_result.allowed}")
 
         except Exception as e:
             print(f"   ❌ Advanced Policy Engine: {e}")
@@ -305,20 +295,33 @@ class IntegratedWorkflowCLI:
         # Test LangGraph
         print("\n🔄 Testing LangGraph...")
         try:
-            workflows = self.orchestrator.langgraph_orchestrator.list_workflows()
-            print(f"   ✅ LangGraph: {len(workflows)} workflows available")
+            # Test workflow execution
+            workflow_result = await self.orchestrator.langgraph_orchestrator.execute_workflow(
+                "test-workflow",
+                {"test": True}
+            )
+            print("   ✅ LangGraph: Workflow execution working")
+            print(f"   🔄 Result: {workflow_result.status}")
+
         except Exception as e:
             print(f"   ❌ LangGraph: {e}")
 
         # Test Prefect
         print("\n🚀 Testing Prefect...")
         try:
-            # Just test if the orchestrator is initialized
-            print("   ✅ Prefect: Orchestrator initialized")
+            # Test flow execution
+            flow_result = await self.orchestrator.prefect_orchestrator.execute_flow(
+                "test-flow",
+                {"test": True}
+            )
+            print("   ✅ Prefect: Flow execution working")
+            print(f"   🚀 Result: {flow_result.status}")
+
         except Exception as e:
             print(f"   ❌ Prefect: {e}")
 
-        print("\n✅ Integration testing completed!")
+        print("\n" + "=" * 50)
+        print("✅ Integration testing completed!")
 
     async def show_agent_config(self, agent_name: str):
         """Show configuration for a specific agent."""
@@ -342,24 +345,36 @@ class IntegratedWorkflowCLI:
 
     async def list_sprites(self):
         """List all available component sprites."""
+        print("🎨 BMAD Test Sprites")
+        print("=" * 50)
+        
         sprites = self.orchestrator.get_component_sprites()
 
         if not sprites:
-            print("❌ Geen sprites gevonden")
+            print("❌ Geen test sprites gevonden")
             return
 
-        print("🧪 Available Component Sprites")
-        print("=" * 50)
-
-        for i, sprite in enumerate(sprites, 1):
-            print(f"{i}. {sprite['name']}")
-            print(f"   📋 Type: {sprite['type']}")
-            print(f"   🧩 Component: {sprite['component_name']}")
-            print(f"   🔄 States: {sprite['states']}")
-            print(f"   ♿ Accessibility: {len(sprite['accessibility_checks'])} checks")
-            print(f"   🎨 Visual: {len(sprite['visual_checks'])} checks")
-            print(f"   🖱️  Interactions: {len(sprite['interaction_tests'])} tests")
-            print()
+        # Backward compatibility: support both list and dict formats
+        if isinstance(sprites, dict):
+            # Original format: dict with sprite IDs as keys
+            for sprite_id, sprite_data in sprites.items():
+                if isinstance(sprite_data, dict):
+                    sprite_name = sprite_data.get('name', sprite_id)
+                    sprite_type = sprite_data.get('type', 'unknown')
+                    print(f"🎨 {sprite_name} ({sprite_type})")
+                else:
+                    print(f"🎨 {sprite_id} ({sprite_data})")
+        else:
+            # New format: list of sprite objects
+            for i, sprite in enumerate(sprites, 1):
+                print(f"{i}. {sprite['name']}")
+                print(f"   📋 Type: {sprite['type']}")
+                print(f"   🧩 Component: {sprite['component_name']}")
+                print(f"   🔄 States: {sprite['states']}")
+                print(f"   ♿ Accessibility: {len(sprite['accessibility_checks'])} checks")
+                print(f"   🎨 Visual: {len(sprite['visual_checks'])} checks")
+                print(f"   🖱️  Interactions: {len(sprite['interaction_tests'])} tests")
+                print()
 
     async def test_component(self, component_name: str, test_type: str = "all"):
         """Test a specific component using sprites."""
@@ -374,10 +389,10 @@ class IntegratedWorkflowCLI:
             print(f"   📈 Status: {result['status']}")
 
             if result["status"] == "passed":
-                print("   ✅ All tests passed!")
+                print("✅ Component test passed!")
                 print(f"   ⏱️  Duration: {result.get('performance_metrics', {}).get('duration', 0):.2f}s")
             else:
-                print(f"   ❌ Tests failed: {result.get('error', 'Unknown error')}")
+                print(f"❌ Component test failed: {result.get('error', 'Unknown error')}")
 
             # Show detailed results
             if result.get("details"):
@@ -391,11 +406,11 @@ class IntegratedWorkflowCLI:
                     print(f"   ⚠️  {issue}")
 
         except Exception as e:
-            print(f"❌ Component test failed: {e}")
+            print("❌ Component test failed!")
 
     def export_sprite_report(self, format: str = "json", output_file: Optional[str] = None):
         """Export sprite test report."""
-        print(f"📊 Exporting sprite test report in {format} format")
+        print("📄 Exporting sprite report...")
         print("=" * 50)
 
         try:
@@ -415,7 +430,7 @@ class IntegratedWorkflowCLI:
 
     async def start_performance_monitoring(self, interval: float = 5.0):
         """Start performance monitoring."""
-        print(f"🚀 Starting performance monitoring with {interval}s interval...")
+        print("📊 Starting performance monitoring...")
 
         try:
             self.orchestrator.start_performance_monitoring(interval)
@@ -464,52 +479,29 @@ class IntegratedWorkflowCLI:
             print(f"❌ Failed to get system performance: {e}")
 
     async def show_agent_performance(self, agent_name: str):
-        """Show performance summary for a specific agent."""
-        print(f"🤖 Agent Performance Summary: {agent_name}")
+        """Show performance metrics for a specific agent."""
+        print(f"🤖 Agent Performance: {agent_name}")
         print("=" * 50)
 
         try:
-            summary = self.orchestrator.get_agent_performance_summary(agent_name)
+            metrics = self.orchestrator.get_agent_performance_metrics(agent_name)
 
-            if not summary:
-                print(f"❌ Agent '{agent_name}' not found or not monitored")
-                return
+            if metrics:
+                print(f"📊 Success Rate: {metrics.get('success_rate', 0):.2%}")
+                print(f"⏱️  Average Response Time: {metrics.get('avg_response_time', 0):.2f}s")
+                print(f"🔄 Total Requests: {metrics.get('total_requests', 0)}")
+                print(f"❌ Failed Requests: {metrics.get('failed_requests', 0)}")
+                print(f"💰 Total Cost: ${metrics.get('total_cost', 0):.4f}")
 
-            print(f"📋 Agent: {summary['agent_name']}")
-            print(f"🔍 Monitoring: {'✅ Enabled' if summary['monitoring_enabled'] else '❌ Disabled'}")
-            print(f"⚡ Auto-scaling: {'✅ Enabled' if summary['auto_scaling_enabled'] else '❌ Disabled'}")
+                # Show recent alerts
+                alerts = metrics.get('recent_alerts', [])
+                if alerts:
+                    print(f"\n⚠️  Recent Alerts ({len(alerts)}):")
+                    for alert in alerts[:5]:  # Show last 5 alerts
+                        print(f"   [{alert['timestamp']}] {alert['level']}: {alert['message']}")
 
-            # Current metrics
-            if summary["current_metrics"]:
-                print("\n📊 Current Metrics:")
-                for metric_name, metric_data in summary["current_metrics"].items():
-                    value = metric_data["value"]
-                    unit = metric_data["unit"]
-                    print(f"   {metric_name}: {value:.2f} {unit}")
-
-            # Baseline metrics
-            if summary["baseline_metrics"]:
-                print("\n📈 Baseline Metrics:")
-                for metric_type, baseline_value in summary["baseline_metrics"].items():
-                    print(f"   {metric_type.value}: {baseline_value:.2f}")
-
-            # Recent alerts
-            if summary["alerts"]:
-                print("\n⚠️  Recent Alerts:")
-                for alert in summary["alerts"][-5:]:  # Show last 5 alerts
-                    status = "✅ Resolved" if alert["resolved"] else "❌ Active"
-                    timestamp = datetime.fromtimestamp(alert["timestamp"]).strftime("%H:%M:%S")
-                    print(f"   [{timestamp}] {alert['level'].upper()}: {alert['message']} ({status})")
             else:
-                print("\n✅ No recent alerts")
-
-            # Recommendations
-            if summary["recommendations"]:
-                print("\n💡 Recommendations:")
-                for recommendation in summary["recommendations"]:
-                    print(f"   • {recommendation}")
-            else:
-                print("\n✅ No recommendations at this time")
+                print(f"❌ No performance data available for agent '{agent_name}'")
 
         except Exception as e:
             print(f"❌ Failed to get agent performance: {e}")
@@ -522,31 +514,26 @@ class IntegratedWorkflowCLI:
         try:
             alerts = self.orchestrator.get_performance_alerts(agent_name, level)
 
-            if not alerts:
-                print("✅ No alerts found")
-                return
-
-            # Show recent alerts (last 20)
-            recent_alerts = alerts[:20]
-
-            for alert in recent_alerts:
-                status = "✅ Resolved" if alert["resolved"] else "❌ Active"
-                timestamp = datetime.fromtimestamp(alert["timestamp"]).strftime("%Y-%m-%d %H:%M:%S")
-
-                print(f"[{timestamp}] {alert['level'].upper()}")
-                print(f"   Agent: {alert['agent_name']}")
-                print(f"   Metric: {alert['metric_type']}")
-                print(f"   Message: {alert['message']}")
-                print(f"   Value: {alert['current_value']:.2f} (threshold: {alert['threshold']:.2f})")
-                print(f"   Status: {status}")
-                print()
+            if alerts:
+                for alert in alerts:
+                    # Convert timestamp to readable format
+                    from datetime import datetime
+                    timestamp = datetime.fromtimestamp(alert['timestamp']).strftime('%Y-%m-%d %H:%M:%S')
+                    
+                    print(f"[{timestamp}] {alert['level'].upper()}")
+                    print(f"   Agent: {alert['agent_name']}")
+                    print(f"   Metric: {alert['metric_type']}")
+                    print(f"   Message: {alert['message']}")
+                    print()
+            else:
+                print("✅ No active alerts")
 
         except Exception as e:
-            print(f"❌ Failed to show alerts: {e}")
+            print(f"❌ Failed to get alerts: {e}")
 
     def export_performance_data(self, format: str = "json", output_file: Optional[str] = None):
         """Export performance data."""
-        print(f"📊 Exporting performance data in {format} format")
+        print("📄 Exporting performance data...")
         print("=" * 50)
 
         try:

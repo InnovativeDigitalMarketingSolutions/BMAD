@@ -37,9 +37,8 @@ Handleidingen en setup instructies:
 ### **📈 Results**
 Test resultaten en planning documenten:
 
-- **[ClickUp Workflow Results](results/BMAD_CLICKUP_WORKFLOW_RESULTS.md)** - ClickUp workflow resultaten
-- **[Template Adaptation Results](results/TEMPLATE_ADAPTATION_TEST_RESULTS.md)** - Template aanpassing resultaten
-- **[Frontend Planning](results/bmad_frontend_planning_20250726_145620.md)** - Frontend planning document
+- **[Master Planning](deployment/BMAD_MASTER_PLANNING.md)** - Geconsolideerde master planning
+- **[System Analysis Report](reports/BMAD_SYSTEM_ANALYSIS_REPORT.md)** - Volledige systeem analyse
 
 ## 🚀 Quick Navigation
 
@@ -51,12 +50,12 @@ Test resultaten en planning documenten:
 ### **Voor Integraties**
 1. Bekijk [Repository Integrations](integrations/REPOSITORY_INTEGRATIONS_README.md)
 2. Lees [Agent Workflow Integration](integrations/AGENT_WORKFLOW_INTEGRATION_README.md)
-3. Check [Production Status](status/PRODUCTION_STATUS.md)
+3. Check [Master Planning](deployment/BMAD_MASTER_PLANNING.md)
 
 ### **Voor Monitoring**
 1. Lees [Performance Monitor](integrations/PERFORMANCE_MONITOR_INTEGRATION_README.md)
 2. Bekijk [Advanced Policy Engine](integrations/ADVANCED_POLICY_ENGINE_README.md)
-3. Check [Test Sprites](integrations/TEST_SPRITES_INTEGRATION_README.md)
+3. Check [Master Planning](deployment/BMAD_MASTER_PLANNING.md)
 
 ## 📝 Documentatie Conventies
 

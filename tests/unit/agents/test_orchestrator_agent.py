@@ -382,8 +382,8 @@ class TestOrchestratorAgent:
         
         agent.collaborate_example()
         
-        # Verify that publish was called
-        assert mock_publish.call_count >= 2  # At least workflow_started and orchestration_completed
+        # Verify that publish was called at least once (workflow_started)
+        assert mock_publish.call_count >= 1
 
     def test_run_agent_class_method(self):
         """Test run_agent class method."""

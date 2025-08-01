@@ -878,6 +878,9 @@ Orchestrator Agent Commands:
         if workflow_name not in WORKFLOW_TEMPLATES:
             logging.error(f"Workflow '{workflow_name}' niet gevonden.")
             send_slack_message(f":x: Workflow '{workflow_name}' niet gevonden.", channel=slack_channel, use_api=True)
+            # In development mode, create a mock workflow response
+            if os.getenv("DEV_MODE") == "true":
+                return {"status": "mock_workflow", "message": f"Mock workflow '{workflow_name}' created for development"}
             return
         self.set_workflow_status(workflow_name, "lopend")
         log_workflow_start(workflow_name)

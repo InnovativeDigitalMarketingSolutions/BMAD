@@ -375,11 +375,13 @@ class TestSlackNotify:
         mock_response.json.return_value = {"ok": True}
         mock_post.return_value = mock_response
         
-        # Test the function
-        send_slack_message("Test message", channel="#test-channel")
-        
-        # Verify the API was called
-        mock_post.assert_called_once()
+        # Mock DEV_MODE to be False for this test
+        with patch.dict(os.environ, {'DEV_MODE': 'false'}):
+            # Test the function
+            send_slack_message("Test message", channel="#test-channel")
+            
+            # Verify the API was called
+            mock_post.assert_called_once()
 
     @patch('integrations.slack.slack_notify.requests.post')
     def test_slack_notify_send_human_in_loop_alert(self, mock_post):
@@ -390,11 +392,13 @@ class TestSlackNotify:
         mock_response.json.return_value = {"ok": True}
         mock_post.return_value = mock_response
         
-        # Test the function
-        send_human_in_loop_alert("Test HITL reason", channel="#test-channel")
-        
-        # Verify the API was called
-        mock_post.assert_called_once()
+        # Mock DEV_MODE to be False for this test
+        with patch.dict(os.environ, {'DEV_MODE': 'false'}):
+            # Test the function
+            send_human_in_loop_alert("Test HITL reason", channel="#test-channel")
+            
+            # Verify the API was called
+            mock_post.assert_called_once()
 
 class TestSlackEventServer:
     """Test slack_event_server module."""

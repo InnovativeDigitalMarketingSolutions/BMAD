@@ -338,6 +338,13 @@ def enterprise_context(tenant_id: str, user_id: str):
 # Utility functions for agents
 def get_enterprise_context():
     """Get current enterprise context."""
+    import os
+    if os.getenv("DEV_MODE") == "true":
+        return {
+            'tenant_id': 'dev_tenant',
+            'user_id': 'dev_user'
+        }
+    
     return {
         'tenant_id': getattr(tenant_manager, '_current_tenant_id', None),
         'user_id': getattr(tenant_manager, '_current_user_id', None)
@@ -350,6 +357,11 @@ def set_enterprise_context(tenant_id: str, user_id: str):
 
 def check_enterprise_feature(feature_flag: str, tenant_id: Optional[str] = None) -> bool:
     """Check if a feature flag is enabled for a tenant."""
+    # Development mode - all features enabled
+    import os
+    if os.getenv("DEV_MODE") == "true":
+        return True
+    
     if not tenant_id:
         tenant_id = getattr(tenant_manager, '_current_tenant_id', None)
     
@@ -360,6 +372,11 @@ def check_enterprise_feature(feature_flag: str, tenant_id: Optional[str] = None)
 
 def check_enterprise_permission(permission: str, user_id: Optional[str] = None) -> bool:
     """Check if a user has a specific permission."""
+    # Development mode - all permissions granted
+    import os
+    if os.getenv("DEV_MODE") == "true":
+        return True
+    
     if not user_id:
         user_id = getattr(tenant_manager, '_current_user_id', None)
     

@@ -385,13 +385,14 @@ class TestQualityGuardianAgent:
 
     def test_collaborate_example(self, agent, capsys):
         """Test collaborate_example method."""
-        agent.collaborate_example()
+        import asyncio
+        asyncio.run(agent.collaborate_example())
         captured = capsys.readouterr()
         assert "QualityGuardian Agent Collaboration Example" in captured.out
         assert "Collaborating with TestEngineer Agent" in captured.out
         assert "Collaborating with SecurityDeveloper Agent" in captured.out
         assert "Collaborating with ReleaseManager Agent" in captured.out
-        assert "Collaboration example completed successfully" in captured.out
+        assert "Async collaboration example completed successfully" in captured.out
 
     def test_on_test_completed(self, agent):
         """Test on_test_completed event handler."""

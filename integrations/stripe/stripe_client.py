@@ -15,8 +15,14 @@ import time
 from typing import Dict, List, Optional, Any
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-import stripe
-from stripe.error import StripeError
+try:
+    import stripe
+    from stripe.error import StripeError
+    STRIPE_AVAILABLE = True
+except ImportError:
+    stripe = None
+    StripeError = Exception
+    STRIPE_AVAILABLE = False
 
 logger = logging.getLogger(__name__)
 
@@ -72,6 +78,10 @@ class StripeClient:
     def __init__(self, config: StripeConfig):
         """Initialize Stripe client with configuration."""
         self.config = config
+        
+        if not STRIPE_AVAILABLE:
+            raise ImportError("Stripe library is not available. Please install it with: pip install stripe")
+        
         stripe.api_key = config.api_key
         stripe.api_version = config.api_version
         

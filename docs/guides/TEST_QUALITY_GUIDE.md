@@ -11,10 +11,32 @@ Dit document dient als handleiding voor het oplossen van test problemen op een k
 - **NIET**: Tests aanpassen om ze te laten slagen zonder echte verbeteringen
 - **WEL**: Echte bugs oplossen, architectuur verbeteren, edge cases afhandelen
 
-### 2. Geen Code Verwijderen
-- **VERBODEN**: Code of tests verwijderen om failures op te lossen
-- **TOEGESTAAN**: Code vervangen, uitbreiden, of verbeteren
-- **VERPLICHT**: Documenteren waarom wijzigingen nodig zijn
+### 2. Code Behoud en Uitbreiding
+- **❌ NOOIT**: Code of tests verwijderen om failures op te lossen
+- **✅ WEL**: Code vervangen, uitbreiden, of verbeteren
+- **✅ WEL**: Oude code vervangen met nieuwe, verbeterde code
+- **✅ WEL**: Functionaliteit behouden en uitbreiden
+
+### 3. Test-Driven Quality Assurance
+- **Doel**: Tests valideren systeemkwaliteit, niet alleen functionaliteit
+- **Proces**: 
+  1. Analyseer eerst de rootcause van falende tests
+  2. Implementeer kwalitatieve oplossingen
+  3. Fix tests niet om simpelweg te laten slagen
+  4. Zorg dat oplossingen de systeemkwaliteit verbeteren
+
+### 4. Test Coverage en Validatie
+- **Na elke implementatie**: Tests opstellen voor het nieuwe onderdeel
+- **Na elk afgerond onderdeel**: 
+  1. Test of alles goed werkt
+  2. Controleer testcoverage (doel: >80%)
+  3. Vul tests aan waar nodig
+  4. Commit en push
+
+### 5. Consistentie en Lessons Learned
+- **Gebruik**: `test_quality_guide.md` en `development_quality_guide.md`
+- **Update**: Deze guides regelmatig met lessons learned
+- **Toepassing**: Zorg dat oplossingen consistent worden toegepast
 
 ### 3. Test Isolation
 - **DOEL**: Tests moeten onafhankelijk en reproduceerbaar zijn
@@ -114,6 +136,54 @@ def test_internal_logic(self, mock_save, mock_publish, agent):
 # GOED - gebruik de originele module path
 @patch('bmad.agents.core.communication.message_bus.publish')
 ```
+
+### 4. Third-Party Integration Mocking
+**PROBLEEM**: Complexe third-party dependencies (psycopg2, Auth0, Stripe, boto3, google.cloud) zijn moeilijk te mocken
+**OPLOSSING**: Pragmatische mocking van hele methoden
+
+```python
+# VOOR: Complexe boto3/Stripe mocking
+@patch('integrations.storage.storage_client.boto3')
+@patch('integrations.stripe.stripe_client.stripe')
+def test_complex_mocking(self, mock_stripe, mock_boto3):
+    # Complex setup...
+
+# NA: Pragmatische mocking
+with patch.object(StorageClient, 'upload_file') as mock_upload:
+    mock_upload.return_value = UploadResult(success=True, ...)
+    result = client.upload_file("test.txt")
+    self.assertTrue(result.success)
+```
+
+**VOORDELEN**:
+- Voorkomt dependency issues
+- Snelle test execution
+- Test method invocation
+- Geen externe dependencies
+- Consistent met guide principes
+
+### 5. Storage Integration Mocking (LESSONS LEARNED 2025-08-01)
+**PROBLEEM**: boto3 en google.cloud storage zijn niet beschikbaar in test environment
+**OPLOSSING**: Mock de hele client initialization en method calls
+
+```python
+# VOOR: Direct boto3 mocking (faalt)
+with patch('integrations.storage.storage_client.boto3') as mock_boto3:
+    # AttributeError: module has no attribute 'boto3'
+
+# NA: Pragmatische mocking van hele methods
+with patch.object(StorageClient, '_initialize_provider'):
+    with patch.object(StorageClient, '_validate_file', return_value=True):
+        with patch.object(StorageClient, '_calculate_checksum', return_value="test_checksum"):
+            client = StorageClient(config)
+            result = client.upload_file("test.txt")
+```
+
+**PATTERNS TOEGEPAST**:
+- Mock `_initialize_provider` om dependency issues te voorkomen
+- Mock validation methods met return values
+- Test dataclass creation en basic functionality
+- Focus op workflow tests in plaats van low-level API calls
 
 ## Veelvoorkomende Problemen en Oplossingen
 
@@ -272,9 +342,35 @@ def _assess_threat_level(self, vulnerabilities):
 **OPLOSSING**: Refactor to return dictionaries
 **PATTERN**: Structured responses met performance metrics
 
-## Workflow voor Test Fixes
+## 4. Grote Test Implementaties
 
-### 1. Analyse
+### 4.1 Test Implementatie Opdeling
+- **Probleem**: Grote test suites kunnen leiden tot incomplete implementaties
+- **Oplossing**: Deel test implementaties op in logische, beheersbare stukken
+- **Proces**:
+  1. **Test Planning**: Bepaal welke functionaliteit getest moet worden
+  2. **Test Opdeling**: Verdeel in logische test groepen
+  3. **Implementatie**: Implementeer één test groep per keer
+  4. **Validatie**: Run tests na elke groep
+  5. **Integratie**: Integreer test groepen stap voor stap
+
+### 4.2 Test Implementatie Stappen
+- **Stap 1**: Basis test setup en fixtures
+- **Stap 2**: Core functionaliteit tests (één methode per keer)
+- **Stap 3**: Error handling en edge case tests
+- **Stap 4**: Integration en mock tests
+- **Stap 5**: CLI en argument tests
+- **Stap 6**: Performance en coverage tests
+
+### 4.3 Best Practices voor Grote Test Wijzigingen
+- **Maximum test size**: Houd test wijzigingen onder 100-150 regels per keer
+- **Test frequency**: Run tests na elke logische stap
+- **Validation**: Verificeer test resultaten na elke stap
+- **Documentation**: Update test documentatie parallel met implementatie
+
+## 5. Workflow voor Test Fixes
+
+### 5.1 Analyse
 - Identificeer het echte probleem (API key, mocking, logic error)
 - Bepaal of het een kwaliteitsprobleem is of een test setup probleem
 - Kies de juiste oplossingsstrategie
@@ -611,4 +707,100 @@ def test_cli_run(self, mock_get_context, mock_publish, mock_save_context, mock_p
 - ✅ **Workflow Testing**
 - ✅ **Full CLI Coverage**
 
-**Totaal aantal tests**: 1,447 
+**Totaal aantal tests**: 1,447
+
+## Complete Agent Testing Workflow
+
+### Fase 1: Unit Testing Foundation (Week 1)
+1. **Unit Tests Aanmaken**
+   - ✅ Core functionaliteit tests
+   - ✅ Input validation tests
+   - ✅ Error handling tests
+   - ✅ Resource management tests
+   - ✅ Method coverage: 100%
+
+2. **Test Quality Assurance**
+   - ✅ Test coverage target: >80%
+   - ✅ Mocking strategy implementatie
+   - ✅ Edge case coverage
+   - ✅ Performance test scenarios
+
+### Fase 2: Integration Testing (Week 1-2)
+3. **Integration Tests Aanmaken**
+   - ✅ Cross-agent communication tests
+   - ✅ Event handling tests
+   - ✅ Workflow integration tests
+   - ✅ Resource completeness tests
+
+4. **System Integration Validation**
+   - ✅ Workflow orchestration tests
+   - ✅ Event bus integration tests
+   - ✅ Context sharing tests
+   - ✅ Error propagation tests
+
+### Fase 3: End-to-End Testing (Week 2)
+5. **E2E Workflow Tests**
+   - ✅ Complete workflow execution tests
+   - ✅ Agent collaboration tests
+   - ✅ Quality gate validation tests
+   - ✅ Performance benchmark tests
+
+6. **Production Readiness Tests**
+   - ✅ Load testing scenarios
+   - ✅ Error recovery tests
+   - ✅ Security validation tests
+   - ✅ User acceptance tests
+
+### Fase 4: Test Documentation & Maintenance (Week 2-3)
+7. **Test Documentation**
+   - ✅ Test coverage reports
+   - ✅ Test execution guides
+   - ✅ Troubleshooting documentation
+   - ✅ Performance benchmarks
+
+8. **Test Maintenance**
+   - ✅ Test data management
+   - ✅ Test environment setup
+   - ✅ Continuous integration tests
+   - ✅ Regression test suites
+
+### Testing Quality Gates
+- **Fase 1**: >80% unit test coverage, alle unit tests slagen
+- **Fase 2**: Alle integration tests slagen, event handling werkt
+- **Fase 3**: E2E workflows slagen, performance targets gehaald
+- **Fase 4**: Volledige test suite gevalideerd en gedocumenteerd
+
+### Test Checklist per Agent
+- [ ] Unit tests compleet (>80% coverage)
+- [ ] Integration tests compleet
+- [ ] E2E workflow tests compleet
+- [ ] Error handling tests compleet
+- [ ] Performance tests compleet
+- [ ] Security tests compleet
+- [ ] Mocking strategy geïmplementeerd
+- [ ] Test documentation compleet
+- [ ] CI/CD integration compleet
+- [ ] Regression test suite compleet
+
+## Repository Management Best Practices
+
+### Temporary Files Management
+- **Principe**: Houd GitHub repository clean van temporary files
+- **Best Practice**: Voeg temporary files direct toe aan .gitignore
+- **Pattern**: `docs/reports/*-improvement-report.md`, `docs/reports/*-analysis-report.md`
+- **Workflow**: 
+  1. Maak temporary report/document
+  2. Voeg pattern toe aan .gitignore
+  3. Commit .gitignore wijziging
+  4. Verwijder temporary file uit repository indien al gecommit
+- **Voordelen**: 
+  - Schone repository
+  - Geen accidental commits van temporary files
+  - Betere focus op permanente documentatie
+
+### Test Report Management
+- **Temporary Reports**: Auto-generated tijdens testing
+- **Permanent Reports**: Enterprise implementation, architecture docs
+- **Pattern**: `*-improvement-report.md`, `*-analysis-report.md`, `*-test-report.md`
+- **Cleanup**: Regelmatige cleanup van temporary files
+- **Documentation**: Update guides met lessons learned 
