@@ -210,10 +210,12 @@ class TestUtilityFunctions:
             mock_tenant._current_tenant_id = "test_tenant"
             mock_tenant._current_user_id = "test_user"
             
-            context = get_enterprise_context()
-            
-            assert context['tenant_id'] == "test_tenant"
-            assert context['user_id'] == "test_user"
+            # Mock DEV_MODE to be False for this test
+            with patch.dict(os.environ, {'DEV_MODE': 'false'}):
+                context = get_enterprise_context()
+                
+                assert context['tenant_id'] == "test_tenant"
+                assert context['user_id'] == "test_user"
     
     def test_set_enterprise_context(self):
         """Test setting enterprise context."""
@@ -228,20 +230,24 @@ class TestUtilityFunctions:
         with patch('bmad.core.enterprise.agent_integration.feature_flag_manager') as mock_flags:
             mock_flags.get_flag_value.return_value = True
             
-            result = check_enterprise_feature("test_feature", "test_tenant")
-            
-            assert result is True
-            mock_flags.get_flag_value.assert_called_with("test_feature", "test_tenant")
+            # Mock DEV_MODE to be False for this test
+            with patch.dict(os.environ, {'DEV_MODE': 'false'}):
+                result = check_enterprise_feature("test_feature", "test_tenant")
+                
+                assert result is True
+                mock_flags.get_flag_value.assert_called_with("test_feature", "test_tenant")
     
     def test_check_enterprise_permission(self):
         """Test checking enterprise permissions."""
         with patch('bmad.core.enterprise.agent_integration.permission_manager') as mock_permission:
             mock_permission.has_permission.return_value = True
             
-            result = check_enterprise_permission("test_permission", "test_user")
-            
-            assert result is True
-            mock_permission.has_permission.assert_called_with("test_user", "test_permission")
+            # Mock DEV_MODE to be False for this test
+            with patch.dict(os.environ, {'DEV_MODE': 'false'}):
+                result = check_enterprise_permission("test_permission", "test_user")
+                
+                assert result is True
+                mock_permission.has_permission.assert_called_with("test_user", "test_permission")
     
     def test_track_enterprise_usage(self):
         """Test tracking enterprise usage."""
