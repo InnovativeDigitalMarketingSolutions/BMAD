@@ -69,9 +69,44 @@ Dit document consolideert alle planning documenten tot één master roadmap voor
 - [x] CDN integration
 - [x] **Integration Requirements Check**: Verify cloud provider accounts and API keys
 
-#### 1.2 Production Infrastructure (Critical)
-**Timeline**: Weeks 3-5  
+#### 1.2 Microservices Architecture Implementation (Critical)
+**Timeline**: Weeks 3-4  
 **Status**: 📋 Planned  
+
+**Current State Analysis**:
+- [x] Modular components exist (agents, integrations, core)
+- [x] Monolithic architecture (all components in single application)
+- [ ] Microservices separation needed
+- [ ] Service boundaries definition required
+- [ ] Inter-service communication needed
+
+**Service Decomposition**:
+- [ ] **Agent Service**: Separate agent management and execution
+- [ ] **Integration Service**: External service integrations
+- [ ] **Context Service**: Enhanced context management
+- [ ] **Workflow Service**: Workflow orchestration
+- [ ] **API Gateway**: Centralized API management
+- [ ] **Authentication Service**: Auth0 integration service
+- [ ] **Notification Service**: Email, Slack, webhook notifications
+
+**Inter-Service Communication**:
+- [ ] Message queue implementation (Redis/RabbitMQ)
+- [ ] Event-driven architecture
+- [ ] Service discovery
+- [ ] Load balancing
+- [ ] Circuit breaker patterns
+- [ ] Distributed tracing
+
+**Data Management**:
+- [ ] Database per service pattern
+- [ ] Event sourcing implementation
+- [ ] Saga pattern for distributed transactions
+- [ ] Data consistency strategies
+- [ ] Backup and recovery per service
+
+#### 1.3 Production Infrastructure (Critical)
+**Timeline**: Weeks 5-6  
+**Status**: 📋 Planned
 
 **Docker Containerization**:
 - [ ] Multi-stage Docker builds
