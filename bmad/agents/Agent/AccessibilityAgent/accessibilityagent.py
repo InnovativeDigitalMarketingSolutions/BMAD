@@ -26,6 +26,14 @@ from integrations.slack.slack_notify import send_slack_message
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
+class AccessibilityError(Exception):
+    """Custom exception for accessibility-related errors."""
+    pass
+
+class AccessibilityValidationError(AccessibilityError):
+    """Exception for accessibility validation failures."""
+    pass
+
 class AccessibilityAgent:
     def __init__(self):
         # Set agent name
@@ -56,6 +64,98 @@ class AccessibilityAgent:
         # Initialize audit history
         self.audit_history = []
         self._load_audit_history()
+
+        # Accessibility-specific attributes
+        self.accessibility_standards = {
+            "wcag": "2.1",
+            "aria": "1.2",
+            "section508": "2017"
+        }
+        self.common_issues = []
+        self.improvement_recommendations = []
+
+    def _validate_input(self, value: Any, expected_type: type, param_name: str) -> None:
+        """Validate input parameters with type checking."""
+        if not isinstance(value, expected_type):
+            raise AccessibilityValidationError(
+                f"Invalid type for {param_name}: expected {expected_type.__name__}, got {type(value).__name__}"
+            )
+
+    def _validate_component_name(self, component_name: str) -> None:
+        """Validate component name parameter."""
+        self._validate_input(component_name, str, "component_name")
+        if not component_name.strip():
+            raise AccessibilityValidationError("Component name cannot be empty")
+        if len(component_name) > 100:
+            raise AccessibilityValidationError("Component name cannot exceed 100 characters")
+
+    def _validate_audit_target(self, target: str) -> None:
+        """Validate accessibility audit target."""
+        self._validate_input(target, str, "target")
+        if not target.strip():
+            raise AccessibilityValidationError("Audit target cannot be empty")
+        if not target.startswith(('/', 'http://', 'https://')):
+            raise AccessibilityValidationError("Audit target must be a valid URL or path")
+
+    def _validate_format_type(self, format_type: str) -> None:
+        """Validate export format type."""
+        self._validate_input(format_type, str, "format_type")
+        if format_type not in ["md", "csv", "json"]:
+            raise AccessibilityValidationError("Format type must be 'md', 'csv', or 'json'")
+
+    def _record_accessibility_metric(self, metric_name: str, value: float, unit: str = "%") -> None:
+        """Record accessibility-specific metrics."""
+        try:
+            self.monitor._record_metric("AccessibilityAgent", MetricType.SUCCESS_RATE, value, unit)
+            logger.info(f"Accessibility metric recorded: {metric_name} = {value}{unit}")
+        except Exception as e:
+            logger.error(f"Failed to record accessibility metric: {e}")
+
+    def _assess_accessibility_level(self, audit_results: Dict[str, Any]) -> str:
+        """Assess the overall accessibility level based on audit results."""
+        if not audit_results:
+            return "unknown"
+        
+        # Calculate accessibility score
+        total_issues = len(audit_results.get("issues", []))
+        critical_issues = len([issue for issue in audit_results.get("issues", []) 
+                             if issue.get("severity") == "critical"])
+        
+        if critical_issues > 0:
+            return "critical"
+        elif total_issues > 10:
+            return "poor"
+        elif total_issues > 5:
+            return "fair"
+        elif total_issues > 0:
+            return "good"
+        else:
+            return "excellent"
+
+    def _generate_accessibility_recommendations(self, audit_results: Dict[str, Any]) -> list:
+        """Generate accessibility recommendations based on audit results."""
+        recommendations = [
+            "Ensure all images have alt text",
+            "Use semantic HTML elements",
+            "Provide sufficient color contrast",
+            "Implement keyboard navigation",
+            "Add ARIA labels where needed"
+        ]
+        
+        issues = audit_results.get("issues", [])
+        if not issues:
+            return recommendations + ["Maintain current accessibility standards"]
+        
+        # Add specific recommendations based on issues
+        for issue in issues:
+            if "color" in issue.get("type", "").lower():
+                recommendations.append("Improve color contrast ratios")
+            if "keyboard" in issue.get("type", "").lower():
+                recommendations.append("Enhance keyboard navigation support")
+            if "screen reader" in issue.get("type", "").lower():
+                recommendations.append("Add screen reader specific attributes")
+        
+        return list(set(recommendations))  # Remove duplicates
 
     def _load_audit_history(self):
         """Load audit history from data file"""
@@ -142,10 +242,7 @@ Accessibility Agent Commands:
     def test_shadcn_component(self, component_name: str = "Button") -> Dict[str, Any]:
         """Test Shadcn component accessibility."""
         # Input validation
-        if not isinstance(component_name, str):
-            raise TypeError("component_name must be a string")
-        if not component_name.strip():
-            raise ValueError("component_name cannot be empty")
+        self._validate_component_name(component_name)
             
         logger.info(f"Testing Shadcn component accessibility: {component_name}")
 
@@ -165,7 +262,7 @@ Accessibility Agent Commands:
                 "color_contrast": "PASS",
                 "touch_targets": "PASS"
             },
-            "issues_found": [
+            "component_issues": [
                 {
                     "type": "minor",
                     "description": "Icon button missing aria-label",
@@ -199,7 +296,7 @@ Accessibility Agent Commands:
         }
 
         # Log performance metrics
-        self.monitor._record_metric("AccessibilityAgent", MetricType.SUCCESS_RATE, test_result["accessibility_score"], "%")
+        self._record_accessibility_metric("ShadcnComponentTest", test_result["accessibility_score"], "%")
 
         # Add to audit history
         audit_entry = f"{datetime.now().isoformat()}: Shadcn {component_name} component tested with {test_result['accessibility_score']}% accessibility score"
@@ -212,10 +309,9 @@ Accessibility Agent Commands:
     def validate_aria(self, component_code: str = "") -> Dict[str, Any]:
         """Validate ARIA attributes in component code."""
         # Input validation
-        if not isinstance(component_code, str):
-            raise TypeError("component_code must be a string")
+        self._validate_input(component_code, str, "component_code")
         if not component_code.strip():
-            raise ValueError("component_code cannot be empty")
+            raise AccessibilityValidationError("component_code cannot be empty")
             
         logger.info("Validating ARIA attributes")
 
@@ -248,7 +344,7 @@ Accessibility Agent Commands:
                     "findings": "Live regions are appropriately used"
                 }
             },
-            "issues_found": [
+            "aria_issues": [
                 {
                     "type": "aria-label",
                     "element": "search button",
@@ -278,7 +374,7 @@ Accessibility Agent Commands:
         }
 
         # Log performance metrics
-        self.monitor._record_metric("AccessibilityAgent", MetricType.SUCCESS_RATE, validation_result["overall_score"], "%")
+        self._record_accessibility_metric("ARIAValidation", validation_result["overall_score"], "%")
 
         logger.info(f"ARIA validation completed: {validation_result}")
         return validation_result
@@ -286,10 +382,7 @@ Accessibility Agent Commands:
     def test_screen_reader(self, component_name: str = "Button") -> Dict[str, Any]:
         """Test screen reader compatibility."""
         # Input validation
-        if not isinstance(component_name, str):
-            raise TypeError("component_name must be a string")
-        if not component_name.strip():
-            raise ValueError("component_name cannot be empty")
+        self._validate_component_name(component_name)
             
         logger.info(f"Testing screen reader compatibility for: {component_name}")
 
@@ -333,7 +426,7 @@ Accessibility Agent Commands:
                 "focus_trap": "PASS",
                 "focus_restoration": "PASS"
             },
-            "issues_found": [],
+            "screen_reader_issues": [],
             "recommendations": [
                 "Component works well with all major screen readers",
                 "Keyboard navigation is fully functional",
@@ -349,7 +442,7 @@ Accessibility Agent Commands:
         }
 
         # Log performance metrics
-        self.monitor._record_metric("AccessibilityAgent", MetricType.SUCCESS_RATE, screen_reader_test["overall_score"], "%")
+        self._record_accessibility_metric("ScreenReaderTest", screen_reader_test["overall_score"], "%")
 
         logger.info(f"Screen reader test completed: {screen_reader_test}")
         return screen_reader_test
@@ -357,10 +450,9 @@ Accessibility Agent Commands:
     def check_design_tokens(self, design_system: str = "Shadcn") -> Dict[str, Any]:
         """Check design token accessibility."""
         # Input validation
-        if not isinstance(design_system, str):
-            raise TypeError("design_system must be a string")
+        self._validate_input(design_system, str, "design_system")
         if not design_system.strip():
-            raise ValueError("design_system cannot be empty")
+            raise AccessibilityValidationError("design_system cannot be empty")
             
         logger.info(f"Checking design token accessibility for: {design_system}")
 
@@ -410,7 +502,7 @@ Accessibility Agent Commands:
                 "focus_offset": "2px from element",
                 "status": "PASS"
             },
-            "issues_found": [
+            "design_token_issues": [
                 {
                     "type": "color_contrast",
                     "element": "muted text on light background",
@@ -439,125 +531,108 @@ Accessibility Agent Commands:
         }
 
         # Log performance metrics
-        self.monitor._record_metric("AccessibilityAgent", MetricType.SUCCESS_RATE, design_token_check["overall_score"], "%")
+        self._record_accessibility_metric("DesignTokenCheck", design_token_check["overall_score"], "%")
 
         logger.info(f"Design token accessibility check completed: {design_token_check}")
         return design_token_check
 
     def run_accessibility_audit(self, target: str = "/mock/page") -> Dict[str, Any]:
-        """Run accessibility audit on target."""
-        # Input validation
-        if not isinstance(target, str):
-            raise TypeError("target must be a string")
-        if not target.strip():
-            raise ValueError("target cannot be empty")
+        """Run accessibility audit on target with enhanced validation and intelligence."""
+        try:
+            self._validate_audit_target(target)
             
-        logger.info(f"Running accessibility audit on: {target}")
-
-        # Simulate accessibility audit
-        time.sleep(2)
-
-        audit_result = {
-            "target": target,
-            "audit_type": "comprehensive",
-            "status": "audited",
-            "timestamp": datetime.now().isoformat(),
-            "overall_score": 85,
-            "categories": {
-                "perceivable": {
-                    "score": 88,
-                    "issues": ["Low contrast text", "Missing alt text"]
-                },
-                "operable": {
-                    "score": 92,
-                    "issues": ["Keyboard navigation works well"]
-                },
-                "understandable": {
-                    "score": 90,
-                    "issues": ["Clear navigation structure"]
-                },
-                "robust": {
-                    "score": 85,
-                    "issues": ["Some ARIA implementation issues"]
-                }
-            },
-            "critical_issues": [
-                "Missing alt text on important images",
-                "Insufficient color contrast on navigation links"
-            ],
-            "recommendations": [
-                "Add descriptive alt text to all images",
-                "Improve color contrast to meet WCAG AA standards",
-                "Ensure all interactive elements are keyboard accessible"
-            ],
-            "wcag_compliance": {
-                "wcag_2_1_aa": "Partially compliant",
-                "wcag_2_1_aaa": "Not compliant",
-                "section_508": "Partially compliant"
-            },
-            "performance_metrics": {
-                "audit_duration": "2.3 seconds",
-                "elements_checked": 156,
-                "issues_found": 8,
-                "critical_issues": 2
-            },
-            "automated_testing": {
-                "axe_core": "Used for automated testing",
-                "lighthouse": "Accessibility score: 85",
-                "wave": "Manual verification completed"
-            },
-            "mobile_accessibility": {
-                "touch_targets": "Compliant",
-                "viewport_scaling": "Supports 200% zoom",
-                "gesture_support": "Properly implemented"
-            },
-            "agent": "AccessibilityAgent"
-        }
-
-        # Log performance metrics
-        self.monitor._record_metric("AccessibilityAgent", MetricType.SUCCESS_RATE, audit_result["overall_score"], "%")
-
-        # Add to audit history
-        audit_entry = f"{datetime.now().isoformat()}: Accessibility audit completed on {target} with {audit_result['overall_score']}% score"
-        self.audit_history.append(audit_entry)
-        self._save_audit_history()
-
-        logger.info(f"Accessibility audit completed: {audit_result}")
-        return audit_result
-
-    def export_audit(self, format_type: str = "md", audit_data: Optional[Dict] = None):
-        """Export audit results in specified format."""
-        # Input validation
-        if not isinstance(format_type, str):
-            raise TypeError("format_type must be a string")
-        if not format_type.strip():
-            raise ValueError("format_type cannot be empty")
-        if audit_data is not None and not isinstance(audit_data, dict):
-            raise TypeError("audit_data must be a dictionary")
+            logger.info(f"Running accessibility audit on: {target}")
             
-        if not audit_data:
-            audit_data = {
-                "audit_type": "Accessibility Audit",
-                "target": "BMAD Application",
-                "status": "exported",
-                "overall_score": 85,
-                "critical_issues": 3,
-                "recommendations": 5,
+            # Record start time for performance monitoring
+            start_time = time.time()
+            
+            # Simulate accessibility audit
+            audit_result = {
+                "target": target,
                 "timestamp": datetime.now().isoformat(),
+                "overall_score": 85,
+                "wcag_compliance": "AA",
+                "issues": [
+                    {"type": "color_contrast", "severity": "medium", "description": "Insufficient color contrast on buttons"},
+                    {"type": "alt_text", "severity": "low", "description": "Missing alt text on decorative images"},
+                    {"type": "keyboard_navigation", "severity": "high", "description": "Focus indicators not visible"}
+                ],
+                "recommendations": [],
                 "agent": "AccessibilityAgent"
             }
+            
+            # Assess accessibility level
+            accessibility_level = self._assess_accessibility_level(audit_result)
+            audit_result["accessibility_level"] = accessibility_level
+            
+            # Generate recommendations
+            recommendations = self._generate_accessibility_recommendations(audit_result)
+            audit_result["recommendations"] = recommendations
+            
+            # Record performance
+            end_time = time.time()
+            audit_time = end_time - start_time
+            
+            # Log performance metric
+            self._record_accessibility_metric("audit_execution_time", audit_time, "s")
+            
+            # Add to audit history
+            audit_entry = f"{datetime.now().isoformat()}: Accessibility audit on {target} - Score: {audit_result['overall_score']}%"
+            self.audit_history.append(audit_entry)
+            self._save_audit_history()
+            
+            logger.info(f"Accessibility audit completed: {audit_result}")
+            
+            return audit_result
+            
+        except AccessibilityValidationError as e:
+            logger.error(f"Validation error in accessibility audit: {e}")
+            return {
+                "success": False,
+                "target": target,
+                "error": str(e)
+            }
+        except Exception as e:
+            logger.error(f"Error running accessibility audit: {e}")
+            return {
+                "success": False,
+                "target": target,
+                "error": str(e)
+            }
 
+    def export_audit(self, format_type: str = "md", audit_data: Optional[Dict] = None):
+        """Export audit results in specified format with enhanced validation."""
         try:
+            self._validate_format_type(format_type)
+            
+            if audit_data is None:
+                audit_data = {
+                    "agent": "AccessibilityAgent",
+                    "timestamp": datetime.now().isoformat(),
+                    "audit_history": self.audit_history[-10:],
+                    "accessibility_metrics": {
+                        "total_audits": len(self.audit_history),
+                        "average_score": 85.0,
+                        "compliance_level": "WCAG 2.1 AA"
+                    }
+                }
+            
             if format_type == "md":
                 self._export_markdown(audit_data)
             elif format_type == "csv":
                 self._export_csv(audit_data)
             elif format_type == "json":
                 self._export_json(audit_data)
-            else:
-                print(f"Unsupported format: {format_type}")
+            
+            # Log performance metric
+            self._record_accessibility_metric("audit_export", 100, "%")
+            
+        except AccessibilityValidationError as e:
+            logger.error(f"Validation error exporting audit: {e}")
+            raise
         except Exception as e:
             logger.error(f"Error exporting audit: {e}")
+            raise
 
     def _export_markdown(self, audit_data: Dict):
         """Export audit data as markdown."""
@@ -616,62 +691,46 @@ Accessibility Agent Commands:
         print(f"Audit export saved to: {output_file}")
 
     def generate_improvement_report(self):
-        """Generate improvement report based on audit history."""
-        logger.info("Generating improvement report")
-
-        # Analyze common issues
-        common_issues = self._analyze_common_issues()
-
-        report = {
-            "report_type": "Accessibility Improvement",
-            "status": "generated",
-            "generated_date": datetime.now().isoformat(),
-            "common_issues": common_issues,
-            "trends": {
-                "score_improvement": "+5% over last month",
-                "critical_issues_reduction": "-30%",
-                "compliance_improvement": "+8%"
-            },
-            "recommendations": [
-                "Focus on color contrast improvements",
-                "Implement comprehensive ARIA training",
-                "Add automated accessibility testing to CI/CD"
-            ],
-            "priority_actions": [
-                {
-                    "action": "Fix critical contrast issues",
-                    "priority": "high",
-                    "estimated_effort": "2-3 days",
-                    "impact": "Immediate accessibility improvement"
-                },
-                {
-                    "action": "Add missing alt text",
-                    "priority": "medium",
-                    "estimated_effort": "1-2 days",
-                    "impact": "Better screen reader support"
-                },
-                {
-                    "action": "Improve keyboard navigation",
-                    "priority": "medium",
-                    "estimated_effort": "3-4 days",
-                    "impact": "Enhanced usability for keyboard users"
-                }
-            ],
-            "compliance_tracking": {
-                "wcag_2_1_aa_target": "95%",
-                "current_compliance": "85%",
-                "gap_analysis": "10% improvement needed"
-            },
-            "automation_opportunities": [
-                "Automated contrast checking in CI/CD",
-                "Automated alt text validation",
-                "Automated keyboard navigation testing"
-            ],
-            "agent": "AccessibilityAgent"
-        }
-
-        logger.info(f"Improvement report generated: {report}")
-        return report
+        """Generate accessibility improvement report with enhanced intelligence."""
+        try:
+            logger.info("Generating accessibility improvement report")
+            
+            # Analyze common issues
+            common_issues = self._analyze_common_issues()
+            
+            # Generate comprehensive report
+            report = {
+                "timestamp": datetime.now().isoformat(),
+                "agent": "AccessibilityAgent",
+                "accessibility_standards": self.accessibility_standards,
+                "common_issues": common_issues,
+                "recommendations": [
+                    "Implement automated accessibility testing in CI/CD",
+                    "Add accessibility training for development team",
+                    "Establish accessibility review process",
+                    "Use accessibility testing tools regularly",
+                    "Monitor accessibility metrics over time"
+                ],
+                "next_steps": [
+                    "Schedule accessibility audit for all components",
+                    "Review and update accessibility guidelines",
+                    "Implement accessibility monitoring dashboard",
+                    "Conduct user testing with assistive technologies"
+                ]
+            }
+            
+            # Log performance metric
+            self._record_accessibility_metric("improvement_report_generation", 100, "%")
+            
+            logger.info(f"Accessibility improvement report generated: {report}")
+            return report
+            
+        except Exception as e:
+            logger.error(f"Error generating improvement report: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
 
     def _analyze_common_issues(self) -> str:
         """Analyze common accessibility issues from audit history."""
@@ -714,12 +773,15 @@ Accessibility Agent Commands:
         # Test Shadcn component
         shadcn_test = self.test_shadcn_component("Button")
 
-        # Publish completion
+        # Publish completion with safe access to scores
+        overall_score = audit_result.get("overall_score", 0) if audit_result.get("success", True) else 0
+        shadcn_score = shadcn_test.get("accessibility_score", 0)
+        
         publish("accessibility_audit_completed", {
             "status": "success",
             "agent": "AccessibilityAgent",
-            "overall_score": audit_result["overall_score"],
-            "shadcn_score": shadcn_test["accessibility_score"]
+            "overall_score": overall_score,
+            "shadcn_score": shadcn_score
         })
 
         # Save context
@@ -727,7 +789,7 @@ Accessibility Agent Commands:
 
         # Notify via Slack
         try:
-            send_slack_message(f"Accessibility audit completed with {audit_result['overall_score']}% score")
+            send_slack_message(f"Accessibility audit completed with {overall_score}% score")
         except Exception as e:
             logger.warning(f"Could not send Slack notification: {e}")
 

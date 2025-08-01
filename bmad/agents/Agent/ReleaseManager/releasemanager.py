@@ -65,6 +65,14 @@ class ReleaseManagerAgent:
                     for line in lines:
                         if line.strip().startswith("- "):
                             self.release_history.append(line.strip()[2:])
+        except FileNotFoundError:
+            logger.info("Release history file not found, starting with empty history")
+        except PermissionError as e:
+            logger.error(f"Permission denied accessing release history: {e}")
+        except UnicodeDecodeError as e:
+            logger.error(f"Unicode decode error in release history: {e}")
+        except OSError as e:
+            logger.error(f"OS error loading release history: {e}")
         except Exception as e:
             logger.warning(f"Could not load release history: {e}")
 
@@ -76,6 +84,10 @@ class ReleaseManagerAgent:
                 f.write("# Release History\n\n")
                 for release in self.release_history[-50:]:  # Keep last 50 releases
                     f.write(f"- {release}\n")
+        except PermissionError as e:
+            logger.error(f"Permission denied saving release history: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving release history: {e}")
         except Exception as e:
             logger.error(f"Could not save release history: {e}")
 
@@ -89,6 +101,14 @@ class ReleaseManagerAgent:
                     for line in lines:
                         if line.strip().startswith("- "):
                             self.rollback_history.append(line.strip()[2:])
+        except FileNotFoundError:
+            logger.info("Rollback history file not found, starting with empty history")
+        except PermissionError as e:
+            logger.error(f"Permission denied accessing rollback history: {e}")
+        except UnicodeDecodeError as e:
+            logger.error(f"Unicode decode error in rollback history: {e}")
+        except OSError as e:
+            logger.error(f"OS error loading rollback history: {e}")
         except Exception as e:
             logger.warning(f"Could not load rollback history: {e}")
 
@@ -100,6 +120,10 @@ class ReleaseManagerAgent:
                 f.write("# Rollback History\n\n")
                 for rollback in self.rollback_history[-50:]:  # Keep last 50 rollbacks
                     f.write(f"- {rollback}\n")
+        except PermissionError as e:
+            logger.error(f"Permission denied saving rollback history: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving rollback history: {e}")
         except Exception as e:
             logger.error(f"Could not save rollback history: {e}")
 
@@ -124,6 +148,15 @@ Release Manager Agent Commands:
 
     def show_resource(self, resource_type: str):
         """Show resource content"""
+        # Input validation
+        if not isinstance(resource_type, str):
+            print("Error: resource_type must be a string")
+            return
+        
+        if not resource_type.strip():
+            print("Error: resource_type cannot be empty")
+            return
+        
         try:
             if resource_type == "best-practices":
                 path = self.template_paths["best-practices"]
@@ -141,6 +174,12 @@ Release Manager Agent Commands:
                     print(f.read())
             else:
                 print(f"Resource file not found: {path}")
+        except FileNotFoundError:
+            print(f"Resource file not found: {resource_type}")
+        except PermissionError as e:
+            print(f"Permission denied accessing resource {resource_type}: {e}")
+        except UnicodeDecodeError as e:
+            print(f"Unicode decode error in resource {resource_type}: {e}")
         except Exception as e:
             logger.error(f"Error reading resource {resource_type}: {e}")
 
@@ -171,6 +210,11 @@ Release Manager Agent Commands:
             raise TypeError("version must be a string")
         if not isinstance(description, str):
             raise TypeError("description must be a string")
+        
+        if not version.strip():
+            raise ValueError("version cannot be empty")
+        if not description.strip():
+            raise ValueError("description cannot be empty")
             
         logger.info(f"Creating release plan for version {version}")
 
@@ -248,6 +292,9 @@ Release Manager Agent Commands:
         # Input validation
         if not isinstance(version, str):
             raise TypeError("version must be a string")
+        
+        if not version.strip():
+            raise ValueError("version cannot be empty")
             
         logger.info(f"Approving release version {version}")
 
@@ -306,6 +353,9 @@ Release Manager Agent Commands:
         # Input validation
         if not isinstance(version, str):
             raise TypeError("version must be a string")
+        
+        if not version.strip():
+            raise ValueError("version cannot be empty")
             
         logger.info(f"Deploying release version {version}")
 
@@ -379,6 +429,11 @@ Release Manager Agent Commands:
             raise TypeError("version must be a string")
         if not isinstance(reason, str):
             raise TypeError("reason must be a string")
+        
+        if not version.strip():
+            raise ValueError("version cannot be empty")
+        if not reason.strip():
+            raise ValueError("reason cannot be empty")
             
         logger.info(f"Rolling back release version {version}")
 
@@ -452,6 +507,16 @@ Release Manager Agent Commands:
 
     def export_report(self, format_type: str = "md", report_data: Optional[Dict] = None):
         """Export release report in specified format."""
+        # Input validation
+        if not isinstance(format_type, str):
+            raise TypeError("format_type must be a string")
+        
+        if format_type not in ["md", "csv", "json"]:
+            raise ValueError("format_type must be one of: md, csv, json")
+        
+        if report_data is not None and not isinstance(report_data, dict):
+            raise TypeError("report_data must be a dictionary")
+        
         if not report_data:
             report_data = {
                 "report_type": "Release Report",
@@ -478,9 +543,10 @@ Release Manager Agent Commands:
 
     def _export_markdown(self, report_data: Dict):
         """Export report data as markdown."""
-        output_file = f"release_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+        try:
+            output_file = f"release_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
 
-        content = f"""# Release Report
+            content = f"""# Release Report
 
 ## Summary
 - **Report Type**: {report_data.get('report_type', 'N/A')}
@@ -505,33 +571,53 @@ Release Manager Agent Commands:
 {chr(10).join([f"- {rollback}" for rollback in self.rollback_history[-5:]])}
 """
 
-        with open(output_file, "w") as f:
-            f.write(content)
-        print(f"Report export saved to: {output_file}")
+            with open(output_file, "w") as f:
+                f.write(content)
+            print(f"Report export saved to: {output_file}")
+        except PermissionError as e:
+            logger.error(f"Permission denied saving markdown report: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving markdown report: {e}")
+        except Exception as e:
+            logger.error(f"Error saving markdown report: {e}")
 
     def _export_csv(self, report_data: Dict):
         """Export report data as CSV."""
-        output_file = f"release_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        try:
+            output_file = f"release_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 
-        with open(output_file, "w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(["Metric", "Value"])
-            writer.writerow(["Version", report_data.get("version", "N/A")])
-            writer.writerow(["Status", report_data.get("status", "N/A")])
-            writer.writerow(["Total Releases", report_data.get("total_releases", 0)])
-            writer.writerow(["Successful Releases", report_data.get("successful_releases", 0)])
-            writer.writerow(["Failed Releases", report_data.get("failed_releases", 0)])
+            with open(output_file, "w", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow(["Metric", "Value"])
+                writer.writerow(["Version", report_data.get("version", "N/A")])
+                writer.writerow(["Status", report_data.get("status", "N/A")])
+                writer.writerow(["Total Releases", report_data.get("total_releases", 0)])
+                writer.writerow(["Successful Releases", report_data.get("successful_releases", 0)])
+                writer.writerow(["Failed Releases", report_data.get("failed_releases", 0)])
 
-        print(f"Report export saved to: {output_file}")
+            print(f"Report export saved to: {output_file}")
+        except PermissionError as e:
+            logger.error(f"Permission denied saving CSV report: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving CSV report: {e}")
+        except Exception as e:
+            logger.error(f"Error saving CSV report: {e}")
 
     def _export_json(self, report_data: Dict):
         """Export report data as JSON."""
-        output_file = f"release_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        try:
+            output_file = f"release_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
 
-        with open(output_file, "w") as f:
-            json.dump(report_data, f, indent=2)
+            with open(output_file, "w") as f:
+                json.dump(report_data, f, indent=2)
 
-        print(f"Report export saved to: {output_file}")
+            print(f"Report export saved to: {output_file}")
+        except PermissionError as e:
+            logger.error(f"Permission denied saving JSON report: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving JSON report: {e}")
+        except Exception as e:
+            logger.error(f"Error saving JSON report: {e}")
 
     def test_resource_completeness(self):
         """Test if all required resources are available."""
@@ -596,6 +682,11 @@ Release Manager Agent Commands:
 
     def on_tests_passed(self, event):
         """Handle tests passed event from other agents."""
+        # Input validation
+        if not isinstance(event, dict):
+            logger.warning("Invalid event type for tests passed event")
+            return
+        
         logger.info(f"Tests passed event received: {event}")
         logger.info("[ReleaseManager] Tests geslaagd, release flow gestart.")
         try:
@@ -606,6 +697,11 @@ Release Manager Agent Commands:
 
     def on_release_approved(self, event):
         """Handle release approved event from other agents."""
+        # Input validation
+        if not isinstance(event, dict):
+            logger.warning("Invalid event type for release approved event")
+            return
+        
         logger.info(f"Release approved event received: {event}")
         logger.info("[ReleaseManager] Release goedgekeurd door PO, release wordt live gezet.")
         try:
@@ -616,6 +712,11 @@ Release Manager Agent Commands:
 
     def on_deployment_failed(self, event):
         """Handle deployment failed event from other agents."""
+        # Input validation
+        if not isinstance(event, dict):
+            logger.warning("Invalid event type for deployment failed event")
+            return
+        
         logger.error(f"Deployment failed event received: {event}")
         logger.error("[ReleaseManager] Deployment failed! Rollback gestart.")
         try:
@@ -679,6 +780,10 @@ def main():
         agent.collaborate_example()
     elif args.command == "run":
         agent.run()
+    else:
+        print("Unknown command. Use 'help' to see available commands.")
+        sys.exit(1)
+        return
 
 if __name__ == "__main__":
     main()

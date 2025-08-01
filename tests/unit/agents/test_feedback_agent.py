@@ -447,3 +447,174 @@ class TestFeedbackAgent:
         assert summary_result is not None
         assert insights_result is not None
         assert trends_result is not None 
+
+
+class TestFeedbackAgentCLI:
+    @patch('sys.argv', ['feedbackagent.py', 'help'])
+    @patch('builtins.print')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.save_context')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.publish')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.get_context', return_value={"status": "active"})
+    def test_cli_help(self, mock_get_context, mock_publish, mock_save_context, mock_print):
+        from bmad.agents.Agent.FeedbackAgent.feedbackagent import main
+        with patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.FeedbackAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'show_help') as mock_show_help:
+                main()
+                mock_show_help.assert_called_once() 
+
+    @patch('sys.argv', ['feedbackagent.py', 'collect-feedback', '--feedback-text', 'Test feedback', '--source', 'Test source'])
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.save_context')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.publish')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.get_context', return_value={"status": "active"})
+    def test_cli_collect_feedback(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.FeedbackAgent.feedbackagent import main
+        with patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.FeedbackAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'collect_feedback', return_value={"result": "ok"}) as mock_collect_feedback:
+                main()
+                mock_collect_feedback.assert_called_once_with('Test feedback', 'Test source')
+
+    @patch('sys.argv', ['feedbackagent.py', 'analyze-sentiment', '--feedback-text', 'Test feedback'])
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.save_context')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.publish')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.get_context', return_value={"status": "active"})
+    def test_cli_analyze_sentiment(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.FeedbackAgent.feedbackagent import main
+        with patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.FeedbackAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'analyze_sentiment', return_value={"result": "ok"}) as mock_analyze_sentiment:
+                main()
+                mock_analyze_sentiment.assert_called_once_with('Test feedback')
+
+    @patch('sys.argv', ['feedbackagent.py', 'summarize-feedback', '--feedback-list', 'Feedback1', 'Feedback2'])
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.save_context')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.publish')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.get_context', return_value={"status": "active"})
+    def test_cli_summarize_feedback(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.FeedbackAgent.feedbackagent import main
+        with patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.FeedbackAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'summarize_feedback', return_value={"result": "ok"}) as mock_summarize_feedback:
+                main()
+                mock_summarize_feedback.assert_called_once_with(['Feedback1', 'Feedback2'])
+
+    @patch('sys.argv', ['feedbackagent.py', 'generate-insights'])
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.save_context')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.publish')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.get_context', return_value={"status": "active"})
+    def test_cli_generate_insights(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.FeedbackAgent.feedbackagent import main
+        with patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.FeedbackAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'generate_insights', return_value={"result": "ok"}) as mock_generate_insights:
+                main()
+                mock_generate_insights.assert_called_once()
+
+    @patch('sys.argv', ['feedbackagent.py', 'track-trends', '--timeframe', '7 days'])
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.save_context')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.publish')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.get_context', return_value={"status": "active"})
+    def test_cli_track_trends(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.FeedbackAgent.feedbackagent import main
+        with patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.FeedbackAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'track_trends', return_value={"result": "ok"}) as mock_track_trends:
+                main()
+                mock_track_trends.assert_called_once_with('7 days')
+
+    @patch('sys.argv', ['feedbackagent.py', 'show-feedback-history'])
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.save_context')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.publish')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.get_context', return_value={"status": "active"})
+    def test_cli_show_feedback_history(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.FeedbackAgent.feedbackagent import main
+        with patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.FeedbackAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'show_feedback_history') as mock_show_feedback_history:
+                main()
+                mock_show_feedback_history.assert_called_once()
+
+    @patch('sys.argv', ['feedbackagent.py', 'show-sentiment-history'])
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.save_context')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.publish')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.get_context', return_value={"status": "active"})
+    def test_cli_show_sentiment_history(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.FeedbackAgent.feedbackagent import main
+        with patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.FeedbackAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'show_sentiment_history') as mock_show_sentiment_history:
+                main()
+                mock_show_sentiment_history.assert_called_once()
+
+    @patch('sys.argv', ['feedbackagent.py', 'show-best-practices'])
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.save_context')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.publish')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.get_context', return_value={"status": "active"})
+    def test_cli_show_best_practices(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.FeedbackAgent.feedbackagent import main
+        with patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.FeedbackAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'show_resource') as mock_show_resource:
+                main()
+                mock_show_resource.assert_called_once_with('best-practices')
+
+    @patch('sys.argv', ['feedbackagent.py', 'show-changelog'])
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.save_context')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.publish')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.get_context', return_value={"status": "active"})
+    def test_cli_show_changelog(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.FeedbackAgent.feedbackagent import main
+        with patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.FeedbackAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'show_resource') as mock_show_resource:
+                main()
+                mock_show_resource.assert_called_once_with('changelog')
+
+    @patch('sys.argv', ['feedbackagent.py', 'export-report', '--format', 'json'])
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.save_context')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.publish')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.get_context', return_value={"status": "active"})
+    def test_cli_export_report(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.FeedbackAgent.feedbackagent import main
+        with patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.FeedbackAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'export_report') as mock_export_report:
+                main()
+                mock_export_report.assert_called_once_with('json')
+
+    @patch('sys.argv', ['feedbackagent.py', 'test'])
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.save_context')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.publish')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.get_context', return_value={"status": "active"})
+    def test_cli_test(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.FeedbackAgent.feedbackagent import main
+        with patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.FeedbackAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'test_resource_completeness') as mock_test_resource_completeness:
+                main()
+                mock_test_resource_completeness.assert_called_once()
+
+    @patch('sys.argv', ['feedbackagent.py', 'collaborate'])
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.save_context')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.publish')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.get_context', return_value={"status": "active"})
+    def test_cli_collaborate(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.FeedbackAgent.feedbackagent import main
+        with patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.FeedbackAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'collaborate_example') as mock_collaborate_example:
+                main()
+                mock_collaborate_example.assert_called_once()
+
+    @patch('sys.argv', ['feedbackagent.py', 'run'])
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.save_context')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.publish')
+    @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.get_context', return_value={"status": "active"})
+    def test_cli_run(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.FeedbackAgent.feedbackagent import main
+        with patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.FeedbackAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'run') as mock_run:
+                main()
+                mock_run.assert_called_once() 

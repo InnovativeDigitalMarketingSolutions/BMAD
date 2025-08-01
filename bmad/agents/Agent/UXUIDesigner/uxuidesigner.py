@@ -61,7 +61,21 @@ class UXUIDesignerAgent:
         self._load_feedback_history()
 
     def create_mobile_ux_design(self, platform: str = "iOS", app_type: str = "native") -> Dict[str, Any]:
-        """Create comprehensive mobile UX design for specified platform."""
+        """Create comprehensive mobile UX design for specified platform with input validation."""
+        # Input validation
+        if not platform or not isinstance(platform, str):
+            raise ValueError("Platform must be a non-empty string")
+        if not app_type or not isinstance(app_type, str):
+            raise ValueError("App type must be a non-empty string")
+            
+        valid_platforms = ["iOS", "Android", "React Native", "Flutter"]
+        if platform not in valid_platforms:
+            raise ValueError(f"Platform must be one of: {', '.join(valid_platforms)}")
+            
+        valid_app_types = ["native", "hybrid", "pwa"]
+        if app_type not in valid_app_types:
+            raise ValueError(f"App type must be one of: {', '.join(valid_app_types)}")
+        
         logger.info(f"Creating mobile UX design for {platform} - {app_type}")
 
         # Simulate mobile UX design creation
@@ -305,6 +319,7 @@ class UXUIDesignerAgent:
         return mobile_flow_result
 
     def _load_design_history(self):
+        """Load design history from file with improved error handling."""
         try:
             if self.data_paths["design-history"].exists():
                 with open(self.data_paths["design-history"]) as f:
@@ -313,19 +328,35 @@ class UXUIDesignerAgent:
                     for line in lines:
                         if line.strip().startswith("- "):
                             self.design_history.append(line.strip()[2:])
+        except FileNotFoundError:
+            logger.info("Design history file not found, starting with empty history")
+            self.design_history = []
+        except PermissionError:
+            logger.warning("Permission denied accessing design history file")
+            self.design_history = []
+        except UnicodeDecodeError:
+            logger.error("Design history file contains invalid characters, starting with empty history")
+            self.design_history = []
         except Exception as e:
             logger.warning(f"Could not load design history: {e}")
+            self.design_history = []
 
     def _save_design_history(self):
+        """Save design history to file with improved error handling."""
         try:
             self.data_paths["design-history"].parent.mkdir(parents=True, exist_ok=True)
             with open(self.data_paths["design-history"], "w") as f:
                 f.write("# Design History\n\n")
                 f.writelines(f"- {design}\n" for design in self.design_history[-50:])
+        except PermissionError:
+            logger.error("Permission denied saving design history file")
+        except OSError as e:
+            logger.error(f"OS error saving design history: {e}")
         except Exception as e:
             logger.error(f"Could not save design history: {e}")
 
     def _load_feedback_history(self):
+        """Load feedback history from file with improved error handling."""
         try:
             if self.data_paths["feedback-history"].exists():
                 with open(self.data_paths["feedback-history"]) as f:
@@ -334,15 +365,30 @@ class UXUIDesignerAgent:
                     for line in lines:
                         if line.strip().startswith("- "):
                             self.feedback_history.append(line.strip()[2:])
+        except FileNotFoundError:
+            logger.info("Feedback history file not found, starting with empty history")
+            self.feedback_history = []
+        except PermissionError:
+            logger.warning("Permission denied accessing feedback history file")
+            self.feedback_history = []
+        except UnicodeDecodeError:
+            logger.error("Feedback history file contains invalid characters, starting with empty history")
+            self.feedback_history = []
         except Exception as e:
             logger.warning(f"Could not load feedback history: {e}")
+            self.feedback_history = []
 
     def _save_feedback_history(self):
+        """Save feedback history to file with improved error handling."""
         try:
             self.data_paths["feedback-history"].parent.mkdir(parents=True, exist_ok=True)
             with open(self.data_paths["feedback-history"], "w") as f:
                 f.write("# Feedback History\n\n")
                 f.writelines(f"- {feedback}\n" for feedback in self.feedback_history[-50:])
+        except PermissionError:
+            logger.error("Permission denied saving feedback history file")
+        except OSError as e:
+            logger.error(f"OS error saving feedback history: {e}")
         except Exception as e:
             logger.error(f"Could not save feedback history: {e}")
 
@@ -371,6 +417,11 @@ UXUIDesigner Agent Commands:
         print(help_text)
 
     def show_resource(self, resource_type: str):
+        """Show resource content with improved error handling and validation."""
+        if not resource_type or not isinstance(resource_type, str):
+            print("Error: Invalid resource type provided")
+            return
+            
         try:
             if resource_type == "best-practices":
                 path = self.template_paths["best-practices"]
@@ -383,15 +434,28 @@ UXUIDesigner Agent Commands:
             elif resource_type == "accessibility-checklist":
                 path = self.template_paths["accessibility-checklist"]
             else:
-                print(f"Unknown resource type: {resource_type}")
+                print(f"Error: Unknown resource type: {resource_type}")
+                print("Available resource types: best-practices, changelog, design-system, shadcn-tokens, accessibility-checklist")
                 return
+                
             if path.exists():
                 with open(path) as f:
-                    print(f.read())
+                    content = f.read()
+                    if content.strip():
+                        print(content)
+                    else:
+                        print(f"Resource file is empty: {path}")
             else:
-                print(f"Resource file not found: {path}")
+                print(f"Error: Resource file not found: {path}")
+        except PermissionError:
+            logger.error(f"Permission denied reading resource {resource_type}")
+            print(f"Error: Permission denied accessing resource: {resource_type}")
+        except UnicodeDecodeError:
+            logger.error(f"Resource file {resource_type} contains invalid characters")
+            print(f"Error: Resource file contains invalid characters: {resource_type}")
         except Exception as e:
             logger.error(f"Error reading resource {resource_type}: {e}")
+            print(f"Error: Could not read resource {resource_type}: {e}")
 
     def show_design_history(self):
         if not self.design_history:
@@ -413,6 +477,16 @@ UXUIDesigner Agent Commands:
 
     def build_shadcn_component(self, component_name: str = "Button") -> Dict[str, Any]:
         """Build a Shadcn/ui component with design tokens and accessibility focus."""
+        # Input validation
+        if not component_name or not isinstance(component_name, str):
+            raise ValueError("Component name must be a non-empty string")
+        if len(component_name.strip()) == 0:
+            raise ValueError("Component name cannot be empty or whitespace")
+            
+        # Validate component name format
+        if not component_name[0].isupper():
+            raise ValueError("Component name should start with uppercase letter")
+        
         logger.info(f"Building Shadcn component: {component_name}")
 
         # Simulate Shadcn component build with design tokens
@@ -992,18 +1066,21 @@ def main():
         if not args.feedback_text:
             print("Geef feedback tekst op met --feedback-text")
             sys.exit(1)
+            return
         result = agent.design_feedback(args.feedback_text)
         print(json.dumps(result, indent=2))
     elif args.command == "document-component":
         if not args.component_desc:
             print("Geef component beschrijving op met --component-desc")
             sys.exit(1)
+            return
         result = agent.document_component(args.component_desc)
         print(json.dumps(result, indent=2))
     elif args.command == "analyze-figma":
         if not args.figma_file_id:
             print("Geef Figma file ID op met --figma-file-id")
             sys.exit(1)
+            return
         result = agent.analyze_figma_design(args.figma_file_id)
         print(json.dumps(result, indent=2))
     elif args.command == "show-design-history":

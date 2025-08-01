@@ -66,6 +66,14 @@ class RnDAgent:
                     for line in lines:
                         if line.strip().startswith("- "):
                             self.experiment_history.append(line.strip()[2:])
+        except FileNotFoundError:
+            logger.info("Experiment history file not found, starting with empty history")
+        except PermissionError as e:
+            logger.error(f"Permission denied accessing experiment history: {e}")
+        except UnicodeDecodeError as e:
+            logger.error(f"Unicode decode error in experiment history: {e}")
+        except OSError as e:
+            logger.error(f"OS error loading experiment history: {e}")
         except Exception as e:
             logger.warning(f"Could not load experiment history: {e}")
 
@@ -77,6 +85,10 @@ class RnDAgent:
                 f.write("# Experiment History\n\n")
                 for experiment in self.experiment_history[-50:]:  # Keep last 50 experiments
                     f.write(f"- {experiment}\n")
+        except PermissionError as e:
+            logger.error(f"Permission denied saving experiment history: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving experiment history: {e}")
         except Exception as e:
             logger.error(f"Could not save experiment history: {e}")
 
@@ -90,6 +102,14 @@ class RnDAgent:
                     for line in lines:
                         if line.strip().startswith("- "):
                             self.research_history.append(line.strip()[2:])
+        except FileNotFoundError:
+            logger.info("Research history file not found, starting with empty history")
+        except PermissionError as e:
+            logger.error(f"Permission denied accessing research history: {e}")
+        except UnicodeDecodeError as e:
+            logger.error(f"Unicode decode error in research history: {e}")
+        except OSError as e:
+            logger.error(f"OS error loading research history: {e}")
         except Exception as e:
             logger.warning(f"Could not load research history: {e}")
 
@@ -101,6 +121,10 @@ class RnDAgent:
                 f.write("# Research History\n\n")
                 for research in self.research_history[-50:]:  # Keep last 50 research items
                     f.write(f"- {research}\n")
+        except PermissionError as e:
+            logger.error(f"Permission denied saving research history: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving research history: {e}")
         except Exception as e:
             logger.error(f"Could not save research history: {e}")
 
@@ -128,6 +152,15 @@ RnD Agent Commands:
 
     def show_resource(self, resource_type: str):
         """Show resource content"""
+        # Input validation
+        if not isinstance(resource_type, str):
+            print("Error: resource_type must be a string")
+            return
+        
+        if not resource_type.strip():
+            print("Error: resource_type cannot be empty")
+            return
+        
         try:
             if resource_type == "best-practices":
                 path = self.template_paths["best-practices"]
@@ -145,6 +178,12 @@ RnD Agent Commands:
                     print(f.read())
             else:
                 print(f"Resource file not found: {path}")
+        except FileNotFoundError:
+            print(f"Resource file not found: {resource_type}")
+        except PermissionError as e:
+            print(f"Permission denied accessing resource {resource_type}: {e}")
+        except UnicodeDecodeError as e:
+            print(f"Unicode decode error in resource {resource_type}: {e}")
         except Exception as e:
             logger.error(f"Error reading resource {resource_type}: {e}")
 
@@ -175,6 +214,11 @@ RnD Agent Commands:
             raise TypeError("research_topic must be a string")
         if not isinstance(research_type, str):
             raise TypeError("research_type must be a string")
+        
+        if not research_topic.strip():
+            raise ValueError("research_topic cannot be empty")
+        if not research_type.strip():
+            raise ValueError("research_type cannot be empty")
             
         logger.info(f"Conducting research on {research_topic}")
 
@@ -242,6 +286,11 @@ RnD Agent Commands:
             raise TypeError("experiment_name must be a string")
         if not isinstance(hypothesis, str):
             raise TypeError("hypothesis must be a string")
+        
+        if not experiment_name.strip():
+            raise ValueError("experiment_name cannot be empty")
+        if not hypothesis.strip():
+            raise ValueError("hypothesis cannot be empty")
             
         logger.info(f"Designing experiment: {experiment_name}")
 
@@ -309,6 +358,11 @@ RnD Agent Commands:
             raise TypeError("experiment_id must be a string")
         if not isinstance(experiment_name, str):
             raise TypeError("experiment_name must be a string")
+        
+        if not experiment_id.strip():
+            raise ValueError("experiment_id cannot be empty")
+        if not experiment_name.strip():
+            raise ValueError("experiment_name cannot be empty")
             
         logger.info(f"Running experiment: {experiment_name}")
 
@@ -389,6 +443,10 @@ RnD Agent Commands:
 
     def evaluate_results(self, experiment_results: Dict = None) -> Dict[str, Any]:
         """Evaluate experiment results with enhanced functionality."""
+        # Input validation
+        if experiment_results is not None and not isinstance(experiment_results, dict):
+            raise TypeError("experiment_results must be a dictionary")
+            
         logger.info("Evaluating experiment results")
 
         # Simulate evaluation process
@@ -468,11 +526,16 @@ RnD Agent Commands:
             raise TypeError("innovation_area must be a string")
         if not isinstance(focus_area, str):
             raise TypeError("focus_area must be a string")
+        
+        if not innovation_area.strip():
+            raise ValueError("innovation_area cannot be empty")
+        if not focus_area.strip():
+            raise ValueError("focus_area cannot be empty")
             
-        logger.info(f"Generating innovation in {innovation_area}")
+        logger.info(f"Generating innovation ideas for {innovation_area}")
 
         # Simulate innovation generation
-        time.sleep(2)
+        time.sleep(1)
 
         innovation_result = {
             "innovation_id": hashlib.sha256(f"{innovation_area}_{focus_area}".encode()).hexdigest()[:8],
@@ -553,6 +616,11 @@ RnD Agent Commands:
             raise TypeError("prototype_name must be a string")
         if not isinstance(solution_type, str):
             raise TypeError("solution_type must be a string")
+        
+        if not prototype_name.strip():
+            raise ValueError("prototype_name cannot be empty")
+        if not solution_type.strip():
+            raise ValueError("solution_type cannot be empty")
             
         logger.info(f"Creating prototype: {prototype_name}")
 
@@ -666,14 +734,24 @@ RnD Agent Commands:
 
     def export_report(self, format_type: str = "md", report_data: Optional[Dict] = None):
         """Export RnD report in specified format."""
+        # Input validation
+        if not isinstance(format_type, str):
+            raise TypeError("format_type must be a string")
+        
+        if format_type not in ["md", "csv", "json"]:
+            raise ValueError("format_type must be one of: md, csv, json")
+        
+        if report_data is not None and not isinstance(report_data, dict):
+            raise TypeError("report_data must be a dictionary")
+        
         if not report_data:
             report_data = {
                 "report_type": "RnD Report",
-                "timeframe": "Last 30 days",
-                "status": "completed",
-                "experiments_conducted": 5,
-                "research_projects": 3,
-                "prototypes_created": 2,
+                "version": "1.2.0",
+                "status": "success",
+                "total_experiments": 15,
+                "successful_experiments": 14,
+                "failed_experiments": 1,
                 "timestamp": datetime.now().isoformat(),
                 "agent": "RnDAgent"
             }
@@ -692,19 +770,26 @@ RnD Agent Commands:
 
     def _export_markdown(self, report_data: Dict):
         """Export report data as markdown."""
-        output_file = f"rnd_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
+        try:
+            output_file = f"rnd_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
 
-        content = f"""# RnD Report
+            content = f"""# RnD Report
 
 ## Summary
 - **Report Type**: {report_data.get('report_type', 'N/A')}
-- **Timeframe**: {report_data.get('timeframe', 'N/A')}
+- **Version**: {report_data.get('version', 'N/A')}
 - **Status**: {report_data.get('status', 'N/A')}
-- **Experiments Conducted**: {report_data.get('experiments_conducted', 0)}
-- **Research Projects**: {report_data.get('research_projects', 0)}
-- **Prototypes Created**: {report_data.get('prototypes_created', 0)}
+- **Total Experiments**: {report_data.get('total_experiments', 0)}
+- **Successful Experiments**: {report_data.get('successful_experiments', 0)}
+- **Failed Experiments**: {report_data.get('failed_experiments', 0)}
 - **Timestamp**: {report_data.get('timestamp', 'N/A')}
 - **Agent**: {report_data.get('agent', 'N/A')}
+
+## Experiment Metrics
+- **Success Rate**: {(report_data.get('successful_experiments', 0) / max(report_data.get('total_experiments', 1), 1)) * 100:.1f}%
+- **Average Experiment Duration**: {report_data.get('experiment_metrics', {}).get('duration', 'N/A')}
+- **Innovation Rate**: {report_data.get('experiment_metrics', {}).get('innovation_rate', 'N/A')}
+- **Failure Rate**: {(report_data.get('failed_experiments', 0) / max(report_data.get('total_experiments', 1), 1)) * 100:.1f}%
 
 ## Recent Experiments
 {chr(10).join([f"- {experiment}" for experiment in self.experiment_history[-5:]])}
@@ -713,33 +798,53 @@ RnD Agent Commands:
 {chr(10).join([f"- {research}" for research in self.research_history[-5:]])}
 """
 
-        with open(output_file, "w") as f:
-            f.write(content)
-        print(f"Report export saved to: {output_file}")
+            with open(output_file, "w") as f:
+                f.write(content)
+            print(f"Report export saved to: {output_file}")
+        except PermissionError as e:
+            logger.error(f"Permission denied saving markdown report: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving markdown report: {e}")
+        except Exception as e:
+            logger.error(f"Error saving markdown report: {e}")
 
     def _export_csv(self, report_data: Dict):
         """Export report data as CSV."""
-        output_file = f"rnd_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+        try:
+            output_file = f"rnd_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
 
-        with open(output_file, "w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(["Metric", "Value"])
-            writer.writerow(["Timeframe", report_data.get("timeframe", "N/A")])
-            writer.writerow(["Status", report_data.get("status", "N/A")])
-            writer.writerow(["Experiments Conducted", report_data.get("experiments_conducted", 0)])
-            writer.writerow(["Research Projects", report_data.get("research_projects", 0)])
-            writer.writerow(["Prototypes Created", report_data.get("prototypes_created", 0)])
+            with open(output_file, "w", newline="") as f:
+                writer = csv.writer(f)
+                writer.writerow(["Metric", "Value"])
+                writer.writerow(["Version", report_data.get("version", "N/A")])
+                writer.writerow(["Status", report_data.get("status", "N/A")])
+                writer.writerow(["Total Experiments", report_data.get("total_experiments", 0)])
+                writer.writerow(["Successful Experiments", report_data.get("successful_experiments", 0)])
+                writer.writerow(["Failed Experiments", report_data.get("failed_experiments", 0)])
 
-        print(f"Report export saved to: {output_file}")
+            print(f"Report export saved to: {output_file}")
+        except PermissionError as e:
+            logger.error(f"Permission denied saving CSV report: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving CSV report: {e}")
+        except Exception as e:
+            logger.error(f"Error saving CSV report: {e}")
 
     def _export_json(self, report_data: Dict):
         """Export report data as JSON."""
-        output_file = f"rnd_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        try:
+            output_file = f"rnd_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
 
-        with open(output_file, "w") as f:
-            json.dump(report_data, f, indent=2)
+            with open(output_file, "w") as f:
+                json.dump(report_data, f, indent=2)
 
-        print(f"Report export saved to: {output_file}")
+            print(f"Report export saved to: {output_file}")
+        except PermissionError as e:
+            logger.error(f"Permission denied saving JSON report: {e}")
+        except OSError as e:
+            logger.error(f"OS error saving JSON report: {e}")
+        except Exception as e:
+            logger.error(f"Error saving JSON report: {e}")
 
     def test_resource_completeness(self):
         """Test if all required resources are available."""
@@ -805,11 +910,18 @@ RnD Agent Commands:
     # Original functionality preserved
     def handle_experiment_completed(self, event):
         """Handle experiment completed event from other agents."""
-        logger.info(f"Experiment completed event: {event}")
-        print(f"[RnDAgent] Experiment completed: {event}")
-        self.monitor._record_metric("RnDAgent", MetricType.SUCCESS_RATE, 95, "%")
-        allowed = self.policy_engine.evaluate_policy("experiment", event)
-        print(f"[RnDAgent] Policy allowed: {allowed}")
+        # Input validation
+        if not isinstance(event, dict):
+            logger.warning("Invalid event type for experiment completed event")
+            return
+        
+        logger.info(f"Experiment completed event received: {event}")
+        logger.info("[RnD] Experiment voltooid, resultaten worden geëvalueerd.")
+        try:
+            send_slack_message("[RnD] Experiment voltooid, resultaten worden geëvalueerd.")
+        except Exception as e:
+            logger.warning(f"Could not send Slack notification: {e}")
+        # Evaluate results (stub)
 
     def run(self):
         """Run the agent and listen for events."""
@@ -830,6 +942,7 @@ def main():
     parser.add_argument("--research-type", default="Technology Research", help="Research type")
     parser.add_argument("--experiment-name", default="AI Automation Pilot", help="Experiment name")
     parser.add_argument("--hypothesis", default="AI automation will improve efficiency by 30%", help="Experiment hypothesis")
+    parser.add_argument("--experiment-id", default="exp_12345", help="Experiment ID")
     parser.add_argument("--innovation-area", default="AI and Automation", help="Innovation area")
     parser.add_argument("--focus-area", default="Process Optimization", help="Focus area")
     parser.add_argument("--prototype-name", default="AI Automation Prototype", help="Prototype name")
@@ -848,7 +961,7 @@ def main():
         result = agent.design_experiment(args.experiment_name, args.hypothesis)
         print(json.dumps(result, indent=2))
     elif args.command == "run-experiment":
-        result = agent.run_experiment("exp_12345", args.experiment_name)
+        result = agent.run_experiment(args.experiment_id, args.experiment_name)
         print(json.dumps(result, indent=2))
     elif args.command == "evaluate-results":
         result = agent.evaluate_results()
@@ -875,6 +988,10 @@ def main():
         agent.collaborate_example()
     elif args.command == "run":
         agent.run()
+    else:
+        print("Unknown command. Use 'help' to see available commands.")
+        sys.exit(1)
+        return
 
 if __name__ == "__main__":
     main()

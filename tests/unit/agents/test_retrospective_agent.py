@@ -235,9 +235,8 @@ class TestRetrospectiveAgent:
     def test_export_report_invalid_format(self, agent, capsys):
         """Test export_report method with invalid format."""
         test_data = {"sprint_name": "Sprint 16", "status": "completed"}
-        agent.export_report("invalid", test_data)
-        captured = capsys.readouterr()
-        assert "Unsupported format" in captured.out
+        with pytest.raises(ValueError, match="format_type must be one of: md, csv, json"):
+            agent.export_report("invalid", test_data)
 
     def test_test_resource_completeness(self, agent, capsys):
         """Test test_resource_completeness method."""
@@ -385,3 +384,385 @@ class TestRetrospectiveAgent:
         assert analysis_result is not None
         assert action_result is not None
         assert tracking_result is not None 
+
+    # Additional error handling and input validation tests
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_load_retro_history_permission_error(self, mock_exists, mock_file, agent):
+        """Test retrospective history loading with permission error."""
+        agent.retro_history = []  # Reset history
+        agent._load_retro_history()
+        assert len(agent.retro_history) == 0
+
+    @patch('builtins.open', side_effect=UnicodeDecodeError("utf-8", b"", 0, 1, "invalid utf-8"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_load_retro_history_unicode_error(self, mock_exists, mock_file, agent):
+        """Test retrospective history loading with unicode error."""
+        agent.retro_history = []  # Reset history
+        agent._load_retro_history()
+        assert len(agent.retro_history) == 0
+
+    @patch('builtins.open', side_effect=OSError("OS error"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_load_retro_history_os_error(self, mock_exists, mock_file, agent):
+        """Test retrospective history loading with OS error."""
+        agent.retro_history = []  # Reset history
+        agent._load_retro_history()
+        assert len(agent.retro_history) == 0
+
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    @patch('pathlib.Path.mkdir')
+    @patch('pathlib.Path.exists', return_value=False)
+    def test_save_retro_history_permission_error(self, mock_exists, mock_mkdir, mock_file, agent):
+        """Test saving retrospective history with permission error."""
+        agent.retro_history = ["Sprint 15 Retrospective"]
+        agent._save_retro_history()
+
+    @patch('builtins.open', side_effect=OSError("OS error"))
+    @patch('pathlib.Path.mkdir')
+    @patch('pathlib.Path.exists', return_value=False)
+    def test_save_retro_history_os_error(self, mock_exists, mock_mkdir, mock_file, agent):
+        """Test saving retrospective history with OS error."""
+        agent.retro_history = ["Sprint 15 Retrospective"]
+        agent._save_retro_history()
+
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_load_action_history_permission_error(self, mock_exists, mock_file, agent):
+        """Test action history loading with permission error."""
+        agent.action_history = []  # Reset history
+        agent._load_action_history()
+        assert len(agent.action_history) == 0
+
+    @patch('builtins.open', side_effect=UnicodeDecodeError("utf-8", b"", 0, 1, "invalid utf-8"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_load_action_history_unicode_error(self, mock_exists, mock_file, agent):
+        """Test action history loading with unicode error."""
+        agent.action_history = []  # Reset history
+        agent._load_action_history()
+        assert len(agent.action_history) == 0
+
+    @patch('builtins.open', side_effect=OSError("OS error"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_load_action_history_os_error(self, mock_exists, mock_file, agent):
+        """Test action history loading with OS error."""
+        agent.action_history = []  # Reset history
+        agent._load_action_history()
+        assert len(agent.action_history) == 0
+
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    @patch('pathlib.Path.mkdir')
+    @patch('pathlib.Path.exists', return_value=False)
+    def test_save_action_history_permission_error(self, mock_exists, mock_mkdir, mock_file, agent):
+        """Test saving action history with permission error."""
+        agent.action_history = ["Action 1: Improve communication"]
+        agent._save_action_history()
+
+    @patch('builtins.open', side_effect=OSError("OS error"))
+    @patch('pathlib.Path.mkdir')
+    @patch('pathlib.Path.exists', return_value=False)
+    def test_save_action_history_os_error(self, mock_exists, mock_mkdir, mock_file, agent):
+        """Test saving action history with OS error."""
+        agent.action_history = ["Action 1: Improve communication"]
+        agent._save_action_history()
+
+    def test_show_resource_invalid_type(self, agent, capsys):
+        """Test show_resource method with invalid resource type."""
+        agent.show_resource(123)  # Invalid type
+        captured = capsys.readouterr()
+        assert "Error: resource_type must be a string" in captured.out
+
+    def test_show_resource_empty_type(self, agent, capsys):
+        """Test show_resource method with empty resource type."""
+        agent.show_resource("")  # Empty string
+        captured = capsys.readouterr()
+        assert "Error: resource_type cannot be empty" in captured.out
+
+    @patch('builtins.open', side_effect=FileNotFoundError("File not found"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_show_resource_file_not_found(self, mock_exists, mock_file, agent, capsys):
+        """Test show_resource method when file not found."""
+        agent.show_resource("best-practices")
+        captured = capsys.readouterr()
+        assert "Resource file not found: best-practices" in captured.out
+
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_show_resource_permission_error(self, mock_exists, mock_file, agent, capsys):
+        """Test show_resource method with permission error."""
+        agent.show_resource("best-practices")
+        captured = capsys.readouterr()
+        assert "Permission denied accessing resource best-practices" in captured.out
+
+    @patch('builtins.open', side_effect=UnicodeDecodeError("utf-8", b"", 0, 1, "invalid utf-8"))
+    @patch('pathlib.Path.exists', return_value=True)
+    def test_show_resource_unicode_error(self, mock_exists, mock_file, agent, capsys):
+        """Test show_resource method with unicode error."""
+        agent.show_resource("best-practices")
+        captured = capsys.readouterr()
+        assert "Unicode decode error in resource best-practices" in captured.out
+
+    def test_conduct_retrospective_empty_sprint_name(self, agent):
+        """Test conduct_retrospective with empty sprint name."""
+        with pytest.raises(ValueError, match="sprint_name cannot be empty"):
+            agent.conduct_retrospective("", 8)
+
+    def test_conduct_retrospective_invalid_team_size_zero(self, agent):
+        """Test conduct_retrospective with zero team size."""
+        with pytest.raises(ValueError, match="team_size must be positive"):
+            agent.conduct_retrospective("Sprint 15", 0)
+
+    def test_conduct_retrospective_invalid_team_size_negative(self, agent):
+        """Test conduct_retrospective with negative team size."""
+        with pytest.raises(ValueError, match="team_size must be positive"):
+            agent.conduct_retrospective("Sprint 15", -5)
+
+    def test_conduct_retrospective_invalid_team_size_too_large(self, agent):
+        """Test conduct_retrospective with team size too large."""
+        with pytest.raises(ValueError, match="team_size cannot exceed 50"):
+            agent.conduct_retrospective("Sprint 15", 100)
+
+    def test_analyze_feedback_invalid_feedback_type(self, agent):
+        """Test analyze_feedback with invalid feedback type."""
+        with pytest.raises(TypeError, match="feedback_list\\[0\\] must be a string"):
+            agent.analyze_feedback([123, "valid feedback"])
+
+    def test_analyze_feedback_empty_feedback_item(self, agent):
+        """Test analyze_feedback with empty feedback item."""
+        with pytest.raises(ValueError, match="feedback_list\\[0\\] cannot be empty"):
+            agent.analyze_feedback(["", "valid feedback"])
+
+    def test_track_improvements_empty_sprint_name(self, agent):
+        """Test track_improvements with empty sprint name."""
+        with pytest.raises(ValueError, match="sprint_name cannot be empty"):
+            agent.track_improvements("")
+
+    def test_export_report_invalid_format_type(self, agent):
+        """Test export_report with invalid format type."""
+        with pytest.raises(TypeError, match="format_type must be a string"):
+            agent.export_report(123)
+
+    def test_export_report_invalid_format_value(self, agent):
+        """Test export_report with invalid format value."""
+        with pytest.raises(ValueError, match="format_type must be one of: md, csv, json"):
+            agent.export_report("xml")
+
+    def test_export_report_invalid_report_data_type(self, agent):
+        """Test export_report with invalid report data type."""
+        with pytest.raises(TypeError, match="report_data must be a dictionary"):
+            agent.export_report("md", "invalid")
+
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    def test_export_markdown_permission_error(self, mock_file, agent):
+        """Test _export_markdown with permission error."""
+        test_data = {"sprint_name": "Sprint 16", "status": "completed"}
+        agent._export_markdown(test_data)
+
+    @patch('builtins.open', side_effect=OSError("OS error"))
+    def test_export_markdown_os_error(self, mock_file, agent):
+        """Test _export_markdown with OS error."""
+        test_data = {"sprint_name": "Sprint 16", "status": "completed"}
+        agent._export_markdown(test_data)
+
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    def test_export_csv_permission_error(self, mock_file, agent):
+        """Test _export_csv with permission error."""
+        test_data = {"sprint_name": "Sprint 16", "status": "completed"}
+        agent._export_csv(test_data)
+
+    @patch('builtins.open', side_effect=OSError("OS error"))
+    def test_export_csv_os_error(self, mock_file, agent):
+        """Test _export_csv with OS error."""
+        test_data = {"sprint_name": "Sprint 16", "status": "completed"}
+        agent._export_csv(test_data)
+
+    @patch('builtins.open', side_effect=PermissionError("Permission denied"))
+    def test_export_json_permission_error(self, mock_file, agent):
+        """Test _export_json with permission error."""
+        test_data = {"sprint_name": "Sprint 16", "status": "completed"}
+        agent._export_json(test_data)
+
+    @patch('builtins.open', side_effect=OSError("OS error"))
+    def test_export_json_os_error(self, mock_file, agent):
+        """Test _export_json with OS error."""
+        test_data = {"sprint_name": "Sprint 16", "status": "completed"}
+        agent._export_json(test_data)
+
+    def test_on_retro_feedback_invalid_event_type(self, agent):
+        """Test on_retro_feedback with invalid event type."""
+        agent.on_retro_feedback("invalid event")  # Should handle gracefully
+
+    def test_on_retro_feedback_invalid_feedback_list_type(self, agent):
+        """Test on_retro_feedback with invalid feedback list type."""
+        agent.on_retro_feedback({"feedback_list": "invalid"})  # Should handle gracefully
+
+    def test_on_generate_actions_invalid_event_type(self, agent):
+        """Test on_generate_actions with invalid event type."""
+        agent.on_generate_actions("invalid event")  # Should handle gracefully
+
+    def test_on_generate_actions_invalid_feedback_list_type(self, agent):
+        """Test on_generate_actions with invalid feedback list type."""
+        agent.on_generate_actions({"feedback_list": "invalid"})  # Should handle gracefully
+
+    def test_on_feedback_sentiment_analyzed_invalid_event_type(self, agent):
+        """Test on_feedback_sentiment_analyzed with invalid event type."""
+        agent.on_feedback_sentiment_analyzed("invalid event")  # Should handle gracefully
+
+
+class TestRetrospectiveAgentCLI:
+    @patch('sys.argv', ['retrospective.py', 'help'])
+    @patch('builtins.print')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.save_context')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.publish')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.get_context', return_value={"status": "active"})
+    def test_cli_help(self, mock_get_context, mock_publish, mock_save_context, mock_print):
+        from bmad.agents.Agent.Retrospective.retrospective import main
+        with patch('bmad.agents.Agent.Retrospective.retrospective.RetrospectiveAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'show_help') as mock_show_help:
+                main()
+                mock_show_help.assert_called_once()
+
+    @patch('sys.argv', ['retrospective.py', 'conduct-retrospective', '--sprint-name', 'Sprint 16', '--team-size', '10'])
+    @patch('bmad.agents.Agent.Retrospective.retrospective.save_context')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.publish')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.get_context', return_value={"status": "active"})
+    def test_cli_conduct_retrospective(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.Retrospective.retrospective import main
+        with patch('bmad.agents.Agent.Retrospective.retrospective.RetrospectiveAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'conduct_retrospective', return_value={"result": "ok"}) as mock_conduct_retrospective:
+                main()
+                mock_conduct_retrospective.assert_called_once_with('Sprint 16', 10)
+
+    @patch('sys.argv', ['retrospective.py', 'analyze-feedback', '--feedback-list', 'Feedback1', 'Feedback2'])
+    @patch('bmad.agents.Agent.Retrospective.retrospective.save_context')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.publish')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.get_context', return_value={"status": "active"})
+    def test_cli_analyze_feedback(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.Retrospective.retrospective import main
+        with patch('bmad.agents.Agent.Retrospective.retrospective.RetrospectiveAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'analyze_feedback', return_value={"result": "ok"}) as mock_analyze_feedback:
+                main()
+                mock_analyze_feedback.assert_called_once_with(['Feedback1', 'Feedback2'])
+
+    @patch('sys.argv', ['retrospective.py', 'create-action-plan'])
+    @patch('bmad.agents.Agent.Retrospective.retrospective.save_context')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.publish')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.get_context', return_value={"status": "active"})
+    def test_cli_create_action_plan(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.Retrospective.retrospective import main
+        with patch('bmad.agents.Agent.Retrospective.retrospective.RetrospectiveAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'create_action_plan', return_value={"result": "ok"}) as mock_create_action_plan:
+                main()
+                mock_create_action_plan.assert_called_once()
+
+    @patch('sys.argv', ['retrospective.py', 'track-improvements', '--sprint-name', 'Sprint 16'])
+    @patch('bmad.agents.Agent.Retrospective.retrospective.save_context')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.publish')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.get_context', return_value={"status": "active"})
+    def test_cli_track_improvements(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.Retrospective.retrospective import main
+        with patch('bmad.agents.Agent.Retrospective.retrospective.RetrospectiveAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'track_improvements', return_value={"result": "ok"}) as mock_track_improvements:
+                main()
+                mock_track_improvements.assert_called_once_with('Sprint 16')
+
+    @patch('sys.argv', ['retrospective.py', 'show-retro-history'])
+    @patch('bmad.agents.Agent.Retrospective.retrospective.save_context')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.publish')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.get_context', return_value={"status": "active"})
+    def test_cli_show_retro_history(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.Retrospective.retrospective import main
+        with patch('bmad.agents.Agent.Retrospective.retrospective.RetrospectiveAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'show_retro_history') as mock_show_retro_history:
+                main()
+                mock_show_retro_history.assert_called_once()
+
+    @patch('sys.argv', ['retrospective.py', 'show-action-history'])
+    @patch('bmad.agents.Agent.Retrospective.retrospective.save_context')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.publish')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.get_context', return_value={"status": "active"})
+    def test_cli_show_action_history(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.Retrospective.retrospective import main
+        with patch('bmad.agents.Agent.Retrospective.retrospective.RetrospectiveAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'show_action_history') as mock_show_action_history:
+                main()
+                mock_show_action_history.assert_called_once()
+
+    @patch('sys.argv', ['retrospective.py', 'show-best-practices'])
+    @patch('bmad.agents.Agent.Retrospective.retrospective.save_context')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.publish')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.get_context', return_value={"status": "active"})
+    def test_cli_show_best_practices(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.Retrospective.retrospective import main
+        with patch('bmad.agents.Agent.Retrospective.retrospective.RetrospectiveAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'show_resource') as mock_show_resource:
+                main()
+                mock_show_resource.assert_called_once_with('best-practices')
+
+    @patch('sys.argv', ['retrospective.py', 'show-changelog'])
+    @patch('bmad.agents.Agent.Retrospective.retrospective.save_context')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.publish')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.get_context', return_value={"status": "active"})
+    def test_cli_show_changelog(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.Retrospective.retrospective import main
+        with patch('bmad.agents.Agent.Retrospective.retrospective.RetrospectiveAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'show_resource') as mock_show_resource:
+                main()
+                mock_show_resource.assert_called_once_with('changelog')
+
+    @patch('sys.argv', ['retrospective.py', 'export-report', '--format', 'json'])
+    @patch('bmad.agents.Agent.Retrospective.retrospective.save_context')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.publish')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.get_context', return_value={"status": "active"})
+    def test_cli_export_report(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.Retrospective.retrospective import main
+        with patch('bmad.agents.Agent.Retrospective.retrospective.RetrospectiveAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'export_report') as mock_export_report:
+                main()
+                mock_export_report.assert_called_once_with('json')
+
+    @patch('sys.argv', ['retrospective.py', 'test'])
+    @patch('bmad.agents.Agent.Retrospective.retrospective.save_context')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.publish')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.get_context', return_value={"status": "active"})
+    def test_cli_test(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.Retrospective.retrospective import main
+        with patch('bmad.agents.Agent.Retrospective.retrospective.RetrospectiveAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'test_resource_completeness') as mock_test_resource_completeness:
+                main()
+                mock_test_resource_completeness.assert_called_once()
+
+    @patch('sys.argv', ['retrospective.py', 'collaborate'])
+    @patch('bmad.agents.Agent.Retrospective.retrospective.save_context')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.publish')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.get_context', return_value={"status": "active"})
+    def test_cli_collaborate(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.Retrospective.retrospective import main
+        with patch('bmad.agents.Agent.Retrospective.retrospective.RetrospectiveAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'collaborate_example') as mock_collaborate_example:
+                main()
+                mock_collaborate_example.assert_called_once()
+
+    @patch('sys.argv', ['retrospective.py', 'run'])
+    @patch('bmad.agents.Agent.Retrospective.retrospective.save_context')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.publish')
+    @patch('bmad.agents.Agent.Retrospective.retrospective.get_context', return_value={"status": "active"})
+    def test_cli_run(self, mock_get_context, mock_publish, mock_save_context):
+        from bmad.agents.Agent.Retrospective.retrospective import main
+        with patch('bmad.agents.Agent.Retrospective.retrospective.RetrospectiveAgent') as mock_agent_class:
+            mock_agent = mock_agent_class.return_value
+            with patch.object(mock_agent, 'run') as mock_run:
+                main()
+                mock_run.assert_called_once() 
