@@ -11,7 +11,7 @@ import logging
 import os
 from typing import Dict, Any, Optional, List
 from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from enum import Enum
 
 # Import Stripe integration
@@ -225,7 +225,7 @@ class BillingManager:
     def _create_default_plans(self):
         """Create default plans if they don't exist."""
         if not self.plans:
-            now = datetime.utcnow()
+            now = datetime.now(UTC)
             
             # Basic plan
             basic_plan = Plan(
@@ -290,7 +290,7 @@ class BillingManager:
                    price_yearly: float, features: List[str], limits: Dict[str, Any]) -> Plan:
         """Create a new plan."""
         plan_id = str(uuid.uuid4())
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         
         plan = Plan(
             id=plan_id,
@@ -321,7 +321,7 @@ class BillingManager:
                           billing_period: BillingPeriod) -> Subscription:
         """Create a new subscription."""
         subscription_id = str(uuid.uuid4())
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         
         # Calculate period dates
         if billing_period == BillingPeriod.MONTHLY:
@@ -365,8 +365,8 @@ class BillingManager:
             return False
         
         subscription.status = SubscriptionStatus.CANCELLED
-        subscription.cancelled_at = datetime.utcnow()
-        subscription.updated_at = datetime.utcnow()
+        subscription.cancelled_at = datetime.now(UTC)
+        subscription.updated_at = datetime.now(UTC)
         self._save_data()
         logger.info(f"Cancelled subscription: {subscription_id}")
         return True
@@ -429,7 +429,7 @@ class BillingManager:
             
             # Create local subscription using existing method
             subscription_id = str(uuid.uuid4())
-            now = datetime.utcnow()
+            now = datetime.now(UTC)
             
             subscription = Subscription(
                 id=subscription_id,
@@ -471,7 +471,7 @@ class BillingManager:
         if result['success']:
             # Update local subscription
             subscription.status = SubscriptionStatus.CANCELLED if not cancel_at_period_end else SubscriptionStatus.ACTIVE
-            subscription.updated_at = datetime.utcnow()
+            subscription.updated_at = datetime.now(UTC)
             self._save_data()
             logger.info(f"Canceled Stripe subscription for tenant {tenant_id}")
         
@@ -540,7 +540,7 @@ class BillingManager:
                     subscription.status = SubscriptionStatus(data.get('status', 'active'))
                     subscription.current_period_start = datetime.fromtimestamp(data.get('current_period_start', 0))
                     subscription.current_period_end = datetime.fromtimestamp(data.get('current_period_end', 0))
-                    subscription.updated_at = datetime.utcnow()
+                    subscription.updated_at = datetime.now(UTC)
                     self._save_data()
         
         elif event_type == 'invoice.payment_succeeded':
@@ -550,7 +550,7 @@ class BillingManager:
                 subscription = self._get_subscription_by_stripe_id(subscription_id)
                 if subscription:
                     subscription.status = SubscriptionStatus.ACTIVE
-                    subscription.updated_at = datetime.utcnow()
+                    subscription.updated_at = datetime.now(UTC)
                     self._save_data()
         
         elif event_type == 'invoice.payment_failed':
@@ -560,7 +560,7 @@ class BillingManager:
                 subscription = self._get_subscription_by_stripe_id(subscription_id)
                 if subscription:
                     subscription.status = SubscriptionStatus.PAST_DUE
-                    subscription.updated_at = datetime.utcnow()
+                    subscription.updated_at = datetime.now(UTC)
                     self._save_data()
     
     def _get_subscription_by_stripe_id(self, stripe_subscription_id: str) -> Optional[Subscription]:
@@ -590,7 +590,7 @@ class BillingManager:
             "amount": amount,
             "currency": "USD",
             "status": "pending",
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
             "due_date": subscription.current_period_end.isoformat(),
             "plan_name": plan.name,
             "billing_period": subscription.billing_period.value
@@ -692,7 +692,7 @@ class UsageTracker:
     
     def record_usage(self, tenant_id: str, metric: str, value: int = 1):
         """Record usage for a tenant."""
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         
         # Create period boundaries (monthly)
         period_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
@@ -729,7 +729,7 @@ class UsageTracker:
     
     def get_current_month_usage(self, tenant_id: str, metric: str) -> int:
         """Get current month usage for a tenant and metric."""
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         period_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         return self.get_usage(tenant_id, metric, period_start, now)
 
@@ -748,9 +748,9 @@ class SubscriptionManager:
             return None
         
         # Check if subscription is expired
-        if subscription.current_period_end < datetime.utcnow():
+        if subscription.current_period_end < datetime.now(UTC):
             subscription.status = SubscriptionStatus.PAST_DUE
-            subscription.updated_at = datetime.utcnow()
+            subscription.updated_at = datetime.now(UTC)
             self.billing_manager._save_data()
         
         return subscription

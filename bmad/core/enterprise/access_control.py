@@ -10,7 +10,7 @@ import json
 import logging
 from typing import Dict, Any, Optional, List, Set
 from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from enum import Enum
 
 logger = logging.getLogger(__name__)
@@ -126,7 +126,7 @@ class FeatureFlagManager:
     def _create_default_flags(self):
         """Create default feature flags if they don't exist."""
         if not self.feature_flags:
-            now = datetime.utcnow()
+            now = datetime.now(UTC)
             
             # Advanced analytics flag
             analytics_flag = FeatureFlag(
@@ -173,7 +173,7 @@ class FeatureFlagManager:
                           default_value: Any) -> FeatureFlag:
         """Create a new feature flag."""
         flag_id = str(uuid.uuid4())
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         
         flag = FeatureFlag(
             id=flag_id,
@@ -221,7 +221,7 @@ class FeatureFlagManager:
             return False
         
         flag.tenant_overrides[tenant_id] = value
-        flag.updated_at = datetime.utcnow()
+        flag.updated_at = datetime.now(UTC)
         self._save_feature_flags()
         logger.info(f"Set override for flag {flag_name}: tenant {tenant_id} = {value}")
         return True
@@ -233,7 +233,7 @@ class FeatureFlagManager:
             return False
         
         del flag.tenant_overrides[tenant_id]
-        flag.updated_at = datetime.utcnow()
+        flag.updated_at = datetime.now(UTC)
         self._save_feature_flags()
         logger.info(f"Removed override for flag {flag_name}: tenant {tenant_id}")
         return True
@@ -287,7 +287,7 @@ class AccessControlManager:
     def _create_default_rules(self):
         """Create default access rules if they don't exist."""
         if not self.access_rules:
-            now = datetime.utcnow()
+            now = datetime.now(UTC)
             
             # Agent access rules
             agent_view_rule = AccessRule(
@@ -345,7 +345,7 @@ class AccessControlManager:
                           action: str, conditions: Dict[str, Any]) -> AccessRule:
         """Create a new access rule."""
         rule_id = str(uuid.uuid4())
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         
         rule = AccessRule(
             id=rule_id,

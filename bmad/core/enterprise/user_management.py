@@ -12,7 +12,7 @@ import hashlib
 import secrets
 from typing import Dict, Any, Optional, List, Set
 from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from enum import Enum
 
 logger = logging.getLogger(__name__)
@@ -182,7 +182,7 @@ class UserManager:
                    tenant_id: str, password: str, role_ids: List[str] = None) -> User:
         """Create a new user."""
         user_id = str(uuid.uuid4())
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         
         if role_ids is None:
             role_ids = []
@@ -237,7 +237,7 @@ class UserManager:
             return None
         
         # Update last login
-        user.last_login = datetime.utcnow()
+        user.last_login = datetime.now(UTC)
         self._save_users()
         
         return user
@@ -252,7 +252,7 @@ class UserManager:
             if hasattr(user, key):
                 setattr(user, key, value)
         
-        user.updated_at = datetime.utcnow()
+        user.updated_at = datetime.now(UTC)
         self._save_users()
         logger.info(f"Updated user: {user.email}")
         return user
@@ -317,7 +317,7 @@ class RoleManager:
     def _create_default_roles(self):
         """Create default system roles if they don't exist."""
         if not self.roles:
-            now = datetime.utcnow()
+            now = datetime.now(UTC)
             
             # Admin role
             admin_role = Role(
@@ -368,7 +368,7 @@ class RoleManager:
     def create_role(self, name: str, description: str, permissions: List[str]) -> Role:
         """Create a new role."""
         role_id = str(uuid.uuid4())
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         
         role = Role(
             id=role_id,
@@ -405,7 +405,7 @@ class RoleManager:
             if hasattr(role, key):
                 setattr(role, key, value)
         
-        role.updated_at = datetime.utcnow()
+        role.updated_at = datetime.now(UTC)
         self._save_roles()
         logger.info(f"Updated role: {role.name}")
         return role

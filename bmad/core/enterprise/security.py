@@ -12,7 +12,7 @@ import hashlib
 import secrets
 from typing import Dict, Any, Optional, List, Union
 from dataclasses import dataclass, asdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from enum import Enum
 
 logger = logging.getLogger(__name__)
@@ -162,7 +162,7 @@ class EnterpriseSecurityManager:
     def _create_default_policies(self):
         """Create default security policies if they don't exist."""
         if not self.security_policies:
-            now = datetime.utcnow()
+            now = datetime.now(UTC)
             
             # Password policy
             password_policy = SecurityPolicy(
@@ -245,7 +245,7 @@ class EnterpriseSecurityManager:
                              rules: Dict[str, Any], security_level: SecurityLevel) -> SecurityPolicy:
         """Create a new security policy."""
         policy_id = str(uuid.uuid4())
-        now = datetime.utcnow()
+        now = datetime.now(UTC)
         
         policy = SecurityPolicy(
             id=policy_id,
@@ -319,7 +319,7 @@ class EnterpriseSecurityManager:
         
         log = AuditLog(
             id=str(uuid.uuid4()),
-            timestamp=datetime.utcnow(),
+            timestamp=datetime.now(UTC),
             user_id=user_id,
             tenant_id=tenant_id,
             event_type=event_type,
@@ -366,9 +366,9 @@ class EnterpriseSecurityManager:
                                end_date: datetime = None) -> Dict[str, Any]:
         """Generate a security report."""
         if not start_date:
-            start_date = datetime.utcnow() - timedelta(days=30)
+            start_date = datetime.now(UTC) - timedelta(days=30)
         if not end_date:
-            end_date = datetime.utcnow()
+            end_date = datetime.now(UTC)
         
         logs = self.get_audit_logs(tenant_id=tenant_id, start_date=start_date, end_date=end_date, limit=10000)
         
@@ -449,7 +449,7 @@ class EnterpriseSecurityManager:
             "security_violations": len(violations),
             "failed_login_rate": len(failed_logins) / len(login_events) if login_events else 0,
             "total_access_events": len(access_events),
-            "assessment_date": datetime.utcnow().isoformat(),
+            "assessment_date": datetime.now(UTC).isoformat(),
             "recommendations": self._generate_security_recommendations(violations, failed_logins)
         }
     
