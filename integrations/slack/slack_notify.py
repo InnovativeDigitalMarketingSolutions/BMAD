@@ -22,6 +22,11 @@ def send_slack_message(text, channel=None, feedback_id=None, use_api=False, bloc
     :param use_api: Gebruik Slack API (chat.postMessage) i.p.v. webhook
     :param blocks: Optioneel, Slack Block Kit blocks (list)
     """
+    # Development mode - skip Slack notifications
+    if os.getenv("DEV_MODE") == "true":
+        logging.info(f"[DEV_MODE] Slack notification skipped: {text}")
+        return
+    
     if use_api:
         if not SLACK_BOT_TOKEN:
             raise ValueError("SLACK_BOT_TOKEN is niet ingesteld!")
@@ -81,6 +86,11 @@ def send_human_in_loop_alert(reason, channel=None, user_mention=None, alert_id=N
     :param alert_id: Unieke id voor deze alert (str)
     :param use_api: Gebruik Slack API (chat.postMessage)
     """
+    # Development mode - auto-approve HITL alerts
+    if os.getenv("DEV_MODE") == "true":
+        logging.info(f"[DEV_MODE] HITL alert auto-approved: {reason}")
+        return True
+    
     if not alert_id:
         import uuid
         alert_id = str(uuid.uuid4())
