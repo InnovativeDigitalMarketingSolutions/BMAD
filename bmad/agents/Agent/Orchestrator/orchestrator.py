@@ -785,6 +785,13 @@ Orchestrator Agent Commands:
             # Quality gate check via QualityGuardian
             self.manage_escalations("quality_gate_failed", "feature_development")
 
+            # Idea validation via StrategiePartner
+            publish("idea_validation_requested", {
+                "idea_description": "A mobile app for task management",
+                "agent": "OrchestratorAgent",
+                "timestamp": datetime.now().isoformat()
+            })
+
             # Publish completion
             publish("orchestration_completed", {
                 "status": "success",
@@ -840,7 +847,7 @@ Orchestrator Agent Commands:
             raise ValueError("Task description must be a non-empty string")
         
         try:
-            prompt = f"Welke agent is het meest geschikt voor deze taak: '{task_desc}'? Kies uit: ProductOwner, Architect, TestEngineer, QualityGuardian, FeedbackAgent, DevOpsInfra, Retrospective. Geef alleen de agentnaam als JSON."
+            prompt = f"Welke agent is het meest geschikt voor deze taak: '{task_desc}'? Kies uit: ProductOwner, Architect, TestEngineer, QualityGuardian, StrategiePartner, FeedbackAgent, DevOpsInfra, Retrospective. Geef alleen de agentnaam als JSON."
             structured_output = '{"agent": "..."}'
             result = ask_openai(prompt, structured_output=structured_output)
             agent = result.get("agent")
@@ -1150,7 +1157,28 @@ def handle_quality_gate_check_requested(event):
     # Trigger QualityGuardian agent
     publish("qualityguardian_quality_gate_check", event)
 
+def handle_idea_validation_requested(event):
+    """Handle idea validation requested event."""
+    logger.info(f"Idea validation requested: {event}")
+    # Trigger StrategiePartner agent
+    publish("strategiepartner_validate_idea", event)
+
+def handle_idea_refinement_requested(event):
+    """Handle idea refinement requested event."""
+    logger.info(f"Idea refinement requested: {event}")
+    # Trigger StrategiePartner agent
+    publish("strategiepartner_refine_idea", event)
+
+def handle_epic_creation_requested(event):
+    """Handle epic creation requested event."""
+    logger.info(f"Epic creation requested: {event}")
+    # Trigger StrategiePartner agent
+    publish("strategiepartner_create_epic", event)
+
 subscribe("quality_gate_check_requested", handle_quality_gate_check_requested)
+subscribe("idea_validation_requested", handle_idea_validation_requested)
+subscribe("idea_refinement_requested", handle_idea_refinement_requested)
+subscribe("epic_creation_requested", handle_epic_creation_requested)
 
 def main():
     parser = argparse.ArgumentParser(description="Orchestrator Agent CLI")

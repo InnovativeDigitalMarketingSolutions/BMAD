@@ -1265,10 +1265,71 @@ StrategiePartner Agent Commands:
         except Exception as e:
             logger.error(f"Error handling strategy development requested: {e}")
 
+    def handle_idea_validation_requested(self, event):
+        """Handle idea validation requested event."""
+        try:
+            logger.info(f"Idea validation requested: {event}")
+            idea_description = event.get("idea_description", "A new mobile app for task management")
+            result = self.validate_idea(idea_description)
+            
+            # Publish validation result
+            publish("idea_validation_completed", {
+                "agent": "StrategiePartnerAgent",
+                "idea_description": idea_description,
+                "validation_result": result,
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info(f"Idea validation completed: {result}")
+        except Exception as e:
+            logger.error(f"Error handling idea validation requested: {e}")
+
+    def handle_idea_refinement_requested(self, event):
+        """Handle idea refinement requested event."""
+        try:
+            logger.info(f"Idea refinement requested: {event}")
+            idea_description = event.get("idea_description", "A mobile app")
+            refinement_data = event.get("refinement_data", {})
+            result = self.refine_idea(idea_description, refinement_data)
+            
+            # Publish refinement result
+            publish("idea_refinement_completed", {
+                "agent": "StrategiePartnerAgent",
+                "idea_description": idea_description,
+                "refinement_result": result,
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info(f"Idea refinement completed: {result}")
+        except Exception as e:
+            logger.error(f"Error handling idea refinement requested: {e}")
+
+    def handle_epic_creation_requested(self, event):
+        """Handle epic creation requested event."""
+        try:
+            logger.info(f"Epic creation requested: {event}")
+            validated_idea = event.get("validated_idea", {})
+            result = self.create_epic_from_idea(validated_idea)
+            
+            # Publish epic creation result
+            publish("epic_creation_completed", {
+                "agent": "StrategiePartnerAgent",
+                "validated_idea": validated_idea,
+                "epic_result": result,
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info(f"Epic creation completed: {result}")
+        except Exception as e:
+            logger.error(f"Error handling epic creation requested: {e}")
+
     def run(self):
         """Start the agent in event listening mode."""
         subscribe("alignment_check_completed", self.handle_alignment_check_completed)
         subscribe("strategy_development_requested", self.handle_strategy_development_requested)
+        subscribe("strategiepartner_validate_idea", self.handle_idea_validation_requested)
+        subscribe("strategiepartner_refine_idea", self.handle_idea_refinement_requested)
+        subscribe("strategiepartner_create_epic", self.handle_epic_creation_requested)
 
         logger.info("StrategiePartnerAgent ready and listening for events...")
         self.collaborate_example()

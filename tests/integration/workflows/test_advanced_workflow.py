@@ -75,6 +75,75 @@ def test_workflow_definition():
     assert workflow_def.tasks[1].dependencies == ["po_1"]
     assert workflow_def.tasks[4].agent == "QualityGuardian"
 
+def test_strategiepartner_workflow_integration():
+    """Test StrategiePartner agent workflow integratie."""
+    orchestrator = IntegratedWorkflowOrchestrator()
+    
+    # Maak workflow met StrategiePartner idea validation
+    tasks = [
+        WorkflowTask(
+            id="idea_1",
+            name="Validate Initial Idea",
+            agent="StrategiePartner",
+            command="validate-idea"
+        ),
+        WorkflowTask(
+            id="refine_1",
+            name="Refine Idea",
+            agent="StrategiePartner",
+            command="refine-idea",
+            dependencies=["idea_1"]
+        ),
+        WorkflowTask(
+            id="epic_1",
+            name="Create Epic",
+            agent="StrategiePartner",
+            command="create-epic-from-idea",
+            dependencies=["refine_1"]
+        ),
+        WorkflowTask(
+            id="po_1",
+            name="Product Owner Review",
+            agent="ProductOwner",
+            command="review-epic",
+            dependencies=["epic_1"]
+        ),
+        WorkflowTask(
+            id="scrum_1",
+            name="Sprint Planning",
+            agent="Scrummaster",
+            command="plan-sprint",
+            dependencies=["po_1"]
+        )
+    ]
+    
+    workflow_def = WorkflowDefinition(
+        name="idea_to_sprint_workflow",
+        description="Complete workflow from idea validation to sprint planning",
+        tasks=tasks
+    )
+    
+    # Test workflow definitie
+    assert workflow_def.name == "idea_to_sprint_workflow"
+    assert len(workflow_def.tasks) == 5
+    
+    # Test StrategiePartner tasks
+    strategie_tasks = [task for task in workflow_def.tasks if task.agent == "StrategiePartner"]
+    assert len(strategie_tasks) == 3
+    
+    # Test dependencies
+    epic_task = next(task for task in workflow_def.tasks if task.id == "epic_1")
+    assert len(epic_task.dependencies) == 1
+    assert "refine_1" in epic_task.dependencies
+    
+    po_task = next(task for task in workflow_def.tasks if task.id == "po_1")
+    assert len(po_task.dependencies) == 1
+    assert "epic_1" in po_task.dependencies
+    
+    # Registreer workflow
+    orchestrator.register_workflow(workflow_def)
+    assert "idea_to_sprint_workflow" in orchestrator.workflow_definitions
+
 def test_workflow_registration():
     """Test workflow registratie."""
     orchestrator = IntegratedWorkflowOrchestrator()
@@ -386,6 +455,9 @@ if __name__ == "__main__":
         
         test_qualityguardian_workflow_integration()
         print("✅ QualityGuardian workflow integration test passed")
+        
+        test_strategiepartner_workflow_integration()
+        print("✅ StrategiePartner workflow integration test passed")
         
         # Async test
         asyncio.run(test_workflow_execution())
