@@ -733,3 +733,108 @@ Deze guide moet worden gebruikt als referentie tijdens development. Het doel is 
   - Schone repository
   - Geen accidental commits van temporary files
   - Betere focus op permanente documentatie 
+
+### 4.7 Thread Safety en Lock Management
+- **Principe**: Voorkom recursive lock deadlocks en thread safety issues
+- **Root Cause**: Recursive lock deadlocks ontstaan wanneer een thread probeert dezelfde lock meerdere keren te verkrijgen
+- **Symptomen**: 
+  - Tests die vastlopen zonder error
+  - Infinite loops in threaded code
+  - Timeout errors in tests
+  - Thread hanging zonder duidelijke oorzaak
+
+#### 4.7.1 Recursive Lock Deadlock Pattern
+```python
+# ❌ PROBLEMATISCH PATTERN - Recursive Lock Deadlock
+def method_a(self):
+    with LOCK:
+        # Do something
+        self.method_b()  # Probeert ook LOCK te verkrijgen
+
+def method_b(self):
+    with LOCK:  # Deadlock! LOCK is al verkregen door method_a
+        # Do something
+```
+
+#### 4.7.2 Kwalitatieve Oplossing
+```python
+# ✅ CORRECT PATTERN - Directe implementatie zonder recursive calls
+def method_a(self):
+    with LOCK:
+        # Do something
+        self._method_b_internal()  # Interne methode zonder lock
+
+def method_b(self):
+    with LOCK:
+        self._method_b_internal()
+
+def _method_b_internal(self):
+    # Implementatie zonder lock - kan veilig aangeroepen worden
+    # Do something
+```
+
+#### 4.7.3 Best Practices voor Thread Safety
+- **Lock Granularity**: Gebruik fijne-grained locks voor specifieke resources
+- **Lock Ordering**: Zorg voor consistente lock ordering om deadlocks te voorkomen
+- **Timeout Mechanisms**: Implementeer timeouts voor lock acquisition
+- **Test Isolation**: Schakel background threads uit in test omgevingen
+- **Resource Cleanup**: Zorg voor proper cleanup van threads en locks
+
+#### 4.7.4 Test Environment Thread Management
+```python
+# ✅ CORRECT PATTERN - Test environment thread management
+class ThreadedManager:
+    def __init__(self, disable_background_threads: bool = False):
+        self._background_threads_enabled = not disable_background_threads
+        
+        if self._background_threads_enabled:
+            self._start_background_threads()
+
+# In tests
+manager = ThreadedManager(disable_background_threads=True)
+```
+
+#### 4.7.5 Debugging Thread Issues
+- **Timeout Tests**: Gebruik `timeout` command voor tests die kunnen vastlopen
+- **Isolation Testing**: Test elke operatie apart om het probleem te isoleren
+- **Lock Analysis**: Analyseer lock acquisition patterns
+- **Thread Dumps**: Gebruik thread dumps voor debugging (indien beschikbaar)
+
+#### 4.7.6 Lesson Learned: Enhanced Context Manager
+**Probleem**: `update_context` methode veroorzaakte recursive lock deadlock
+- **Root Cause**: `update_context` verkreeg `CONTEXT_LOCK` en riep `get_context_entry` aan
+- **Oplossing**: Directe entry lookup in plaats van `get_context_entry` aanroepen
+- **Resultaat**: Alle 33 tests slagen nu (100% success rate)
+- **Performance**: Tests uitgevoerd in 1.52 seconden
+
+**Code Fix**:
+```python
+# ❌ VOOR - Recursive lock deadlock
+def update_context(self, key, value, layer=None):
+    with CONTEXT_LOCK:
+        entry = self.get_context_entry(key, layer)  # Probeert ook LOCK te verkrijgen
+        # ...
+
+# ✅ NA - Directe implementatie
+def update_context(self, key, value, layer=None):
+    with CONTEXT_LOCK:
+        # Directe entry lookup zonder recursive lock
+        entry = None
+        if layer:
+            entry = self._layers[layer].get(key)
+        else:
+            for layer_enum in reversed(list(ContextLayer)):
+                entry = self._layers[layer_enum].get(key)
+                if entry and not self._is_expired(entry):
+                    break
+        # ...
+```
+
+#### 4.7.7 Thread Safety Checklist
+- [ ] **Lock Analysis**: Analyseer alle lock acquisition patterns
+- [ ] **Recursive Calls**: Identificeer methoden die andere locked methoden aanroepen
+- [ ] **Test Isolation**: Schakel background threads uit in tests
+- [ ] **Timeout Testing**: Gebruik timeouts voor tests die kunnen vastlopen
+- [ ] **Resource Cleanup**: Zorg voor proper cleanup van threads
+- [ ] **Documentation**: Documenteer thread safety patterns
+- [ ] **Code Review**: Review thread safety in code reviews 
