@@ -847,7 +847,7 @@ Orchestrator Agent Commands:
             raise ValueError("Task description must be a non-empty string")
         
         try:
-            prompt = f"Welke agent is het meest geschikt voor deze taak: '{task_desc}'? Kies uit: ProductOwner, Architect, TestEngineer, QualityGuardian, StrategiePartner, FeedbackAgent, DevOpsInfra, Retrospective. Geef alleen de agentnaam als JSON."
+            prompt = f"Welke agent is het meest geschikt voor deze taak: '{task_desc}'? Kies uit: ProductOwner, Architect, TestEngineer, QualityGuardian, StrategiePartner, WorkflowAutomator, FeedbackAgent, DevOpsInfra, Retrospective. Geef alleen de agentnaam als JSON."
             structured_output = '{"agent": "..."}'
             result = ask_openai(prompt, structured_output=structured_output)
             agent = result.get("agent")
@@ -1175,10 +1175,46 @@ def handle_epic_creation_requested(event):
     # Trigger StrategiePartner agent
     publish("strategiepartner_create_epic", event)
 
+def handle_workflow_execution_requested(event):
+    """Handle workflow execution requested event."""
+    workflow_id = event.get("workflow_id")
+    logger.info(f"Workflow execution requested for workflow: {workflow_id}")
+    
+    # Trigger WorkflowAutomator agent for workflow execution
+    publish("workflow_execution_requested", {
+        "workflow_id": workflow_id,
+        "timestamp": datetime.now().isoformat()
+    })
+
+def handle_workflow_optimization_requested(event):
+    """Handle workflow optimization requested event."""
+    workflow_id = event.get("workflow_id")
+    logger.info(f"Workflow optimization requested for workflow: {workflow_id}")
+    
+    # Trigger WorkflowAutomator agent for workflow optimization
+    publish("workflow_optimization_requested", {
+        "workflow_id": workflow_id,
+        "timestamp": datetime.now().isoformat()
+    })
+
+def handle_workflow_monitoring_requested(event):
+    """Handle workflow monitoring requested event."""
+    workflow_id = event.get("workflow_id")
+    logger.info(f"Workflow monitoring requested for workflow: {workflow_id}")
+    
+    # Trigger WorkflowAutomator agent for workflow monitoring
+    publish("workflow_monitoring_requested", {
+        "workflow_id": workflow_id,
+        "timestamp": datetime.now().isoformat()
+    })
+
 subscribe("quality_gate_check_requested", handle_quality_gate_check_requested)
 subscribe("idea_validation_requested", handle_idea_validation_requested)
 subscribe("idea_refinement_requested", handle_idea_refinement_requested)
 subscribe("epic_creation_requested", handle_epic_creation_requested)
+subscribe("workflow_execution_requested", handle_workflow_execution_requested)
+subscribe("workflow_optimization_requested", handle_workflow_optimization_requested)
+subscribe("workflow_monitoring_requested", handle_workflow_monitoring_requested)
 
 def main():
     parser = argparse.ArgumentParser(description="Orchestrator Agent CLI")
