@@ -10,7 +10,7 @@ import json
 import logging
 import hashlib
 import secrets
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional, List, Union
 from dataclasses import dataclass, asdict
 from datetime import datetime, timedelta
 from enum import Enum
@@ -36,6 +36,7 @@ class AuditEventType(Enum):
     ACCESS = "access"
     PERMISSION_CHANGE = "permission_change"
     SECURITY_VIOLATION = "security_violation"
+    CUSTOM = "custom"
 
 
 @dataclass
@@ -304,10 +305,18 @@ class EnterpriseSecurityManager:
             "policy_level": policy.security_level.value
         }
     
-    def log_audit_event(self, user_id: str, tenant_id: str, event_type: AuditEventType,
+    def log_audit_event(self, user_id: str, tenant_id: str, event_type: Union[AuditEventType, str],
                        resource: str, action: str, details: Dict[str, Any],
                        ip_address: str = None, user_agent: str = None, success: bool = True):
         """Log an audit event."""
+        # Convert string to enum if needed
+        if isinstance(event_type, str):
+            try:
+                event_type = AuditEventType(event_type)
+            except ValueError:
+                # If not a valid enum value, create a custom one
+                event_type = AuditEventType.CUSTOM
+        
         log = AuditLog(
             id=str(uuid.uuid4()),
             timestamp=datetime.utcnow(),
@@ -321,7 +330,7 @@ class EnterpriseSecurityManager:
             user_agent=user_agent,
             success=success
         )
-        
+
         self.audit_logs.append(log)
         self._save_data()
         logger.info(f"Audit log: {event_type.value} - {user_id} - {resource} - {action}")

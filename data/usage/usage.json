@@ -1,0 +1,47 @@
+[
+  {
+    "id": "b2981132-b363-48ec-87fa-4f2068509019",
+    "tenant_id": "test_tenant",
+    "metric": "agent_method_calls",
+    "value": 1,
+    "timestamp": "2025-08-01T10:29:32.079000",
+    "period_start": "2025-08-01T00:00:00",
+    "period_end": "2025-09-01T10:29:32.079000"
+  },
+  {
+    "id": "8027338c-8e70-4d3b-878a-0dd953004e61",
+    "tenant_id": "test_tenant",
+    "metric": "agent_method_calls",
+    "value": 1,
+    "timestamp": "2025-08-01T10:33:30.764814",
+    "period_start": "2025-08-01T00:00:00",
+    "period_end": "2025-09-01T10:33:30.764814"
+  },
+  {
+    "id": "4616d161-7ecd-4f24-ad2a-54324ca3d84d",
+    "tenant_id": "test_tenant",
+    "metric": "agent_method_calls",
+    "value": 1,
+    "timestamp": "2025-08-01T10:33:30.768906",
+    "period_start": "2025-08-01T00:00:00",
+    "period_end": "2025-09-01T10:33:30.768906"
+  },
+  {
+    "id": "25abb329-7e0c-44ca-a3d9-66ca252799a2",
+    "tenant_id": "test_tenant",
+    "metric": "agent_method_calls",
+    "value": 1,
+    "timestamp": "2025-08-01T10:33:48.479315",
+    "period_start": "2025-08-01T00:00:00",
+    "period_end": "2025-09-01T10:33:48.479315"
+  },
+  {
+    "id": "58e162df-58af-4289-a252-a584b6b28109",
+    "tenant_id": "test_tenant",
+    "metric": "agent_method_calls",
+    "value": 1,
+    "timestamp": "2025-08-01T10:33:48.482758",
+    "period_start": "2025-08-01T00:00:00",
+    "period_end": "2025-09-01T10:33:48.482758"
+  }
+]
