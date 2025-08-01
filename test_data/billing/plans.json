@@ -1,0 +1,119 @@
+{
+  "f9973912-0342-4126-a61b-f3e2d65fea2a": {
+    "id": "f9973912-0342-4126-a61b-f3e2d65fea2a",
+    "name": "Basic",
+    "description": "Perfect for small teams and startups",
+    "price_monthly": 29.99,
+    "price_yearly": 299.99,
+    "features": [
+      "core_agents",
+      "basic_workflows",
+      "email_support"
+    ],
+    "limits": {
+      "max_agents": 5,
+      "max_workflows": 10,
+      "storage_limit_gb": 1,
+      "api_rate_limit": 1000
+    },
+    "created_at": "2025-08-01T10:42:24.033615",
+    "updated_at": "2025-08-01T10:42:24.033615",
+    "is_active": true
+  },
+  "3c73b8ab-4728-4ae6-aafc-e6e2e5a49466": {
+    "id": "3c73b8ab-4728-4ae6-aafc-e6e2e5a49466",
+    "name": "Professional",
+    "description": "Ideal for growing businesses",
+    "price_monthly": 99.99,
+    "price_yearly": 999.99,
+    "features": [
+      "core_agents",
+      "advanced_workflows",
+      "priority_support",
+      "analytics"
+    ],
+    "limits": {
+      "max_agents": 20,
+      "max_workflows": 50,
+      "storage_limit_gb": 10,
+      "api_rate_limit": 5000
+    },
+    "created_at": "2025-08-01T10:42:24.033615",
+    "updated_at": "2025-08-01T10:42:24.033615",
+    "is_active": true
+  },
+  "beffabef-7ba6-44a0-aada-3e7d8aabb53d": {
+    "id": "beffabef-7ba6-44a0-aada-3e7d8aabb53d",
+    "name": "Enterprise",
+    "description": "For large organizations with custom needs",
+    "price_monthly": 299.99,
+    "price_yearly": 2999.99,
+    "features": [
+      "all_agents",
+      "custom_workflows",
+      "dedicated_support",
+      "advanced_analytics",
+      "custom_integrations"
+    ],
+    "limits": {
+      "max_agents": 100,
+      "max_workflows": 500,
+      "storage_limit_gb": 100,
+      "api_rate_limit": 50000
+    },
+    "created_at": "2025-08-01T10:42:24.033615",
+    "updated_at": "2025-08-01T10:42:24.033615",
+    "is_active": true
+  },
+  "ed9da825-7904-4377-b9a2-d60f60be080b": {
+    "id": "ed9da825-7904-4377-b9a2-d60f60be080b",
+    "name": "Test Plan",
+    "description": "Test plan for testing",
+    "price_monthly": 29.99,
+    "price_yearly": 299.99,
+    "features": [
+      "feature1",
+      "feature2"
+    ],
+    "limits": {
+      "max_agents": 10
+    },
+    "created_at": "2025-08-01T10:42:24.386916",
+    "updated_at": "2025-08-01T10:42:24.386916",
+    "is_active": true
+  },
+  "545b89ba-0f55-4cc7-bc64-e862ddf7b12e": {
+    "id": "545b89ba-0f55-4cc7-bc64-e862ddf7b12e",
+    "name": "Test Plan",
+    "description": "Test plan for testing",
+    "price_monthly": 29.99,
+    "price_yearly": 299.99,
+    "features": [
+      "feature1",
+      "feature2"
+    ],
+    "limits": {
+      "max_agents": 10
+    },
+    "created_at": "2025-08-01T10:43:55.618838",
+    "updated_at": "2025-08-01T10:43:55.618838",
+    "is_active": true
+  },
+  "986ba9c2-efb8-4756-8a2a-75df9ded24bd": {
+    "id": "986ba9c2-efb8-4756-8a2a-75df9ded24bd",
+    "name": "Test Plan",
+    "description": "Test plan for testing",
+    "price_monthly": 29.99,
+    "price_yearly": 299.99,
+    "features": [
+      "feature1",
+      "feature2"
+    ],
+    "limits": {
+      "max_agents": 10
+    },
+    "created_at": "2025-08-01T10:45:55.696151",
+    "updated_at": "2025-08-01T10:45:55.696151",
+    "is_active": true
+  }
+}

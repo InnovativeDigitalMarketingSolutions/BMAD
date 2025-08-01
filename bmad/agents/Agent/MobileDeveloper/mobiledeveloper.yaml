@@ -1,0 +1,410 @@
+name: MobileDeveloper
+version: "1.0.0"
+description: "Specialized agent for mobile application development across multiple platforms"
+author: "BMAD Team"
+maintainer: "BMAD Development Team"
+
+# Agent Configuration
+agent:
+  type: "mobile_development"
+  category: "development"
+  priority: "high"
+  status: "active"
+  auto_start: false
+  max_concurrent_tasks: 5
+  timeout: 300  # 5 minutes
+
+# Core Services
+services:
+  performance_monitor:
+    enabled: true
+    metrics:
+      - app_creation_time
+      - build_performance
+      - test_execution_time
+      - deployment_success_rate
+      - optimization_impact
+  
+  policy_engine:
+    enabled: true
+    policies:
+      - mobile_app_guidelines
+      - platform_specific_rules
+      - performance_standards
+      - security_requirements
+  
+  message_bus:
+    enabled: true
+    events:
+      - app_created
+      - component_built
+      - performance_optimized
+      - app_tested
+      - app_deployed
+      - analysis_completed
+
+# Supported Platforms
+platforms:
+  react_native:
+    name: "React Native"
+    language: "JavaScript/TypeScript"
+    framework: "React Native"
+    supported_versions: ["0.70+", "0.71+", "0.72+"]
+    features:
+      - cross_platform
+      - hot_reload
+      - native_modules
+      - performance_optimization
+  
+  flutter:
+    name: "Flutter"
+    language: "Dart"
+    framework: "Flutter"
+    supported_versions: ["3.0+", "3.10+", "3.16+"]
+    features:
+      - cross_platform
+      - hot_reload
+      - custom_widgets
+      - performance_optimization
+  
+  ios:
+    name: "iOS"
+    language: "Swift"
+    framework: "UIKit/SwiftUI"
+    supported_versions: ["iOS 13+", "iOS 14+", "iOS 15+", "iOS 16+"]
+    features:
+      - native_performance
+      - app_store_integration
+      - ios_specific_features
+      - testflight_support
+  
+  android:
+    name: "Android"
+    language: "Kotlin"
+    framework: "Android SDK"
+    supported_versions: ["API 21+", "API 24+", "API 28+", "API 30+"]
+    features:
+      - native_performance
+      - google_play_integration
+      - android_specific_features
+      - internal_distribution
+
+# App Types
+app_types:
+  business:
+    name: "Business"
+    description: "Enterprise and business applications"
+    features:
+      - user_authentication
+      - data_management
+      - reporting_analytics
+      - integration_apis
+    templates:
+      - business_dashboard
+      - user_management
+      - data_visualization
+  
+  social:
+    name: "Social"
+    description: "Social media and communication apps"
+    features:
+      - real_time_messaging
+      - media_sharing
+      - user_profiles
+      - social_features
+    templates:
+      - chat_interface
+      - media_gallery
+      - user_profile
+  
+  gaming:
+    name: "Gaming"
+    description: "Mobile games and entertainment apps"
+    features:
+      - game_engine_integration
+      - multiplayer_support
+      - in_app_purchases
+      - leaderboards
+    templates:
+      - game_ui
+      - score_system
+      - multiplayer_lobby
+  
+  utility:
+    name: "Utility"
+    description: "Utility and productivity apps"
+    features:
+      - task_management
+      - file_handling
+      - system_integration
+      - automation
+    templates:
+      - task_list
+      - file_manager
+      - settings_panel
+  
+  ecommerce:
+    name: "E-commerce"
+    description: "Shopping and marketplace apps"
+    features:
+      - product_catalog
+      - shopping_cart
+      - payment_integration
+      - order_management
+    templates:
+      - product_listing
+      - shopping_cart
+      - checkout_process
+
+# Component Types
+component_types:
+  ui:
+    name: "UI Components"
+    description: "User interface components"
+    examples:
+      - buttons
+      - forms
+      - navigation
+      - modals
+      - cards
+  
+  navigation:
+    name: "Navigation Components"
+    description: "Navigation and routing components"
+    examples:
+      - tab_navigation
+      - stack_navigation
+      - drawer_navigation
+      - bottom_sheets
+  
+  data:
+    name: "Data Components"
+    description: "Data handling and storage components"
+    examples:
+      - data_tables
+      - charts
+      - forms
+      - lists
+  
+  api:
+    name: "API Components"
+    description: "API integration components"
+    examples:
+      - http_clients
+      - data_fetchers
+      - cache_managers
+      - error_handlers
+  
+  custom:
+    name: "Custom Components"
+    description: "Custom specialized components"
+    examples:
+      - platform_specific
+      - business_logic
+      - third_party_integrations
+
+# Performance Optimization
+performance_optimization:
+  general:
+    name: "General Optimization"
+    description: "General performance improvements"
+    techniques:
+      - code_splitting
+      - lazy_loading
+      - caching_strategies
+      - bundle_optimization
+  
+  memory:
+    name: "Memory Optimization"
+    description: "Memory usage optimization"
+    techniques:
+      - memory_leak_detection
+      - garbage_collection
+      - image_optimization
+      - data_structures
+  
+  battery:
+    name: "Battery Optimization"
+    description: "Battery life optimization"
+    techniques:
+      - background_tasks
+      - location_services
+      - network_requests
+      - sensor_usage
+  
+  network:
+    name: "Network Optimization"
+    description: "Network performance optimization"
+    techniques:
+      - request_batching
+      - caching
+      - compression
+      - offline_support
+  
+  ui:
+    name: "UI Performance"
+    description: "User interface performance optimization"
+    techniques:
+      - rendering_optimization
+      - animation_performance
+      - layout_efficiency
+      - view_recycling
+
+# Testing
+testing:
+  unit:
+    name: "Unit Testing"
+    description: "Unit testing for individual components"
+    frameworks:
+      - jest
+      - mocha
+      - junit
+      - xctest
+  
+  integration:
+    name: "Integration Testing"
+    description: "Integration testing for app features"
+    frameworks:
+      - detox
+      - espresso
+      - xcuitest
+      - integration_tests
+  
+  e2e:
+    name: "End-to-End Testing"
+    description: "End-to-end testing for complete workflows"
+    frameworks:
+      - appium
+      - maestro
+      - playwright
+      - cypress
+  
+  performance:
+    name: "Performance Testing"
+    description: "Performance testing"
+    tools:
+      - lighthouse
+      - profiler
+      - memory_analyzer
+      - network_monitor
+
+# Deployment
+deployment:
+  app_store:
+    name: "iOS App Store"
+    description: "iOS App Store deployment"
+    requirements:
+      - apple_developer_account
+      - app_store_connect
+      - code_signing
+      - app_review_process
+  
+  google_play:
+    name: "Google Play Store"
+    description: "Android Google Play Store deployment"
+    requirements:
+      - google_play_console
+      - app_bundle
+      - content_rating
+      - privacy_policy
+  
+  testflight:
+    name: "TestFlight"
+    description: "iOS TestFlight for beta testing"
+    requirements:
+      - apple_developer_account
+      - testflight_integration
+      - beta_testers
+      - feedback_collection
+  
+  internal:
+    name: "Internal Distribution"
+    description: "Internal distribution"
+    requirements:
+      - enterprise_certificate
+      - internal_testing
+      - device_registration
+      - over_the_air_updates
+
+# Resources
+resources:
+  templates:
+    base_path: "templates/mobiledeveloper"
+    files:
+      - best-practices.md
+      - react-native-template.tsx
+      - flutter-template.dart
+      - ios-template.swift
+      - android-template.kt
+      - mobile-test-template.ts
+      - performance-template.md
+      - deployment-template.yaml
+  
+  data:
+    base_path: "data/mobiledeveloper"
+    files:
+      - changelog.md
+      - app-history.md
+      - performance-history.md
+
+# Error Handling
+error_handling:
+  exceptions:
+    - MobileError
+    - MobileValidationError
+    - PlatformNotSupportedError
+    - BuildError
+    - DeploymentError
+  
+  validation:
+    - input_validation
+    - platform_validation
+    - app_type_validation
+    - component_validation
+  
+  recovery:
+    - automatic_retry
+    - fallback_strategies
+    - error_reporting
+    - user_notification
+
+# Integration
+integration:
+  external_services:
+    - slack_notifications
+    - supabase_context
+    - performance_monitor
+    - policy_engine
+  
+  internal_agents:
+    - TestEngineer
+    - DevOpsInfra
+    - SecurityDeveloper
+    - UXUIDesigner
+  
+  apis:
+    - app_store_connect_api
+    - google_play_console_api
+    - firebase_api
+    - analytics_api
+
+# Monitoring
+monitoring:
+  metrics:
+    - app_creation_success_rate
+    - build_performance
+    - test_coverage
+    - deployment_success_rate
+    - user_satisfaction
+  
+  alerts:
+    - build_failures
+    - test_failures
+    - deployment_issues
+    - performance_degradation
+  
+  reporting:
+    - daily_summary
+    - weekly_analytics
+    - monthly_review
+    - quarterly_assessment 

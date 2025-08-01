@@ -290,12 +290,15 @@ StrategiePartner Agent Commands:
   assess-risks [strategy] - Assess risks for a strategy
   stakeholder-analysis [project] - Analyze stakeholders
   create-roadmap [strategy] - Create strategic roadmap
+  calculate-roi [strategy] - Calculate ROI for strategy
+  business-model-canvas   - Generate business model canvas
+  validate-idea [description] - Valideer en verfijn vage ideeën tot concrete plannen
+  refine-idea [description] [data] - Verfijn idee op basis van aanvullende informatie
+  create-epic-from-idea [idea] - Maak epic van gevalideerd idee voor ProductOwner en Scrummaster
   show-strategy-history   - Show strategy history
   show-market-data        - Show market data
   show-competitive-data   - Show competitive data
   show-risk-register      - Show risk register
-  calculate-roi [strategy] - Calculate ROI for strategy
-  business-model-canvas   - Generate business model canvas
   show-strategy-guide     - Show strategy guide
   test                    - Test resource completeness
   collaborate             - Demonstrate collaboration with other agents
@@ -720,6 +723,421 @@ StrategiePartner Agent Commands:
             self._record_strategy_metric("business_model_canvas_error", 9, "%")
             raise StrategyError(f"Failed to generate business model canvas: {e}")
 
+    def validate_idea(self, idea_description: str) -> Dict[str, Any]:
+        """Validate and refine vague ideas into concrete plans."""
+        try:
+            self._validate_input(idea_description, str, "idea_description")
+            
+            if not idea_description.strip():
+                raise StrategyValidationError("Idea description cannot be empty")
+            
+            logger.info(f"Validating idea: {idea_description}")
+            
+            # Simulate idea validation process
+            time.sleep(1)
+            
+            # Analyze idea completeness
+            completeness_score = self._analyze_idea_completeness(idea_description)
+            
+            # Generate refinement questions
+            refinement_questions = self._generate_refinement_questions(idea_description)
+            
+            # Create validation report
+            result = {
+                "idea_description": idea_description,
+                "completeness_score": completeness_score,
+                "validation_status": "needs_refinement" if completeness_score < 80 else "ready_for_development",
+                "missing_elements": self._identify_missing_elements(idea_description),
+                "refinement_questions": refinement_questions,
+                "next_steps": self._suggest_next_steps(completeness_score),
+                "estimated_effort": self._estimate_effort(idea_description),
+                "risk_assessment": self._assess_idea_risks(idea_description),
+                "stakeholder_impact": self._analyze_stakeholder_impact(idea_description),
+                "timestamp": datetime.now().isoformat(),
+                "agent": "StrategiePartnerAgent"
+            }
+            
+            self._record_strategy_metric("ideas_validated", 92, "%")
+            
+            logger.info(f"Idea validation completed: {result}")
+            return result
+            
+        except StrategyValidationError as e:
+            logger.error(f"Validation error validating idea: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Error validating idea: {e}")
+            self._record_strategy_metric("idea_validation_error", 8, "%")
+            raise StrategyError(f"Failed to validate idea: {e}")
+
+    def refine_idea(self, idea_description: str, refinement_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Refine idea based on additional information and feedback."""
+        try:
+            self._validate_input(idea_description, str, "idea_description")
+            self._validate_input(refinement_data, dict, "refinement_data")
+            
+            if not idea_description.strip():
+                raise StrategyValidationError("Idea description cannot be empty")
+            
+            logger.info(f"Refining idea: {idea_description}")
+            
+            # Simulate idea refinement process
+            time.sleep(1)
+            
+            # Combine original idea with refinement data
+            refined_idea = self._combine_idea_with_refinement(idea_description, refinement_data)
+            
+            # Re-validate refined idea
+            refined_validation = self.validate_idea(refined_idea)
+            # Add original idea description to refined validation for epic creation
+            refined_validation["idea_description"] = refined_idea
+            
+            # Create refinement report
+            result = {
+                "original_idea": idea_description,
+                "refinement_data": refinement_data,
+                "refined_idea": refined_idea,
+                "refined_validation": refined_validation,
+                "improvement_score": refined_validation["completeness_score"] - self._analyze_idea_completeness(idea_description),
+                "refinement_actions": self._document_refinement_actions(refinement_data),
+                "timestamp": datetime.now().isoformat(),
+                "agent": "StrategiePartnerAgent"
+            }
+            
+            self._record_strategy_metric("ideas_refined", 88, "%")
+            
+            logger.info(f"Idea refinement completed: {result}")
+            return result
+            
+        except StrategyValidationError as e:
+            logger.error(f"Validation error refining idea: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Error refining idea: {e}")
+            self._record_strategy_metric("idea_refinement_error", 12, "%")
+            raise StrategyError(f"Failed to refine idea: {e}")
+
+    def create_epic_from_idea(self, validated_idea: Dict[str, Any]) -> Dict[str, Any]:
+        """Create epic from validated idea for ProductOwner and Scrummaster."""
+        try:
+            self._validate_input(validated_idea, dict, "validated_idea")
+            
+            if validated_idea.get("validation_status") != "ready_for_development":
+                raise StrategyValidationError("Idea must be validated before creating epic")
+            
+            logger.info("Creating epic from validated idea...")
+            
+            # Simulate epic creation process
+            time.sleep(1)
+            
+            # Generate epic structure
+            epic = self._generate_epic_structure(validated_idea)
+            
+            # Create PBIs (Product Backlog Items)
+            pbis = self._generate_pbis(validated_idea)
+            
+            # Estimate story points
+            story_points = self._estimate_story_points(pbis)
+            
+            # Create epic result
+            result = {
+                "epic": epic,
+                "product_backlog_items": pbis,
+                "total_story_points": story_points,
+                "estimated_sprints": self._estimate_sprints(story_points),
+                "priority": self._determine_priority(validated_idea),
+                "dependencies": self._identify_dependencies(pbis),
+                "acceptance_criteria": self._generate_acceptance_criteria(epic),
+                "success_metrics": self._define_success_metrics(validated_idea),
+                "timestamp": datetime.now().isoformat(),
+                "agent": "StrategiePartnerAgent"
+            }
+            
+            self._record_strategy_metric("epics_created", 90, "%")
+            
+            logger.info(f"Epic created from idea: {result}")
+            return result
+            
+        except StrategyValidationError as e:
+            logger.error(f"Validation error creating epic: {e}")
+            raise
+        except Exception as e:
+            logger.error(f"Error creating epic: {e}")
+            self._record_strategy_metric("epic_creation_error", 10, "%")
+            raise StrategyError(f"Failed to create epic: {e}")
+
+    def _analyze_idea_completeness(self, idea_description: str) -> float:
+        """Analyze idea completeness and return score (0-100)."""
+        # Simple completeness analysis based on key elements
+        completeness_factors = {
+            "problem_statement": 25,
+            "solution_approach": 25,
+            "target_audience": 20,
+            "value_proposition": 20,
+            "implementation_plan": 10
+        }
+        
+        score = 0
+        idea_lower = idea_description.lower()
+        
+        if any(word in idea_lower for word in ["problem", "issue", "challenge", "need"]):
+            score += completeness_factors["problem_statement"]
+        if any(word in idea_lower for word in ["solution", "approach", "method", "strategy"]):
+            score += completeness_factors["solution_approach"]
+        if any(word in idea_lower for word in ["user", "customer", "audience", "target"]):
+            score += completeness_factors["target_audience"]
+        if any(word in idea_lower for word in ["value", "benefit", "advantage", "improvement"]):
+            score += completeness_factors["value_proposition"]
+        if any(word in idea_lower for word in ["implement", "plan", "timeline", "steps"]):
+            score += completeness_factors["implementation_plan"]
+        
+        return min(score, 100)
+
+    def _generate_refinement_questions(self, idea_description: str) -> List[str]:
+        """Generate questions to refine the idea."""
+        questions = []
+        idea_lower = idea_description.lower()
+        
+        if "problem" not in idea_lower and "issue" not in idea_lower:
+            questions.append("What specific problem or challenge does this idea address?")
+        
+        if "user" not in idea_lower and "customer" not in idea_lower:
+            questions.append("Who is the target audience or user for this idea?")
+        
+        if "value" not in idea_lower and "benefit" not in idea_lower:
+            questions.append("What value or benefit does this idea provide?")
+        
+        if "implement" not in idea_lower and "plan" not in idea_lower:
+            questions.append("What are the key implementation steps or timeline?")
+        
+        if "cost" not in idea_lower and "budget" not in idea_lower:
+            questions.append("What are the estimated costs and resource requirements?")
+        
+        if "risk" not in idea_lower and "challenge" not in idea_lower:
+            questions.append("What are the potential risks or challenges?")
+        
+        return questions
+
+    def _identify_missing_elements(self, idea_description: str) -> List[str]:
+        """Identify missing elements in the idea."""
+        missing = []
+        idea_lower = idea_description.lower()
+        
+        if "problem" not in idea_lower and "issue" not in idea_lower:
+            missing.append("Problem statement")
+        if "user" not in idea_lower and "customer" not in idea_lower:
+            missing.append("Target audience definition")
+        if "value" not in idea_lower and "benefit" not in idea_lower:
+            missing.append("Value proposition")
+        if "implement" not in idea_lower and "plan" not in idea_lower:
+            missing.append("Implementation plan")
+        if "cost" not in idea_lower and "budget" not in idea_lower:
+            missing.append("Cost estimation")
+        
+        return missing
+
+    def _suggest_next_steps(self, completeness_score: float) -> List[str]:
+        """Suggest next steps based on completeness score."""
+        if completeness_score >= 80:
+            return [
+                "Create epic and PBIs",
+                "Present to ProductOwner for approval",
+                "Schedule sprint planning with Scrummaster"
+            ]
+        elif completeness_score >= 60:
+            return [
+                "Gather additional requirements",
+                "Conduct stakeholder interviews",
+                "Refine idea based on feedback"
+            ]
+        else:
+            return [
+                "Define problem statement clearly",
+                "Identify target audience",
+                "Research similar solutions",
+                "Gather more information"
+            ]
+
+    def _estimate_effort(self, idea_description: str) -> Dict[str, Any]:
+        """Estimate effort for idea implementation."""
+        # Simple effort estimation based on idea complexity
+        word_count = len(idea_description.split())
+        complexity_score = min(word_count / 10, 10)  # Scale complexity
+        
+        return {
+            "complexity": complexity_score,
+            "estimated_story_points": int(complexity_score * 3),
+            "estimated_sprints": max(1, int(complexity_score / 2)),
+            "confidence_level": "medium"
+        }
+
+    def _assess_idea_risks(self, idea_description: str) -> List[Dict[str, Any]]:
+        """Assess risks associated with the idea."""
+        risks = []
+        idea_lower = idea_description.lower()
+        
+        if "new" in idea_lower or "innovative" in idea_lower:
+            risks.append({
+                "risk": "Technology uncertainty",
+                "probability": "medium",
+                "impact": "high",
+                "mitigation": "Proof of concept development"
+            })
+        
+        if "user" in idea_lower or "customer" in idea_lower:
+            risks.append({
+                "risk": "User adoption",
+                "probability": "medium",
+                "impact": "medium",
+                "mitigation": "User research and testing"
+            })
+        
+        if "cost" in idea_lower or "budget" in idea_lower:
+            risks.append({
+                "risk": "Budget overrun",
+                "probability": "low",
+                "impact": "high",
+                "mitigation": "Detailed cost analysis"
+            })
+        
+        return risks
+
+    def _analyze_stakeholder_impact(self, idea_description: str) -> Dict[str, Any]:
+        """Analyze stakeholder impact of the idea."""
+        return {
+            "primary_stakeholders": ["End Users", "Development Team", "Business Stakeholders"],
+            "impact_level": "medium",
+            "change_management_required": True,
+            "communication_needs": ["Regular updates", "Training sessions", "Feedback collection"]
+        }
+
+    def _combine_idea_with_refinement(self, original_idea: str, refinement_data: Dict[str, Any]) -> str:
+        """Combine original idea with refinement data."""
+        refined_idea = original_idea
+        
+        # Add missing elements from refinement data
+        if "problem_statement" in refinement_data:
+            refined_idea += f"\n\nProblem Statement: {refinement_data['problem_statement']}"
+        if "target_audience" in refinement_data:
+            refined_idea += f"\n\nTarget Audience: {refinement_data['target_audience']}"
+        if "value_proposition" in refinement_data:
+            refined_idea += f"\n\nValue Proposition: {refinement_data['value_proposition']}"
+        if "implementation_plan" in refinement_data:
+            refined_idea += f"\n\nImplementation Plan: {refinement_data['implementation_plan']}"
+        
+        return refined_idea
+
+    def _document_refinement_actions(self, refinement_data: Dict[str, Any]) -> List[str]:
+        """Document refinement actions taken."""
+        actions = []
+        for key, value in refinement_data.items():
+            actions.append(f"Added {key}: {value}")
+        return actions
+
+    def _generate_epic_structure(self, validated_idea: Dict[str, Any]) -> Dict[str, Any]:
+        """Generate epic structure from validated idea."""
+        # Get idea description from validated idea or use default
+        idea_description = validated_idea.get("idea_description", "A validated idea ready for development")
+        
+        return {
+            "epic_name": f"Epic: {idea_description[:50]}...",
+            "epic_description": idea_description,
+            "epic_goals": [
+                "Implement the proposed solution",
+                "Deliver value to target audience",
+                "Achieve success metrics"
+            ],
+            "epic_acceptance_criteria": [
+                "Solution is implemented and functional",
+                "Target audience can use the solution",
+                "Success metrics are achieved"
+            ]
+        }
+
+    def _generate_pbis(self, validated_idea: Dict[str, Any]) -> List[Dict[str, Any]]:
+        """Generate Product Backlog Items from validated idea."""
+        return [
+            {
+                "pbi_id": "PBI-001",
+                "title": "Research and Analysis",
+                "description": "Conduct research and analysis for the idea",
+                "story_points": 3,
+                "priority": "high"
+            },
+            {
+                "pbi_id": "PBI-002",
+                "title": "Design and Architecture",
+                "description": "Design the solution architecture",
+                "story_points": 5,
+                "priority": "high"
+            },
+            {
+                "pbi_id": "PBI-003",
+                "title": "Implementation",
+                "description": "Implement the core solution",
+                "story_points": 8,
+                "priority": "medium"
+            },
+            {
+                "pbi_id": "PBI-004",
+                "title": "Testing and Validation",
+                "description": "Test and validate the solution",
+                "story_points": 3,
+                "priority": "medium"
+            }
+        ]
+
+    def _estimate_story_points(self, pbis: List[Dict[str, Any]]) -> int:
+        """Estimate total story points for PBIs."""
+        return sum(pbi.get("story_points", 0) for pbi in pbis)
+
+    def _estimate_sprints(self, story_points: int) -> int:
+        """Estimate number of sprints needed."""
+        velocity_per_sprint = 13  # Average story points per sprint
+        return max(1, int(story_points / velocity_per_sprint))
+
+    def _determine_priority(self, validated_idea: Dict[str, Any]) -> str:
+        """Determine priority based on idea characteristics."""
+        if validated_idea.get("completeness_score", 0) >= 90:
+            return "high"
+        elif validated_idea.get("completeness_score", 0) >= 70:
+            return "medium"
+        else:
+            return "low"
+
+    def _identify_dependencies(self, pbis: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Identify dependencies between PBIs."""
+        return [
+            {
+                "from_pbi": "PBI-001",
+                "to_pbi": "PBI-002",
+                "dependency_type": "finish-to-start"
+            },
+            {
+                "from_pbi": "PBI-002",
+                "to_pbi": "PBI-003",
+                "dependency_type": "finish-to-start"
+            }
+        ]
+
+    def _generate_acceptance_criteria(self, epic: Dict[str, Any]) -> List[str]:
+        """Generate acceptance criteria for epic."""
+        return [
+            "Solution meets all functional requirements",
+            "Solution is user-friendly and accessible",
+            "Solution performs within acceptable parameters",
+            "Solution is properly tested and validated"
+        ]
+
+    def _define_success_metrics(self, validated_idea: Dict[str, Any]) -> Dict[str, Any]:
+        """Define success metrics for the idea."""
+        return {
+            "user_adoption_rate": "Target: 80%",
+            "performance_improvement": "Target: 25%",
+            "user_satisfaction": "Target: 4.5/5",
+            "time_to_market": "Target: 3 sprints"
+        }
+
     def show_strategy_history(self):
         """Show strategy history."""
         if not self.strategy_history:
@@ -782,56 +1200,114 @@ StrategiePartner Agent Commands:
             print("All resources are available!")
             return True
 
-    def collaborate_example(self):
-        """Demonstrate collaboration with other agents."""
-        logger.info("Starting collaboration example...")
+    async def collaborate_example(self):
+        """Demonstrate collaboration with other agents with async optimization."""
+        logger.info("Starting async collaboration example...")
 
         try:
-            # Develop strategy
-            strategy_result = self.develop_strategy("Digital Transformation Strategy")
+            # Use asyncio.gather for parallel execution of all operations
+            tasks = [
+                self._async_develop_strategy("Digital Transformation Strategy"),
+                self._async_analyze_market("Technology"),
+                self._async_competitive_analysis("Main Competitor"),
+                self._async_assess_risks("Digital Transformation"),
+                self._async_stakeholder_analysis("Digital Transformation Project"),
+                self._async_create_roadmap("Digital Transformation Strategy"),
+                self._async_calculate_roi("Digital Transformation Strategy"),
+                self._async_business_model_canvas()
+            ]
             
-            # Analyze market
-            market_result = self.analyze_market("Technology")
+            # Execute all tasks concurrently
+            results = await asyncio.gather(*tasks, return_exceptions=True)
             
-            # Competitive analysis
-            competitive_result = self.competitive_analysis("Main Competitor")
+            # Unpack results
+            strategy_result, market_result, competitive_result, risk_result, \
+            stakeholder_result, roadmap_result, roi_result, canvas_result = results
             
-            # Risk assessment
-            risk_result = self.assess_risks("Digital Transformation")
+            # Check for errors
+            for i, result in enumerate(results):
+                if isinstance(result, Exception):
+                    logger.error(f"Task {i} failed: {result}")
+                    raise result
             
-            # Stakeholder analysis
-            stakeholder_result = self.stakeholder_analysis("Digital Transformation Project")
+            # Publish events (can be done in parallel too)
+            publish_tasks = [
+                self._async_publish_event("strategy_developed", strategy_result),
+                self._async_publish_event("market_analyzed", market_result),
+                self._async_publish_event("competitive_analysis_completed", competitive_result),
+                self._async_publish_event("risk_assessment_completed", risk_result),
+                self._async_publish_event("stakeholder_analysis_completed", stakeholder_result),
+                self._async_publish_event("roadmap_created", roadmap_result),
+                self._async_publish_event("roi_calculated", roi_result),
+                self._async_publish_event("business_model_canvas_generated", canvas_result)
+            ]
             
-            # Create roadmap
-            roadmap_result = self.create_roadmap("Digital Transformation Strategy")
-            
-            # Calculate ROI
-            roi_result = self.calculate_roi("Digital Transformation Strategy")
-            
-            # Generate business model canvas
-            canvas_result = self.business_model_canvas()
-            
-            # Publish events
-            publish("strategy_developed", strategy_result)
-            publish("market_analyzed", market_result)
-            publish("competitive_analysis_completed", competitive_result)
-            publish("risk_assessment_completed", risk_result)
-            publish("stakeholder_analysis_completed", stakeholder_result)
-            publish("roadmap_created", roadmap_result)
-            publish("roi_calculated", roi_result)
-            publish("business_model_canvas_generated", canvas_result)
+            await asyncio.gather(*publish_tasks, return_exceptions=True)
 
-            # Notify via Slack
+            # Notify via Slack (async)
             try:
-                send_slack_message(f"Strategy '{strategy_result['strategy_name']}' developed with {roi_result['roi_percentage']} ROI")
+                await self._async_send_slack_message(
+                    f"Strategy '{strategy_result['strategy_name']}' developed with {roi_result['roi_percentage']} ROI"
+                )
             except Exception as e:
                 logger.warning(f"Could not send Slack notification: {e}")
 
-            logger.info("Collaboration example completed successfully")
+            logger.info("Async collaboration example completed successfully")
             
         except Exception as e:
-            logger.error(f"Error in collaboration example: {e}")
-            raise StrategyError(f"Collaboration example failed: {e}")
+            logger.error(f"Error in async collaboration example: {e}")
+            raise StrategyError(f"Async collaboration example failed: {e}")
+    
+    # Async wrapper methods for parallel execution
+    async def _async_develop_strategy(self, strategy_name: str):
+        """Async wrapper for develop_strategy."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.develop_strategy, strategy_name)
+    
+    async def _async_analyze_market(self, sector: str):
+        """Async wrapper for analyze_market."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.analyze_market, sector)
+    
+    async def _async_competitive_analysis(self, competitor: str):
+        """Async wrapper for competitive_analysis."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.competitive_analysis, competitor)
+    
+    async def _async_assess_risks(self, strategy: str):
+        """Async wrapper for assess_risks."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.assess_risks, strategy)
+    
+    async def _async_stakeholder_analysis(self, project: str):
+        """Async wrapper for stakeholder_analysis."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.stakeholder_analysis, project)
+    
+    async def _async_create_roadmap(self, strategy: str):
+        """Async wrapper for create_roadmap."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.create_roadmap, strategy)
+    
+    async def _async_calculate_roi(self, strategy: str):
+        """Async wrapper for calculate_roi."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.calculate_roi, strategy)
+    
+    async def _async_business_model_canvas(self):
+        """Async wrapper for business_model_canvas."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, self.business_model_canvas)
+    
+    async def _async_publish_event(self, event_type: str, data: Dict[str, Any]):
+        """Async wrapper for publish."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, publish, event_type, data)
+    
+    async def _async_send_slack_message(self, message: str):
+        """Async wrapper for send_slack_message."""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(None, send_slack_message, message)
 
     def handle_alignment_check_completed(self, event):
         """Handle alignment check completed event."""
@@ -852,10 +1328,71 @@ StrategiePartner Agent Commands:
         except Exception as e:
             logger.error(f"Error handling strategy development requested: {e}")
 
+    def handle_idea_validation_requested(self, event):
+        """Handle idea validation requested event."""
+        try:
+            logger.info(f"Idea validation requested: {event}")
+            idea_description = event.get("idea_description", "A new mobile app for task management")
+            result = self.validate_idea(idea_description)
+            
+            # Publish validation result
+            publish("idea_validation_completed", {
+                "agent": "StrategiePartnerAgent",
+                "idea_description": idea_description,
+                "validation_result": result,
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info(f"Idea validation completed: {result}")
+        except Exception as e:
+            logger.error(f"Error handling idea validation requested: {e}")
+
+    def handle_idea_refinement_requested(self, event):
+        """Handle idea refinement requested event."""
+        try:
+            logger.info(f"Idea refinement requested: {event}")
+            idea_description = event.get("idea_description", "A mobile app")
+            refinement_data = event.get("refinement_data", {})
+            result = self.refine_idea(idea_description, refinement_data)
+            
+            # Publish refinement result
+            publish("idea_refinement_completed", {
+                "agent": "StrategiePartnerAgent",
+                "idea_description": idea_description,
+                "refinement_result": result,
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info(f"Idea refinement completed: {result}")
+        except Exception as e:
+            logger.error(f"Error handling idea refinement requested: {e}")
+
+    def handle_epic_creation_requested(self, event):
+        """Handle epic creation requested event."""
+        try:
+            logger.info(f"Epic creation requested: {event}")
+            validated_idea = event.get("validated_idea", {})
+            result = self.create_epic_from_idea(validated_idea)
+            
+            # Publish epic creation result
+            publish("epic_creation_completed", {
+                "agent": "StrategiePartnerAgent",
+                "validated_idea": validated_idea,
+                "epic_result": result,
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info(f"Epic creation completed: {result}")
+        except Exception as e:
+            logger.error(f"Error handling epic creation requested: {e}")
+
     def run(self):
         """Start the agent in event listening mode."""
         subscribe("alignment_check_completed", self.handle_alignment_check_completed)
         subscribe("strategy_development_requested", self.handle_strategy_development_requested)
+        subscribe("strategiepartner_validate_idea", self.handle_idea_validation_requested)
+        subscribe("strategiepartner_refine_idea", self.handle_idea_refinement_requested)
+        subscribe("strategiepartner_create_epic", self.handle_epic_creation_requested)
 
         logger.info("StrategiePartnerAgent ready and listening for events...")
         self.collaborate_example()
@@ -866,13 +1403,16 @@ def main():
     parser.add_argument("command", nargs="?", default="help",
                        choices=["help", "develop-strategy", "analyze-market", "competitive-analysis",
                                "assess-risks", "stakeholder-analysis", "create-roadmap", "calculate-roi",
-                               "business-model-canvas", "show-strategy-history", "show-market-data",
-                               "show-competitive-data", "show-risk-register", "show-strategy-guide",
-                               "test", "collaborate", "run"])
+                               "business-model-canvas", "validate-idea", "refine-idea", "create-epic-from-idea",
+                               "show-strategy-history", "show-market-data", "show-competitive-data", 
+                               "show-risk-register", "show-strategy-guide", "test", "collaborate", "run"])
     parser.add_argument("--strategy-name", default="Digital Transformation Strategy", help="Strategy name")
     parser.add_argument("--sector", default="Technology", help="Market sector")
     parser.add_argument("--competitor", default="Main Competitor", help="Competitor name")
     parser.add_argument("--project", default="Digital Transformation Project", help="Project name")
+    parser.add_argument("--idea-description", default="A new mobile app for task management", help="Idea description")
+    parser.add_argument("--refinement-data", default='{"problem_statement": "Users need better task organization"}', help="Refinement data as JSON")
+    parser.add_argument("--validated-idea", default='{"validation_status": "ready_for_development"}', help="Validated idea as JSON")
 
     args = parser.parse_args()
 
@@ -905,6 +1445,17 @@ def main():
         elif args.command == "business-model-canvas":
             result = agent.business_model_canvas()
             print(f"Business model canvas generated: {result}")
+        elif args.command == "validate-idea":
+            result = agent.validate_idea(args.idea_description)
+            print(f"Idea validation completed: {result}")
+        elif args.command == "refine-idea":
+            refinement_data = json.loads(args.refinement_data)
+            result = agent.refine_idea(args.idea_description, refinement_data)
+            print(f"Idea refinement completed: {result}")
+        elif args.command == "create-epic-from-idea":
+            validated_idea = json.loads(args.validated_idea)
+            result = agent.create_epic_from_idea(validated_idea)
+            print(f"Epic created from idea: {result}")
         elif args.command == "show-strategy-history":
             agent.show_strategy_history()
         elif args.command == "show-market-data":

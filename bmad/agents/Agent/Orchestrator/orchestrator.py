@@ -781,6 +781,16 @@ Orchestrator Agent Commands:
 
             # Manage escalations
             self.manage_escalations("workflow_blocked", "feature_delivery")
+            
+            # Quality gate check via QualityGuardian
+            self.manage_escalations("quality_gate_failed", "feature_development")
+
+            # Idea validation via StrategiePartner
+            publish("idea_validation_requested", {
+                "idea_description": "A mobile app for task management",
+                "agent": "OrchestratorAgent",
+                "timestamp": datetime.now().isoformat()
+            })
 
             # Publish completion
             publish("orchestration_completed", {
@@ -837,7 +847,7 @@ Orchestrator Agent Commands:
             raise ValueError("Task description must be a non-empty string")
         
         try:
-            prompt = f"Welke agent is het meest geschikt voor deze taak: '{task_desc}'? Kies uit: ProductOwner, Architect, TestEngineer, FeedbackAgent, DevOpsInfra, Retrospective. Geef alleen de agentnaam als JSON."
+            prompt = f"Welke agent is het meest geschikt voor deze taak: '{task_desc}'? Kies uit: ProductOwner, Architect, TestEngineer, QualityGuardian, StrategiePartner, WorkflowAutomator, FeedbackAgent, DevOpsInfra, Retrospective. Geef alleen de agentnaam als JSON."
             structured_output = '{"agent": "..."}'
             result = ask_openai(prompt, structured_output=structured_output)
             agent = result.get("agent")
@@ -1140,6 +1150,71 @@ def handle_tests_completed(event):
         # Hier kun je eventueel een event publiceren om de workflow terug te zetten
 
 subscribe("tests_completed", handle_tests_completed)
+
+def handle_quality_gate_check_requested(event):
+    """Handle quality gate check requested event."""
+    logger.info(f"Quality gate check requested: {event}")
+    # Trigger QualityGuardian agent
+    publish("qualityguardian_quality_gate_check", event)
+
+def handle_idea_validation_requested(event):
+    """Handle idea validation requested event."""
+    logger.info(f"Idea validation requested: {event}")
+    # Trigger StrategiePartner agent
+    publish("strategiepartner_validate_idea", event)
+
+def handle_idea_refinement_requested(event):
+    """Handle idea refinement requested event."""
+    logger.info(f"Idea refinement requested: {event}")
+    # Trigger StrategiePartner agent
+    publish("strategiepartner_refine_idea", event)
+
+def handle_epic_creation_requested(event):
+    """Handle epic creation requested event."""
+    logger.info(f"Epic creation requested: {event}")
+    # Trigger StrategiePartner agent
+    publish("strategiepartner_create_epic", event)
+
+def handle_workflow_execution_requested(event):
+    """Handle workflow execution requested event."""
+    workflow_id = event.get("workflow_id")
+    logger.info(f"Workflow execution requested for workflow: {workflow_id}")
+    
+    # Trigger WorkflowAutomator agent for workflow execution
+    publish("workflow_execution_requested", {
+        "workflow_id": workflow_id,
+        "timestamp": datetime.now().isoformat()
+    })
+
+def handle_workflow_optimization_requested(event):
+    """Handle workflow optimization requested event."""
+    workflow_id = event.get("workflow_id")
+    logger.info(f"Workflow optimization requested for workflow: {workflow_id}")
+    
+    # Trigger WorkflowAutomator agent for workflow optimization
+    publish("workflow_optimization_requested", {
+        "workflow_id": workflow_id,
+        "timestamp": datetime.now().isoformat()
+    })
+
+def handle_workflow_monitoring_requested(event):
+    """Handle workflow monitoring requested event."""
+    workflow_id = event.get("workflow_id")
+    logger.info(f"Workflow monitoring requested for workflow: {workflow_id}")
+    
+    # Trigger WorkflowAutomator agent for workflow monitoring
+    publish("workflow_monitoring_requested", {
+        "workflow_id": workflow_id,
+        "timestamp": datetime.now().isoformat()
+    })
+
+subscribe("quality_gate_check_requested", handle_quality_gate_check_requested)
+subscribe("idea_validation_requested", handle_idea_validation_requested)
+subscribe("idea_refinement_requested", handle_idea_refinement_requested)
+subscribe("epic_creation_requested", handle_epic_creation_requested)
+subscribe("workflow_execution_requested", handle_workflow_execution_requested)
+subscribe("workflow_optimization_requested", handle_workflow_optimization_requested)
+subscribe("workflow_monitoring_requested", handle_workflow_monitoring_requested)
 
 def main():
     parser = argparse.ArgumentParser(description="Orchestrator Agent CLI")
