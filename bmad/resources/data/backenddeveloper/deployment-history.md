@@ -41,3 +41,6 @@
 - 2025-08-01T22:06:34.444818: /api/v1/users - Status: deployed - Environment: production
 - 2025-08-01T22:06:37.505790: /api/v1/users - Status: deployed - Environment: production
 - 2025-08-01T22:06:40.524980: /api/v1/users - Status: deployed - Environment: production
+- 2025-08-02T08:08:44.893711: /api/v1/users - Status: deployed - Environment: production
+- 2025-08-02T08:08:47.948757: /api/v1/users - Status: deployed - Environment: production
+- 2025-08-02T08:08:50.972764: /api/v1/users - Status: deployed - Environment: production

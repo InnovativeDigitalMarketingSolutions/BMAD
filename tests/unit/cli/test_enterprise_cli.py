@@ -343,16 +343,11 @@ class TestEnterpriseCLI:
     def test_validate_password_weak(self, mock_security_manager):
         """Test weak password validation."""
         # Create a proper mock that matches the expected structure
-        mock_result = MagicMock()
-        mock_result.valid = False
-        mock_result.score = 30
-        mock_result.feedback = ['Too short', 'No special characters']
-        # Mock the dictionary-like access that the CLI expects
-        mock_result.__getitem__ = MagicMock(side_effect=lambda key: {
-            'policy_level': 'weak',
-            'score': 30,
-            'feedback': ['Too short', 'No special characters']
-        }.get(key, MagicMock()))
+        mock_result = {
+            'valid': False,
+            'errors': ['Too short', 'No special characters'],
+            'policy_level': 'weak'
+        }
         
         mock_security_manager.validate_password.return_value = mock_result
         
