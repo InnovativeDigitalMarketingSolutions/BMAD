@@ -63,6 +63,24 @@ class AiDeveloperAgent:
             "ai-review": self.resource_base / "templates/ai/ai-review-checklist.md",
             "ai-doc": self.resource_base / "templates/ai/ai-doc-template.md"
         }
+        
+        # Framework templates
+        from bmad.agents.core.utils.framework_templates import (
+            get_framework_templates_manager,
+            get_framework_guidelines,
+            get_quality_gates,
+            get_pyramid_strategies,
+            get_mocking_strategy,
+            get_workflow_commands,
+            get_linting_config
+        )
+        self.framework_manager = get_framework_templates_manager()
+        self.framework_guidelines = get_framework_guidelines("ai_agents")
+        self.quality_gates = get_quality_gates()
+        self.pyramid_strategies = get_pyramid_strategies()
+        self.mocking_strategy = get_mocking_strategy()
+        self.workflow_commands = get_workflow_commands()
+        self.linting_config = get_linting_config()
         self.data_paths = {
             "changelog": self.resource_base / "data/ai/ai-changelog.md",
             "experiment-history": self.resource_base / "data/ai/experiment-history.md",
@@ -277,6 +295,16 @@ AiDeveloper Agent Commands:
   export-report [format]  - Export report (md, json)
   test                    - Test resource completeness
   collaborate             - Demonstrate collaboration
+  
+  🎯 FRAMEWORK TEMPLATES:
+  show-framework-overview - Show complete framework overview
+  show-framework-guidelines - Show AI agent framework guidelines
+  show-quality-gates      - Show quality gates for development/testing
+  show-pyramid-strategies - Show development/testing pyramid strategies
+  show-mocking-strategy   - Show pragmatic mocking strategy
+  show-workflow-commands  - Show development/testing workflow commands
+  show-linting-config     - Show flake8 linting configuration
+  show-framework-template [name] - Show specific framework template
         """
         print(help_text)
 
@@ -323,6 +351,130 @@ AiDeveloper Agent Commands:
         except Exception as e:
             logger.error(f"Error reading resource {resource_type}: {e}")
             print(f"Error reading resource: {resource_type}")
+
+    def show_framework_template(self, template_name: str):
+        """Show framework template content."""
+        available_templates = self.framework_manager.list_available_templates()
+        if template_name not in available_templates:
+            print(f"❌ Unknown framework template: {template_name}")
+            print(f"Available framework templates: {available_templates}")
+            return
+
+        content = self.framework_manager.get_framework_template(template_name)
+        if content:
+            print(f"\n🎯 {template_name.upper()} FRAMEWORK TEMPLATE:")
+            print("=" * 60)
+            print(content)
+            print("=" * 60)
+        else:
+            print(f"❌ Error loading framework template: {template_name}")
+    
+    def show_framework_guidelines(self):
+        """Show framework guidelines for AI agents."""
+        print("\n🤖 AI AGENT FRAMEWORK GUIDELINES:")
+        print("=" * 50)
+        
+        if "development" in self.framework_guidelines:
+            print("\n🔧 DEVELOPMENT GUIDELINES:")
+            for i, guideline in enumerate(self.framework_guidelines["development"], 1):
+                print(f"  {i}. {guideline}")
+        
+        if "testing" in self.framework_guidelines:
+            print("\n🧪 TESTING GUIDELINES:")
+            for i, guideline in enumerate(self.framework_guidelines["testing"], 1):
+                print(f"  {i}. {guideline}")
+        
+        print("\n" + "=" * 50)
+    
+    def show_quality_gates(self):
+        """Show quality gates for development and testing."""
+        print("\n🎯 QUALITY GATES:")
+        print("=" * 40)
+        
+        print("\n🔧 DEVELOPMENT QUALITY GATES:")
+        for gate, requirement in self.quality_gates["development"].items():
+            print(f"  • {gate}: {requirement}")
+        
+        print("\n🧪 TESTING QUALITY GATES:")
+        for gate, requirement in self.quality_gates["testing"].items():
+            print(f"  • {gate}: {requirement}")
+        
+        print("\n" + "=" * 40)
+    
+    def show_pyramid_strategies(self):
+        """Show development and testing pyramid strategies."""
+        print("\n🏗️ PYRAMID STRATEGIES:")
+        print("=" * 40)
+        
+        print("\n🔧 DEVELOPMENT PYRAMID:")
+        for level, description in self.pyramid_strategies["development"].items():
+            print(f"  • {level.title()}: {description}")
+        
+        print("\n🧪 TESTING PYRAMID:")
+        for level, description in self.pyramid_strategies["testing"].items():
+            print(f"  • {level.title()}: {description}")
+        
+        print("\n" + "=" * 40)
+    
+    def show_mocking_strategy(self):
+        """Show pragmatic mocking strategy."""
+        print("\n🎭 PRAGMATIC MOCKING STRATEGY:")
+        print("=" * 50)
+        print(self.mocking_strategy)
+        print("=" * 50)
+    
+    def show_workflow_commands(self):
+        """Show development and testing workflow commands."""
+        print("\n⚡ WORKFLOW COMMANDS:")
+        print("=" * 40)
+        
+        print("\n🔧 DEVELOPMENT WORKFLOW:")
+        for command in self.workflow_commands["development"]:
+            print(f"  {command}")
+        
+        print("\n🧪 TESTING WORKFLOW:")
+        for command in self.workflow_commands["testing"]:
+            print(f"  {command}")
+        
+        print("\n" + "=" * 40)
+    
+    def show_linting_config(self):
+        """Show flake8 linting configuration."""
+        print("\n🔍 LINTING CONFIGURATION:")
+        print("=" * 40)
+        print(self.linting_config)
+        print("=" * 40)
+    
+    def show_framework_overview(self):
+        """Show complete framework overview."""
+        print("\n🎯 FRAMEWORK OVERVIEW:")
+        print("=" * 50)
+        
+        print("\n📋 Available Framework Templates:")
+        available_templates = self.framework_manager.list_available_templates()
+        for template in available_templates:
+            print(f"  • {template}")
+        
+        print("\n🤖 AI Agent Guidelines:")
+        self.show_framework_guidelines()
+        
+        print("\n🎯 Quality Gates:")
+        self.show_quality_gates()
+        
+        print("\n🏗️ Pyramid Strategies:")
+        self.show_pyramid_strategies()
+        
+        print("\n⚡ Quick Access Commands:")
+        print("  • show_framework_template('development_strategy')")
+        print("  • show_framework_template('testing_strategy')")
+        print("  • show_framework_template('development_workflow')")
+        print("  • show_framework_template('testing_workflow')")
+        print("  • show_framework_template('frameworks_overview')")
+        print("  • show_mocking_strategy()")
+        print("  • show_workflow_commands()")
+        print("  • show_linting_config()")
+        
+        print("\n" + "=" * 50)
 
     def show_experiment_history(self):
         if not self.experiment_history:
@@ -948,8 +1100,12 @@ def main():
                                "build-etl-pipeline", "deploy-model", "version-model", "auto-evaluate",
                                "bias-check", "explain", "model-card", "prompt-eval", "retrain",
                                "show-experiment-history", "show-model-history", "show-best-practices",
-                               "show-changelog", "export-report", "test", "collaborate", "run"])
+                               "show-changelog", "export-report", "test", "collaborate", "run",
+                               "show-framework-overview", "show-framework-guidelines", "show-quality-gates",
+                               "show-pyramid-strategies", "show-mocking-strategy", "show-workflow-commands",
+                               "show-linting-config", "show-framework-template"])
     parser.add_argument("--format", choices=["md", "json"], default="md", help="Export format")
+    parser.add_argument("--template", help="Framework template name for show-framework-template")
 
     try:
         args = parser.parse_args()
@@ -1017,6 +1173,27 @@ def main():
             agent.collaborate_example()
         elif args.command == "run":
             agent.run()
+        # Framework template commands
+        elif args.command == "show-framework-overview":
+            agent.show_framework_overview()
+        elif args.command == "show-framework-guidelines":
+            agent.show_framework_guidelines()
+        elif args.command == "show-quality-gates":
+            agent.show_quality_gates()
+        elif args.command == "show-pyramid-strategies":
+            agent.show_pyramid_strategies()
+        elif args.command == "show-mocking-strategy":
+            agent.show_mocking_strategy()
+        elif args.command == "show-workflow-commands":
+            agent.show_workflow_commands()
+        elif args.command == "show-linting-config":
+            agent.show_linting_config()
+        elif args.command == "show-framework-template":
+            if not args.template:
+                print("❌ Error: --template argument required for show-framework-template")
+                print("Available templates:", agent.framework_manager.list_available_templates())
+                sys.exit(1)
+            agent.show_framework_template(args.template)
         else:
             print(f"Unknown command: {args.command}")
             print("Use 'help' for available commands.")
