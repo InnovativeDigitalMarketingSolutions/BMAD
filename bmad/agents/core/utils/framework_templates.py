@@ -26,7 +26,10 @@ class FrameworkTemplatesManager:
             "development_workflow": self.frameworks_path / "development_workflow_template.md",
             "testing_strategy": self.frameworks_path / "testing_strategy_template.md",
             "testing_workflow": self.frameworks_path / "testing_workflow_template.md",
-            "frameworks_overview": self.frameworks_path / "frameworks_overview_template.md"
+            "frameworks_overview": self.frameworks_path / "frameworks_overview_template.md",
+            "backend_development": self.frameworks_path / "backend_development_template.md",
+            "frontend_development": self.frameworks_path / "frontend_development_template.md",
+            "fullstack_development": self.frameworks_path / "fullstack_development_template.md"
         }
         
         # Validate template paths
@@ -90,12 +93,69 @@ class FrameworkTemplatesManager:
                     "Test fallback mechanismen voor API failures"
                 ]
             },
+            "backend_agents": {
+                "development": [
+                    "Volg microservices architecture patterns",
+                    "Implementeer proper database schema design",
+                    "Gebruik FastAPI voor REST API development",
+                    "Implementeer comprehensive error handling",
+                    "Volg security best practices (JWT, RBAC, input validation)",
+                    "Gebruik connection pooling en caching strategies",
+                    "Implementeer proper logging en monitoring"
+                ],
+                "testing": [
+                    "Test database operations met proper fixtures",
+                    "Mock external service dependencies",
+                    "Test API endpoints met comprehensive scenarios",
+                    "Implementeer integration tests voor service communication",
+                    "Test security measures en authentication flows"
+                ]
+            },
+            "frontend_agents": {
+                "development": [
+                    "Gebruik component-based architecture",
+                    "Implementeer proper state management (React Query + Zustand)",
+                    "Volg TypeScript best practices voor type safety",
+                    "Gebruik Tailwind CSS voor consistent styling",
+                    "Implementeer proper form validation met React Hook Form",
+                    "Gebruik proper error boundaries en loading states",
+                    "Implementeer responsive design patterns"
+                ],
+                "testing": [
+                    "Test component rendering en user interactions",
+                    "Mock API calls in component tests",
+                    "Test form validation en error handling",
+                    "Implementeer accessibility testing",
+                    "Test responsive design op verschillende screen sizes"
+                ]
+            },
+            "fullstack_agents": {
+                "development": [
+                    "Coördineer frontend en backend development",
+                    "Gebruik shared type definitions tussen frontend en backend",
+                    "Implementeer end-to-end workflows",
+                    "Volg consistent API design patterns",
+                    "Gebruik proper authentication flows",
+                    "Implementeer real-time features met WebSockets",
+                    "Test complete user journeys"
+                ],
+                "testing": [
+                    "Implementeer end-to-end tests voor complete workflows",
+                    "Test API integration tussen frontend en backend",
+                    "Test real-time features en WebSocket communication",
+                    "Test complete user registration en authentication flows",
+                    "Implementeer performance testing voor fullstack applications"
+                ]
+            },
             "development_agents": {
                 "development": [
                     "Volg de development pyramid strategie",
                     "Implementeer unit tests voor alle nieuwe functionaliteit",
                     "Gebruik type hints en comprehensive docstrings",
-                    "Valideer code quality met linting tools"
+                    "Valideer code quality met linting tools",
+                    "Gebruik framework templates voor consistente development",
+                    "Implementeer proper error handling en logging",
+                    "Volg security best practices voor input validation"
                 ],
                 "testing": [
                     "Volg de test pyramid strategie",
