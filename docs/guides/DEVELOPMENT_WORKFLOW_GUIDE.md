@@ -52,6 +52,7 @@ Volg de development pyramid strategie zoals beschreven in `DEVELOPMENT_STRATEGY.
 - [ ] **Test Execution**: Uitvoeren van unit, integration en e2e tests
 - [ ] **Test Reporting**: Allure test reports genereren en analyseren
 - [ ] **Documentation**: Code documenteren
+- [ ] **Documentation Updates**: Regelmatige documentatie updates uitvoeren
 - [ ] **Review**: Code review inclusief quality checks
 - [ ] **Strategy Validation**: Controleer of development strategie correct is toegepast
 
@@ -501,6 +502,19 @@ python bmad/api.py
 - Update development documentation
 - Document development patterns
 - Share best practices
+
+#### **Documentation Maintenance Workflow**
+- **Weekly**: Documentatie review en updates
+- **Monthly**: Guide review en consolidatie
+- **After Changes**: Reference updates en version history
+- **Quality Check**: Documentatie completeness en accuracy
+
+#### **Documentation Standards**
+- **Code Documentation**: Complete docstrings en inline comments
+- **API Documentation**: OpenAPI/Swagger documentation
+- **User Documentation**: User guides en tutorials
+- **Architecture Documentation**: System architecture en design docs
+- **Guide Maintenance**: Regelmatige consolidatie en updates
 
 ## Troubleshooting
 
