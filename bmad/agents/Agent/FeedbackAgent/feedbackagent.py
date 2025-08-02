@@ -24,15 +24,33 @@ from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_e
 from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
 from integrations.slack.slack_notify import send_slack_message
 
+# MCP Integration
+from bmad.core.mcp import (
+    MCPClient,
+    MCPContext,
+    FrameworkMCPIntegration,
+    get_mcp_client,
+    get_framework_mcp_integration,
+    initialize_framework_mcp_integration
+)
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
 class FeedbackAgent:
+    """
+    Feedback Agent voor BMAD.
+    Gespecialiseerd in feedback collection, sentiment analysis, en template quality tracking.
+    """
+    
     def __init__(self):
         # Framework templates integration
         self.framework_manager = get_framework_templates_manager()
-        self.feedback_agent_template = self.framework_manager.get_template('feedback_agent')
+        try:
+            self.feedback_agent_template = self.framework_manager.get_framework_template('feedback_agent')
+        except:
+            self.feedback_agent_template = None
         self.lessons_learned = []
 
         # Set agent name
@@ -67,6 +85,94 @@ class FeedbackAgent:
         self.template_feedback = {}
         self.template_quality_scores = {}
         self._load_template_feedback()
+        
+        # MCP Integration
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
+        
+        logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+    
+    async def initialize_mcp(self):
+        """Initialize MCP client voor enhanced feedback capabilities."""
+        try:
+            self.mcp_client = await get_mcp_client()
+            self.mcp_integration = get_framework_mcp_integration()
+            await initialize_framework_mcp_integration()
+            self.mcp_enabled = True
+            logger.info("MCP client initialized successfully for FeedbackAgent")
+        except Exception as e:
+            logger.warning(f"MCP initialization failed for FeedbackAgent: {e}")
+            self.mcp_enabled = False
+    
+    async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Use MCP tool voor enhanced feedback functionality."""
+        if not self.mcp_enabled or not self.mcp_client:
+            logger.warning("MCP not available, using local feedback tools")
+            return None
+        
+        try:
+            result = await self.mcp_client.execute_tool(tool_name, parameters)
+            logger.info(f"MCP tool {tool_name} executed successfully")
+            return result
+        except Exception as e:
+            logger.error(f"MCP tool {tool_name} execution failed: {e}")
+            return None
+    
+    async def use_feedback_specific_mcp_tools(self, feedback_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use feedback-specific MCP tools voor enhanced feedback analysis."""
+        if not self.mcp_enabled:
+            return {}
+        
+        enhanced_data = {}
+        
+        try:
+            # Feedback collection
+            collection_result = await self.use_mcp_tool("feedback_collection", {
+                "feedback_text": feedback_data.get("feedback_text", ""),
+                "source": feedback_data.get("source", ""),
+                "collection_type": feedback_data.get("collection_type", "general"),
+                "include_metadata": feedback_data.get("include_metadata", True)
+            })
+            if collection_result:
+                enhanced_data["feedback_collection"] = collection_result
+            
+            # Sentiment analysis
+            sentiment_result = await self.use_mcp_tool("sentiment_analysis", {
+                "feedback_text": feedback_data.get("feedback_text", ""),
+                "analysis_type": feedback_data.get("analysis_type", "comprehensive"),
+                "include_emotions": feedback_data.get("include_emotions", True),
+                "confidence_threshold": feedback_data.get("confidence_threshold", 0.8)
+            })
+            if sentiment_result:
+                enhanced_data["sentiment_analysis"] = sentiment_result
+            
+            # Feedback summarization
+            summary_result = await self.use_mcp_tool("feedback_summarization", {
+                "feedback_list": feedback_data.get("feedback_list", []),
+                "summary_type": feedback_data.get("summary_type", "comprehensive"),
+                "include_trends": feedback_data.get("include_trends", True),
+                "group_by_category": feedback_data.get("group_by_category", True)
+            })
+            if summary_result:
+                enhanced_data["feedback_summarization"] = summary_result
+            
+            # Trend analysis
+            trend_result = await self.use_mcp_tool("trend_analysis", {
+                "feedback_data": feedback_data.get("feedback_data", {}),
+                "timeframe": feedback_data.get("timeframe", "30 days"),
+                "trend_type": feedback_data.get("trend_type", "sentiment"),
+                "include_predictions": feedback_data.get("include_predictions", True)
+            })
+            if trend_result:
+                enhanced_data["trend_analysis"] = trend_result
+            
+            logger.info(f"Feedback-specific MCP tools executed: {list(enhanced_data.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Error in feedback-specific MCP tools: {e}")
+        
+        return enhanced_data
 
     def _load_feedback_history(self):
         """Load feedback history from data file"""
@@ -216,7 +322,7 @@ Examples:
         for i, sentiment in enumerate(self.sentiment_history[-10:], 1):
             print(f"{i}. {sentiment}")
 
-    def collect_feedback(self, feedback_text: str = "The new dashboard is much more user-friendly", source: str = "User Survey") -> Dict[str, Any]:
+    async def collect_feedback(self, feedback_text: str = "The new dashboard is much more user-friendly", source: str = "User Survey") -> Dict[str, Any]:
         """Collect new feedback with enhanced functionality."""
         # Input validation
         if not isinstance(feedback_text, str):
@@ -230,10 +336,68 @@ Examples:
             
         logger.info(f"Collecting feedback from {source}")
 
+        # Try MCP-enhanced feedback collection first
+        if self.mcp_enabled and self.mcp_client:
+            try:
+                mcp_result = await self.use_mcp_tool("collect_feedback", {
+                    "feedback_text": feedback_text,
+                    "source": source,
+                    "collection_type": "enhanced",
+                    "include_metadata": True,
+                    "include_analysis": True
+                })
+                
+                if mcp_result:
+                    logger.info("MCP-enhanced feedback collection completed")
+                    result = mcp_result.get("feedback_result", {})
+                    result["mcp_enhanced"] = True
+                else:
+                    logger.warning("MCP feedback collection failed, using local feedback collection")
+                    result = self._create_local_feedback_result(feedback_text, source)
+            except Exception as e:
+                logger.warning(f"MCP feedback collection failed: {e}, using local feedback collection")
+                result = self._create_local_feedback_result(feedback_text, source)
+        else:
+            result = self._create_local_feedback_result(feedback_text, source)
+        
+        # Use feedback-specific MCP tools for additional enhancement
+        if self.mcp_enabled:
+            try:
+                feedback_data = {
+                    "feedback_text": feedback_text,
+                    "source": source,
+                    "collection_type": "comprehensive",
+                    "include_metadata": True,
+                    "analysis_type": "comprehensive",
+                    "include_emotions": True,
+                    "confidence_threshold": 0.8
+                }
+                feedback_enhanced = await self.use_feedback_specific_mcp_tools(feedback_data)
+                if feedback_enhanced:
+                    result["feedback_enhancements"] = feedback_enhanced
+            except Exception as e:
+                logger.warning(f"Feedback-specific MCP tools failed: {e}")
+
+        # Log performance metrics
+        try:
+            self.monitor._record_metric("FeedbackAgent", MetricType.SUCCESS_RATE, 98, "%")
+        except AttributeError:
+            logger.info("Performance metrics recording not available")
+
+        # Add to feedback history
+        feedback_entry = f"{datetime.now().isoformat()}: Feedback collected from {source} - {feedback_text[:50]}..."
+        self.feedback_history.append(feedback_entry)
+        self._save_feedback_history()
+
+        logger.info(f"Feedback collected: {result}")
+        return result
+    
+    def _create_local_feedback_result(self, feedback_text: str, source: str) -> Dict[str, Any]:
+        """Create local feedback result when MCP is not available."""
         # Simulate feedback collection
         time.sleep(1)
-
-        feedback_result = {
+        
+        return {
             "feedback_id": hashlib.sha256(feedback_text.encode()).hexdigest()[:8],
             "feedback_type": "Feedback Collection",
             "source": source,
@@ -273,17 +437,6 @@ Examples:
             "timestamp": datetime.now().isoformat(),
             "agent": "FeedbackAgent"
         }
-
-        # Log performance metrics
-        self.monitor._record_metric("FeedbackAgent", MetricType.SUCCESS_RATE, 98, "%")
-
-        # Add to feedback history
-        feedback_entry = f"{datetime.now().isoformat()}: Feedback collected from {source} - {feedback_text[:50]}..."
-        self.feedback_history.append(feedback_entry)
-        self._save_feedback_history()
-
-        logger.info(f"Feedback collected: {feedback_result}")
-        return feedback_result
 
     def analyze_sentiment(self, feedback_text: str = "The new dashboard is much more user-friendly") -> Dict[str, Any]:
         """Analyze feedback sentiment with enhanced functionality."""
@@ -768,7 +921,7 @@ Examples:
         else:
             print("All resources are available!")
 
-    def collaborate_example(self):
+    async def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         logger.info("Starting feedback collaboration example...")
 
@@ -780,7 +933,7 @@ Examples:
         })
 
         # Collect feedback
-        self.collect_feedback("The new dashboard is much more user-friendly", "User Survey")
+        await self.collect_feedback("The new dashboard is much more user-friendly", "User Survey")
 
         # Analyze sentiment
         sentiment_result = self.analyze_sentiment("The new dashboard is much more user-friendly")
@@ -1209,15 +1362,20 @@ Examples:
                 "error": str(e)
             }
 
-    def run(self):
-        """Run the agent and listen for events."""
+    async def run(self):
+        """Run the agent and listen for events met MCP integration."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
         subscribe("feedback_received", self.on_feedback_received)
         subscribe("summarize_feedback", self.on_summarize_feedback)
         subscribe("retro_planned", self.handle_retro_planned)
         subscribe("feedback_collected", self.handle_feedback_collected)
 
         logger.info("FeedbackAgent ready and listening for events...")
-        self.collaborate_example()
+        await self.collaborate_example()
+
+import asyncio
 
 def main():
     parser = argparse.ArgumentParser(description="Feedback Agent CLI")
@@ -1246,7 +1404,7 @@ def main():
     if args.command == "help":
         agent.show_help()
     elif args.command == "collect-feedback":
-        result = agent.collect_feedback(args.feedback_text, args.source)
+        result = asyncio.run(agent.collect_feedback(args.feedback_text, args.source))
         print(json.dumps(result, indent=2))
     elif args.command == "analyze-sentiment":
         result = agent.analyze_sentiment(args.feedback_text)
@@ -1273,9 +1431,9 @@ def main():
     elif args.command == "test":
         agent.test_resource_completeness()
     elif args.command == "collaborate":
-        agent.collaborate_example()
+        asyncio.run(agent.collaborate_example())
     elif args.command == "run":
-        agent.run()
+        asyncio.run(agent.run())
     elif args.command == "collect-template-feedback":
         if not args.template_name or not args.template_feedback:
             print("Error: --template-name and --template-feedback are required")

@@ -1647,10 +1647,60 @@ Voor elke nieuwe integration moet het volgende gecontroleerd worden:
 - [ ] **Choose Provider**: AWS S3 OR Google Cloud Storage
 - [ ] **Setup Instructions**: Zie `docs/guides/INTEGRATION_REQUIREMENTS.md`
 
+## 📚 **DocumentationAgent Project Setup Workflow (Week 29)**
+
+### **Overview**
+Automatische project documentatie setup door de DocumentationAgent bij nieuwe projecten. De agent haalt core guides, lessons learned, en best practices op en maakt project-specifieke kopieën beschikbaar voor agents en Cursor AI.
+
+### **Phase 1: Workflow Implementation (Week 29)**
+- [ ] **Project Detection**: Automatic new project detection
+- [ ] **Core Documentation Collection**: Fetch guides, lessons learned, best practices
+- [ ] **Project-Specific Customization**: Adapt documentation to project context
+- [ ] **Documentation Structure**: Create project documentation structure
+- [ ] **Agent & Cursor AI Integration**: Setup documentation access
+
+### **Phase 2: Automation & Integration (Week 30)**
+- [ ] **Automatic Trigger**: Detect and setup new projects
+- [ ] **Manual Trigger**: Setup for existing projects
+- [ ] **Quality Validation**: Validate documentation setup
+- [ ] **Integration Testing**: Test workflow integration
+
+### **Phase 3: Enhancement & Optimization (Week 31)**
+- [ ] **Customization Options**: Enhanced project customization
+- [ ] **Template Updates**: Update templates based on experience
+- [ ] **Knowledge Transfer**: Transfer lessons learned back to core guides
+- [ ] **Performance Optimization**: Optimize workflow performance
+
+### **Core Documentation Files**
+1. **Lessons Learned Guide**: Project-specifieke lessons learned
+2. **Best Practices Guide**: Development best practices
+3. **MCP Integration Guide**: MCP integration patterns
+4. **Development Workflow Guide**: Development workflow
+5. **Testing Guide**: Testing strategies
+6. **Quality Guide**: Quality assurance
+
+### **Project Context Customization**
+- **Project Information**: Name, type, team size, technology stack
+- **Development Approach**: Agile, Waterfall, Hybrid
+- **Technology Stack**: Python, React, PostgreSQL, etc.
+- **Team Size**: Small, Medium, Large
+- **Complexity Level**: Simple, Medium, Complex
+
+### **Agent & Cursor AI Integration**
+- **Agent Documentation**: Quick reference, development guide, troubleshooting
+- **Cursor AI Configuration**: Project context, development patterns, best practices
+- **Accessibility**: Easy access for agents and Cursor AI during development
+
+### **Quality Assurance**
+- **Documentation Quality Checks**: All files present and accessible
+- **Customization Validation**: Project-specific customization applied
+- **Integration Validation**: Agent and Cursor AI access working
+- **Structure Validation**: Logical documentation structure
+
 ---
 
 **Document Status**: Active Development  
-**Last Updated**: 27 januari 2025  
+**Last Updated**: 2 augustus 2025  
 **Next Review**: Weekly during development  
 **Owner**: Development Team  
 **Stakeholders**: Product, Engineering, DevOps, Security 

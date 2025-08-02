@@ -2,11 +2,16 @@
 """
 DocumentationAgent voor BMAD
 """
+import os
+import sys
+
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
+
 import argparse
+import asyncio
 import hashlib
 import json
 import logging
-import sys
 import time
 from datetime import datetime
 from pathlib import Path
@@ -29,6 +34,16 @@ from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.projects.project_manager import project_manager
 from integrations.figma.figma_client import FigmaClient
 
+# MCP Integration
+from bmad.core.mcp import (
+    MCPClient,
+    MCPContext,
+    FrameworkMCPIntegration,
+    get_mcp_client,
+    get_framework_mcp_integration,
+    initialize_framework_mcp_integration
+)
+
 load_dotenv()
 
 # Configure logging
@@ -36,6 +51,11 @@ logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
 class DocumentationAgent:
+    """
+    Documentation Agent voor BMAD.
+    Gespecialiseerd in documentatie generatie, API docs, user guides, en technical documentation.
+    """
+    
     def __init__(self):
         # Set agent name
         self.agent_name = "DocumentationAgent"
@@ -64,6 +84,93 @@ class DocumentationAgent:
         self.figma_history = []
         self._load_docs_history()
         self._load_figma_history()
+        
+        # MCP Integration
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
+        
+        logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+    
+    async def initialize_mcp(self):
+        """Initialize MCP client voor enhanced documentation capabilities."""
+        try:
+            self.mcp_client = await get_mcp_client()
+            self.mcp_integration = get_framework_mcp_integration()
+            await initialize_framework_mcp_integration()
+            self.mcp_enabled = True
+            logger.info("MCP client initialized successfully for DocumentationAgent")
+        except Exception as e:
+            logger.warning(f"MCP initialization failed for DocumentationAgent: {e}")
+            self.mcp_enabled = False
+    
+    async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Use MCP tool voor enhanced documentation functionality."""
+        if not self.mcp_enabled or not self.mcp_client:
+            logger.warning("MCP not available, using local documentation tools")
+            return None
+        
+        try:
+            result = await self.mcp_client.execute_tool(tool_name, parameters)
+            logger.info(f"MCP tool {tool_name} executed successfully")
+            return result
+        except Exception as e:
+            logger.error(f"MCP tool {tool_name} execution failed: {e}")
+            return None
+    
+    async def use_documentation_specific_mcp_tools(self, doc_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use documentation-specific MCP tools voor enhanced documentation generation."""
+        if not self.mcp_enabled:
+            return {}
+        
+        enhanced_data = {}
+        
+        try:
+            # API documentation generation
+            api_result = await self.use_mcp_tool("api_documentation_generation", {
+                "api_name": doc_data.get("api_name", ""),
+                "api_type": doc_data.get("api_type", "REST"),
+                "endpoints": doc_data.get("endpoints", []),
+                "documentation_style": doc_data.get("documentation_style", "comprehensive")
+            })
+            if api_result:
+                enhanced_data["api_documentation_generation"] = api_result
+            
+            # User guide generation
+            guide_result = await self.use_mcp_tool("user_guide_generation", {
+                "product_name": doc_data.get("product_name", ""),
+                "guide_type": doc_data.get("guide_type", "comprehensive"),
+                "target_audience": doc_data.get("target_audience", "developers"),
+                "content_structure": doc_data.get("content_structure", "step-by-step")
+            })
+            if guide_result:
+                enhanced_data["user_guide_generation"] = guide_result
+            
+            # Technical documentation
+            tech_result = await self.use_mcp_tool("technical_documentation", {
+                "system_name": doc_data.get("system_name", ""),
+                "doc_type": doc_data.get("doc_type", "architecture"),
+                "technical_depth": doc_data.get("technical_depth", "detailed"),
+                "include_diagrams": doc_data.get("include_diagrams", True)
+            })
+            if tech_result:
+                enhanced_data["technical_documentation"] = tech_result
+            
+            # Changelog summarization
+            changelog_result = await self.use_mcp_tool("changelog_summarization", {
+                "changelog_texts": doc_data.get("changelog_texts", []),
+                "summary_type": doc_data.get("summary_type", "comprehensive"),
+                "include_categories": doc_data.get("include_categories", True)
+            })
+            if changelog_result:
+                enhanced_data["changelog_summarization"] = changelog_result
+            
+            logger.info(f"Documentation-specific MCP tools executed: {list(enhanced_data.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Error in documentation-specific MCP tools: {e}")
+        
+        return enhanced_data
 
     def _load_docs_history(self):
         """Load documentation history from data file"""
@@ -315,14 +422,73 @@ DocumentationAgent Commands:
             logger.error(f"[DocumentationAgent] Error documenting Figma UI: {e}")
             return {"error": str(e)}
 
-    def create_api_docs(self, api_name: str = "BMAD API", api_type: str = "REST") -> Dict[str, Any]:
+    async def create_api_docs(self, api_name: str = "BMAD API", api_type: str = "REST") -> Dict[str, Any]:
         """Create comprehensive API documentation."""
         logger.info(f"Creating API documentation for: {api_name}")
 
+        # Try MCP-enhanced API documentation first
+        if self.mcp_enabled and self.mcp_client:
+            try:
+                mcp_result = await self.use_mcp_tool("create_api_docs", {
+                    "api_name": api_name,
+                    "api_type": api_type,
+                    "documentation_style": "comprehensive",
+                    "include_examples": True,
+                    "include_swagger": True
+                })
+                
+                if mcp_result:
+                    logger.info("MCP-enhanced API documentation completed")
+                    result = mcp_result.get("api_docs_result", {})
+                    result["mcp_enhanced"] = True
+                else:
+                    logger.warning("MCP API documentation failed, using local API documentation")
+                    result = self._create_local_api_docs_result(api_name, api_type)
+            except Exception as e:
+                logger.warning(f"MCP API documentation failed: {e}, using local API documentation")
+                result = self._create_local_api_docs_result(api_name, api_type)
+        else:
+            result = self._create_local_api_docs_result(api_name, api_type)
+        
+        # Use documentation-specific MCP tools for additional enhancement
+        if self.mcp_enabled:
+            try:
+                doc_data = {
+                    "api_name": api_name,
+                    "api_type": api_type,
+                    "endpoints": [
+                        {"name": "GET /api/v1/agents", "description": "List all agents"},
+                        {"name": "POST /api/v1/agents", "description": "Create new agent"},
+                        {"name": "GET /api/v1/agents/{id}", "description": "Get agent by ID"}
+                    ],
+                    "documentation_style": "comprehensive"
+                }
+                doc_enhanced = await self.use_documentation_specific_mcp_tools(doc_data)
+                if doc_enhanced:
+                    result["documentation_enhancements"] = doc_enhanced
+            except Exception as e:
+                logger.warning(f"Documentation-specific MCP tools failed: {e}")
+
+        # Log performance metrics
+        try:
+            self.monitor._record_metric("DocumentationAgent", MetricType.SUCCESS_RATE, 95, "%")
+        except AttributeError:
+            logger.info("Performance metrics recording not available")
+
+        # Add to docs history
+        docs_entry = f"{datetime.now().isoformat()}: API documentation created - {api_name}"
+        self.docs_history.append(docs_entry)
+        self._save_docs_history()
+
+        logger.info(f"API documentation created: {result}")
+        return result
+    
+    def _create_local_api_docs_result(self, api_name: str, api_type: str) -> Dict[str, Any]:
+        """Create local API documentation result when MCP is not available."""
         # Simulate API documentation creation
         time.sleep(1)
-
-        api_docs_result = {
+        
+        return {
             "docs_id": hashlib.sha256(f"api_docs_{api_name}".encode()).hexdigest()[:8],
             "api_name": api_name,
             "api_type": api_type,
@@ -358,17 +524,6 @@ DocumentationAgent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "DocumentationAgent"
         }
-
-        # Log performance metrics
-        self.monitor._record_metric("DocumentationAgent", MetricType.SUCCESS_RATE, 95, "%")
-
-        # Add to docs history
-        docs_entry = f"{datetime.now().isoformat()}: API documentation created - {api_name}"
-        self.docs_history.append(docs_entry)
-        self._save_docs_history()
-
-        logger.info(f"API documentation created: {api_docs_result}")
-        return api_docs_result
 
     def create_user_guide(self, product_name: str = "BMAD System", guide_type: str = "comprehensive") -> Dict[str, Any]:
         """Create comprehensive user guide documentation."""
@@ -603,11 +758,14 @@ DocumentationAgent Commands:
         context = get_context("DocumentationAgent")
         print(f"Opgehaalde context: {context}")
 
-    def run(self):
-        """Run the agent and listen for events."""
+    async def run(self):
+        """Run the agent and listen for events met MCP integration."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
         logger.info("DocumentationAgent ready and listening for events...")
         print("[DocumentationAgent] Ready and listening for events...")
-        self.collaborate_example()
+        await self.collaborate_example()
 
 # Global functions for Figma documentation
 def document_figma_ui(figma_file_id: str) -> Dict:
@@ -1027,7 +1185,7 @@ def main():
         result = agent.document_figma_ui(args.figma_file_id)
         print(json.dumps(result, indent=2))
     elif args.command == "create-api-docs":
-        result = agent.create_api_docs(args.api_name, args.api_type)
+        result = asyncio.run(agent.create_api_docs(args.api_name, args.api_type))
         print(json.dumps(result, indent=2))
     elif args.command == "create-user-guide":
         result = agent.create_user_guide(args.product_name, args.guide_type)
@@ -1048,9 +1206,9 @@ def main():
     elif args.command == "test":
         agent.test_resource_completeness()
     elif args.command == "collaborate":
-        agent.collaborate_example()
+        asyncio.run(agent.collaborate_example())
     elif args.command == "run":
-        agent.run()
+        asyncio.run(agent.run())
 
 if __name__ == "__main__":
     main()
