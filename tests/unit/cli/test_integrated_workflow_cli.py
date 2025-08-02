@@ -22,6 +22,29 @@ import sys
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../")))
 
+# Mock zware externe dependencies
+sys.modules['opentelemetry'] = MagicMock()
+sys.modules['opentelemetry.trace'] = MagicMock()
+sys.modules['opentelemetry.sdk'] = MagicMock()
+sys.modules['opentelemetry.sdk.trace'] = MagicMock()
+sys.modules['opentelemetry.sdk.trace.export'] = MagicMock()
+sys.modules['opentelemetry.sdk.resources'] = MagicMock()
+sys.modules['opentelemetry.exporter'] = MagicMock()
+sys.modules['opentelemetry.exporter.jaeger'] = MagicMock()
+sys.modules['opentelemetry.exporter.jaeger.thrift'] = MagicMock()
+sys.modules['opentelemetry.exporter.otlp'] = MagicMock()
+sys.modules['opentelemetry.exporter.otlp.proto'] = MagicMock()
+sys.modules['opentelemetry.exporter.otlp.proto.http'] = MagicMock()
+sys.modules['opentelemetry.exporter.otlp.proto.http.trace_exporter'] = MagicMock()
+sys.modules['opentelemetry.instrumentation'] = MagicMock()
+sys.modules['opentelemetry.instrumentation.requests'] = MagicMock()
+sys.modules['supabase'] = MagicMock()
+sys.modules['openai'] = MagicMock()
+sys.modules['langgraph'] = MagicMock()
+sys.modules['langgraph.graph'] = MagicMock()
+sys.modules['langgraph.checkpoint'] = MagicMock()
+sys.modules['langgraph.checkpoint.memory'] = MagicMock()
+
 from cli.integrated_workflow_cli import IntegratedWorkflowCLI
 from bmad.agents.core.workflow.integrated_workflow_orchestrator import (
     IntegratedWorkflowResult, 
