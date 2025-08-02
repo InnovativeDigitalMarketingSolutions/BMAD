@@ -285,6 +285,12 @@ class TestUXUIDesignerAgentFileOperations:
             self.agent._save_feedback_history()
             mock_file.assert_called_once()
 
+    def test_save_feedback_history_os_error(self):
+        """Test _save_feedback_history with OS error."""
+        with patch('pathlib.Path.mkdir'), \
+             patch('builtins.open', side_effect=OSError("Disk full")):
+            self.agent._save_feedback_history()
+
 
 class TestUXUIDesignerAgentLLMIntegration:
     """Test LLM integration functionality."""
@@ -897,22 +903,23 @@ class TestUXUIDesignerAgentCLI:
     def test_cli_run(self, mock_get_context, mock_publish, mock_save_context, mock_print):
         """Test CLI run command."""
         from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
-        
+
         # Mock the agent instance methods to prevent real API calls
         with patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.UXUIDesignerAgent') as mock_agent_class:
             # Create a mock agent instance
             mock_agent = mock_agent_class.return_value
-            
-            # Mock the run method to prevent real execution
-            with patch.object(mock_agent, 'run') as mock_run:
-                main()
-                mock_run.assert_called_once()
+
+            # Mock the run method as AsyncMock to prevent real execution
+            from unittest.mock import AsyncMock
+            mock_run = AsyncMock()
+            mock_agent.run = mock_run
+            main()
+            mock_run.assert_called_once()
 
     @patch('sys.argv', ['uxuidesigner.py', 'design-feedback'])
     @patch('sys.exit')
     @patch('builtins.print')
-    @patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.UXUIDesignerAgent.design_feedback')
-    def test_cli_design_feedback_missing_text(self, mock_design_feedback, mock_print, mock_exit):
+    def test_cli_design_feedback_missing_text(self, mock_print, mock_exit):
         """Test CLI design-feedback command with missing feedback text."""
         from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
         main()
@@ -922,8 +929,7 @@ class TestUXUIDesignerAgentCLI:
     @patch('sys.argv', ['uxuidesigner.py', 'document-component'])
     @patch('sys.exit')
     @patch('builtins.print')
-    @patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.UXUIDesignerAgent.document_component')
-    def test_cli_document_component_missing_desc(self, mock_document_component, mock_print, mock_exit):
+    def test_cli_document_component_missing_desc(self, mock_print, mock_exit):
         """Test CLI document-component command with missing component description."""
         from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
         main()
@@ -933,8 +939,7 @@ class TestUXUIDesignerAgentCLI:
     @patch('sys.argv', ['uxuidesigner.py', 'analyze-figma'])
     @patch('sys.exit')
     @patch('builtins.print')
-    @patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.UXUIDesignerAgent.analyze_figma_design')
-    def test_cli_analyze_figma_missing_file_id(self, mock_analyze_figma, mock_print, mock_exit):
+    def test_cli_analyze_figma_missing_file_id(self, mock_print, mock_exit):
         """Test CLI analyze-figma command with missing file ID."""
         from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
         main()
