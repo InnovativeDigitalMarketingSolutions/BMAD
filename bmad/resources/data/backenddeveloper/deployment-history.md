@@ -1,6 +1,5 @@
 # Deployment History
 
-- 2025-07-31T17:59:19.393937: /api/v1/users - Status: deployed - Environment: production
 - 2025-07-31T17:59:24.001719: /api/v1/users - Status: deployed - Environment: production
 - 2025-07-31T18:01:55.549914: /api/v1/users - Status: deployed - Environment: production
 - 2025-07-31T18:01:59.173076: /api/v1/users - Status: deployed - Environment: production
@@ -44,3 +43,10 @@
 - 2025-08-02T08:08:44.893711: /api/v1/users - Status: deployed - Environment: production
 - 2025-08-02T08:08:47.948757: /api/v1/users - Status: deployed - Environment: production
 - 2025-08-02T08:08:50.972764: /api/v1/users - Status: deployed - Environment: production
+- 2025-08-02T22:33:58.645261: /api/v1/users - Status: deployed - Environment: production
+- 2025-08-02T22:35:32.844841: /api/v1/users - Status: deployed - Environment: production
+- 2025-08-02T22:35:36.972585: /api/v1/users - Status: deployed - Environment: production
+- 2025-08-02T22:35:41.007533: /api/v1/users - Status: deployed - Environment: production
+- 2025-08-02T22:36:13.409760: /api/v1/users - Status: deployed - Environment: production
+- 2025-08-02T22:36:17.457364: /api/v1/users - Status: deployed - Environment: production
+- 2025-08-02T22:36:21.470207: /api/v1/users - Status: deployed - Environment: production
