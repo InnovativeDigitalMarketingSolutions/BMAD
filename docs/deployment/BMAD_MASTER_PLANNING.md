@@ -220,8 +220,11 @@ Dit document consolideert alle planning documenten tot één master roadmap voor
 
 **Load Testing**:
 - [ ] Performance baseline establishment
-- [ ] Load testing scenarios
-- [ ] Stress testing
+- [ ] Load testing scenarios for multiple agents operating in parallel
+- [ ] Stress testing for hundreds of stories and long context chains
+- [ ] Automated tests with Locust/k6 tools
+- [ ] CI/CD pipeline integration for load tests
+- [ ] Response time, throughput, and resource usage measurement
 - [ ] Capacity planning
 - [ ] Performance optimization
 - [ ] Scaling strategies
@@ -253,6 +256,22 @@ Dit document consolideert alle planning documenten tot één master roadmap voor
 - [ ] Conversation analytics
 - [ ] Conversation optimization
 - [ ] Conversation templates
+
+#### 2.3 Infrastructure Automation & Service Mesh
+**Timeline**: Weeks 10-12  
+**Status**: 📋 Planned
+
+**Infrastructure as Code (IaC)**:
+- [ ] Terraform/Pulumi implementation for Kubernetes deployment
+- [ ] Infrastructure versioning and management
+- [ ] Automated provisioning and scaling
+- [ ] Environment consistency across dev/staging/prod
+
+**Service Mesh Implementation**:
+- [ ] Istio/Linkerd integration for service-to-service communication
+- [ ] Secure inter-service communication
+- [ ] Observability and fault injection for testing
+- [ ] Traffic management and load balancing
 
 ### **Phase 2.5: Advanced Context & Conversation Patterns (Weeks 10-12)**
 
