@@ -54,19 +54,27 @@ Voor uitgebreide backlog items met implementatie details, zie:
   - Data encryption
 
 ### **Priority 3 - Low Priority**
-- [ ] **Documentation Automation** (Week 20-21)
+- [ ] **Test Quality & Coverage Enhancement** (Week 26-27)
+  - Test success rate: 100% (alle tests moeten slagen)
+  - Critical components coverage: >90-95% (MCP core, agent integration, enterprise)
+  - General components coverage: >70% (overige modules en utilities)
+  - Async test configuration en pytest-asyncio setup
+  - Test isolation en reliability improvements
+  - **Zie**: `docs/deployment/BMAD_MASTER_PLANNING.md` voor details
+
+- [ ] **Documentation Automation** (Week 27-28)
   - Auto-generated API docs
   - Code documentation
   - Architecture diagrams
   - User guides
 
-- [ ] **Performance Optimization** (Week 21-22)
+- [ ] **Performance Optimization** (Week 28-29)
   - Database optimization
   - Caching implementation
   - Code optimization
   - Resource optimization
 
-- [ ] **Dependency Visibility Strategy Implementation** (Week 13-14)
+- [ ] **Dependency Visibility Strategy Implementation** (Week 29-30)
   - Implement dependency visibility across all agents
   - Add dependency checking to all CLI interfaces
   - Create dependency health monitoring dashboard
@@ -76,7 +84,7 @@ Voor uitgebreide backlog items met implementatie details, zie:
   - Create dependency audit tools for CI/CD
   - Document dependency visibility best practices
 
-- [ ] **Strategy Integration Documentation & Guidelines** (Week 14-15)
+- [ ] **Strategy Integration Documentation & Guidelines** (Week 30-31)
   - Document Mocking Strategy & Dependency Visibility integration patterns
   - Create best practice guidelines for when to use each strategy
   - Develop training materials for developers on strategy usage
