@@ -1,7 +1,7 @@
 # BMAD Testing Strategy Guide
 
 ## Overzicht
-Deze gids beschrijft de test strategie voor BMAD, inclusief de balans tussen pragmatisch mocken en echte integratie testing.
+Deze gids beschrijft de test strategie voor BMAD, inclusief de balans tussen pragmatisch mocken en echte integratie testing. Voor praktische implementatie details, zie `TEST_WORKFLOW_GUIDE.md`.
 
 ## Test Pyramid
 
@@ -42,6 +42,11 @@ sys.modules['langgraph'] = MagicMock()
 - Regressie testing
 - Code reviews
 
+### Coverage Requirements
+- **Line Coverage**: 90%+
+- **Branch Coverage**: 85%+
+- **Function Coverage**: 95%+
+
 ## 2. Integration Tests (Kritiek)
 
 ### Doel
@@ -77,6 +82,14 @@ async def test_supabase_integration(self):
 - Bij configuratie wijzigingen
 - Staging environment validatie
 
+### Integration Test Categories
+- **Database Integration**: Supabase CRUD operaties
+- **LLM Integration**: OpenRouter API calls
+- **Tracing Integration**: OpenTelemetry spans
+- **Workflow Integration**: LangGraph workflows
+- **Policy Integration**: OPA policy evaluation
+- **Full Integration**: Complete workflow testing
+
 ## 3. End-to-End Tests (Compleet)
 
 ### Doel
@@ -106,6 +119,12 @@ async def test_full_workflow():
 - ❌ Brittle (veel failure points)
 - ❌ Duur om te onderhouden
 
+### Wanneer Gebruiken
+- Voor major releases
+- Bij architectuur wijzigingen
+- Voor performance validatie
+- User acceptance testing
+
 ## Test Execution Strategie
 
 ### Development Workflow
@@ -127,7 +146,7 @@ pytest tests/ -v --run-integration
   run: pytest tests/unit/ --cov=bmad
 
 # Stage 2: Integration Tests (op staging)
-- name: Integration Tests  
+- name: Integration Tests
   run: pytest tests/integration/ --run-integration
   environment: staging
 
@@ -215,4 +234,10 @@ Door pragmatisch te mocken in unit tests en echte integraties te testen in apart
 - Vertrouwen dat integraties werken
 - Detectie van zowel component als systeem problemen
 
-Deze strategie volgt de master planning en development quality guide, en zorgt voor een robuuste, onderhoudbare test suite. 
+**Voor praktische implementatie details, zie**: `TEST_WORKFLOW_GUIDE.md`
+
+## Referenties
+
+- [TEST_WORKFLOW_GUIDE.md](./TEST_WORKFLOW_GUIDE.md) - Praktische test implementatie
+- [CLI_TESTING_COMPLETE_REPORT.md](../reports/CLI_TESTING_COMPLETE_REPORT.md) - CLI testing success case
+- [CLI_TEST_FAILURES_ANALYSIS.md](../reports/CLI_TEST_FAILURES_ANALYSIS.md) - Test failure analysis 
