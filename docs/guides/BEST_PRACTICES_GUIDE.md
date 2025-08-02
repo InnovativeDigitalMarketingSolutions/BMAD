@@ -299,11 +299,97 @@ async def test_async_agent():
     assert result is not None
 ```
 
+#### **MCP Integration Test Pattern**
+**Best Practice**: Comprehensive MCP integration testing.
+
+```python
+@pytest.mark.asyncio
+async def test_mcp_integration_workflow(self, agent):
+    """Test complete MCP integration workflow."""
+    # Test MCP initialization
+    await agent.initialize_mcp()
+    
+    # Test MCP tool usage
+    result = await agent.develop_strategy("Test Strategy")
+    assert result["status"] == "developed"
+    
+    # Test MCP enhanced data
+    if "mcp_enhanced_data" in result:
+        assert isinstance(result["mcp_enhanced_data"], dict)
+    
+    # Test fallback behavior
+    agent.mcp_enabled = False
+    fallback_result = await agent.develop_strategy("Test Strategy")
+    assert fallback_result["status"] == "developed"
+```
+
 **Voordelen**:
-- ✅ Proper async testing
-- ✅ Both async and sync coverage
-- ✅ Realistic test scenarios
-- ✅ No async errors
+- ✅ Test MCP initialization
+- ✅ Test MCP tool execution
+- ✅ Test fallback behavior
+- ✅ Test enhanced data structure
+
+#### **CLI Async Test Pattern**
+**Best Practice**: Proper CLI async method testing.
+
+```python
+def test_cli_async_command(self, capsys):
+    """Test CLI command with async method."""
+    with patch('module.AgentClass') as mock_agent_class:
+        mock_agent = Mock()
+        from unittest.mock import AsyncMock
+        
+        # Setup async mock
+        mock_async_method = AsyncMock()
+        mock_async_method.return_value = {"status": "success"}
+        mock_agent.async_method = mock_async_method
+        mock_agent_class.return_value = mock_agent
+        
+        # Execute CLI
+        main()
+        
+        # Verify output
+        captured = capsys.readouterr()
+        assert "success" in captured.out
+```
+
+**Voordelen**:
+- ✅ Proper async mocking
+- ✅ CLI integration testing
+- ✅ Output verification
+- ✅ Error handling testing
+
+#### **Integration Test Logger Setup**
+**Best Practice**: Proper logger setup voor integration tests.
+
+```python
+# ✅ Test File Header
+import pytest
+from unittest.mock import Mock, patch
+import logging
+
+from bmad.agents.Agent.AgentName.agentname import AgentClass
+
+# Configure logging for tests
+logger = logging.getLogger(__name__)
+
+class TestAgentIntegration:
+    @pytest.fixture
+    def agent(self):
+        return AgentClass()
+    
+    @pytest.mark.asyncio
+    async def test_integration_workflow(self, agent):
+        """Test complete integration workflow."""
+        # ... test logic ...
+        logger.info("Integration test completed successfully")
+```
+
+**Voordelen**:
+- ✅ Voorkomt logger import errors
+- ✅ Consistent logging across tests
+- ✅ Better test debugging
+- ✅ Professional test output
 
 #### **Test Isolation**
 **Best Practice**: Independent tests zonder shared state.

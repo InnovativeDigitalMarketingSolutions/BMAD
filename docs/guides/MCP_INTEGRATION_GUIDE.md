@@ -299,6 +299,54 @@ async def use_documentation_specific_mcp_tools(self, doc_data: Dict[str, Any]):
     return enhanced_data
 ```
 
+#### **StrategiePartner Tools**
+```python
+async def use_strategy_specific_mcp_tools(self, strategy_data: Dict[str, Any]):
+    enhanced_data = {}
+    
+    # Strategy development
+    strategy_result = await self.use_mcp_tool("strategy_development", {
+        "strategy_name": strategy_data.get("strategy_name", ""),
+        "business_context": strategy_data.get("business_context", ""),
+        "market_conditions": strategy_data.get("market_conditions", ""),
+        "analysis_type": "comprehensive"
+    })
+    if strategy_result:
+        enhanced_data["strategy_development"] = strategy_result
+    
+    # Market analysis
+    market_result = await self.use_mcp_tool("market_analysis", {
+        "sector": strategy_data.get("sector", ""),
+        "market_size": strategy_data.get("market_size", ""),
+        "growth_rate": strategy_data.get("growth_rate", ""),
+        "analysis_depth": "detailed"
+    })
+    if market_result:
+        enhanced_data["market_analysis"] = market_result
+    
+    # Competitive analysis
+    competitive_result = await self.use_mcp_tool("competitive_analysis", {
+        "competitors": strategy_data.get("competitors", []),
+        "market_position": strategy_data.get("market_position", ""),
+        "competitive_advantage": strategy_data.get("competitive_advantage", ""),
+        "analysis_scope": "comprehensive"
+    })
+    if competitive_result:
+        enhanced_data["competitive_analysis"] = competitive_result
+    
+    # Risk assessment
+    risk_result = await self.use_mcp_tool("risk_assessment", {
+        "strategy": strategy_data.get("strategy", ""),
+        "risk_factors": strategy_data.get("risk_factors", []),
+        "mitigation_strategies": strategy_data.get("mitigation_strategies", []),
+        "assessment_type": "comprehensive"
+    })
+    if risk_result:
+        enhanced_data["risk_assessment"] = risk_result
+    
+    return enhanced_data
+```
+
 ## Error Handling Patterns
 
 ### 1. MCP Initialization Error Handling
@@ -444,6 +492,62 @@ print(f"MCP Integration: {self.mcp_integration}")
 result = await self.use_mcp_tool("test_tool", {"param": "test"})
 print(f"Tool Result: {result}")
 ```
+
+### 3. Async Wrapper Method Patterns
+
+#### **Correct Async Wrapper Pattern**
+**Problem**: Incorrect async wrapper voor reeds async methodes
+
+**Solution**:
+```python
+# ❌ VERKEERD: Async wrapper voor reeds async methode
+async def _async_develop_strategy(self, strategy_name: str):
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, self.develop_strategy, strategy_name)
+
+# ✅ CORRECT: Directe async call voor reeds async methode
+async def _async_develop_strategy(self, strategy_name: str):
+    return await self.develop_strategy(strategy_name)
+```
+
+**Waarom**: `run_in_executor()` is alleen voor sync methodes. Voor async methodes gebruik je direct `await`.
+
+#### **CLI Async Method Handling**
+**Problem**: CLI methodes die async methodes aanroepen
+
+**Solution**:
+```python
+def main():
+    # ... argument parsing ...
+    
+    if args.command == "develop-strategy":
+        result = asyncio.run(agent.develop_strategy(args.strategy_name))
+        print(f"Strategy developed successfully: {result}")
+    elif args.command == "collaborate":
+        asyncio.run(agent.collaborate_example())
+    elif args.command == "run":
+        agent = asyncio.run(StrategiePartnerAgent.run_agent())
+```
+
+**Waarom**: Zorgt voor correcte async execution in CLI context.
+
+#### **Test Logger Setup**
+**Problem**: `NameError: name 'logger' is not defined` in integration tests
+
+**Solution**:
+```python
+# ✅ Test File Setup met Logger
+import pytest
+from unittest.mock import Mock, patch
+import logging
+
+from bmad.agents.Agent.AgentName.agentname import AgentClass
+
+# Configure logging for tests
+logger = logging.getLogger(__name__)
+```
+
+**Waarom**: Voorkomt logger import errors in integration tests.
 
 ## Best Practices Checklist
 
