@@ -21,8 +21,11 @@ from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.ai.llm_client import ask_openai
 from bmad.agents.core.communication.message_bus import publish, subscribe
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
+from bmad.core.mcp import (
+    MCPClient, MCPContext, FrameworkMCPIntegration,
+    get_mcp_client, get_framework_mcp_integration, initialize_framework_mcp_integration
+)
 from integrations.slack.slack_notify import send_slack_message
-from bmad.core.mcp import get_mcp_client, get_framework_mcp_integration, initialize_framework_mcp_integration
 from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
 
 # Configure logging
@@ -36,8 +39,8 @@ class TestEngineerAgent:
         self.lessons_learned = []
         
         # Initialize MCP integration
-        self.mcp_client = None
-        self.mcp_integration = None
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
         self.mcp_enabled = False
 
         self.agent_name = "TestEngineerAgent"
@@ -71,6 +74,80 @@ class TestEngineerAgent:
         self._load_test_history()
         self._load_coverage_history()
 
+        logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+
+    async def initialize_mcp(self):
+        """Initialize MCP client and integration."""
+        try:
+            self.mcp_client = await get_mcp_client()
+            self.mcp_integration = get_framework_mcp_integration()
+            await initialize_framework_mcp_integration()
+            self.mcp_enabled = True
+            logger.info("MCP client initialized successfully")
+        except Exception as e:
+            logger.warning(f"MCP initialization failed: {e}")
+            self.mcp_enabled = False
+
+    async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Use MCP tool voor enhanced functionality."""
+        if not self.mcp_enabled or not self.mcp_client:
+            logger.warning("MCP not available, using local tools")
+            return None
+        
+        try:
+            result = await self.mcp_client.execute_tool(tool_name, parameters)
+            logger.info(f"MCP tool {tool_name} executed successfully")
+            return result
+        except Exception as e:
+            logger.error(f"MCP tool {tool_name} execution failed: {e}")
+            return None
+
+    async def use_test_specific_mcp_tools(self, test_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use test-specific MCP tools voor enhanced functionality."""
+        enhanced_data = {}
+        
+        # Test generation
+        test_gen_result = await self.use_mcp_tool("test_generation", {
+            "component_name": test_data.get("component_name", ""),
+            "test_type": test_data.get("test_type", ""),
+            "framework": test_data.get("framework", "pytest"),
+            "generation_type": "comprehensive"
+        })
+        if test_gen_result:
+            enhanced_data["test_generation"] = test_gen_result
+        
+        # Test execution
+        test_exec_result = await self.use_mcp_tool("test_execution", {
+            "test_suite": test_data.get("test_suite", ""),
+            "test_type": test_data.get("test_type", ""),
+            "execution_mode": test_data.get("execution_mode", "standard"),
+            "coverage_tracking": test_data.get("coverage_tracking", True)
+        })
+        if test_exec_result:
+            enhanced_data["test_execution"] = test_exec_result
+        
+        # Coverage analysis
+        coverage_result = await self.use_mcp_tool("coverage_analysis", {
+            "test_results": test_data.get("test_results", {}),
+            "coverage_data": test_data.get("coverage_data", {}),
+            "analysis_type": "comprehensive",
+            "report_format": test_data.get("report_format", "detailed")
+        })
+        if coverage_result:
+            enhanced_data["coverage_analysis"] = coverage_result
+        
+        # Test reporting
+        report_result = await self.use_mcp_tool("test_reporting", {
+            "test_data": test_data.get("test_data", {}),
+            "report_type": test_data.get("report_type", "comprehensive"),
+            "format": test_data.get("format", "markdown"),
+            "include_coverage": test_data.get("include_coverage", True)
+        })
+        if report_result:
+            enhanced_data["test_reporting"] = report_result
+        
+        return enhanced_data
+
     def _load_test_history(self):
         try:
             if self.data_paths["test-history"].exists():
@@ -103,32 +180,6 @@ class TestEngineerAgent:
                             self.coverage_history.append(line.strip()[2:])
         except Exception as e:
             logger.warning(f"Could not load coverage history: {e}")
-
-    async def initialize_mcp(self):
-        """Initialize MCP client voor enhanced testing capabilities."""
-        try:
-            self.mcp_client = await get_mcp_client()
-            self.mcp_integration = get_framework_mcp_integration()
-            await initialize_framework_mcp_integration()
-            self.mcp_enabled = True
-            logger.info("MCP client initialized successfully for TestEngineer")
-        except Exception as e:
-            logger.warning(f"MCP initialization failed for TestEngineer: {e}")
-            self.mcp_enabled = False
-
-    async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Use MCP tool voor enhanced testing functionality."""
-        if not self.mcp_enabled or not self.mcp_client:
-            logger.warning("MCP not available, using local testing tools")
-            return None
-        
-        try:
-            result = await self.mcp_client.execute_tool(tool_name, parameters)
-            logger.info(f"MCP tool {tool_name} executed successfully")
-            return result
-        except Exception as e:
-            logger.error(f"MCP tool {tool_name} execution failed: {e}")
-            return None
 
     def _save_coverage_history(self):
         try:
@@ -265,32 +316,26 @@ TestEngineer Agent Commands:
             # Record start time for performance monitoring
             start_time = time.time()
             
-            # Try MCP-enhanced test generation first
-            if self.mcp_enabled and self.mcp_client:
-                try:
-                    mcp_result = await self.use_mcp_tool("generate_tests", {
-                        "component_name": component_name,
-                        "test_type": test_type,
-                        "include_coverage": True,
-                        "best_practices": True
-                    })
-                    
-                    if mcp_result:
-                        logger.info("MCP-enhanced test generation completed")
-                        test_result = mcp_result
-                        test_result["mcp_enhanced"] = True
-                    else:
-                        logger.warning("MCP test generation failed, falling back to local generation")
-                        test_content = self._generate_test_content(component_name, test_type)
-                        test_result = self._create_test_result(component_name, test_type, test_content)
-                except Exception as e:
-                    logger.warning(f"MCP test generation failed: {e}, using local generation")
-                    test_content = self._generate_test_content(component_name, test_type)
-                    test_result = self._create_test_result(component_name, test_type, test_content)
-            else:
-                # Fallback naar lokale test generation
-                test_content = self._generate_test_content(component_name, test_type)
-                test_result = self._create_test_result(component_name, test_type, test_content)
+            # Use MCP tools for enhanced test generation
+            test_data = {
+                "component_name": component_name,
+                "test_type": test_type,
+                "framework": "pytest",
+                "generation_type": "comprehensive",
+                "include_coverage": True,
+                "best_practices": True
+            }
+            
+            enhanced_data = await self.use_test_specific_mcp_tools(test_data)
+            
+            # Generate test content (local fallback if MCP not available)
+            test_content = self._generate_test_content(component_name, test_type)
+            test_result = self._create_test_result(component_name, test_type, test_content)
+            
+            # Add MCP enhanced data if available
+            if enhanced_data:
+                test_result["mcp_enhanced_data"] = enhanced_data
+                test_result["mcp_enhanced"] = True
             
             # Record performance
             end_time = time.time()

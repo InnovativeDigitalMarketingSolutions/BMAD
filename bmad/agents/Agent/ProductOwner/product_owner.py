@@ -88,21 +88,21 @@ class ProductOwnerAgent:
         logging.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
     
     async def initialize_mcp(self):
-        """Initialize MCP client voor enhanced product management capabilities."""
+        """Initialize MCP client and integration."""
         try:
             self.mcp_client = await get_mcp_client()
             self.mcp_integration = get_framework_mcp_integration()
             await initialize_framework_mcp_integration()
             self.mcp_enabled = True
-            logging.info("MCP client initialized successfully for ProductOwner")
+            logging.info("MCP client initialized successfully")
         except Exception as e:
-            logging.warning(f"MCP initialization failed for ProductOwner: {e}")
+            logging.warning(f"MCP initialization failed: {e}")
             self.mcp_enabled = False
-    
+
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Use MCP tool voor enhanced product management functionality."""
+        """Use MCP tool voor enhanced functionality."""
         if not self.mcp_enabled or not self.mcp_client:
-            logging.warning("MCP not available, using local product management tools")
+            logging.warning("MCP not available, using local tools")
             return None
         
         try:
@@ -112,46 +112,51 @@ class ProductOwnerAgent:
         except Exception as e:
             logging.error(f"MCP tool {tool_name} execution failed: {e}")
             return None
-    
+
     async def use_product_specific_mcp_tools(self, product_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Use product-specific MCP tools voor story enhancement."""
-        if not self.mcp_enabled:
-            return {}
-        
+        """Use product-specific MCP tools voor enhanced functionality."""
         enhanced_data = {}
         
-        try:
-            # User story analysis
-            if "story_analysis" in self.mcp_config.custom_tools:
-                analysis_result = await self.use_mcp_tool("story_analysis", {
-                    "story": product_data.get("story", ""),
-                    "acceptance_criteria": product_data.get("acceptance_criteria", []),
-                    "analysis_type": "quality"
-                })
-                if analysis_result:
-                    enhanced_data["story_analysis"] = analysis_result
-            
-            # Stakeholder analysis
-            if "stakeholder_analysis" in self.mcp_config.custom_tools:
-                stakeholder_result = await self.use_mcp_tool("stakeholder_analysis", {
-                    "story": product_data.get("story", ""),
-                    "stakeholders": product_data.get("stakeholders", [])
-                })
-                if stakeholder_result:
-                    enhanced_data["stakeholder_analysis"] = stakeholder_result
-            
-            # Business value assessment
-            business_result = await self.use_mcp_tool("business_value_assessment", {
-                "story": product_data.get("story", ""),
-                "business_goals": product_data.get("business_goals", [])
-            })
-            if business_result:
-                enhanced_data["business_value"] = business_result
-            
-            logging.info(f"Product-specific MCP tools executed: {list(enhanced_data.keys())}")
-            
-        except Exception as e:
-            logging.error(f"Error in product-specific MCP tools: {e}")
+        # User story creation
+        story_result = await self.use_mcp_tool("user_story_creation", {
+            "requirement": product_data.get("requirement", ""),
+            "user_type": product_data.get("user_type", "end_user"),
+            "story_type": product_data.get("story_type", "feature"),
+            "priority": product_data.get("priority", "medium"),
+            "acceptance_criteria": product_data.get("acceptance_criteria", True)
+        })
+        if story_result:
+            enhanced_data["user_story_creation"] = story_result
+        
+        # Product vision
+        vision_result = await self.use_mcp_tool("product_vision", {
+            "product_name": product_data.get("product_name", ""),
+            "vision_type": product_data.get("vision_type", "strategic"),
+            "timeframe": product_data.get("timeframe", "long_term"),
+            "stakeholders": product_data.get("stakeholders", [])
+        })
+        if vision_result:
+            enhanced_data["product_vision"] = vision_result
+        
+        # Backlog management
+        backlog_result = await self.use_mcp_tool("backlog_management", {
+            "backlog_items": product_data.get("backlog_items", []),
+            "prioritization_method": product_data.get("prioritization_method", "value_effort"),
+            "sprint_planning": product_data.get("sprint_planning", True),
+            "refinement": product_data.get("refinement", True)
+        })
+        if backlog_result:
+            enhanced_data["backlog_management"] = backlog_result
+        
+        # Stakeholder analysis
+        stakeholder_result = await self.use_mcp_tool("stakeholder_analysis", {
+            "stakeholders": product_data.get("stakeholders", []),
+            "analysis_type": product_data.get("analysis_type", "comprehensive"),
+            "engagement_strategy": product_data.get("engagement_strategy", True),
+            "communication_plan": product_data.get("communication_plan", True)
+        })
+        if stakeholder_result:
+            enhanced_data["stakeholder_analysis"] = stakeholder_result
         
         return enhanced_data
 
@@ -177,47 +182,39 @@ Voorbeelden:
         if not requirement or not requirement.strip():
             raise ValueError("Requirement must be a non-empty string")
         
-        # Try MCP-enhanced story creation first
-        if self.mcp_enabled and self.mcp_client:
-            try:
-                mcp_result = await self.use_mcp_tool("create_user_story", {
-                    "requirement": requirement,
-                    "include_acceptance_criteria": True,
-                    "include_stakeholder_analysis": True,
-                    "include_business_value": True
-                })
-                
-                if mcp_result:
-                    logging.info("MCP-enhanced user story creation completed")
-                    story = mcp_result.get("story", "")
-                    story += "\n\n[MCP Enhanced] - User story enhanced with MCP tools"
-                    
-                    # Use product-specific MCP tools for additional enhancement
-                    if self.mcp_enabled:
-                        try:
-                            story_data = {
-                                "story": story,
-                                "acceptance_criteria": mcp_result.get("acceptance_criteria", []),
-                                "stakeholders": mcp_result.get("stakeholders", []),
-                                "business_goals": mcp_result.get("business_goals", [])
-                            }
-                            product_enhanced = await self.use_product_specific_mcp_tools(story_data)
-                            if product_enhanced:
-                                story += "\n\n🔧 Product Enhancements:"
-                                for key, value in product_enhanced.items():
-                                    story += f"\n- {key}: {value}"
-                        except Exception as e:
-                            logging.warning(f"Product-specific MCP tools failed: {e}")
-                    
-                    return story
-                else:
-                    logging.warning("MCP story creation failed, using local creation")
-                    return create_user_story(requirement)
-            except Exception as e:
-                logging.warning(f"MCP story creation failed: {e}, using local creation")
-                return create_user_story(requirement)
-        else:
-            return create_user_story(requirement)
+        # Use MCP tools for enhanced story creation
+        product_data = {
+            "requirement": requirement,
+            "user_type": "end_user",
+            "story_type": "feature",
+            "priority": "medium",
+            "acceptance_criteria": True,
+            "product_name": "BMAD",
+            "vision_type": "strategic",
+            "timeframe": "long_term",
+            "stakeholders": ["developers", "users", "stakeholders"],
+            "backlog_items": [],
+            "prioritization_method": "value_effort",
+            "sprint_planning": True,
+            "refinement": True,
+            "analysis_type": "comprehensive",
+            "engagement_strategy": True,
+            "communication_plan": True
+        }
+        
+        enhanced_data = await self.use_product_specific_mcp_tools(product_data)
+        
+        # Create base story (local fallback if MCP not available)
+        story = create_user_story(requirement)
+        
+        # Add MCP enhanced data if available
+        if enhanced_data:
+            story += "\n\n[MCP Enhanced] - User story enhanced with MCP tools"
+            story += "\n\n🔧 Product Enhancements:"
+            for key, value in enhanced_data.items():
+                story += f"\n- {key}: {value}"
+        
+        return story
 
     def show_vision(self):
         """Show the BMAD vision."""
