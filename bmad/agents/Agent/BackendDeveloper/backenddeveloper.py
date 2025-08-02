@@ -24,6 +24,7 @@ from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 from integrations.prefect.prefect_workflow import PrefectWorkflowOrchestrator
 from integrations.slack.slack_notify import send_slack_message
 from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
+from bmad.core.mcp import get_mcp_client, get_framework_mcp_integration, initialize_framework_mcp_integration
 
 
 # Configure logging
@@ -43,6 +44,11 @@ class BackendDeveloperAgent:
         self.framework_manager = get_framework_templates_manager()
         self.backend_development_template = self.framework_manager.get_template('backend_development')
         self.lessons_learned = []
+        
+        # Initialize MCP integration
+        self.mcp_client = None
+        self.mcp_integration = None
+        self.mcp_enabled = False
 
         # Set agent name
         self.agent_name = "BackendDeveloper"
@@ -99,7 +105,52 @@ class BackendDeveloperAgent:
             "success_rate": 0.0,
             "deployment_success_rate": 0.0
         }
-
+    
+    async def initialize_mcp(self):
+        """Initialize MCP integration."""
+        try:
+            self.mcp_client = get_mcp_client()
+            await self.mcp_client.connect()
+            
+            self.mcp_integration = get_framework_mcp_integration()
+            await self.mcp_integration.initialize()
+            
+            self.mcp_enabled = True
+            logger.info("MCP integration initialized successfully for BackendDeveloper")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to initialize MCP integration: {e}")
+            self.mcp_enabled = False
+            return False
+    
+    async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Use MCP tool for enhanced functionality."""
+        if not self.mcp_enabled or not self.mcp_integration:
+            logger.warning("MCP integration not available")
+            return None
+        
+        try:
+            # Create context for the tool call
+            context = await self.mcp_client.create_context(
+                user_id="backend_developer",
+                agent_id=self.agent_name,
+                project_id="backend_development"
+            )
+            
+            # Call the framework tool
+            response = await self.mcp_integration.call_framework_tool(tool_name, parameters, context)
+            
+            if response.success:
+                logger.info(f"MCP tool {tool_name} executed successfully")
+                return response.data
+            else:
+                logger.error(f"MCP tool {tool_name} failed: {response.error}")
+                return None
+                
+        except Exception as e:
+            logger.error(f"Error using MCP tool {tool_name}: {e}")
+            return None
+    
     def _validate_input(self, value: Any, expected_type: type, param_name: str) -> None:
         """Validate input parameters with type checking."""
         if not isinstance(value, expected_type):
@@ -343,7 +394,7 @@ BackendDeveloper Agent Commands:
         for i, deploy in enumerate(self.deployment_history[-10:], 1):
             print(f"{i}. {deploy}")
 
-    def build_api(self, endpoint: str = "/api/v1/users") -> Dict[str, Any]:
+    async def build_api(self, endpoint: str = "/api/v1/users") -> Dict[str, Any]:
         """Build API endpoint with comprehensive validation and error handling."""
         try:
             self._validate_endpoint(endpoint)
@@ -365,6 +416,34 @@ BackendDeveloper Agent Commands:
                 "security": "enabled",
                 "rate_limiting": "enabled"
             }
+            
+            # Use MCP tools for enhanced functionality if available
+            if self.mcp_enabled:
+                # Code analysis
+                code_analysis_result = await self.use_mcp_tool("code_analysis", {
+                    "code": f"def handle_{endpoint.replace('/', '_').replace('-', '_')}():\n    return {{'status': 'success'}}",
+                    "language": "python",
+                    "analysis_type": "quality"
+                })
+                
+                if code_analysis_result:
+                    result["code_quality"] = {
+                        "score": code_analysis_result.get("score", 0),
+                        "issues": code_analysis_result.get("issues", []),
+                        "recommendations": code_analysis_result.get("recommendations", [])
+                    }
+                
+                # Test generation
+                test_result = await self.use_mcp_tool("test_generation", {
+                    "code": f"def test_{endpoint.replace('/', '_').replace('-', '_')}():\n    pass",
+                    "language": "python",
+                    "framework": "pytest",
+                    "test_type": "unit"
+                })
+                
+                if test_result:
+                    result["tests"] = test_result.get("tests", [])
+                    result["test_coverage"] = test_result.get("coverage", 0)
 
             # Add to history
             api_entry = f"{result['timestamp']}: {result['method']} {endpoint} - Status: {result['status']}"
