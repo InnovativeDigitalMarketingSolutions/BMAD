@@ -500,7 +500,8 @@ class TestAskOpenAIWithConfidence:
     @patch('requests.post')
     @patch('bmad.agents.core.data.redis_cache.cache.get')
     @patch('bmad.agents.core.data.redis_cache.cache.set')
-    def test_logprobs_integration(self, mock_cache_set, mock_cache_get, mock_post, mock_file_cache_get):
+    @pytest.mark.asyncio
+    async def test_logprobs_integration(self, mock_cache_set, mock_cache_get, mock_post, mock_file_cache_get):
         """Test logprobs integration with cache testing."""
         mock_file_cache_get.return_value = None
         mock_cache_get.return_value = None
@@ -612,7 +613,10 @@ class TestLLMClientIntegration:
     @patch('bmad.agents.core.ai.llm_client._file_cache_get')
     @patch('requests.post')
     @patch('bmad.agents.core.data.redis_cache.cache.get')
-    def test_confidence_scoring_workflow(self, mock_cache_get, mock_post, mock_file_cache_get):
+    @pytest.mark.asyncio
+    async @pytest.mark.asyncio
+    async @pytest.mark.asyncio
+    async def test_confidence_scoring_workflow(self, mock_cache_get, mock_post, mock_file_cache_get):
         """Test confidence scoring workflow integration."""
         mock_file_cache_get.return_value = None
         mock_cache_get.return_value = None

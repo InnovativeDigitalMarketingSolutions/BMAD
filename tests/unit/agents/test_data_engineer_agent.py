@@ -26,9 +26,10 @@ class TestDataEngineerAgent:
         assert hasattr(agent, 'template_paths')
         assert hasattr(agent, 'data_paths')
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Pipeline History\n\n- Pipeline 1\n- Pipeline 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Pipeline Historynn- Pipeline 1n- Pipeline 2")
     @patch('pathlib.Path.exists', return_value=True)
-    def test_load_pipeline_history_success(self, mock_exists, mock_file, agent):
+    @pytest.mark.asyncio
+    async def test_load_pipeline_history_success(self, mock_exists, mock_file, agent):
         """Test successful pipeline history loading."""
         agent.pipeline_history = []  # Reset history
         agent._load_pipeline_history()
@@ -51,9 +52,10 @@ class TestDataEngineerAgent:
         agent._save_pipeline_history()
         mock_file.assert_called()
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Quality History\n\n- Quality 1\n- Quality 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Quality Historynn- Quality 1n- Quality 2")
     @patch('pathlib.Path.exists', return_value=True)
-    def test_load_quality_history_success(self, mock_exists, mock_file, agent):
+    @pytest.mark.asyncio
+    async def test_load_quality_history_success(self, mock_exists, mock_file, agent):
         """Test successful quality history loading."""
         agent.quality_history = []  # Reset history
         agent._load_quality_history()
@@ -78,13 +80,13 @@ class TestDataEngineerAgent:
 
     def test_show_help(self, agent, capsys):
         """Test show_help method."""
-        agent.show_help()
+        await agent.show_help()
         captured = capsys.readouterr()
         assert "Data Engineer Agent Commands:" in captured.out
         assert "data-quality-check" in captured.out
         assert "explain-pipeline" in captured.out
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Best Practices\n\nTest content")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Best PracticesnnTest content")
     @patch('pathlib.Path.exists', return_value=True)
     def test_show_resource_best_practices(self, mock_exists, mock_file, agent, capsys):
         """Test show_resource method for best-practices."""
@@ -112,7 +114,8 @@ class TestDataEngineerAgent:
         captured = capsys.readouterr()
         assert "No pipeline history available." in captured.out
 
-    def test_show_pipeline_history_with_data(self, agent, capsys):
+    @pytest.mark.asyncio
+    async def test_show_pipeline_history_with_data(self, agent, capsys):
         """Test show_pipeline_history with data."""
         agent.pipeline_history = ["Pipeline 1", "Pipeline 2"]
         agent.show_pipeline_history()
@@ -127,7 +130,8 @@ class TestDataEngineerAgent:
         captured = capsys.readouterr()
         assert "No quality check history available." in captured.out
 
-    def test_show_quality_history_with_data(self, agent, capsys):
+    @pytest.mark.asyncio
+    async def test_show_quality_history_with_data(self, agent, capsys):
         """Test show_quality_history with data."""
         agent.quality_history = ["Quality 1", "Quality 2"]
         agent.show_quality_history()
@@ -245,7 +249,8 @@ class TestDataEngineerAgent:
     @patch('bmad.agents.core.communication.message_bus.publish')
     @patch('bmad.agents.core.data.supabase_context.save_context')
     @patch('bmad.agents.core.data.supabase_context.get_context')
-    def test_collaborate_example(self, mock_get_context, mock_save_context, mock_publish, agent):
+    @pytest.mark.asyncio
+    async def test_collaborate_example(self, mock_get_context, mock_save_context, mock_publish, agent):
         """Test collaborate_example method."""
         mock_get_context.return_value = {"data_projects": ["Project1"]}
         mock_save_context.return_value = None
@@ -253,7 +258,7 @@ class TestDataEngineerAgent:
         # Mock the entire collaborate_example method to avoid external calls
         with patch.object(agent, 'collaborate_example') as mock_collaborate:
             mock_collaborate.return_value = None
-            agent.collaborate_example()
+            await agent.collaborate_example()
         
         # Verify the method was called
         mock_collaborate.assert_called_once()
@@ -275,7 +280,7 @@ class TestDataEngineerAgent:
         # Mock the entire run method to avoid event subscription issues
         with patch.object(agent, 'run') as mock_run:
             mock_run.return_value = None
-            agent.run()
+            await agent.run()
         
         # Verify the method was called
         mock_run.assert_called_once()
@@ -284,17 +289,18 @@ class TestDataEngineerAgent:
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
     @patch('bmad.agents.core.communication.message_bus.publish')
     @pytest.mark.asyncio
+    @pytest.mark.asyncio
     async def test_complete_data_engineering_workflow(self, mock_publish, mock_monitor, agent):
         """Test complete data engineering workflow from quality check to monitoring."""
         mock_monitor_instance = MagicMock()
         mock_monitor.return_value = mock_monitor_instance
 
         # Run data quality check
-        quality_result = agent.data_quality_check("Test data")
+        quality_result = await agent.data_quality_check("Test data")
         assert quality_result["check_type"] == "Data Quality Assessment"
 
         # Explain pipeline
-        explanation_result = agent.explain_pipeline("Test ETL pipeline")
+        explanation_result = await agent.explain_pipeline("Test ETL pipeline")
         assert explanation_result["explanation_type"] == "ETL Pipeline Analysis"
 
         # Build pipeline
@@ -302,7 +308,7 @@ class TestDataEngineerAgent:
         assert build_result["pipeline_name"] == "Test Pipeline"
 
         # Monitor pipeline
-        monitor_result = agent.monitor_pipeline("pipeline_001")
+        monitor_result = await agent.monitor_pipeline("pipeline_001")
         assert monitor_result["pipeline_id"] == "pipeline_001"
 
         # Verify all methods were called successfully
@@ -657,7 +663,8 @@ class TestDataEngineerAgentCLI:
     @patch('bmad.agents.Agent.DataEngineer.dataengineer.save_context')
     @patch('bmad.agents.Agent.DataEngineer.dataengineer.publish')
     @patch('bmad.agents.Agent.DataEngineer.dataengineer.get_context', return_value={"status": "active"})
-    def test_cli_test(self, mock_get_context, mock_publish, mock_save_context):
+    @pytest.mark.asyncio
+    async def test_cli_test(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.DataEngineer.dataengineer import main
         with patch('bmad.agents.Agent.DataEngineer.dataengineer.DataEngineerAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
@@ -669,7 +676,8 @@ class TestDataEngineerAgentCLI:
     @patch('bmad.agents.Agent.DataEngineer.dataengineer.save_context')
     @patch('bmad.agents.Agent.DataEngineer.dataengineer.publish')
     @patch('bmad.agents.Agent.DataEngineer.dataengineer.get_context', return_value={"status": "active"})
-    def test_cli_collaborate(self, mock_get_context, mock_publish, mock_save_context):
+    @pytest.mark.asyncio
+    async def test_cli_collaborate(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.DataEngineer.dataengineer import main
         with patch('bmad.agents.Agent.DataEngineer.dataengineer.DataEngineerAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
@@ -681,7 +689,8 @@ class TestDataEngineerAgentCLI:
     @patch('bmad.agents.Agent.DataEngineer.dataengineer.save_context')
     @patch('bmad.agents.Agent.DataEngineer.dataengineer.publish')
     @patch('bmad.agents.Agent.DataEngineer.dataengineer.get_context', return_value={"status": "active"})
-    def test_cli_run(self, mock_get_context, mock_publish, mock_save_context):
+    @pytest.mark.asyncio
+    async def test_cli_run(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.DataEngineer.dataengineer import main
         with patch('bmad.agents.Agent.DataEngineer.dataengineer.DataEngineerAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value

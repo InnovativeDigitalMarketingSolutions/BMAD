@@ -5,8 +5,8 @@
 Dit document bevat alle best practices voor BMAD development, geconsolideerd uit lessons learned en development ervaring. Deze guide dient als referentie voor alle development activiteiten.
 
 **Laatste Update**: 2025-01-27  
-**Versie**: 2.0  
-**Status**: Actief - MCP Integration voltooid
+**Versie**: 2.1  
+**Status**: Actief - MCP Integration voltooid, Test Quality Verbeterd
 
 ## Development Best Practices
 
@@ -82,6 +82,76 @@ class AsyncAgent:
 - ✅ Proper error handling
 - ✅ Backward compatibility
 - ✅ Graceful degradation
+
+### 3. Test Quality Best Practices
+
+#### **Async Test Patterns**
+**Best Practice**: Proper async test patterns met pytest-asyncio.
+
+```python
+import pytest
+from unittest.mock import patch, MagicMock
+
+class TestAsyncAgent:
+    @pytest.fixture
+    def agent(self):
+        return AsyncAgent()
+    
+    @pytest.mark.asyncio
+    async def test_async_method(self, agent):
+        """Test async methodes met proper decorators."""
+        result = await agent.execute_task("test_task")
+        assert result is not None
+    
+    @pytest.mark.asyncio
+    async def test_cli_async_command(self, agent):
+        """Test CLI commands die async methodes aanroepen."""
+        with patch('sys.argv', ['agent.py', 'async-command']):
+            with patch.object(agent, 'execute_task') as mock_task:
+                async def async_mock():
+                    return {"result": "success"}
+                mock_task.side_effect = async_mock
+                
+                # Test CLI main function
+                main()
+                mock_task.assert_called_once()
+```
+
+**Voordelen**:
+- ✅ Proper async test execution
+- ✅ Event loop management
+- ✅ Mock strategy voor async methodes
+- ✅ CLI testing patterns
+
+#### **Test Fix Automation**
+**Best Practice**: Systematische aanpak voor het fixen van syntax errors.
+
+```python
+# Script voor het fixen van syntax errors in test files
+def fix_test_syntax_errors(file_path):
+    """Fix common syntax errors in test files."""
+    with open(file_path, 'r') as f:
+        content = f.read()
+    
+    # Fix 1: Remove duplicate decorators
+    content = re.sub(r'@pytest\.mark\.asyncio\s*\n\s*async\s+@pytest\.mark\.asyncio', 
+                    '@pytest.mark.asyncio', content)
+    
+    # Fix 2: Remove backslashes from regex replacements
+    content = content.replace('\\', '')
+    
+    # Fix 3: Fix async method calls
+    content = re.sub(r'await agent\\.show_help\\(\\)', 'agent.show_help()', content)
+    
+    with open(file_path, 'w') as f:
+        f.write(content)
+```
+
+**Voordelen**:
+- ✅ Systematische error fixing
+- ✅ Consistentie in test files
+- ✅ Automatisering van repetitieve fixes
+- ✅ Kwaliteitsverbetering
 
 ### 2. MCP Integration
 

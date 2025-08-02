@@ -26,9 +26,10 @@ class TestRetrospectiveAgent:
         assert hasattr(agent, 'template_paths')
         assert hasattr(agent, 'data_paths')
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Retrospective History\n\n- Sprint 15 Retrospective\n- Sprint 14 Retrospective")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Retrospective Historynn- Sprint 15 Retrospectiven- Sprint 14 Retrospective")
     @patch('pathlib.Path.exists', return_value=True)
-    def test_load_retro_history_success(self, mock_exists, mock_file, agent):
+    @pytest.mark.asyncio
+    async def test_load_retro_history_success(self, mock_exists, mock_file, agent):
         """Test successful retrospective history loading."""
         agent.retro_history = []  # Reset history
         agent._load_retro_history()
@@ -51,9 +52,10 @@ class TestRetrospectiveAgent:
         agent._save_retro_history()
         mock_file.assert_called()
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Action History\n\n- Action 1: Improve communication\n- Action 2: Update documentation")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Action Historynn- Action 1: Improve communicationn- Action 2: Update documentation")
     @patch('pathlib.Path.exists', return_value=True)
-    def test_load_action_history_success(self, mock_exists, mock_file, agent):
+    @pytest.mark.asyncio
+    async def test_load_action_history_success(self, mock_exists, mock_file, agent):
         """Test successful action history loading."""
         agent.action_history = []  # Reset history
         agent._load_action_history()
@@ -78,13 +80,13 @@ class TestRetrospectiveAgent:
 
     def test_show_help(self, agent, capsys):
         """Test show_help method."""
-        agent.show_help()
+        await agent.show_help()
         captured = capsys.readouterr()
         assert "Retrospective Agent Commands:" in captured.out
         assert "conduct-retrospective" in captured.out
         assert "analyze-feedback" in captured.out
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Best Practices\n\nTest content")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Best PracticesnnTest content")
     @patch('pathlib.Path.exists', return_value=True)
     def test_show_resource_best_practices(self, mock_exists, mock_file, agent, capsys):
         """Test show_resource method for best-practices."""
@@ -112,7 +114,8 @@ class TestRetrospectiveAgent:
         captured = capsys.readouterr()
         assert "No retrospective history available." in captured.out
 
-    def test_show_retro_history_with_data(self, agent, capsys):
+    @pytest.mark.asyncio
+    async def test_show_retro_history_with_data(self, agent, capsys):
         """Test show_retro_history with data."""
         agent.retro_history = ["Sprint 15 Retrospective", "Sprint 14 Retrospective"]
         agent.show_retro_history()
@@ -127,7 +130,8 @@ class TestRetrospectiveAgent:
         captured = capsys.readouterr()
         assert "No action history available." in captured.out
 
-    def test_show_action_history_with_data(self, agent, capsys):
+    @pytest.mark.asyncio
+    async def test_show_action_history_with_data(self, agent, capsys):
         """Test show_action_history with data."""
         agent.action_history = ["Action 1: Improve communication", "Action 2: Update documentation"]
         agent.show_action_history()
@@ -136,6 +140,7 @@ class TestRetrospectiveAgent:
         assert "Action 1: Improve communication" in captured.out
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
+    @pytest.mark.asyncio
     @pytest.mark.asyncio
     async def test_conduct_retrospective(self, mock_monitor, agent):
         """Test conduct_retrospective method."""
@@ -156,7 +161,9 @@ class TestRetrospectiveAgent:
         assert result["agent"] == "RetrospectiveAgent"
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
-    def test_analyze_feedback(self, mock_monitor, agent):
+    @pytest.mark.asyncio
+    @pytest.mark.asyncio
+    async def test_analyze_feedback(self, mock_monitor, agent):
         """Test analyze_feedback method."""
         mock_monitor_instance = MagicMock()
         mock_monitor.return_value = mock_monitor_instance
@@ -250,7 +257,8 @@ class TestRetrospectiveAgent:
     @patch('bmad.agents.core.communication.message_bus.publish')
     @patch('bmad.agents.core.data.supabase_context.save_context')
     @patch('bmad.agents.core.data.supabase_context.get_context')
-    def test_collaborate_example(self, mock_get_context, mock_save_context, mock_publish, agent):
+    @pytest.mark.asyncio
+    async def test_collaborate_example(self, mock_get_context, mock_save_context, mock_publish, agent):
         """Test collaborate_example method."""
         mock_get_context.return_value = {"retrospective_projects": ["Project1"]}
         mock_save_context.return_value = None
@@ -258,7 +266,7 @@ class TestRetrospectiveAgent:
         # Mock the entire collaborate_example method to avoid Supabase API calls
         with patch.object(agent, 'collaborate_example') as mock_collaborate:
             mock_collaborate.return_value = None
-            agent.collaborate_example()
+            await agent.collaborate_example()
         
         # Verify the method was called
         mock_collaborate.assert_called_once()
@@ -307,7 +315,9 @@ class TestRetrospectiveAgent:
         # Verify the method was called
         mock_generate.assert_called_once()
 
-    def test_on_retro_feedback(self, agent):
+    @pytest.mark.asyncio
+    @pytest.mark.asyncio
+    async def test_on_retro_feedback(self, agent):
         """Test on_retro_feedback method."""
         test_event = {"sprint_name": "Sprint 16", "feedback": ["Great communication"]}
         result = agent.on_retro_feedback(test_event)
@@ -330,7 +340,7 @@ class TestRetrospectiveAgent:
         # Mock the entire run method to avoid Supabase API calls
         with patch.object(agent, 'run') as mock_run:
             mock_run.return_value = None
-            agent.run()
+            await agent.run()
         
         # Verify the method was called
         mock_run.assert_called_once()
@@ -342,17 +352,20 @@ class TestRetrospectiveAgent:
         with pytest.raises(TypeError):
             await agent.conduct_retrospective(123, 8)
 
-    def test_analyze_feedback_invalid_input(self, agent):
+    @pytest.mark.asyncio
+    async def test_analyze_feedback_invalid_input(self, agent):
         """Test analyze_feedback with invalid input."""
         with pytest.raises(TypeError):
             agent.analyze_feedback("not a list")
 
-    def test_create_action_plan_invalid_input(self, agent):
+    @pytest.mark.asyncio
+    async def test_create_action_plan_invalid_input(self, agent):
         """Test create_action_plan with invalid input."""
         with pytest.raises(TypeError):
             agent.create_action_plan("not a dict")
 
-    def test_track_improvements_invalid_input(self, agent):
+    @pytest.mark.asyncio
+    async def test_track_improvements_invalid_input(self, agent):
         """Test track_improvements with invalid input."""
         with pytest.raises(TypeError):
             agent.track_improvements(123)
@@ -360,6 +373,7 @@ class TestRetrospectiveAgent:
     # Integration workflow test
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
     @patch('bmad.agents.core.communication.message_bus.publish')
+    @pytest.mark.asyncio
     @pytest.mark.asyncio
     async def test_complete_retrospective_workflow(self, mock_publish, mock_monitor, agent):
         """Test complete retrospective workflow from conduct to tracking."""
@@ -371,15 +385,15 @@ class TestRetrospectiveAgent:
         assert retro_result["status"] == "completed"
 
         # Analyze feedback
-        feedback_result = agent.analyze_feedback(["Good communication", "Need better documentation"])
+        feedback_result = await agent.analyze_feedback(["Good communication", "Need better documentation"])
         assert "feedback_analysis" in feedback_result
 
         # Create action plan
-        action_plan_result = agent.create_action_plan(retro_result)
+        action_plan_result = await agent.create_action_plan(retro_result)
         assert "action_plan" in action_plan_result
 
         # Track improvements
-        improvement_result = agent.track_improvements("Sprint 16")
+        improvement_result = await agent.track_improvements("Sprint 16")
         assert "improvement_metrics" in improvement_result
         
         # Verify that all methods were called successfully
@@ -531,12 +545,12 @@ class TestRetrospectiveAgent:
 
     def test_analyze_feedback_invalid_feedback_type(self, agent):
         """Test analyze_feedback with invalid feedback type."""
-        with pytest.raises(TypeError, match="feedback_list\\[0\\] must be a string"):
+        with pytest.raises(TypeError, match="feedback_list[0] must be a string"):
             agent.analyze_feedback([123, "valid feedback"])
 
     def test_analyze_feedback_empty_feedback_item(self, agent):
         """Test analyze_feedback with empty feedback item."""
-        with pytest.raises(ValueError, match="feedback_list\\[0\\] cannot be empty"):
+        with pytest.raises(ValueError, match="feedback_list[0] cannot be empty"):
             agent.analyze_feedback(["", "valid feedback"])
 
     def test_track_improvements_empty_sprint_name(self, agent):
@@ -634,7 +648,8 @@ class TestRetrospectiveAgentCLI:
     @patch('bmad.agents.Agent.Retrospective.retrospective.save_context')
     @patch('bmad.agents.Agent.Retrospective.retrospective.publish')
     @patch('bmad.agents.Agent.Retrospective.retrospective.get_context', return_value={"status": "active"})
-    def test_cli_conduct_retrospective(self, mock_get_context, mock_publish, mock_save_context):
+    @pytest.mark.asyncio
+    async def test_cli_conduct_retrospective(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.Retrospective.retrospective import main
         with patch('bmad.agents.Agent.Retrospective.retrospective.RetrospectiveAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
@@ -647,7 +662,9 @@ class TestRetrospectiveAgentCLI:
     @patch('bmad.agents.Agent.Retrospective.retrospective.save_context')
     @patch('bmad.agents.Agent.Retrospective.retrospective.publish')
     @patch('bmad.agents.Agent.Retrospective.retrospective.get_context', return_value={"status": "active"})
-    def test_cli_analyze_feedback(self, mock_get_context, mock_publish, mock_save_context):
+    @pytest.mark.asyncio
+    @pytest.mark.asyncio
+    async def test_cli_analyze_feedback(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.Retrospective.retrospective import main
         with patch('bmad.agents.Agent.Retrospective.retrospective.RetrospectiveAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
@@ -743,7 +760,8 @@ class TestRetrospectiveAgentCLI:
     @patch('bmad.agents.Agent.Retrospective.retrospective.save_context')
     @patch('bmad.agents.Agent.Retrospective.retrospective.publish')
     @patch('bmad.agents.Agent.Retrospective.retrospective.get_context', return_value={"status": "active"})
-    def test_cli_test(self, mock_get_context, mock_publish, mock_save_context):
+    @pytest.mark.asyncio
+    async def test_cli_test(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.Retrospective.retrospective import main
         with patch('bmad.agents.Agent.Retrospective.retrospective.RetrospectiveAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
@@ -755,7 +773,8 @@ class TestRetrospectiveAgentCLI:
     @patch('bmad.agents.Agent.Retrospective.retrospective.save_context')
     @patch('bmad.agents.Agent.Retrospective.retrospective.publish')
     @patch('bmad.agents.Agent.Retrospective.retrospective.get_context', return_value={"status": "active"})
-    def test_cli_collaborate(self, mock_get_context, mock_publish, mock_save_context):
+    @pytest.mark.asyncio
+    async def test_cli_collaborate(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.Retrospective.retrospective import main
         with patch('bmad.agents.Agent.Retrospective.retrospective.RetrospectiveAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
@@ -767,7 +786,8 @@ class TestRetrospectiveAgentCLI:
     @patch('bmad.agents.Agent.Retrospective.retrospective.save_context')
     @patch('bmad.agents.Agent.Retrospective.retrospective.publish')
     @patch('bmad.agents.Agent.Retrospective.retrospective.get_context', return_value={"status": "active"})
-    def test_cli_run(self, mock_get_context, mock_publish, mock_save_context):
+    @pytest.mark.asyncio
+    async def test_cli_run(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.Retrospective.retrospective import main
         with patch('bmad.agents.Agent.Retrospective.retrospective.RetrospectiveAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value

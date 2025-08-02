@@ -38,9 +38,10 @@ class TestMobileDeveloperAgent:
         assert hasattr(agent, 'template_paths')
         assert hasattr(agent, 'data_paths')
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Mobile App Development History\n\n- Test App 1\n- Test App 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Mobile App Development Historynn- Test App 1n- Test App 2")
     @patch('pathlib.Path.exists', return_value=True)
-    def test_load_app_history_success(self, mock_exists, mock_file, agent):
+    @pytest.mark.asyncio
+    async def test_load_app_history_success(self, mock_exists, mock_file, agent):
         """Test successful app history loading."""
         agent.app_history = []  # Reset history
         agent._load_app_history()
@@ -59,7 +60,8 @@ class TestMobileDeveloperAgent:
     @patch('builtins.open', new_callable=mock_open)
     @patch('pathlib.Path.mkdir')
     @patch('pathlib.Path.parent')
-    def test_save_app_history_success(self, mock_parent, mock_mkdir, mock_file, agent):
+    @pytest.mark.asyncio
+    async def test_save_app_history_success(self, mock_parent, mock_mkdir, mock_file, agent):
         """Test successful app history saving."""
         agent.app_history = ["App 1", "App 2", "App 3"]
         agent._save_app_history()
@@ -73,9 +75,10 @@ class TestMobileDeveloperAgent:
         agent.app_history = ["App 1"]
         agent._save_app_history()  # Should not raise exception
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Performance History\n\n- Performance 1\n- Performance 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Performance Historynn- Performance 1n- Performance 2")
     @patch('pathlib.Path.exists', return_value=True)
-    def test_load_performance_history_success(self, mock_exists, mock_file, agent):
+    @pytest.mark.asyncio
+    async def test_load_performance_history_success(self, mock_exists, mock_file, agent):
         """Test successful performance history loading."""
         agent.performance_history = []  # Reset history
         agent._load_performance_history()
@@ -85,7 +88,7 @@ class TestMobileDeveloperAgent:
 
     def test_show_help(self, agent, capsys):
         """Test show_help method."""
-        agent.show_help()
+        await agent.show_help()
         captured = capsys.readouterr()
         assert "MobileDeveloper Agent" in captured.out
         assert "create-app" in captured.out
@@ -94,7 +97,7 @@ class TestMobileDeveloperAgent:
     def test_show_resource_best_practices(self, agent, capsys):
         """Test show_resource with best-practices."""
         with patch('pathlib.Path.exists', return_value=True):
-            with patch('pathlib.Path.read_text', return_value="# Mobile Best Practices\n\n1. Use React Native"):
+            with patch('pathlib.Path.read_text', return_value="# Mobile Best Practicesnn1. Use React Native"):
                 agent.show_resource("best-practices")
                 captured = capsys.readouterr()
                 assert "Mobile Best Practices" in captured.out
@@ -244,7 +247,8 @@ class TestMobileDeveloperAgent:
 
     @patch('bmad.agents.core.communication.message_bus.publish')
     @patch('bmad.agents.core.data.supabase_context.save_context')
-    def test_test_app_integration(self, mock_save_context, mock_publish, agent):
+    @pytest.mark.asyncio
+    async def test_test_app_integration(self, mock_save_context, mock_publish, agent):
         """Test test_app method with integration testing."""
         result = agent.test_app("TestApp", "integration")
 
@@ -351,12 +355,13 @@ class TestMobileDeveloperAgent:
     @patch('bmad.agents.core.communication.message_bus.publish')
     @patch('bmad.agents.core.data.supabase_context.save_context')
     @patch('bmad.agents.core.data.supabase_context.get_context')
-    def test_collaborate_example(self, mock_get_context, mock_save_context, mock_publish, agent):
+    @pytest.mark.asyncio
+    async def test_collaborate_example(self, mock_get_context, mock_save_context, mock_publish, agent):
         """Test collaborate_example method."""
         # Mock the entire collaborate_example method to avoid Supabase API calls
         with patch.object(agent, 'collaborate_example') as mock_collaborate:
             mock_collaborate.return_value = None
-            agent.collaborate_example()
+            await agent.collaborate_example()
 
         # Verify the method was called
         mock_collaborate.assert_called_once()
@@ -382,10 +387,11 @@ class TestMobileDeveloperAgent:
         assert "TestApp" in captured.out
         assert "exported" in captured.out
 
-    def test_run_method(self, agent):
+    @pytest.mark.asyncio
+    async def test_run_method(self, agent):
         """Test run method."""
         with patch.object(agent, 'collaborate_example') as mock_collaborate:
-            agent.run()
+            await agent.run()
             mock_collaborate.assert_called_once()
 
 
@@ -444,30 +450,32 @@ class TestMobileDeveloperAgentIntegration:
 
     @patch('bmad.agents.core.communication.message_bus.publish')
     @patch('bmad.agents.core.data.supabase_context.save_context')
-    def test_complete_mobile_development_workflow(self, mock_save_context, mock_publish, agent):
+    @pytest.mark.asyncio
+    @pytest.mark.asyncio
+    async def test_complete_mobile_development_workflow(self, mock_save_context, mock_publish, agent):
         """Test complete mobile development workflow."""
         # 1. Create app
-        create_result = agent.create_app("WorkflowApp", "react-native", "business")
+        create_result = await agent.create_app("WorkflowApp", "react-native", "business")
         assert create_result["status"] == "success"
 
         # 2. Build component
-        component_result = agent.build_component("WorkflowButton", "react-native", "ui")
+        component_result = await agent.build_component("WorkflowButton", "react-native", "ui")
         assert component_result["status"] == "success"
 
         # 3. Optimize performance
-        optimize_result = agent.optimize_performance("WorkflowApp", "general")
+        optimize_result = await agent.optimize_performance("WorkflowApp", "general")
         assert optimize_result["status"] == "success"
 
         # 4. Test app
-        test_result = agent.test_app("WorkflowApp", "comprehensive")
+        test_result = await agent.test_app("WorkflowApp", "comprehensive")
         assert test_result["status"] == "success"
 
         # 5. Analyze performance
-        analyze_result = agent.analyze_performance("WorkflowApp", "comprehensive")
+        analyze_result = await agent.analyze_performance("WorkflowApp", "comprehensive")
         assert analyze_result["status"] == "success"
 
         # 6. Deploy app
-        deploy_result = agent.deploy_app("WorkflowApp", "app-store")
+        deploy_result = await agent.deploy_app("WorkflowApp", "app-store")
         assert deploy_result["status"] == "success"
 
         # Verify all events were published

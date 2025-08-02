@@ -50,10 +50,11 @@ class TestOrchestratorAgent:
 
     @patch('os.path.exists')
     @patch('os.makedirs')
-    def test_load_workflow_history_success(self, mock_makedirs, mock_exists, agent):
+    @pytest.mark.asyncio
+    async def test_load_workflow_history_success(self, mock_makedirs, mock_exists, agent):
         """Test successful loading of workflow history."""
         mock_exists.return_value = True
-        mock_content = "# Workflow History\n\n- 2025-07-31T08:14:22.179170: Workflow started - automated_deployment\n- 2025-07-31T08:15:30.123456: Workflow completed - feature_delivery"
+        mock_content = "# Workflow Historynn- 2025-07-31T08:14:22.179170: Workflow started - automated_deploymentn- 2025-07-31T08:15:30.123456: Workflow completed - feature_delivery"
         
         with patch('builtins.open', mock_open(read_data=mock_content)):
             agent.workflow_history = []  # Clear existing history
@@ -101,10 +102,11 @@ class TestOrchestratorAgent:
 
     @patch('os.path.exists')
     @patch('os.makedirs')
-    def test_load_orchestration_history_success(self, mock_makedirs, mock_exists, agent):
+    @pytest.mark.asyncio
+    async def test_load_orchestration_history_success(self, mock_makedirs, mock_exists, agent):
         """Test successful loading of orchestration history."""
         mock_exists.return_value = True
-        mock_content = "# Orchestration History\n\n- 2025-07-31T08:14:22.179170: Task assignment orchestration\n- 2025-07-31T08:15:30.123456: Resource allocation orchestration"
+        mock_content = "# Orchestration Historynn- 2025-07-31T08:14:22.179170: Task assignment orchestrationn- 2025-07-31T08:15:30.123456: Resource allocation orchestration"
         
         with patch('builtins.open', mock_open(read_data=mock_content)):
             agent.orchestration_history = []  # Clear existing history
@@ -153,7 +155,7 @@ class TestOrchestratorAgent:
 
     def test_show_help(self, agent, capsys):
         """Test show_help method."""
-        agent.show_help()
+        await agent.show_help()
         captured = capsys.readouterr()
         
         assert "Orchestrator Agent Commands:" in captured.out
@@ -166,7 +168,7 @@ class TestOrchestratorAgent:
     def test_show_resource_best_practices(self, mock_exists, agent, capsys):
         """Test show_resource with best practices."""
         mock_exists.return_value = True
-        mock_content = "# Orchestration Best Practices\n\n1. Always validate inputs\n2. Monitor workflows continuously\n3. Handle escalations promptly"
+        mock_content = "# Orchestration Best Practicesnn1. Always validate inputsn2. Monitor workflows continuouslyn3. Handle escalations promptly"
         
         with patch('builtins.open', mock_open(read_data=mock_content)):
             agent.show_resource("best-practices")
@@ -345,7 +347,8 @@ class TestOrchestratorAgent:
         with pytest.raises(ValueError, match="Format type must be 'md', 'csv', or 'json'"):
             agent.export_report("invalid")
 
-    def test_export_report_default_data(self, agent):
+    @pytest.mark.asyncio
+    async def test_export_report_default_data(self, agent):
         """Test export_report with default data."""
         with patch('builtins.open', new_callable=mock_open):
             agent.export_report("md")  # Should use default data
@@ -373,14 +376,15 @@ class TestOrchestratorAgent:
     @patch('bmad.agents.Agent.Orchestrator.orchestrator.save_context')
     @patch('bmad.agents.Agent.Orchestrator.orchestrator.get_context')
     @patch('bmad.agents.Agent.Orchestrator.orchestrator.send_slack_message')
-    def test_collaborate_example(self, mock_slack, mock_get_context, mock_save_context, mock_publish, agent):
+    @pytest.mark.asyncio
+    async def test_collaborate_example(self, mock_slack, mock_get_context, mock_save_context, mock_publish, agent):
         """Test collaborate_example method."""
         mock_publish.return_value = None
         mock_save_context.return_value = None
         mock_get_context.return_value = {"status": "active"}
         mock_slack.return_value = None
         
-        agent.collaborate_example()
+        await agent.collaborate_example()
         
         # Verify that publish was called at least once (workflow_started)
         assert mock_publish.call_count >= 1
@@ -438,7 +442,8 @@ class TestOrchestratorAgent:
             mock_publish.assert_called_once()
 
     @patch('bmad.agents.Agent.Orchestrator.orchestrator.ask_openai')
-    def test_intelligent_task_assignment_success(self, mock_ask_openai, agent):
+    @pytest.mark.asyncio
+    async def test_intelligent_task_assignment_success(self, mock_ask_openai, agent):
         """Test intelligent_task_assignment with successful LLM response."""
         mock_ask_openai.return_value = {"agent": "TestEngineer"}
         
@@ -456,7 +461,8 @@ class TestOrchestratorAgent:
         
         assert result == "ProductOwner"  # Default fallback
 
-    def test_intelligent_task_assignment_invalid_input(self, agent):
+    @pytest.mark.asyncio
+    async def test_intelligent_task_assignment_invalid_input(self, agent):
         """Test intelligent_task_assignment with invalid input."""
         with pytest.raises(ValueError, match="Task description must be a non-empty string"):
             agent.intelligent_task_assignment("")
@@ -726,8 +732,8 @@ class TestOrchestratorCLI:
 
     def setup_method(self):
         """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.Orchestrator.orchestrator.get_performance_monitor'), \
-             patch('bmad.agents.Agent.Orchestrator.orchestrator.get_advanced_policy_engine'), \
+        with patch('bmad.agents.Agent.Orchestrator.orchestrator.get_performance_monitor'), 
+             patch('bmad.agents.Agent.Orchestrator.orchestrator.get_advanced_policy_engine'), 
              patch('bmad.agents.Agent.Orchestrator.orchestrator.get_sprite_library'):
             self.agent = OrchestratorAgent()
 
@@ -742,7 +748,9 @@ class TestOrchestratorCLI:
     @patch('sys.argv', ['orchestrator.py', 'start-workflow', '--workflow', 'test_workflow'])
     @patch('builtins.print')
     @patch('bmad.agents.Agent.Orchestrator.orchestrator.OrchestratorAgent.start_workflow')
-    def test_cli_start_workflow(self, mock_start_workflow, mock_print):
+    @pytest.mark.asyncio
+    @pytest.mark.asyncio
+    async def test_cli_start_workflow(self, mock_start_workflow, mock_print):
         """Test CLI start-workflow command."""
         from bmad.agents.Agent.Orchestrator.orchestrator import main
         main()
@@ -826,7 +834,8 @@ class TestOrchestratorCLI:
 
     @patch('sys.argv', ['orchestrator.py', 'test'])
     @patch('builtins.print')
-    def test_cli_test(self, mock_print):
+    @pytest.mark.asyncio
+    async def test_cli_test(self, mock_print):
         """Test CLI test command."""
         from bmad.agents.Agent.Orchestrator.orchestrator import main
         main()
@@ -834,7 +843,8 @@ class TestOrchestratorCLI:
 
     @patch('sys.argv', ['orchestrator.py', 'collaborate'])
     @patch('builtins.print')
-    def test_cli_collaborate(self, mock_print):
+    @pytest.mark.asyncio
+    async def test_cli_collaborate(self, mock_print):
         """Test CLI collaborate command."""
         from bmad.agents.Agent.Orchestrator.orchestrator import main
         main()
@@ -842,7 +852,8 @@ class TestOrchestratorCLI:
 
     @patch('sys.argv', ['orchestrator.py', 'run'])
     @patch('builtins.print')
-    def test_cli_run(self, mock_print):
+    @pytest.mark.asyncio
+    async def test_cli_run(self, mock_print):
         """Test CLI run command."""
         from bmad.agents.Agent.Orchestrator.orchestrator import main
         main()
@@ -901,7 +912,9 @@ class TestOrchestratorCLI:
     @patch('sys.exit')
     @patch('builtins.print')
     @patch('bmad.agents.Agent.Orchestrator.orchestrator.OrchestratorAgent.start_workflow')
-    def test_cli_start_workflow_missing_workflow(self, mock_start_workflow, mock_print, mock_exit):
+    @pytest.mark.asyncio
+    @pytest.mark.asyncio
+    async def test_cli_start_workflow_missing_workflow(self, mock_start_workflow, mock_print, mock_exit):
         """Test CLI start-workflow command with missing workflow."""
         from bmad.agents.Agent.Orchestrator.orchestrator import main
         main()
@@ -912,7 +925,9 @@ class TestOrchestratorCLI:
     @patch('sys.exit')
     @patch('builtins.print')
     @patch('bmad.agents.Agent.Orchestrator.orchestrator.OrchestratorAgent.get_workflow_status')
-    def test_cli_show_workflow_status_missing_workflow(self, mock_get_workflow_status, mock_print, mock_exit):
+    @pytest.mark.asyncio
+    @pytest.mark.asyncio
+    async def test_cli_show_workflow_status_missing_workflow(self, mock_get_workflow_status, mock_print, mock_exit):
         """Test CLI show-workflow-status command with missing workflow."""
         from bmad.agents.Agent.Orchestrator.orchestrator import main
         main()

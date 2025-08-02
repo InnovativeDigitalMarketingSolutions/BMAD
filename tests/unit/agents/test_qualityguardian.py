@@ -46,20 +46,22 @@ class TestQualityGuardianAgent:
         assert agent.quality_thresholds["security_score"] == 90
         assert agent.quality_thresholds["performance_score"] == 85
 
-    def test_validate_input_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_input_success(self, agent):
         """Test successful input validation."""
         agent._validate_input("test", str, "test_param")
         agent._validate_input(42, int, "test_param")
         agent._validate_input(True, bool, "test_param")
 
-    def test_validate_input_failure(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_input_failure(self, agent):
         """Test input validation failure."""
         with pytest.raises(QualityValidationError, match="Invalid type for test_param"):
             agent._validate_input(42, str, "test_param")
 
     def test_show_help(self, agent, capsys):
         """Test show_help method."""
-        agent.show_help()
+        await agent\.show_help\()
         captured = capsys.readouterr()
         assert "QualityGuardian Agent Commands:" in captured.out
         assert "analyze-code-quality" in captured.out
@@ -69,7 +71,8 @@ class TestQualityGuardianAgent:
         assert "enforce-standards" in captured.out
         assert "quality-gate-check" in captured.out
 
-    def test_analyze_code_quality_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_analyze_code_quality_success(self, agent):
         """Test successful code quality analysis."""
         result = agent.analyze_code_quality("./test_path")
         
@@ -96,7 +99,8 @@ class TestQualityGuardianAgent:
         with pytest.raises(QualityValidationError, match="Invalid type for path"):
             agent.analyze_code_quality(123)
 
-    def test_monitor_test_coverage_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_monitor_test_coverage_success(self, agent):
         """Test successful test coverage monitoring."""
         result = agent.monitor_test_coverage(85)
         
@@ -121,7 +125,8 @@ class TestQualityGuardianAgent:
         with pytest.raises(QualityValidationError, match="Threshold must be between 0 and 100"):
             agent.monitor_test_coverage(-10)
 
-    def test_security_scan_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_security_scan_success(self, agent):
         """Test successful security scan."""
         result = agent.security_scan("*.py")
         
@@ -150,7 +155,8 @@ class TestQualityGuardianAgent:
         with pytest.raises(QualityValidationError, match="Invalid type for files"):
             agent.security_scan(123)
 
-    def test_performance_analysis_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_performance_analysis_success(self, agent):
         """Test successful performance analysis."""
         result = agent.performance_analysis("test_component")
         
@@ -177,7 +183,8 @@ class TestQualityGuardianAgent:
         with pytest.raises(QualityValidationError, match="Invalid type for component"):
             agent.performance_analysis(123)
 
-    def test_enforce_standards_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_enforce_standards_success(self, agent):
         """Test successful standards enforcement."""
         result = agent.enforce_standards("./test_path")
         
@@ -202,9 +209,10 @@ class TestQualityGuardianAgent:
         with pytest.raises(QualityValidationError, match="Invalid type for path"):
             agent.enforce_standards(123)
 
-    def test_quality_gate_check_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_quality_gate_check_success(self, agent):
         """Test successful quality gate check."""
-        result = agent.quality_gate_check(deployment=True)
+        result = await agent\.quality_gate_check\(deployment=True)
         
         assert result["deployment"] is True
         assert "all_gates_passed" in result
@@ -219,9 +227,10 @@ class TestQualityGuardianAgent:
     def test_quality_gate_check_invalid_deployment_type(self, agent):
         """Test quality gate check with invalid deployment type."""
         with pytest.raises(QualityValidationError, match="Invalid type for deployment"):
-            agent.quality_gate_check("invalid")
+            await agent\.quality_gate_check\("invalid")
 
-    def test_generate_quality_report_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_generate_quality_report_success(self, agent):
         """Test successful quality report generation."""
         result = agent.generate_quality_report("md")
         
@@ -242,7 +251,8 @@ class TestQualityGuardianAgent:
         with pytest.raises(QualityValidationError, match="Invalid type for format_type"):
             agent.generate_quality_report(123)
 
-    def test_suggest_improvements_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_suggest_improvements_success(self, agent):
         """Test successful improvement suggestions."""
         result = agent.suggest_improvements("code_quality")
         
@@ -383,10 +393,11 @@ class TestQualityGuardianAgent:
             assert "Template found:" in captured.out
             assert "Data file found:" in captured.out
 
-    def test_collaborate_example(self, agent, capsys):
+    @pytest.mark.asyncio
+    async def test_collaborate_example(self, agent, capsys):
         """Test collaborate_example method."""
         import asyncio
-        asyncio.run(agent.collaborate_example())
+        asyncio.run(await agent\.collaborate_example\())
         captured = capsys.readouterr()
         assert "QualityGuardian Agent Collaboration Example" in captured.out
         assert "Collaborating with TestEngineer Agent" in captured.out
@@ -408,7 +419,8 @@ class TestQualityGuardianAgent:
             agent.on_security_scan_completed(event)
             mock_scan.assert_called_once()
 
-    def test_on_deployment_requested_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_on_deployment_requested_success(self, agent):
         """Test on_deployment_requested event handler with successful gates."""
         event = {"type": "deployment_requested", "data": "test_data"}
         with patch.object(agent, 'quality_gate_check', return_value={"all_gates_passed": True}):
@@ -416,7 +428,8 @@ class TestQualityGuardianAgent:
                 agent.on_deployment_requested(event)
                 mock_publish.assert_called_once_with("quality_gates_passed", {"result": {"all_gates_passed": True}})
 
-    def test_on_deployment_requested_failure(self, agent):
+    @pytest.mark.asyncio
+    async def test_on_deployment_requested_failure(self, agent):
         """Test on_deployment_requested event handler with failed gates."""
         event = {"type": "deployment_requested", "data": "test_data"}
         with patch.object(agent, 'quality_gate_check', return_value={"all_gates_passed": False}):
@@ -424,10 +437,11 @@ class TestQualityGuardianAgent:
                 agent.on_deployment_requested(event)
                 mock_publish.assert_called_once_with("quality_gates_failed", {"reason": "Quality thresholds not met"})
 
-    def test_run_method(self, agent, capsys):
+    @pytest.mark.asyncio
+    async def test_run_method(self, agent, capsys):
         """Test run method."""
         with patch('bmad.agents.Agent.QualityGuardian.qualityguardian.subscribe') as mock_subscribe:
-            agent.run()
+            await agent\.run\()
             captured = capsys.readouterr()
             assert "Starting QualityGuardian Agent" in captured.out
             assert "QualityGuardian Agent is running and listening for events" in captured.out

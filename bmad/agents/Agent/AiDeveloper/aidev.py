@@ -910,7 +910,7 @@ AiDeveloper Agent Commands:
                 "error": str(e)
             }
 
-    def prompt_template(self):
+    async def prompt_template(self):
         """Generate AI prompt template with enhanced validation."""
         try:
             logger.info("Generating AI prompt template")
@@ -994,7 +994,7 @@ AiDeveloper Agent Commands:
             )
         )
 
-    def evaluate(self):
+    async def evaluate(self):
         """Evaluate AI model with enhanced validation and intelligence."""
         try:
             logger.info("Evaluating AI model")
@@ -1281,7 +1281,8 @@ def main():
             result = asyncio.run(agent.build_pipeline())
             print(json.dumps(result, indent=2))
         elif args.command == "prompt-template":
-            agent.prompt_template()
+            result = asyncio.run(agent.prompt_template())
+            print(json.dumps(result, indent=2))
         elif args.command == "vector-search":
             agent.vector_search()
         elif args.command == "ai-endpoint":

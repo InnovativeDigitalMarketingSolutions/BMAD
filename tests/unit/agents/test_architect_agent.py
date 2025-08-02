@@ -50,12 +50,12 @@ class TestArchitectAgentInitialization:
         """Test best_practices met bestaand bestand."""
         mock_content = "Test best practices content"
         
-        with patch('pathlib.Path.exists', return_value=True), \
-             patch('pathlib.Path.read_text', return_value=mock_content), \
+        with patch('pathlib.Path.exists', return_value=True), 
+             patch('pathlib.Path.read_text', return_value=mock_content), 
              patch('builtins.print') as mock_print:
             
             agent = ArchitectAgent()
-            agent.best_practices()
+            await agent.best_practices()
             
             # Test dat content getoond is
             mock_print.assert_called()
@@ -63,11 +63,11 @@ class TestArchitectAgentInitialization:
 
     def test_best_practices_without_file(self):
         """Test best_practices zonder bestand."""
-        with patch('pathlib.Path.exists', return_value=False), \
+        with patch('pathlib.Path.exists', return_value=False), 
              patch('builtins.print') as mock_print:
             
             agent = ArchitectAgent()
-            agent.best_practices()
+            await agent.best_practices()
             
             # Test dat error getoond is
             mock_print.assert_called()
@@ -77,7 +77,7 @@ class TestArchitectAgentInitialization:
         """Test changelog command."""
         with patch('builtins.print') as mock_print:
             agent = ArchitectAgent()
-            agent.changelog()
+            await agent.changelog()
             
             # Test dat changelog getoond is
             mock_print.assert_called()
@@ -86,7 +86,7 @@ class TestArchitectAgentInitialization:
         """Test list_resources command."""
         with patch('builtins.print') as mock_print:
             agent = ArchitectAgent()
-            agent.list_resources()
+            await agent.list_resources()
             
             # Test dat resources getoond zijn
             mock_print.assert_called()
@@ -95,22 +95,22 @@ class TestArchitectAgentInitialization:
         """Test test command."""
         with patch('builtins.print') as mock_print:
             agent = ArchitectAgent()
-            agent.test()
+            await agent.test()
             
             # Test dat test uitgevoerd is
             mock_print.assert_called()
 
     def test_collaborate_example(self):
         """Test collaborate_example command."""
-        with patch('builtins.print') as mock_print, \
-             patch('bmad.agents.Agent.Architect.architect.save_context') as mock_save, \
-             patch('bmad.agents.Agent.Architect.architect.get_context') as mock_get, \
+        with patch('builtins.print') as mock_print, 
+             patch('bmad.agents.Agent.Architect.architect.save_context') as mock_save, 
+             patch('bmad.agents.Agent.Architect.architect.get_context') as mock_get, 
              patch('bmad.agents.Agent.Architect.architect.publish') as mock_publish:
             
             mock_get.return_value = [{"test": "context"}]
             
             agent = ArchitectAgent()
-            agent.collaborate_example()
+            await agent.collaborate_example()
             
             # Test dat samenwerking getoond is
             mock_print.assert_called()
@@ -134,11 +134,11 @@ class TestArchitectAgentDesignMethods:
 
     def test_design_frontend(self):
         """Test design_frontend functionaliteit."""
-        with patch('bmad.agents.Agent.Architect.architect.ask_openai') as mock_llm, \
-             patch('builtins.print') as mock_print, \
-             patch('bmad.agents.Agent.Architect.architect.save_context') as mock_save, \
-             patch('bmad.agents.Agent.Architect.architect.get_context') as mock_get, \
-             patch('bmad.agents.Agent.Architect.architect.publish') as mock_publish, \
+        with patch('bmad.agents.Agent.Architect.architect.ask_openai') as mock_llm, 
+             patch('builtins.print') as mock_print, 
+             patch('bmad.agents.Agent.Architect.architect.save_context') as mock_save, 
+             patch('bmad.agents.Agent.Architect.architect.get_context') as mock_get, 
+             patch('bmad.agents.Agent.Architect.architect.publish') as mock_publish, 
              patch('builtins.input', return_value="1"):
             
             mock_llm.return_value = {
@@ -147,7 +147,7 @@ class TestArchitectAgentDesignMethods:
             }
             mock_get.return_value = [{"stories": "Test user stories"}]
             
-            self.agent.design_frontend()
+            self.await agent.design_frontend()
             
             # Test dat LLM aangeroepen is
             mock_llm.assert_called()
@@ -163,7 +163,7 @@ class TestArchitectAgentDesignMethods:
 
     def test_design_system(self):
         """Test design_system functionaliteit."""
-        with patch('bmad.agents.Agent.Architect.architect.ask_openai') as mock_llm, \
+        with patch('bmad.agents.Agent.Architect.architect.ask_openai') as mock_llm, 
              patch('builtins.print') as mock_print:
             
             mock_llm.return_value = {
@@ -171,7 +171,7 @@ class TestArchitectAgentDesignMethods:
                 "llm_confidence": 0.90
             }
             
-            self.agent.design_system()
+            self.await agent.design_system()
             
             # Test dat LLM aangeroepen is
             mock_llm.assert_called()
@@ -181,7 +181,7 @@ class TestArchitectAgentDesignMethods:
 
     def test_tech_stack(self):
         """Test tech_stack functionaliteit."""
-        with patch('bmad.agents.Agent.Architect.architect.ask_openai') as mock_llm, \
+        with patch('bmad.agents.Agent.Architect.architect.ask_openai') as mock_llm, 
              patch('builtins.print') as mock_print:
             
             mock_llm.return_value = {
@@ -189,7 +189,7 @@ class TestArchitectAgentDesignMethods:
                 "llm_confidence": 0.88
             }
             
-            self.agent.tech_stack()
+            self.await agent.tech_stack()
             
             # Test dat LLM aangeroepen is
             mock_llm.assert_called()
@@ -218,8 +218,8 @@ class TestArchitectAgentDesignMethods:
 
     def test_start_conversation(self):
         """Test start_conversation functionaliteit."""
-        with patch('bmad.agents.Agent.Architect.architect.ask_openai') as mock_llm, \
-             patch('builtins.print') as mock_print, \
+        with patch('bmad.agents.Agent.Architect.architect.ask_openai') as mock_llm, 
+             patch('builtins.print') as mock_print, 
              patch('builtins.input', side_effect=["help", "quit"]):
             
             mock_llm.return_value = {
@@ -246,54 +246,54 @@ class TestArchitectAgentRunMethod:
     def test_run_design_frontend(self):
         """Test run met design-frontend command."""
         with patch.object(self.agent, 'design_frontend') as mock_design:
-            self.agent.run("design-frontend")
+            self.await agent.run("design-frontend")
             mock_design.assert_called_once()
 
     def test_run_design_system(self):
         """Test run met design-system command."""
         with patch.object(self.agent, 'design_system') as mock_design:
-            self.agent.run("design-system")
+            self.await agent.run("design-system")
             mock_design.assert_called_once()
 
     def test_run_tech_stack(self):
         """Test run met tech-stack command."""
         with patch.object(self.agent, 'tech_stack') as mock_tech:
-            self.agent.run("tech-stack")
+            self.await agent.run("tech-stack")
             mock_tech.assert_called_once()
 
     def test_run_best_practices(self):
         """Test run met best-practices command."""
         with patch.object(self.agent, 'best_practices') as mock_best:
-            self.agent.run("best-practices")
+            self.await agent.run("best-practices")
             mock_best.assert_called_once()
 
     def test_run_changelog(self):
         """Test run met changelog command."""
         with patch.object(self.agent, 'changelog') as mock_changelog:
-            self.agent.run("changelog")
+            self.await agent.run("changelog")
             mock_changelog.assert_called_once()
 
     def test_run_list_resources(self):
         """Test run met list-resources command."""
         with patch.object(self.agent, 'list_resources') as mock_list:
-            self.agent.run("list-resources")
+            self.await agent.run("list-resources")
             mock_list.assert_called_once()
 
     def test_run_test(self):
         """Test run met test command."""
         with patch.object(self.agent, 'test') as mock_test:
-            self.agent.run("test")
+            self.await agent.run("test")
             mock_test.assert_called_once()
 
     def test_run_collaborate_example(self):
         """Test run collaborate_example command."""
-        with patch('bmad.agents.Agent.Architect.architect.save_context') as mock_save, \
-             patch('bmad.agents.Agent.Architect.architect.get_context') as mock_get, \
+        with patch('bmad.agents.Agent.Architect.architect.save_context') as mock_save, 
+             patch('bmad.agents.Agent.Architect.architect.get_context') as mock_get, 
              patch('bmad.agents.Agent.Architect.architect.publish') as mock_publish:
             
             mock_get.return_value = [{"test": "context"}]
             
-            result = self.agent.run("collaborate_example")
+            result = self.await agent.run("collaborate_example")
             
             # Test dat command uitgevoerd is
             assert result is None
@@ -310,14 +310,14 @@ class TestArchitectAgentRunMethod:
     def test_run_help(self):
         """Test run met help command."""
         with patch.object(self.agent, 'show_help') as mock_help:
-            self.agent.run("help")
+            self.await agent.run("help")
             mock_help.assert_called_once()
 
     def test_run_unknown_command(self):
         """Test run met onbekend commando."""
-        with patch('builtins.print') as mock_print, \
+        with patch('builtins.print') as mock_print, 
              patch('logging.error') as mock_logging:
-            self.agent.run("unknown-command")
+            self.await agent.run("unknown-command")
             
             # Test dat error gelogd is
             mock_logging.assert_called_once()
@@ -400,7 +400,7 @@ class TestArchitectAgentIntegration:
         """Test error handling van ArchitectAgent."""
         # Test dat agent robuust is bij errors
         try:
-            self.agent.run("invalid-command")
+            self.await agent.run("invalid-command")
             # Should not raise exception
         except Exception as e:
             pytest.fail(f"Agent should handle errors gracefully: {e}")
@@ -474,7 +474,7 @@ class TestArchitectAgentCommandValidation:
 
         for command in valid_commands:
             with patch.object(self.agent, command.replace('-', '_')) as mock_method:
-                self.agent.run(command)
+                self.await agent.run(command)
                 mock_method.assert_called_once()
 
     def test_invalid_commands(self):
@@ -486,7 +486,7 @@ class TestArchitectAgentCommandValidation:
 
         for command in invalid_commands:
             with patch('logging.error') as mock_logging:
-                self.agent.run(command)
+                self.await agent.run(command)
 
                 # Test dat error gelogd is
                 mock_logging.assert_called_once()

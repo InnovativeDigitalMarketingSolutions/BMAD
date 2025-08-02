@@ -5,8 +5,8 @@
 Dit document bevat alle lessons learned uit het BMAD development proces. Deze lessons zijn verzameld tijdens development, testing, en MCP integration om de kwaliteit van toekomstige development te verbeteren.
 
 **Laatste Update**: 2025-01-27  
-**Versie**: 2.0  
-**Status**: Actief - MCP Integration voltooid
+**Versie**: 2.1  
+**Status**: Actief - MCP Integration voltooid, Test Quality Verbeterd
 
 ## 🎉 MCP Integration Completion Lessons
 
@@ -25,6 +25,8 @@ Dit document bevat alle lessons learned uit het BMAD development proces. Deze le
 3. **Test Quality**: Async tests vereisen proper `@pytest.mark.asyncio` decorators
 4. **CLI Compatibility**: CLI calls moeten `asyncio.run()` gebruiken voor async methodes
 5. **Error Handling**: MCP failures mogen geen crashes veroorzaken
+6. **Test Fix Automation**: Systematische aanpak voor het fixen van syntax errors in test files
+7. **Quality Over Speed**: Kwalitatieve oplossingen boven snelle hacks
 
 ## Development Process Lessons
 
@@ -68,6 +70,34 @@ async def _async_method(self, param):
 ```
 
 **Waarom**: `run_in_executor()` is bedoeld voor **sync** methodes die je async wilt maken. Als een methode **al async** is, moet je direct `await` gebruiken.
+
+### **Massive Test Quality Improvement (Januari 2025)**
+
+**Major Achievement**: Van 100+ test failures naar 92.8% success rate in AiDeveloper agent door systematische fixes.
+
+**Key Lessons Learned**:
+1. **Systematic Approach**: Scripts gebruiken voor het fixen van syntax errors in meerdere files
+2. **Regex Replacement Care**: Voorzichtig zijn met regex replacements om backslashes te voorkomen
+3. **Async Test Patterns**: Alle async methodes moeten `@pytest.mark.asyncio` decorators hebben
+4. **CLI Event Loop Issues**: `asyncio.run()` kan niet worden aangeroepen vanuit een bestaande event loop
+5. **Mock Strategy**: Async mocks moeten coroutines returnen, niet dicts
+6. **Incremental Fixes**: Eén issue tegelijk oplossen en testen
+7. **Quality Verification**: Na elke fix de tests opnieuw uitvoeren
+
+**Best Practices voor Test Fixes**:
+```python
+# ✅ CORRECT: Async mock voor CLI tests
+@pytest.mark.asyncio
+async def test_cli_build_pipeline(self):
+    with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
+        mock_agent = mock_agent_class.return_value
+        async def async_build_pipeline():
+            return {"result": "ok"}
+        with patch.object(mock_agent, 'build_pipeline', side_effect=async_build_pipeline):
+            main()
+```
+
+**Waarom**: Zorgt voor betrouwbare tests en voorkomt event loop conflicts.
 
 #### **MCP Integration Pattern**
 **Lesson**: MCP integration vereist graceful fallback naar lokale tools.

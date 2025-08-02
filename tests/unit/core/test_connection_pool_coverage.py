@@ -16,7 +16,8 @@ class TestConnectionPoolManagerUnit:
 
     @patch('bmad.agents.core.data.connection_pool.RedisConnectionPool.from_url')
     @patch('bmad.agents.core.data.connection_pool.Redis')
-    def test_init_redis_pool_success(self, mock_redis, mock_pool):
+    @pytest.mark.asyncio
+    async def test_init_redis_pool_success(self, mock_redis, mock_pool):
         mock_client = MagicMock()
         mock_redis.return_value = mock_client
         mock_client.ping.return_value = True
@@ -34,7 +35,8 @@ class TestConnectionPoolManagerUnit:
         assert manager.health_checks['redis'] is False
 
     @patch('bmad.agents.core.data.connection_pool.asyncpg.create_pool', new_callable=AsyncMock)
-    def test_init_postgres_pool_success(self, mock_create_pool):
+    @pytest.mark.asyncio
+    async def test_init_postgres_pool_success(self, mock_create_pool):
         # Mock the pool and connection
         pool = MagicMock()
         conn_mock = MagicMock()
@@ -68,7 +70,8 @@ class TestConnectionPoolManagerUnit:
 
     @patch('bmad.agents.core.data.connection_pool.aiohttp.ClientSession')
     @patch('bmad.agents.core.data.connection_pool.aiohttp.TCPConnector')
-    def test_init_http_pool_success(self, mock_connector, mock_session):
+    @pytest.mark.asyncio
+    async def test_init_http_pool_success(self, mock_connector, mock_session):
         mock_session.return_value = MagicMock()
         mock_connector.return_value = MagicMock()
         manager = cp.ConnectionPoolManager()
@@ -84,7 +87,8 @@ class TestConnectionPoolManagerUnit:
         assert manager.health_checks['http'] is False
 
     @patch('bmad.agents.core.data.connection_pool.Redis')
-    def test_get_redis_connection_success(self, mock_redis):
+    @pytest.mark.asyncio
+    async def test_get_redis_connection_success(self, mock_redis):
         manager = cp.ConnectionPoolManager()
         manager.pools['redis'] = MagicMock()
         manager.health_checks['redis'] = True

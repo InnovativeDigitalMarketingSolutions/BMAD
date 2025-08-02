@@ -1,7 +1,7 @@
 {
   "events": [
     {
-      "timestamp": "2025-08-02T23:00:20.431636",
+      "timestamp": "2025-08-02T23:18:14.385926",
       "event": "test_topic",
       "data": {
         "type": "test",
@@ -9,44 +9,44 @@
       }
     },
     {
-      "timestamp": "2025-08-02T23:00:50.066907",
+      "timestamp": "2025-08-02T23:18:43.796849",
       "event": "tests_requested",
       "data": {
         "desc": "Tests uitvoeren"
       }
     },
     {
-      "timestamp": "2025-08-02T23:00:52.076112",
+      "timestamp": "2025-08-02T23:18:45.822235",
       "event": "deployment_completed",
       "data": {
         "desc": "Deployment afgerond"
       }
     },
     {
-      "timestamp": "2025-08-02T23:01:07.540975",
+      "timestamp": "2025-08-02T23:19:00.586676",
       "event": "feedback_collected",
       "data": {
         "desc": "Feedback verzameld"
       }
     },
     {
-      "timestamp": "2025-08-02T23:01:08.548321",
+      "timestamp": "2025-08-02T23:19:01.593643",
       "event": "trends_analyzed",
       "data": {
         "desc": "Trends geanalyseerd"
       }
     },
     {
-      "timestamp": "2025-08-02T23:01:08.695784",
+      "timestamp": "2025-08-02T23:19:01.723373",
       "event": "component_build_requested",
       "data": {
         "agent": "FrontendDeveloperAgent",
         "component_name": "Button",
-        "timestamp": "2025-08-02T23:01:08.695725"
+        "timestamp": "2025-08-02T23:19:01.723228"
       }
     },
     {
-      "timestamp": "2025-08-02T23:01:08.696417",
+      "timestamp": "2025-08-02T23:19:01.724089",
       "event": "component_build_completed",
       "data": {
         "name": "Button",
@@ -54,12 +54,12 @@
         "status": "created",
         "accessibility_score": 95,
         "performance_score": 88,
-        "timestamp": "2025-08-02T23:01:08.696098",
+        "timestamp": "2025-08-02T23:19:01.723703",
         "agent": "FrontendDeveloperAgent"
       }
     },
     {
-      "timestamp": "2025-08-02T23:01:08.696573",
+      "timestamp": "2025-08-02T23:19:01.724261",
       "event": "accessibility_check_completed",
       "data": {
         "component": "Button",
@@ -76,12 +76,12 @@
             "description": "Missing alt text on image"
           }
         ],
-        "timestamp": "2025-08-02T23:01:08.696344",
+        "timestamp": "2025-08-02T23:19:01.724018",
         "agent": "FrontendDeveloperAgent"
       }
     },
     {
-      "timestamp": "2025-08-02T23:01:30.576794",
+      "timestamp": "2025-08-02T23:19:23.202959",
       "event": "new_task",
       "data": {
         "event_type": "new_task",
@@ -89,7 +89,7 @@
       }
     },
     {
-      "timestamp": "2025-08-02T23:01:30.577458",
+      "timestamp": "2025-08-02T23:19:23.203461",
       "event": "user_story_requested",
       "data": {
         "event_type": "user_story_requested",
@@ -97,7 +97,7 @@
       }
     },
     {
-      "timestamp": "2025-08-02T23:01:30.577808",
+      "timestamp": "2025-08-02T23:19:23.203796",
       "event": "test_generation_requested",
       "data": {
         "event_type": "test_generation_requested",
@@ -105,25 +105,25 @@
       }
     },
     {
-      "timestamp": "2025-08-02T23:01:39.704005",
+      "timestamp": "2025-08-02T23:19:32.309329",
       "event": "workflow_started",
       "data": {
         "agent": "OrchestratorAgent",
         "workflow_type": "feature_delivery",
-        "timestamp": "2025-08-02T23:01:39.703225"
+        "timestamp": "2025-08-02T23:19:32.309038"
       }
     },
     {
-      "timestamp": "2025-08-02T23:01:42.719443",
+      "timestamp": "2025-08-02T23:19:35.328780",
       "event": "workflow_started",
       "data": {
         "agent": "OrchestratorAgent",
         "workflow_type": "feature_delivery",
-        "timestamp": "2025-08-02T23:01:42.719278"
+        "timestamp": "2025-08-02T23:19:35.328643"
       }
     },
     {
-      "timestamp": "2025-08-02T23:01:45.748921",
+      "timestamp": "2025-08-02T23:19:38.359316",
       "event": "workflow_status",
       "data": {
         "event_type": "workflow_status",
@@ -133,7 +133,7 @@
       }
     },
     {
-      "timestamp": "2025-08-02T23:01:45.749531",
+      "timestamp": "2025-08-02T23:19:38.360151",
       "event": "workflow_status",
       "data": {
         "event_type": "workflow_status",
@@ -143,7 +143,7 @@
       }
     },
     {
-      "timestamp": "2025-08-02T23:01:45.749972",
+      "timestamp": "2025-08-02T23:19:38.360687",
       "event": "workflow_status",
       "data": {
         "event_type": "workflow_status",
@@ -153,7 +153,7 @@
       }
     },
     {
-      "timestamp": "2025-08-02T23:01:45.750384",
+      "timestamp": "2025-08-02T23:19:38.361079",
       "event": "workflow_status",
       "data": {
         "event_type": "workflow_status",
@@ -163,16 +163,56 @@
       }
     },
     {
-      "timestamp": "2025-08-02T23:02:50.076064",
+      "timestamp": "2025-08-02T23:19:38.361478",
+      "event": "workflow_status",
+      "data": {
+        "event_type": "workflow_status",
+        "workflow": "feature",
+        "status": "lopend",
+        "timestamp": "2025-08-02T23:12:23.046804"
+      }
+    },
+    {
+      "timestamp": "2025-08-02T23:19:38.362028",
+      "event": "workflow_status",
+      "data": {
+        "event_type": "workflow_status",
+        "workflow": "feature",
+        "status": "afgerond",
+        "timestamp": "2025-08-02T23:12:23.048385"
+      }
+    },
+    {
+      "timestamp": "2025-08-02T23:19:38.362446",
+      "event": "workflow_status",
+      "data": {
+        "event_type": "workflow_status",
+        "workflow": "automated_deployment",
+        "status": "lopend",
+        "timestamp": "2025-08-02T23:12:31.270520"
+      }
+    },
+    {
+      "timestamp": "2025-08-02T23:19:38.362838",
+      "event": "workflow_status",
+      "data": {
+        "event_type": "workflow_status",
+        "workflow": "automated_deployment",
+        "status": "afgerond",
+        "timestamp": "2025-08-02T23:12:31.275476"
+      }
+    },
+    {
+      "timestamp": "2025-08-02T23:20:42.170770",
       "event": "design_requested",
       "data": {
         "agent": "UXUIDesignerAgent",
         "task": "Create Shadcn Button Component",
-        "timestamp": "2025-08-02T23:02:50.075847"
+        "timestamp": "2025-08-02T23:20:42.170499"
       }
     },
     {
-      "timestamp": "2025-08-02T23:02:51.088954",
+      "timestamp": "2025-08-02T23:20:43.183682",
       "event": "design_completed",
       "data": {
         "status": "success",
@@ -182,10 +222,28 @@
       }
     },
     {
-      "timestamp": "2025-08-02T23:02:58.264713",
+      "timestamp": "2025-08-02T23:20:50.357273",
       "event": "test_event",
       "data": {
         "data": "test"
+      }
+    },
+    {
+      "timestamp": "2025-08-02T23:36:55.590091",
+      "event": "ai_development_requested",
+      "data": {
+        "agent": "AiDeveloperAgent",
+        "task": "Sentiment Analysis Model",
+        "timestamp": "2025-08-02T23:36:55.589666"
+      }
+    },
+    {
+      "timestamp": "2025-08-02T23:36:55.590847",
+      "event": "ai_development_completed",
+      "data": {
+        "status": "success",
+        "agent": "AiDeveloperAgent",
+        "accuracy": 91.0
       }
     }
   ]

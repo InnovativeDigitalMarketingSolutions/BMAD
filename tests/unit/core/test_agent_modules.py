@@ -59,7 +59,7 @@ class TestArchitectAgent:
             
             # Test with invalid input
             try:
-                result = agent.design_system(None)
+                result = await agent\.design_system\(None)
                 # Should handle gracefully
                 assert True
             except Exception:
