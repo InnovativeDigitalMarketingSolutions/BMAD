@@ -48,7 +48,7 @@ class FrontendDeveloperAgent:
     
     def __init__(self):
         self.framework_manager = get_framework_templates_manager()
-        self.frontend_development_template = self.framework_manager.get_template('frontend_development')
+        self.frontend_development_template = self.framework_manager.get_framework_template('frontend_development')
         self.lessons_learned = []
 
         """Initialize FrontendDeveloper agent met lazy loading."""
@@ -87,43 +87,30 @@ class FrontendDeveloperAgent:
         # Basic initialization only
         logger.info(f"{self.agent_name} Agent geïnitialiseerd (lazy loading)")
     
-    async def initialize_mcp(self) -> bool:
-        """Initialize MCP integration for FrontendDeveloper agent."""
+    async def initialize_mcp(self):
+        """Initialize MCP client voor enhanced frontend development capabilities."""
         try:
-            # Use the mixin's initialize_mcp method
-            success = await super().initialize_mcp()
-            
-            if success:
-                logger.info("MCP integration initialized successfully for FrontendDeveloper")
-            else:
-                logger.warning("MCP initialization failed for FrontendDeveloper")
-            
-            return success
-            
+            self.mcp_client = await get_mcp_client()
+            self.mcp_integration = get_framework_mcp_integration()
+            await initialize_framework_mcp_integration()
+            self.mcp_enabled = True
+            logger.info("MCP client initialized successfully for FrontendDeveloper")
         except Exception as e:
-            logger.error(f"Failed to initialize MCP for FrontendDeveloper: {e}")
+            logger.warning(f"MCP initialization failed for FrontendDeveloper: {e}")
             self.mcp_enabled = False
-            return False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Use MCP tool for enhanced functionality."""
-        if not self.mcp_enabled or not self.mcp_integration:
-            logger.warning("MCP integration not available")
+        """Use MCP tool voor enhanced frontend development functionality."""
+        if not self.mcp_enabled or not self.mcp_client:
+            logger.warning("MCP not available, using local frontend development tools")
             return None
         
         try:
-            # Use the mixin's use_mcp_tool method
-            result = await super().use_mcp_tool(tool_name, parameters)
-            
-            if result:
-                logger.info(f"MCP tool {tool_name} executed successfully")
-            else:
-                logger.warning(f"MCP tool {tool_name} returned no result")
-            
+            result = await self.mcp_client.execute_tool(tool_name, parameters)
+            logger.info(f"MCP tool {tool_name} executed successfully")
             return result
-                
         except Exception as e:
-            logger.error(f"Error using MCP tool {tool_name}: {e}")
+            logger.error(f"MCP tool {tool_name} execution failed: {e}")
             return None
     
     async def use_frontend_specific_mcp_tools(self, component_data: Dict[str, Any]) -> Dict[str, Any]:
@@ -373,28 +360,33 @@ FrontendDeveloper Agent Commands:
             "agent": "FrontendDeveloperAgent"
         }
 
-        # Use enhanced operation with MCP tools
-        enhanced_result = await self.enhanced_operation(
-            operation_name="build_shadcn_component",
-            operation_data={
-                "component_name": component_name,
-                "code": f"// {component_name} component code would be here",
-                "language": "typescript",
-                "framework": "shadcn/ui"
-            }
-        )
-        
-        if enhanced_result.get("mcp_enhanced"):
-            result.update(enhanced_result.get("mcp_insights", {}))
+        # Try MCP-enhanced component building first
+        if self.mcp_enabled and self.mcp_client:
+            try:
+                mcp_result = await self.use_mcp_tool("build_component", {
+                    "component_name": component_name,
+                    "framework": "shadcn/ui",
+                    "include_accessibility": True,
+                    "include_performance": True
+                })
+                
+                if mcp_result:
+                    logger.info("MCP-enhanced component building completed")
+                    result.update(mcp_result)
+                    result["mcp_enhanced"] = True
+                else:
+                    logger.warning("MCP component building failed, using local building")
+            except Exception as e:
+                logger.warning(f"MCP component building failed: {e}, using local building")
         
         # Use frontend-specific MCP tools for additional enhancement
-        frontend_enhanced = await self.use_frontend_specific_mcp_tools(result)
-        if frontend_enhanced:
-            result["frontend_enhancements"] = frontend_enhanced
-
-        # Log performance metrics
-        self.performance_monitor._record_metric("FrontendDeveloper", MetricType.SUCCESS_RATE, result["accessibility_score"], "%")
-        self.performance_monitor._record_metric("FrontendDeveloper", MetricType.RESPONSE_TIME, result["performance_score"], "ms")
+        if self.mcp_enabled:
+            try:
+                frontend_enhanced = await self.use_frontend_specific_mcp_tools(result)
+                if frontend_enhanced:
+                    result["frontend_enhancements"] = frontend_enhanced
+            except Exception as e:
+                logger.warning(f"Frontend-specific MCP tools failed: {e}")
 
         # Add to component history
         comp_entry = f"{datetime.now().isoformat()}: Shadcn {component_name} component built with {result['accessibility_score']}% accessibility score"
@@ -734,7 +726,11 @@ FrontendDeveloper Agent Commands:
             logger.error(f"[FrontendDeveloper][Figma Codegen Error]: {e!s}")
             return {"error": str(e)}
 
-    def run(self):
+    async def run(self):
+        """Run the FrontendDeveloper agent met MCP integration."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
         def sync_handler(event):
             asyncio.run(self.handle_component_build_completed(event))
 
@@ -743,12 +739,19 @@ FrontendDeveloper Agent Commands:
 
         logger.info("FrontendDeveloperAgent ready and listening for events...")
         self.collaborate_example()
+        
+        try:
+            # Keep the agent running
+            while True:
+                await asyncio.sleep(1)
+        except KeyboardInterrupt:
+            logger.info("FrontendDeveloper agent stopped.")
     
     @classmethod
-    def run_agent(cls):
-        """Class method to run the FrontendDeveloper agent."""
+    async def run_agent(cls):
+        """Class method to run the FrontendDeveloper agent met MCP integration."""
         agent = cls()
-        agent.run()
+        await agent.run()
 
 def main():
     parser = argparse.ArgumentParser(description="FrontendDeveloper Agent CLI")
@@ -798,7 +801,7 @@ def main():
     elif args.command == "collaborate":
         agent.collaborate_example()
     elif args.command == "run":
-        agent.run()
+        asyncio.run(agent.run())
     elif args.command == "initialize-mcp":
         success = asyncio.run(agent.initialize_mcp())
         print(f"MCP initialization: {'Success' if success else 'Failed'}")
