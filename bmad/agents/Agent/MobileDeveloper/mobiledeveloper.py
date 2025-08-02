@@ -29,6 +29,16 @@ from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.slack.slack_notify import send_slack_message
 
+# MCP Integration
+from bmad.core.mcp import (
+    MCPClient,
+    MCPContext,
+    FrameworkMCPIntegration,
+    get_mcp_client,
+    get_framework_mcp_integration,
+    initialize_framework_mcp_integration
+)
+
 load_dotenv()
 
 # Configure logging
@@ -36,6 +46,11 @@ logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
 class MobileDeveloperAgent:
+    """
+    Mobile Developer Agent voor BMAD.
+    Gespecialiseerd in cross-platform mobile development, React Native, Flutter, en native development.
+    """
+    
     def __init__(self):
         # Set agent name
         self.agent_name = "MobileDeveloper"
@@ -70,6 +85,105 @@ class MobileDeveloperAgent:
         # Original functionality
         self.current_project = None
         self.platform = "react-native"
+        
+        # MCP Integration
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
+        
+        logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+    
+    async def initialize_mcp(self):
+        """Initialize MCP client voor enhanced mobile development capabilities."""
+        try:
+            self.mcp_client = await get_mcp_client()
+            self.mcp_integration = get_framework_mcp_integration()
+            await initialize_framework_mcp_integration()
+            self.mcp_enabled = True
+            logger.info("MCP client initialized successfully for MobileDeveloper")
+        except Exception as e:
+            logger.warning(f"MCP initialization failed for MobileDeveloper: {e}")
+            self.mcp_enabled = False
+    
+    async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Use MCP tool voor enhanced mobile development functionality."""
+        if not self.mcp_enabled or not self.mcp_client:
+            logger.warning("MCP not available, using local mobile development tools")
+            return None
+        
+        try:
+            result = await self.mcp_client.execute_tool(tool_name, parameters)
+            logger.info(f"MCP tool {tool_name} executed successfully")
+            return result
+        except Exception as e:
+            logger.error(f"MCP tool {tool_name} execution failed: {e}")
+            return None
+    
+    async def use_mobile_specific_mcp_tools(self, mobile_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use mobile-specific MCP tools voor enhanced mobile development."""
+        if not self.mcp_enabled:
+            return {}
+        
+        enhanced_data = {}
+        
+        try:
+            # Mobile app development
+            app_result = await self.use_mcp_tool("mobile_app_development", {
+                "app_name": mobile_data.get("app_name", ""),
+                "platform": mobile_data.get("platform", "react-native"),
+                "app_type": mobile_data.get("app_type", "business"),
+                "features": mobile_data.get("features", []),
+                "target_platforms": mobile_data.get("target_platforms", ["ios", "android"])
+            })
+            if app_result:
+                enhanced_data["mobile_app_development"] = app_result
+            
+            # Cross-platform development
+            cross_platform_result = await self.use_mcp_tool("cross_platform_development", {
+                "framework": mobile_data.get("framework", "react-native"),
+                "platforms": mobile_data.get("platforms", ["ios", "android"]),
+                "shared_code": mobile_data.get("shared_code", True),
+                "platform_specific": mobile_data.get("platform_specific", False)
+            })
+            if cross_platform_result:
+                enhanced_data["cross_platform_development"] = cross_platform_result
+            
+            # Mobile performance optimization
+            performance_result = await self.use_mcp_tool("mobile_performance_optimization", {
+                "app_name": mobile_data.get("app_name", ""),
+                "optimization_type": mobile_data.get("optimization_type", "general"),
+                "target_metrics": mobile_data.get("target_metrics", ["load_time", "memory_usage", "battery_usage"]),
+                "platform": mobile_data.get("platform", "react-native")
+            })
+            if performance_result:
+                enhanced_data["mobile_performance_optimization"] = performance_result
+            
+            # Mobile testing
+            testing_result = await self.use_mcp_tool("mobile_testing", {
+                "app_name": mobile_data.get("app_name", ""),
+                "test_type": mobile_data.get("test_type", "comprehensive"),
+                "platforms": mobile_data.get("platforms", ["ios", "android"]),
+                "test_frameworks": mobile_data.get("test_frameworks", ["jest", "detox"])
+            })
+            if testing_result:
+                enhanced_data["mobile_testing"] = testing_result
+            
+            # App store deployment
+            deployment_result = await self.use_mcp_tool("app_store_deployment", {
+                "app_name": mobile_data.get("app_name", ""),
+                "deployment_target": mobile_data.get("deployment_target", "app-store"),
+                "platforms": mobile_data.get("platforms", ["ios", "android"]),
+                "store_requirements": mobile_data.get("store_requirements", True)
+            })
+            if deployment_result:
+                enhanced_data["app_store_deployment"] = deployment_result
+            
+            logger.info(f"Mobile-specific MCP tools executed: {list(enhanced_data.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Error in mobile-specific MCP tools: {e}")
+        
+        return enhanced_data
 
     def _load_app_history(self):
         """Load app history from data file"""
@@ -181,7 +295,7 @@ MobileDeveloper Agent Commands:
         for i, performance in enumerate(self.performance_history[-10:], 1):
             print(f"{i}. {performance}")
 
-    def create_app(self, app_name: str = "MyMobileApp", platform: str = "react-native", app_type: str = "business") -> Dict[str, Any]:
+    async def create_app(self, app_name: str = "MyMobileApp", platform: str = "react-native", app_type: str = "business") -> Dict[str, Any]:
         """Create a new mobile app with enhanced functionality."""
         logger.info(f"Creating mobile app: {app_name} on {platform}")
 
@@ -197,6 +311,21 @@ MobileDeveloper Agent Commands:
 
         # Simulate app creation
         time.sleep(1)
+        
+        # Use MCP tools for enhanced mobile development
+        mobile_data = {
+            "app_name": app_name,
+            "platform": platform,
+            "app_type": app_type,
+            "features": ["authentication", "navigation", "state_management", "api_integration"],
+            "target_platforms": ["ios", "android"],
+            "framework": platform,
+            "platforms": ["ios", "android"],
+            "shared_code": True,
+            "platform_specific": False
+        }
+        
+        mcp_enhanced_data = await self.use_mobile_specific_mcp_tools(mobile_data)
 
         app_result = {
             "app_id": hashlib.sha256(f"{app_name}_{platform}".encode()).hexdigest()[:8],
@@ -299,9 +428,17 @@ MobileDeveloper Agent Commands:
                 "state_management": "ViewModel"
             }
 
+        # Integrate MCP enhanced data
+        if mcp_enhanced_data:
+            app_result["mcp_enhanced_data"] = mcp_enhanced_data
+            logger.info("MCP enhanced data integrated into app creation")
+        
         # Log performance metrics
-        self.monitor._record_metric("MobileDeveloperAgent", MetricType.SUCCESS_RATE, 95, "%")
-
+        try:
+            self.monitor._record_metric("MobileDeveloperAgent", MetricType.SUCCESS_RATE, 95, "%")
+        except AttributeError:
+            logger.info("Performance monitor _record_metric not available")
+        
         # Add to app history
         app_entry = f"{datetime.now().isoformat()}: App created - {app_name} ({platform})"
         self.app_history.append(app_entry)
@@ -1240,7 +1377,7 @@ fun {component_name}(
         else:
             print("All resources are available!")
 
-    def collaborate_example(self):
+    async def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         logger.info("Starting mobile developer collaboration example...")
 
@@ -1253,7 +1390,7 @@ fun {component_name}(
         })
 
         # Create app
-        app_result = self.create_app("MyMobileApp", "react-native", "business")
+        app_result = await self.create_app("MyMobileApp", "react-native", "business")
 
         # Build component
         self.build_component("CustomButton", "react-native", "ui")
@@ -1343,13 +1480,19 @@ fun {component_name}(
             json.dump(app_config, f, indent=2)
         print(f"App configuration exported to: {output_file}")
 
-    def run(self):
+    async def run(self):
         """Run the agent and listen for events."""
         logger.info("MobileDeveloperAgent ready and listening for events...")
         print("[MobileDeveloper] Ready and listening for events...")
-        self.collaborate_example()
+        
+        # Initialize MCP
+        await self.initialize_mcp()
+        
+        await self.collaborate_example()
 
 def main():
+    import asyncio
+    
     parser = argparse.ArgumentParser(description="MobileDeveloper Agent CLI")
     parser.add_argument("command", nargs="?", default="help",
                        choices=["help", "create-app", "build-component", "optimize-performance",
@@ -1375,7 +1518,7 @@ def main():
     if args.command == "help":
         agent.show_help()
     elif args.command == "create-app":
-        result = agent.create_app(args.app_name, args.platform, args.app_type)
+        result = asyncio.run(agent.create_app(args.app_name, args.platform, args.app_type))
         print(json.dumps(result, indent=2))
     elif args.command == "build-component":
         result = agent.build_component(args.component_name, args.platform, args.component_type)
@@ -1405,9 +1548,9 @@ def main():
     elif args.command == "test":
         agent.test_resource_completeness()
     elif args.command == "collaborate":
-        agent.collaborate_example()
+        asyncio.run(agent.collaborate_example())
     elif args.command == "run":
-        agent.run()
+        asyncio.run(agent.run())
     elif args.command == "show-status":
         print(f"Current platform: {agent.platform}")
         print(f"Current project: {agent.current_project}")
