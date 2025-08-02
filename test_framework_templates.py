@@ -10,6 +10,34 @@ from pathlib import Path
 # Add BMAD to path
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
 
+# Pragmatic mocking voor externe dependencies
+import sys
+from unittest.mock import MagicMock
+
+# Mock externe modules
+sys.modules['opentelemetry'] = MagicMock()
+sys.modules['opentelemetry.trace'] = MagicMock()
+sys.modules['opentelemetry.sdk'] = MagicMock()
+sys.modules['opentelemetry.sdk.trace'] = MagicMock()
+sys.modules['opentelemetry.sdk.trace.export'] = MagicMock()
+sys.modules['opentelemetry.sdk.resources'] = MagicMock()
+sys.modules['opentelemetry.exporter'] = MagicMock()
+sys.modules['opentelemetry.exporter.jaeger'] = MagicMock()
+sys.modules['opentelemetry.exporter.jaeger.thrift'] = MagicMock()
+sys.modules['opentelemetry.exporter.otlp'] = MagicMock()
+sys.modules['opentelemetry.exporter.otlp.proto'] = MagicMock()
+sys.modules['opentelemetry.exporter.otlp.proto.http'] = MagicMock()
+sys.modules['opentelemetry.exporter.otlp.proto.http.trace_exporter'] = MagicMock()
+sys.modules['opentelemetry.instrumentation'] = MagicMock()
+sys.modules['opentelemetry.instrumentation.requests'] = MagicMock()
+sys.modules['supabase'] = MagicMock()
+sys.modules['openai'] = MagicMock()
+sys.modules['langgraph'] = MagicMock()
+sys.modules['langgraph.graph'] = MagicMock()
+sys.modules['langgraph.checkpoint'] = MagicMock()
+sys.modules['langgraph.checkpoint.memory'] = MagicMock()
+sys.modules['psutil'] = MagicMock()
+
 def test_framework_templates():
     """Test framework templates functionality."""
     print("🧪 Testing Framework Templates Integration")
