@@ -24,6 +24,15 @@ from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_e
 from integrations.slack.slack_notify import send_slack_message
 from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
 
+# MCP Integration
+from bmad.core.mcp import (
+    MCPClient,
+    MCPContext,
+    FrameworkMCPIntegration,
+    get_mcp_client,
+    get_framework_mcp_integration,
+    initialize_framework_mcp_integration
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
@@ -38,9 +47,17 @@ class QualityValidationError(QualityError):
     pass
 
 class QualityGuardianAgent:
+    """
+    Quality Guardian Agent voor BMAD.
+    Gespecialiseerd in quality assurance, standards enforcement, en quality monitoring.
+    """
+    
     def __init__(self):
         self.framework_manager = get_framework_templates_manager()
-        self.quality_guardian_template = self.framework_manager.get_template('quality_guardian')
+        try:
+            self.quality_guardian_template = self.framework_manager.get_framework_template('quality_guardian')
+        except:
+            self.quality_guardian_template = None
         self.lessons_learned = []
 
         # Set agent name
@@ -99,6 +116,90 @@ class QualityGuardianAgent:
             "quality_gates_failed": 0,
             "quality_score": 0.0
         }
+        
+        # MCP Integration
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
+        
+        logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+    
+    async def initialize_mcp(self):
+        """Initialize MCP client voor enhanced quality assurance capabilities."""
+        try:
+            self.mcp_client = await get_mcp_client()
+            self.mcp_integration = get_framework_mcp_integration()
+            await initialize_framework_mcp_integration()
+            self.mcp_enabled = True
+            logger.info("MCP client initialized successfully for QualityGuardian")
+        except Exception as e:
+            logger.warning(f"MCP initialization failed for QualityGuardian: {e}")
+            self.mcp_enabled = False
+    
+    async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Use MCP tool voor enhanced quality assurance functionality."""
+        if not self.mcp_enabled or not self.mcp_client:
+            logger.warning("MCP not available, using local quality assurance tools")
+            return None
+        
+        try:
+            result = await self.mcp_client.execute_tool(tool_name, parameters)
+            logger.info(f"MCP tool {tool_name} executed successfully")
+            return result
+        except Exception as e:
+            logger.error(f"MCP tool {tool_name} execution failed: {e}")
+            return None
+    
+    async def use_quality_specific_mcp_tools(self, quality_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use quality-specific MCP tools voor enhanced quality analysis."""
+        if not self.mcp_enabled:
+            return {}
+        
+        enhanced_data = {}
+        
+        try:
+            # Code quality analysis
+            quality_result = await self.use_mcp_tool("code_quality_analysis", {
+                "code_path": quality_data.get("code_path", ""),
+                "quality_metrics": quality_data.get("quality_metrics", {}),
+                "analysis_type": "comprehensive"
+            })
+            if quality_result:
+                enhanced_data["code_quality_analysis"] = quality_result
+            
+            # Security analysis
+            security_result = await self.use_mcp_tool("security_analysis", {
+                "files": quality_data.get("files", ""),
+                "security_scan_type": quality_data.get("security_scan_type", "comprehensive"),
+                "vulnerability_check": True
+            })
+            if security_result:
+                enhanced_data["security_analysis"] = security_result
+            
+            # Performance analysis
+            performance_result = await self.use_mcp_tool("performance_analysis", {
+                "component": quality_data.get("component", ""),
+                "performance_metrics": quality_data.get("performance_metrics", {}),
+                "optimization_target": "efficiency"
+            })
+            if performance_result:
+                enhanced_data["performance_analysis"] = performance_result
+            
+            # Quality gate validation
+            gate_result = await self.use_mcp_tool("quality_gate_validation", {
+                "quality_metrics": quality_data.get("quality_metrics", {}),
+                "thresholds": quality_data.get("thresholds", {}),
+                "deployment_check": quality_data.get("deployment_check", False)
+            })
+            if gate_result:
+                enhanced_data["quality_gate_validation"] = gate_result
+            
+            logger.info(f"Quality-specific MCP tools executed: {list(enhanced_data.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Error in quality-specific MCP tools: {e}")
+        
+        return enhanced_data
 
     def _validate_input(self, value: Any, expected_type: type, param_name: str) -> None:
         """Validate input parameters with type checking."""
@@ -483,7 +584,7 @@ Examples:
             self._record_quality_metric("performance_analysis_error", 10, "%")
             raise QualityError(f"Failed to analyze performance: {e}")
 
-    def quality_gate_check(self, deployment: bool = False) -> Dict[str, Any]:
+    async def quality_gate_check(self, deployment: bool = False) -> Dict[str, Any]:
         """Check quality gates with comprehensive validation and error handling."""
         try:
             self._validate_input(deployment, bool, "deployment")
@@ -509,24 +610,99 @@ Examples:
             
             all_gates_passed = all(quality_gates.values())
             
-            result = {
-                "deployment": deployment,
-                "all_gates_passed": all_gates_passed,
-                "quality_gates": quality_gates,
-                "metrics": {
-                    "code_quality_score": code_quality_score,
-                    "test_coverage": test_coverage,
-                    "security_score": security_score,
-                    "performance_score": performance_score
-                },
-                "thresholds": self.quality_thresholds,
-                "recommendations": [
-                    "Improve test coverage to meet threshold",
-                    "Optimize performance for better scores"
-                ] if not all_gates_passed else ["All quality gates passed"],
-                "timestamp": datetime.now().isoformat(),
-                "agent": "QualityGuardianAgent"
-            }
+            # Try MCP-enhanced quality gate check first
+            if self.mcp_enabled and self.mcp_client:
+                try:
+                    mcp_result = await self.use_mcp_tool("quality_gate_check", {
+                        "deployment": deployment,
+                        "quality_metrics": {
+                            "code_quality_score": code_quality_score,
+                            "test_coverage": test_coverage,
+                            "security_score": security_score,
+                            "performance_score": performance_score
+                        },
+                        "thresholds": self.quality_thresholds,
+                        "include_analysis": True
+                    })
+                    
+                    if mcp_result:
+                        logger.info("MCP-enhanced quality gate check completed")
+                        result = mcp_result.get("quality_gate_result", {})
+                        result["mcp_enhanced"] = True
+                    else:
+                        logger.warning("MCP quality gate check failed, using local quality gate check")
+                        result = {
+                            "deployment": deployment,
+                            "all_gates_passed": all_gates_passed,
+                            "quality_gates": quality_gates,
+                            "metrics": {
+                                "code_quality_score": code_quality_score,
+                                "test_coverage": test_coverage,
+                                "security_score": security_score,
+                                "performance_score": performance_score
+                            },
+                            "timestamp": datetime.now().isoformat(),
+                            "agent": "QualityGuardianAgent"
+                        }
+                except Exception as e:
+                    logger.warning(f"MCP quality gate check failed: {e}, using local quality gate check")
+                    result = {
+                        "deployment": deployment,
+                        "all_gates_passed": all_gates_passed,
+                        "quality_gates": quality_gates,
+                        "metrics": {
+                            "code_quality_score": code_quality_score,
+                            "test_coverage": test_coverage,
+                            "security_score": security_score,
+                            "performance_score": performance_score
+                        },
+                        "timestamp": datetime.now().isoformat(),
+                        "agent": "QualityGuardianAgent"
+                    }
+            else:
+                result = {
+                    "deployment": deployment,
+                    "all_gates_passed": all_gates_passed,
+                    "quality_gates": quality_gates,
+                    "metrics": {
+                        "code_quality_score": code_quality_score,
+                        "test_coverage": test_coverage,
+                        "security_score": security_score,
+                        "performance_score": performance_score
+                    },
+                    "timestamp": datetime.now().isoformat(),
+                    "agent": "QualityGuardianAgent"
+                }
+            
+            # Use quality-specific MCP tools for additional enhancement
+            if self.mcp_enabled:
+                try:
+                    quality_data = {
+                        "code_path": "./",
+                        "files": "*.py",
+                        "component": "main",
+                        "quality_metrics": result["metrics"],
+                        "thresholds": self.quality_thresholds,
+                        "deployment_check": deployment,
+                        "security_scan_type": "comprehensive",
+                        "performance_metrics": {"response_time": 245, "memory_usage": 45.2}
+                    }
+                    quality_enhanced = await self.use_quality_specific_mcp_tools(quality_data)
+                    if quality_enhanced:
+                        result["quality_enhancements"] = quality_enhanced
+                except Exception as e:
+                    logger.warning(f"Quality-specific MCP tools failed: {e}")
+
+            # Update metrics
+            if all_gates_passed:
+                self.performance_metrics["quality_gates_passed"] += 1
+            else:
+                self.performance_metrics["quality_gates_failed"] += 1
+
+            self._record_quality_metric("quality_gate_check_success", 95, "%")
+
+            logger.info(f"Quality gate check result: {result}")
+            return result
 
             # Update metrics
             if all_gates_passed:
@@ -940,11 +1116,11 @@ Examples:
         # Process security results and update metrics
         self.security_scan()
 
-    def on_deployment_requested(self, event):
+    async def on_deployment_requested(self, event):
         """Handle deployment request events."""
         logger.info(f"Received deployment request event: {event}")
         # Check quality gates before deployment
-        gate_result = self.quality_gate_check(deployment=True)
+        gate_result = await self.quality_gate_check(deployment=True)
         if not gate_result['all_gates_passed']:
             logger.warning("Quality gates failed - deployment blocked")
             # Notify ReleaseManager about failed gates
@@ -953,8 +1129,11 @@ Examples:
             logger.info("Quality gates passed - deployment approved")
             publish("quality_gates_passed", {"result": gate_result})
 
-    def run(self):
-        """Run the agent and listen for events."""
+    async def run(self):
+        """Run the agent and listen for events met MCP integration."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
         print("🚀 Starting QualityGuardian Agent...")
         
         def sync_handler(event):
@@ -976,6 +1155,20 @@ Examples:
         
         print("✅ QualityGuardian Agent is running and listening for events...")
         print("Press Ctrl+C to stop the agent")
+        
+        try:
+            # Keep the agent running
+            while True:
+                await asyncio.sleep(1)
+        except KeyboardInterrupt:
+            logger.info("QualityGuardian agent stopped.")
+    
+    @classmethod
+    async def run_agent(cls):
+        """Class method to run the QualityGuardian agent met MCP integration."""
+        agent = cls()
+        await agent.initialize_mcp()
+        print("QualityGuardian agent started with MCP integration")
 
     def validate_framework_template(self, template_name: str) -> Dict[str, Any]:
         """
@@ -1619,7 +1812,7 @@ def main():
             result = agent.enforce_standards(args.path)
             print(f"✅ Standards enforcement completed: {result['compliance_score']}%")
         elif args.command == "quality-gate-check":
-            result = agent.quality_gate_check(args.deployment)
+            result = asyncio.run(agent.quality_gate_check(args.deployment))
             print(f"✅ Quality gate check completed: {'PASS' if result['all_gates_passed'] else 'FAIL'}")
         elif args.command == "generate-quality-report":
             result = agent.generate_quality_report(args.format)
@@ -1638,9 +1831,9 @@ def main():
         elif args.command == "test":
             agent.test_resource_completeness()
         elif args.command == "collaborate":
-            agent.collaborate_example()
+            asyncio.run(agent.collaborate_example())
         elif args.command == "run":
-            agent.run()
+            asyncio.run(agent.run())
         elif args.command == "validate-framework-template":
             if not args.template_name:
                 print("Error: --template-name is required")
