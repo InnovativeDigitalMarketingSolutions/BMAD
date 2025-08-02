@@ -3,6 +3,7 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import argparse
+import asyncio
 import csv
 import json
 import logging
@@ -21,6 +22,16 @@ from bmad.agents.core.communication.message_bus import publish, subscribe
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.slack.slack_notify import send_slack_message
+
+# MCP Integration
+from bmad.core.mcp import (
+    MCPClient,
+    MCPContext,
+    FrameworkMCPIntegration,
+    get_mcp_client,
+    get_framework_mcp_integration,
+    initialize_framework_mcp_integration
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
@@ -55,6 +66,85 @@ class RetrospectiveAgent:
         self.action_history = []
         self._load_retro_history()
         self._load_action_history()
+
+        # Initialize MCP integration
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
+
+        logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+
+    async def initialize_mcp(self):
+        """Initialize MCP client and integration."""
+        try:
+            self.mcp_client = await get_mcp_client()
+            self.mcp_integration = get_framework_mcp_integration()
+            await initialize_framework_mcp_integration()
+            self.mcp_enabled = True
+            logger.info("MCP client initialized successfully")
+        except Exception as e:
+            logger.warning(f"MCP initialization failed: {e}")
+            self.mcp_enabled = False
+
+    async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Use MCP tool voor enhanced functionality."""
+        if not self.mcp_enabled or not self.mcp_client:
+            logger.warning("MCP not available, using local tools")
+            return None
+        
+        try:
+            result = await self.mcp_client.execute_tool(tool_name, parameters)
+            logger.info(f"MCP tool {tool_name} executed successfully")
+            return result
+        except Exception as e:
+            logger.error(f"MCP tool {tool_name} execution failed: {e}")
+            return None
+
+    async def use_retrospective_specific_mcp_tools(self, retro_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use retrospective-specific MCP tools voor enhanced functionality."""
+        enhanced_data = {}
+        
+        # Retrospective analysis
+        retro_analysis_result = await self.use_mcp_tool("retrospective_analysis", {
+            "sprint_name": retro_data.get("sprint_name", ""),
+            "team_size": retro_data.get("team_size", 8),
+            "feedback_list": retro_data.get("feedback_list", []),
+            "analysis_type": "comprehensive"
+        })
+        if retro_analysis_result:
+            enhanced_data["retrospective_analysis"] = retro_analysis_result
+        
+        # Action plan generation
+        action_plan_result = await self.use_mcp_tool("action_plan_generation", {
+            "retrospective_data": retro_data.get("retrospective_data", {}),
+            "team_capacity": retro_data.get("team_capacity", 100),
+            "priority_level": retro_data.get("priority_level", "medium"),
+            "timeframe": retro_data.get("timeframe", "next_sprint")
+        })
+        if action_plan_result:
+            enhanced_data["action_plan_generation"] = action_plan_result
+        
+        # Improvement tracking
+        improvement_result = await self.use_mcp_tool("improvement_tracking", {
+            "sprint_name": retro_data.get("sprint_name", ""),
+            "action_items": retro_data.get("action_items", []),
+            "tracking_type": "comprehensive",
+            "metrics": retro_data.get("metrics", {})
+        })
+        if improvement_result:
+            enhanced_data["improvement_tracking"] = improvement_result
+        
+        # Feedback analysis
+        feedback_result = await self.use_mcp_tool("feedback_analysis", {
+            "feedback_list": retro_data.get("feedback_list", []),
+            "analysis_type": "sentiment_and_theme",
+            "team_context": retro_data.get("team_context", {}),
+            "historical_data": retro_data.get("historical_data", {})
+        })
+        if feedback_result:
+            enhanced_data["feedback_analysis"] = feedback_result
+        
+        return enhanced_data
 
     def _load_retro_history(self):
         """Load retrospective history from data file"""
@@ -202,8 +292,8 @@ Retrospective Agent Commands:
         for i, action in enumerate(self.action_history[-10:], 1):
             print(f"{i}. {action}")
 
-    def conduct_retrospective(self, sprint_name: str = "Sprint 15", team_size: int = 8) -> Dict[str, Any]:
-        """Conduct retrospective with enhanced functionality."""
+    async def conduct_retrospective(self, sprint_name: str = "Sprint 15", team_size: int = 8) -> Dict[str, Any]:
+        """Conduct retrospective with enhanced functionality met MCP enhancement."""
         # Input validation
         if not isinstance(sprint_name, str):
             raise TypeError("sprint_name must be a string")
@@ -217,6 +307,27 @@ Retrospective Agent Commands:
             raise ValueError("team_size cannot exceed 50")
             
         logger.info(f"Conducting retrospective for {sprint_name}")
+
+        # Use MCP tools for enhanced retrospective
+        retro_data = {
+            "sprint_name": sprint_name,
+            "team_size": team_size,
+            "feedback_list": [
+                "Daily standups are working well",
+                "Need better documentation",
+                "Automation would help",
+                "Team collaboration is good"
+            ],
+            "team_capacity": 100,
+            "priority_level": "medium",
+            "timeframe": "next_sprint",
+            "action_items": [],
+            "metrics": {},
+            "team_context": {"team_size": team_size, "sprint_name": sprint_name},
+            "historical_data": {"previous_retros": len(self.retro_history)}
+        }
+        
+        enhanced_data = await self.use_retrospective_specific_mcp_tools(retro_data)
 
         # Simulate retrospective process
         time.sleep(2)
@@ -287,33 +398,33 @@ Retrospective Agent Commands:
                 ],
                 "start": [
                     "Implement automated testing in CI/CD pipeline",
-                    "Add code review guidelines",
-                    "Create team knowledge sharing sessions"
+                    "Create comprehensive documentation",
+                    "Regular knowledge sharing sessions"
                 ],
                 "stop": [
                     "Long meetings without clear agenda",
-                    "Manual deployment processes",
-                    "Lack of documentation updates"
+                    "Manual testing processes",
+                    "Delayed code reviews"
                 ]
             },
-            "next_sprint_focus": [
-                "Implement automated testing",
-                "Improve documentation practices",
-                "Optimize meeting efficiency"
-            ],
             "timestamp": datetime.now().isoformat(),
             "agent": "RetrospectiveAgent"
         }
 
-        # Log performance metrics
-        self.monitor._record_metric("RetrospectiveAgent", MetricType.SUCCESS_RATE, 92, "%")
+        # Add MCP enhanced data if available
+        if enhanced_data:
+            retrospective_result["mcp_enhanced_data"] = enhanced_data
+            retrospective_result["mcp_enhanced"] = True
 
-        # Add to retrospective history
-        retro_entry = f"{datetime.now().isoformat()}: Retrospective completed - {sprint_name}"
+        # Add to history
+        retro_entry = f"{retrospective_result['timestamp']}: {sprint_name} retrospective completed - Team size: {team_size}"
         self.retro_history.append(retro_entry)
         self._save_retro_history()
 
-        logger.info(f"Retrospective completed: {retrospective_result}")
+        # Record performance metric
+        self.monitor._record_metric("RetrospectiveAgent", MetricType.RESPONSE_TIME, 2.0, {"sprint_name": sprint_name, "team_size": team_size})
+
+        logger.info(f"Retrospective completed for {sprint_name}")
         return retrospective_result
 
     def analyze_feedback(self, feedback_list: List[str] = None) -> Dict[str, Any]:
@@ -902,14 +1013,31 @@ Retrospective Agent Commands:
         except Exception as e:
             logger.error(f"Error handling feedback sentiment analyzed event: {e}")
 
-    def run(self):
-        """Run the agent and listen for events."""
+    async def run(self):
+        """Run the agent and listen for events met MCP integration."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
         subscribe("retro_feedback", self.on_retro_feedback)
         subscribe("generate_actions", self.on_generate_actions)
         subscribe("feedback_sentiment_analyzed", self.on_feedback_sentiment_analyzed)
 
         logger.info("RetrospectiveAgent ready and listening for events...")
-        self.collaborate_example()
+        print("🔄 Retrospective Agent is running...")
+        print("Listening for events: retro_feedback, generate_actions, feedback_sentiment_analyzed")
+        print("Press Ctrl+C to stop")
+        
+        try:
+            while True:
+                await asyncio.sleep(1)
+        except KeyboardInterrupt:
+            print("\n🛑 Retrospective Agent stopped.")
+
+    @classmethod
+    async def run_agent(cls):
+        """Class method to run the Retrospective agent met MCP integration."""
+        agent = cls()
+        await agent.run()
 
 def main():
     parser = argparse.ArgumentParser(description="Retrospective Agent CLI")
@@ -930,7 +1058,7 @@ def main():
     if args.command == "help":
         agent.show_help()
     elif args.command == "conduct-retrospective":
-        result = agent.conduct_retrospective(args.sprint_name, args.team_size)
+        result = asyncio.run(agent.conduct_retrospective(args.sprint_name, args.team_size))
         print(json.dumps(result, indent=2))
     elif args.command == "analyze-feedback":
         result = agent.analyze_feedback(args.feedback_list)
@@ -956,7 +1084,7 @@ def main():
     elif args.command == "collaborate":
         agent.collaborate_example()
     elif args.command == "run":
-        agent.run()
+        asyncio.run(agent.run())
 
 if __name__ == "__main__":
     main()
