@@ -79,10 +79,11 @@ class TestUXUIDesignerAgentMobileDesign:
             self.agent = UXUIDesignerAgent()
             self.mock_monitor = mock_monitor.return_value
 
-    def test_create_mobile_ux_design(self):
+    @pytest.mark.asyncio
+    async def test_create_mobile_ux_design(self):
         """Test create_mobile_ux_design functionality."""
         with patch('time.sleep'):
-            result = self.agent.create_mobile_ux_design("iOS", "native")
+            result = await self.agent.create_mobile_ux_design("iOS", "native")
             
             assert "design_id" in result
             assert result["platform"] == "iOS"
@@ -283,6 +284,12 @@ class TestUXUIDesignerAgentFileOperations:
              patch('builtins.open', mock_open()) as mock_file:
             self.agent._save_feedback_history()
             mock_file.assert_called_once()
+
+    def test_save_feedback_history_os_error(self):
+        """Test _save_feedback_history with OS error."""
+        with patch('pathlib.Path.mkdir'), \
+             patch('builtins.open', side_effect=OSError("Disk full")):
+            self.agent._save_feedback_history()
 
 
 class TestUXUIDesignerAgentLLMIntegration:
@@ -516,14 +523,15 @@ class TestUXUIDesignerAgentCollaboration:
             self.agent = UXUIDesignerAgent()
             self.mock_monitor = mock_monitor.return_value
 
-    def test_collaborate_example(self):
+    @pytest.mark.asyncio
+    async def test_collaborate_example(self):
         """Test collaborate_example functionality."""
         with patch('builtins.print') as mock_print, \
              patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.publish') as mock_publish, \
              patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.save_context') as mock_save_context, \
              patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.get_context') as mock_get_context:
             mock_get_context.return_value = {"status": "active"}
-            self.agent.collaborate_example()
+            await self.agent.collaborate_example()
             # The function may not call print directly, so we just check it doesn't raise an error
             assert True
 
@@ -539,7 +547,8 @@ class TestUXUIDesignerAgentRunMethod:
             self.agent = UXUIDesignerAgent()
             self.mock_monitor = mock_monitor.return_value
 
-    def test_run_method(self):
+    @pytest.mark.asyncio
+    async def test_run_method(self):
         """Test run method functionality."""
         import bmad.agents.Agent.UXUIDesigner.uxuidesigner as ux_module
         ux_module.subscribe = lambda *args, **kwargs: None
@@ -548,7 +557,7 @@ class TestUXUIDesignerAgentRunMethod:
              patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.save_context') as mock_save_context, \
              patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.get_context') as mock_get_context:
             mock_get_context.return_value = {"status": "active"}
-            self.agent.run()
+            await self.agent.run()
             assert True
         del ux_module.subscribe
 
@@ -563,25 +572,29 @@ class TestUXUIDesignerAgentErrorHandling:
              patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.get_sprite_library'):
             self.agent = UXUIDesignerAgent()
 
-    def test_create_mobile_ux_design_invalid_platform(self):
+    @pytest.mark.asyncio
+    async def test_create_mobile_ux_design_invalid_platform(self):
         """Test create_mobile_ux_design with invalid platform."""
         with pytest.raises(ValueError, match="Platform must be one of"):
-            self.agent.create_mobile_ux_design("InvalidPlatform", "native")
+            await self.agent.create_mobile_ux_design("InvalidPlatform", "native")
 
-    def test_create_mobile_ux_design_invalid_app_type(self):
+    @pytest.mark.asyncio
+    async def test_create_mobile_ux_design_invalid_app_type(self):
         """Test create_mobile_ux_design with invalid app type."""
         with pytest.raises(ValueError, match="App type must be one of"):
-            self.agent.create_mobile_ux_design("iOS", "InvalidType")
+            await self.agent.create_mobile_ux_design("iOS", "InvalidType")
 
-    def test_create_mobile_ux_design_empty_platform(self):
+    @pytest.mark.asyncio
+    async def test_create_mobile_ux_design_empty_platform(self):
         """Test create_mobile_ux_design with empty platform."""
         with pytest.raises(ValueError, match="Platform must be a non-empty string"):
-            self.agent.create_mobile_ux_design("", "native")
+            await self.agent.create_mobile_ux_design("", "native")
 
-    def test_create_mobile_ux_design_empty_app_type(self):
+    @pytest.mark.asyncio
+    async def test_create_mobile_ux_design_empty_app_type(self):
         """Test create_mobile_ux_design with empty app type."""
         with pytest.raises(ValueError, match="App type must be a non-empty string"):
-            self.agent.create_mobile_ux_design("iOS", "")
+            await self.agent.create_mobile_ux_design("iOS", "")
 
     def test_build_shadcn_component_invalid_name(self):
         """Test build_shadcn_component with invalid component name."""
@@ -696,7 +709,8 @@ class TestUXUIDesignerAgentIntegration:
              patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.get_sprite_library'):
             self.agent = UXUIDesignerAgent()
 
-    def test_agent_complete_workflow(self):
+    @pytest.mark.asyncio
+    async def test_agent_complete_workflow(self):
         """Test complete agent workflow."""
         with patch.object(self.agent, 'create_mobile_ux_design') as mock_design, \
              patch.object(self.agent, 'build_shadcn_component') as mock_component, \
@@ -707,7 +721,7 @@ class TestUXUIDesignerAgentIntegration:
             mock_component.return_value = {"component": "TestButton", "status": "created"}
             
             # Execute workflow
-            design = self.agent.create_mobile_ux_design("iOS", "native")
+            design = await self.agent.create_mobile_ux_design("iOS", "native")
             component = self.agent.build_shadcn_component("TestButton")
             self.agent.export_report("md", design)
             
@@ -889,22 +903,23 @@ class TestUXUIDesignerAgentCLI:
     def test_cli_run(self, mock_get_context, mock_publish, mock_save_context, mock_print):
         """Test CLI run command."""
         from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
-        
+
         # Mock the agent instance methods to prevent real API calls
         with patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.UXUIDesignerAgent') as mock_agent_class:
             # Create a mock agent instance
             mock_agent = mock_agent_class.return_value
-            
-            # Mock the run method to prevent real execution
-            with patch.object(mock_agent, 'run') as mock_run:
-                main()
-                mock_run.assert_called_once()
+
+            # Mock the run method as AsyncMock to prevent real execution
+            from unittest.mock import AsyncMock
+            mock_run = AsyncMock()
+            mock_agent.run = mock_run
+            main()
+            mock_run.assert_called_once()
 
     @patch('sys.argv', ['uxuidesigner.py', 'design-feedback'])
     @patch('sys.exit')
     @patch('builtins.print')
-    @patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.UXUIDesignerAgent.design_feedback')
-    def test_cli_design_feedback_missing_text(self, mock_design_feedback, mock_print, mock_exit):
+    def test_cli_design_feedback_missing_text(self, mock_print, mock_exit):
         """Test CLI design-feedback command with missing feedback text."""
         from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
         main()
@@ -914,8 +929,7 @@ class TestUXUIDesignerAgentCLI:
     @patch('sys.argv', ['uxuidesigner.py', 'document-component'])
     @patch('sys.exit')
     @patch('builtins.print')
-    @patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.UXUIDesignerAgent.document_component')
-    def test_cli_document_component_missing_desc(self, mock_document_component, mock_print, mock_exit):
+    def test_cli_document_component_missing_desc(self, mock_print, mock_exit):
         """Test CLI document-component command with missing component description."""
         from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
         main()
@@ -925,8 +939,7 @@ class TestUXUIDesignerAgentCLI:
     @patch('sys.argv', ['uxuidesigner.py', 'analyze-figma'])
     @patch('sys.exit')
     @patch('builtins.print')
-    @patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.UXUIDesignerAgent.analyze_figma_design')
-    def test_cli_analyze_figma_missing_file_id(self, mock_analyze_figma, mock_print, mock_exit):
+    def test_cli_analyze_figma_missing_file_id(self, mock_print, mock_exit):
         """Test CLI analyze-figma command with missing file ID."""
         from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
         main()

@@ -23,6 +23,16 @@ from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_e
 from integrations.figma.figma_client import FigmaClient
 from integrations.slack.slack_notify import send_slack_message
 
+# Voeg MCP imports toe na de bestaande imports
+from bmad.core.mcp import (
+    MCPClient,
+    MCPContext,
+    FrameworkMCPIntegration,
+    get_mcp_client,
+    get_framework_mcp_integration,
+    initialize_framework_mcp_integration
+)
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -60,7 +70,82 @@ class UXUIDesignerAgent:
         self._load_design_history()
         self._load_feedback_history()
 
-    def create_mobile_ux_design(self, platform: str = "iOS", app_type: str = "native") -> Dict[str, Any]:
+        # MCP integratie attributen
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
+        logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+
+    async def initialize_mcp(self):
+        """Initialize MCP client voor enhanced UX/UI design capabilities."""
+        try:
+            self.mcp_client = await get_mcp_client()
+            self.mcp_integration = get_framework_mcp_integration()
+            await initialize_framework_mcp_integration()
+            self.mcp_enabled = True
+            logger.info("MCP client initialized successfully for UXUIDesigner")
+        except Exception as e:
+            logger.warning(f"MCP initialization failed for UXUIDesigner: {e}")
+            self.mcp_enabled = False
+
+    async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Use MCP tool voor enhanced UX/UI design functionality."""
+        if not self.mcp_enabled or not self.mcp_client:
+            logger.warning("MCP not available, using local UX/UI design tools")
+            return None
+        try:
+            result = await self.mcp_client.execute_tool(tool_name, parameters)
+            logger.info(f"MCP tool {tool_name} executed successfully")
+            return result
+        except Exception as e:
+            logger.error(f"MCP tool {tool_name} execution failed: {e}")
+            return None
+
+    async def use_uxui_specific_mcp_tools(self, design_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use UX/UI-specific MCP tools voor enhanced design analysis."""
+        if not self.mcp_enabled:
+            return {}
+        enhanced_data = {}
+        try:
+            # Design analysis
+            analysis_result = await self.use_mcp_tool("design_analysis", {
+                "design_id": design_data.get("design_id", ""),
+                "platform": design_data.get("platform", ""),
+                "app_type": design_data.get("app_type", ""),
+                "design_data": design_data,
+                "analysis_type": "uxui"
+            })
+            if analysis_result:
+                enhanced_data["design_analysis"] = analysis_result
+            # Accessibility check
+            accessibility_result = await self.use_mcp_tool("accessibility_check", {
+                "design_id": design_data.get("design_id", ""),
+                "platform": design_data.get("platform", ""),
+                "design_data": design_data
+            })
+            if accessibility_result:
+                enhanced_data["accessibility_check"] = accessibility_result
+            # Component spec generation
+            component_spec_result = await self.use_mcp_tool("component_spec_generation", {
+                "component_name": design_data.get("component_name", ""),
+                "platform": design_data.get("platform", ""),
+                "design_data": design_data
+            })
+            if component_spec_result:
+                enhanced_data["component_spec_generation"] = component_spec_result
+            # Figma analysis
+            figma_result = await self.use_mcp_tool("figma_analysis", {
+                "figma_file_id": design_data.get("figma_file_id", ""),
+                "design_data": design_data
+            })
+            if figma_result:
+                enhanced_data["figma_analysis"] = figma_result
+            logger.info(f"UX/UI-specific MCP tools executed: {list(enhanced_data.keys())}")
+        except Exception as e:
+            logger.error(f"Error in UX/UI-specific MCP tools: {e}")
+        return enhanced_data
+
+    async def create_mobile_ux_design(self, platform: str = "iOS", app_type: str = "native") -> Dict[str, Any]:
         """Create comprehensive mobile UX design for specified platform with input validation."""
         # Input validation
         if not platform or not isinstance(platform, str):
@@ -149,6 +234,18 @@ class UXUIDesignerAgent:
             "timestamp": datetime.now().isoformat(),
             "agent": "UXUIDesigner"
         }
+
+        # MCP integratie
+        design_data = {
+            "design_id": mobile_ux_result["design_id"],
+            "platform": platform,
+            "app_type": app_type,
+            "design_data": mobile_ux_result
+        }
+        mcp_enhanced_data = await self.use_uxui_specific_mcp_tools(design_data)
+        if mcp_enhanced_data:
+            mobile_ux_result["mcp_enhanced_data"] = mcp_enhanced_data
+            logger.info("MCP enhanced data integrated into mobile UX design")
 
         # Log performance metrics
         self.monitor._record_metric("UXUIDesigner", MetricType.SUCCESS_RATE, 95, "%")
@@ -699,7 +796,7 @@ UXUIDesigner Agent Commands:
         else:
             print("All resources are available!")
 
-    def collaborate_example(self):
+    async def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         logger.info("Starting UX/UI collaboration example...")
 
@@ -752,7 +849,8 @@ UXUIDesigner Agent Commands:
         except Exception as e:
             logger.error(f"Policy evaluation failed: {e}")
 
-    def run(self):
+    async def run(self):
+        await self.initialize_mcp()
         def sync_handler(event):
             asyncio.run(self.handle_design_completed(event))
 
@@ -760,7 +858,7 @@ UXUIDesigner Agent Commands:
         subscribe("design_requested", self.handle_design_requested)
 
         logger.info("UXUIDesignerAgent ready and listening for events...")
-        self.collaborate_example()
+        await self.collaborate_example()
 
     # --- ORIGINELE FUNCTIONALITEIT BEHOUDEN ---
     def collaborate_example_original(self):
@@ -1040,11 +1138,8 @@ def main():
     parser.add_argument("--component-desc", help="Component description")
     parser.add_argument("--figma-file-id", help="Figma file ID")
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
-
     args = parser.parse_args()
-
     agent = UXUIDesignerAgent()
-
     if args.command == "help":
         agent.show_help()
     elif args.command == "build-shadcn-component":
@@ -1054,7 +1149,7 @@ def main():
         result = agent.create_component_spec(args.component_name)
         print(json.dumps(result, indent=2))
     elif args.command == "create-mobile-ux":
-        result = agent.create_mobile_ux_design(args.platform, args.app_type)
+        result = asyncio.run(agent.create_mobile_ux_design(args.platform, args.app_type))
         print(json.dumps(result, indent=2))
     elif args.command == "design-mobile-component":
         result = agent.design_mobile_component(args.component_name, args.platform)
@@ -1066,21 +1161,18 @@ def main():
         if not args.feedback_text:
             print("Geef feedback tekst op met --feedback-text")
             sys.exit(1)
-            return
         result = agent.design_feedback(args.feedback_text)
         print(json.dumps(result, indent=2))
     elif args.command == "document-component":
         if not args.component_desc:
             print("Geef component beschrijving op met --component-desc")
             sys.exit(1)
-            return
         result = agent.document_component(args.component_desc)
         print(json.dumps(result, indent=2))
     elif args.command == "analyze-figma":
         if not args.figma_file_id:
             print("Geef Figma file ID op met --figma-file-id")
             sys.exit(1)
-            return
         result = agent.analyze_figma_design(args.figma_file_id)
         print(json.dumps(result, indent=2))
     elif args.command == "show-design-history":
@@ -1096,9 +1188,10 @@ def main():
     elif args.command == "test":
         agent.test_resource_completeness()
     elif args.command == "collaborate":
-        agent.collaborate_example()
+        result = asyncio.run(agent.collaborate_example())
+        print(json.dumps(result, indent=2))
     elif args.command == "run":
-        agent.run()
+        asyncio.run(agent.run())
 
 if __name__ == "__main__":
     main()
