@@ -23,9 +23,9 @@ class TestStrategiePartnerAgent:
     @pytest.fixture
     def agent(self):
         """Create a StrategiePartnerAgent instance for testing."""
-        with patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_performance_monitor'), 
-             patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_advanced_policy_engine'), 
-             patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_sprite_library'), 
+        with patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_performance_monitor'),
+             patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_advanced_policy_engine'),
+             patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_sprite_library'),
              patch('bmad.agents.Agent.StrategiePartner.strategiepartner.BMADTracer'):
             return StrategiePartnerAgent()
 
@@ -122,14 +122,14 @@ class TestStrategiePartnerAgent:
 
     def test_show_help(self, agent, capsys):
         """Test help display."""
-        await agent.show_help()
+        agent.show_help()
         captured = capsys.readouterr()
         assert "StrategiePartner Agent Commands:" in captured.out
 
     @pytest.mark.asyncio
     async def test_show_resource_success(self, agent, capsys):
         """Test resource display with valid resource type."""
-        with patch('builtins.open', create=True) as mock_open, 
+        with patch('builtins.open', create=True) as mock_open,
              patch('pathlib.Path.exists', return_value=True):
             mock_open.return_value.__enter__.return_value.read.return_value = "Strategy planning content"
             agent.show_resource("strategy-planning")
@@ -380,7 +380,7 @@ class TestStrategiePartnerAgent:
              patch.object(agent, 'create_roadmap') as mock_roadmap, 
              patch.object(agent, 'calculate_roi') as mock_roi, 
              patch.object(agent, 'business_model_canvas') as mock_canvas:
-            asyncio.run(await agent.collaborate_example())
+            asyncio.run(agent.collaborate_example())
             
             mock_publish.assert_called()
             mock_develop.assert_called()
@@ -721,9 +721,9 @@ class TestStrategiePartnerAgentCLI:
     @pytest.fixture
     def agent(self):
         """Create a StrategiePartnerAgent instance for CLI testing."""
-        with patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_performance_monitor'), 
-             patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_advanced_policy_engine'), 
-             patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_sprite_library'), 
+        with patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_performance_monitor'),
+             patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_advanced_policy_engine'),
+             patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_sprite_library'),
              patch('bmad.agents.Agent.StrategiePartner.strategiepartner.BMADTracer'):
             return StrategiePartnerAgent()
 
@@ -981,13 +981,12 @@ class TestStrategiePartnerAgentIntegration:
     @pytest.fixture
     def agent(self):
         """Create a StrategiePartnerAgent instance for integration testing."""
-        with patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_performance_monitor'), 
-             patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_advanced_policy_engine'), 
-             patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_sprite_library'), 
+        with patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_performance_monitor'),
+             patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_advanced_policy_engine'),
+             patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_sprite_library'),
              patch('bmad.agents.Agent.StrategiePartner.strategiepartner.BMADTracer'):
             return StrategiePartnerAgent()
 
-    @pytest.mark.asyncio
     @pytest.mark.asyncio
     async def test_complete_strategy_workflow(self, agent):
         """Test complete strategy workflow from development to ROI calculation."""
@@ -1088,7 +1087,6 @@ class TestStrategiePartnerAgentIntegration:
             agent.handle_alignment_check_completed(event)
             mock_log.assert_called()
 
-    @pytest.mark.asyncio
     @pytest.mark.asyncio
     async def test_complete_idea_validation_workflow(self, agent):
         """Test complete idea validation workflow."""

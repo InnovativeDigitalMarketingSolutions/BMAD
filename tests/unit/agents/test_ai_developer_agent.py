@@ -328,9 +328,10 @@ class TestAiDeveloperAgent:
         assert "performance_level" in result
         assert "recommendations" in result
 
-    def test_prompt_template(self, agent):
+    @pytest.mark.asyncio
+    async def test_prompt_template(self, agent):
         """Test prompt_template method."""
-        result = agent.prompt_template()
+        result = await agent.prompt_template()
         assert "template_type" in result
         assert "performance_level" in result
         assert "recommendations" in result

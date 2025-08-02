@@ -823,6 +823,30 @@ def expensive_calculation(self, param: str) -> Dict[str, Any]:
 - ✅ Memory efficient
 - ✅ Scalable
 
+### 3. Gitignore Management
+
+#### **Regular Gitignore Maintenance**
+**Best Practice**: Regelmatige controle en update van `.gitignore`.
+
+**Checklist**:
+```bash
+# Weekly check
+git status --ignored
+
+# Check specific files
+git check-ignore bmad/agents/core/shared_context.json
+
+# Update patterns
+echo "new_pattern" >> .gitignore
+git add .gitignore
+```
+
+**Voordelen**:
+- ✅ Clean repository
+- ✅ No accidental commits van runtime data
+- ✅ Security (no secrets in git)
+- ✅ Better collaboration
+
 ## Quick Reference
 
 ### **Development Checklist**
@@ -834,6 +858,7 @@ def expensive_calculation(self, param: str) -> Dict[str, Any]:
 - [ ] **Documentation**: Code documentation
 - [ ] **Testing**: Unit tests geschreven
 - [ ] **Code Review**: Quality review uitgevoerd
+- [ ] **Gitignore Check**: Controleer `.gitignore` voor nieuwe file patterns
 
 ### **Common Patterns**
 ```python
@@ -885,6 +910,25 @@ Voeg nieuwe best practices toe door:
 3. **Benefits**: Voordelen van het pattern
 4. **Implementation**: Stap-voor-stap implementatie
 5. **Update Version**: Update version history
+
+## Related Documentation
+
+### **Core Documentation**
+- **[Kanban Board](../deployment/KANBAN_BOARD.md)** - Huidige project status en taken
+- **[Master Planning](../deployment/BMAD_MASTER_PLANNING.md)** - Uitgebreide project planning en roadmap
+- **[Lessons Learned Guide](LESSONS_LEARNED_GUIDE.md)** - Lessons learned van development process
+- **[Quality Guide](QUALITY_GUIDE.md)** - Quality assurance en testing best practices
+- **[Development Workflow Guide](DEVELOPMENT_WORKFLOW_GUIDE.md)** - Development workflow en processen
+
+### **Technical Documentation**
+- **[MCP Integration Guide](MCP_INTEGRATION_GUIDE.md)** - MCP integration patterns en best practices
+- **[Test Workflow Guide](TEST_WORKFLOW_GUIDE.md)** - Testing strategies en workflows
+- **[Agent Optimization Guide](agent-optimization-guide.md)** - Agent optimalisatie en enhancement
+
+### **Implementation Documentation**
+- **[Implementation Details](../deployment/IMPLEMENTATION_DETAILS.md)** - Technische implementatie details
+- **[Microservices Status](../deployment/MICROSERVICES_IMPLEMENTATION_STATUS.md)** - Microservices implementatie status
+- **[Quality Guide](QUALITY_GUIDE.md)** - Quality assurance en testing
 
 ---
 
