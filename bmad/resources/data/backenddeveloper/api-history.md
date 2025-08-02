@@ -1,6 +1,5 @@
 # API History
 
-- 2025-07-27: GET /api/v1/users endpoint created
 - 2025-07-27: POST /api/v1/users endpoint updated
 - 2025-07-26: DELETE /api/v1/users endpoint added
 - 2025-07-27T18:23:40.869648: GET /api/v1/products - Status: created
@@ -33,3 +32,21 @@
 - 2025-08-01T19:12:18.419188: GET /api/v1/users - Status: created
 - 2025-08-01T19:12:19.517013: GET /api/v1/users - Status: created
 - 2025-08-01T19:12:22.540421: GET /api/v1/users - Status: created
+- 2025-08-01T19:35:54.380510: GET /api/v1/users - Status: created
+- 2025-08-01T19:35:55.481488: GET /api/v1/users - Status: created
+- 2025-08-01T19:35:58.511875: GET /api/v1/users - Status: created
+- 2025-08-01T20:02:19.262536: GET /api/v1/users - Status: created
+- 2025-08-01T20:02:20.326961: GET /api/v1/users - Status: created
+- 2025-08-01T20:02:23.347387: GET /api/v1/users - Status: created
+- 2025-08-01T20:18:00.339117: GET /api/v1/users - Status: created
+- 2025-08-01T20:18:01.432060: GET /api/v1/users - Status: created
+- 2025-08-01T20:18:04.461542: GET /api/v1/users - Status: created
+- 2025-08-01T21:58:01.141725: GET /api/v1/users - Status: created
+- 2025-08-01T21:58:02.193910: GET /api/v1/users - Status: created
+- 2025-08-01T21:58:05.215382: GET /api/v1/users - Status: created
+- 2025-08-01T22:06:34.441359: GET /api/v1/users - Status: created
+- 2025-08-01T22:06:35.500800: GET /api/v1/users - Status: created
+- 2025-08-01T22:06:38.522355: GET /api/v1/users - Status: created
+- 2025-08-02T08:08:44.890293: GET /api/v1/users - Status: created
+- 2025-08-02T08:08:45.944668: GET /api/v1/users - Status: created
+- 2025-08-02T08:08:48.966468: GET /api/v1/users - Status: created

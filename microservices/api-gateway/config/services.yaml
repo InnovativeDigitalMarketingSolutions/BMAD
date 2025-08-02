@@ -1,0 +1,33 @@
+# Services configuration for API Gateway
+services:
+  agent-service:
+    url: http://agent-service:8001
+    health_check: /health
+    timeout: 30
+    retries: 3
+    weight: 1
+    enabled: true
+    
+  integration-service:
+    url: http://integration-service:8002
+    health_check: /health
+    timeout: 30
+    retries: 3
+    weight: 1
+    enabled: true
+    
+  context-service:
+    url: http://context-service:8003
+    health_check: /health
+    timeout: 30
+    retries: 3
+    weight: 1
+    enabled: true
+    
+  workflow-service:
+    url: http://workflow-service:8004
+    health_check: /health
+    timeout: 30
+    retries: 3
+    weight: 1
+    enabled: true 

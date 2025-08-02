@@ -1,17 +1,5 @@
 # Rollback History
 
-- 2025-07-31T13:45:52.162669: Release rolled back - 1.3.0 - High error rate
-- 2025-07-31T13:45:59.673675: Release rolled back - 1.3.0 - High error rate
-- 2025-07-31T13:53:42.120188: Release rolled back - 1.3.0 - High error rate
-- 2025-07-31T13:53:49.612376: Release rolled back - 1.3.0 - High error rate
-- 2025-07-31T14:07:23.472904: Release rolled back - 1.3.0 - High error rate
-- 2025-07-31T14:07:30.979026: Release rolled back - 1.3.0 - High error rate
-- 2025-07-31T14:13:42.428441: Release rolled back - 1.3.0 - High error rate
-- 2025-07-31T14:13:49.903406: Release rolled back - 1.3.0 - High error rate
-- 2025-07-31T14:56:57.787046: Release rolled back - 1.3.0 - High error rate
-- 2025-07-31T14:57:05.181355: Release rolled back - 1.3.0 - High error rate
-- 2025-07-31T15:20:25.745332: Release rolled back - 1.3.0 - High error rate
-- 2025-07-31T15:20:33.161007: Release rolled back - 1.3.0 - High error rate
 - 2025-07-31T15:33:00.517909: Release rolled back - 1.3.0 - High error rate
 - 2025-07-31T15:33:08.083119: Release rolled back - 1.3.0 - High error rate
 - 2025-07-31T16:08:16.275315: Release rolled back - 1.3.0 - High error rate
@@ -50,3 +38,15 @@
 - 2025-08-01T18:41:56.552188: Release rolled back - 1.3.0 - High error rate
 - 2025-08-01T19:14:14.336034: Release rolled back - 1.3.0 - High error rate
 - 2025-08-01T19:14:20.390085: Release rolled back - 1.3.0 - High error rate
+- 2025-08-01T19:37:50.539620: Release rolled back - 1.3.0 - High error rate
+- 2025-08-01T19:37:56.576326: Release rolled back - 1.3.0 - High error rate
+- 2025-08-01T20:04:13.595410: Release rolled back - 1.3.0 - High error rate
+- 2025-08-01T20:04:19.634652: Release rolled back - 1.3.0 - High error rate
+- 2025-08-01T20:19:57.653127: Release rolled back - 1.3.0 - High error rate
+- 2025-08-01T20:20:03.705963: Release rolled back - 1.3.0 - High error rate
+- 2025-08-01T21:59:57.069515: Release rolled back - 1.3.0 - High error rate
+- 2025-08-01T22:00:03.117697: Release rolled back - 1.3.0 - High error rate
+- 2025-08-01T22:08:29.741877: Release rolled back - 1.3.0 - High error rate
+- 2025-08-01T22:08:35.810649: Release rolled back - 1.3.0 - High error rate
+- 2025-08-02T08:10:39.643258: Release rolled back - 1.3.0 - High error rate
+- 2025-08-02T08:10:45.689884: Release rolled back - 1.3.0 - High error rate

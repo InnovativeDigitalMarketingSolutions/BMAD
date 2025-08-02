@@ -1,0 +1,106 @@
+version: '3.8'
+
+services:
+  api-gateway:
+    build: .
+    container_name: bmad-api-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - GATEWAY_HOST=0.0.0.0
+      - GATEWAY_PORT=8000
+      - DEBUG=false
+      - JWT_SECRET_KEY=your-secret-key-here
+      - JWT_ALGORITHM=HS256
+      - JWT_EXPIRATION=3600
+      - RATE_LIMIT_REQUESTS=100
+      - RATE_LIMIT_WINDOW=60
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=0
+      - CIRCUIT_BREAKER_FAILURE_THRESHOLD=5
+      - CIRCUIT_BREAKER_RECOVERY_TIMEOUT=60
+    volumes:
+      - ./config:/app/config
+    depends_on:
+      - redis
+      - agent-service
+      - integration-service
+      - context-service
+      - workflow-service
+    networks:
+      - bmad-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  redis:
+    image: redis:7-alpine
+    container_name: bmad-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - bmad-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  agent-service:
+    image: bmad-agent-service:latest
+    container_name: bmad-agent-service
+    ports:
+      - "8001:8001"
+    environment:
+      - AGENT_SERVICE_HOST=0.0.0.0
+      - AGENT_SERVICE_PORT=8001
+    networks:
+      - bmad-network
+    restart: unless-stopped
+
+  integration-service:
+    image: bmad-integration-service:latest
+    container_name: bmad-integration-service
+    ports:
+      - "8002:8002"
+    environment:
+      - INTEGRATION_SERVICE_HOST=0.0.0.0
+      - INTEGRATION_SERVICE_PORT=8002
+    networks:
+      - bmad-network
+    restart: unless-stopped
+
+  context-service:
+    image: bmad-context-service:latest
+    container_name: bmad-context-service
+    ports:
+      - "8003:8003"
+    environment:
+      - CONTEXT_SERVICE_HOST=0.0.0.0
+      - CONTEXT_SERVICE_PORT=8003
+    networks:
+      - bmad-network
+    restart: unless-stopped
+
+  workflow-service:
+    image: bmad-workflow-service:latest
+    container_name: bmad-workflow-service
+    ports:
+      - "8004:8004"
+    environment:
+      - WORKFLOW_SERVICE_HOST=0.0.0.0
+      - WORKFLOW_SERVICE_PORT=8004
+    networks:
+      - bmad-network
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+
+networks:
+  bmad-network:
+    driver: bridge 
