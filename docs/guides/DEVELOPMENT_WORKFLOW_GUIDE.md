@@ -36,6 +36,7 @@ Volg de development pyramid strategie zoals beschreven in `DEVELOPMENT_STRATEGY.
 - [ ] **Planning**: Development strategie bepalen (unit, integration, production)
 - [ ] **Review**: Bestaande guide files raadplegen voor best practices
 - [ ] **Strategy Review**: Bekijk `DEVELOPMENT_STRATEGY.md` voor development type keuze
+- [ ] **Gitignore Check**: Controleer `.gitignore` voor nieuwe file patterns en update indien nodig
 - [ ] **MCP Integration Planning**: Voor MCP integratie, raadpleeg:
   - `docs/guides/MCP_INTEGRATION_GUIDE.md` - MCP integration patterns
   - `docs/guides/MCP_TROUBLESHOOTING_GUIDE.md` - Common issues en solutions
@@ -64,6 +65,7 @@ Volg de development pyramid strategie zoals beschreven in `DEVELOPMENT_STRATEGY.
 - [ ] **Test Reporting**: Allure test reports genereren en analyseren
 - [ ] **Documentation**: Code documenteren
 - [ ] **Documentation Updates**: Regelmatige documentatie updates uitvoeren
+- [ ] **Gitignore Maintenance**: Controleer en update `.gitignore` voor nieuwe file types
 - [ ] **Review**: Code review inclusief quality checks
 - [ ] **Strategy Validation**: Controleer of development strategie correct is toegepast
 - [ ] **MCP Validation**: Voor MCP integratie:
@@ -73,6 +75,61 @@ Volg de development pyramid strategie zoals beschreven in `DEVELOPMENT_STRATEGY.
   - [ ] **Test Coverage**: Zorg voor 100% test success rate
   - [ ] **Performance Check**: Verificeer geen performance regressions
   - [ ] **Documentation Update**: Update MCP guides met nieuwe patterns
+
+## Gitignore Maintenance & File Management
+
+### Gitignore Check & Update Workflow
+Regelmatige controle en onderhoud van `.gitignore` is essentieel voor een schone repository:
+
+#### **Gitignore Check Checklist**
+- [ ] **Runtime Files**: Controleer of alle runtime data files geïgnoreerd worden
+- [ ] **Temporary Files**: Verificeer dat temporary test files geïgnoreerd worden
+- [ ] **Generated Reports**: Zorg dat auto-generated reports geïgnoreerd worden
+- [ ] **Cache Files**: Controleer cache directories en files
+- [ ] **Environment Files**: Verificeer security-critical files zijn geïgnoreerd
+- [ ] **IDE Files**: Zorg dat IDE-specific files geïgnoreerd worden
+
+#### **Gitignore Update Process**
+```bash
+# Check welke files niet geïgnoreerd worden
+git status --ignored
+
+# Check specifieke files
+git check-ignore <file_path>
+
+# Update .gitignore en test
+git add .gitignore
+git status
+```
+
+#### **Common Patterns to Add**
+```gitignore
+# Runtime data files
+bmad/agents/core/shared_context.json
+bmad/resources/data/*/history.md
+policies/*.json
+
+# Temporary test files
+temp_*.py
+test_*.py.bak
+*_temp.py
+
+# Generated reports
+*_report_*.json
+*_report_*.csv
+*_report_*.md
+
+# Cache directories
+.ruff_cache/
+.llm_cache/
+.benchmarks/
+```
+
+#### **Gitignore Maintenance Schedule**
+- **Weekly**: Quick check tijdens development
+- **Monthly**: Comprehensive review en cleanup
+- **Per Feature**: Check bij nieuwe file types
+- **Per Sprint**: Full audit en update
 
 ## Test Reporting & Quality Assurance
 

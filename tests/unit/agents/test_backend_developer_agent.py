@@ -19,11 +19,11 @@ class TestBackendDeveloperAgent:
     @pytest.fixture
     def agent(self):
         """Create a BackendDeveloperAgent instance for testing."""
-        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_performance_monitor'), 
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_advanced_policy_engine'), 
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_sprite_library'), 
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BMADTracer'), 
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.PrefectWorkflowOrchestrator'), 
+        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_performance_monitor'),
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_advanced_policy_engine'),
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_sprite_library'),
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BMADTracer'),
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.PrefectWorkflowOrchestrator'),
              patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_framework_templates_manager') as mock_framework_manager:
             # Mock the framework manager to return a mock with get_template method
             mock_manager_instance = Mock()
@@ -162,7 +162,7 @@ class TestBackendDeveloperAgent:
 
     def test_show_help(self, agent, capsys):
         """Test help display."""
-        await agent.show_help()
+        agent.show_help()
         captured = capsys.readouterr()
         assert "BackendDeveloper Agent Commands:" in captured.out
 
@@ -337,7 +337,7 @@ class TestBackendDeveloperAgent:
         """Test successful collaboration example."""
         with patch.object(agent, 'build_api', new_callable=AsyncMock) as mock_build, 
              patch.object(agent, 'deploy_api') as mock_deploy:
-            await agent.collaborate_example()
+            agent.collaborate_example()
             
             mock_publish.assert_called()
             # Note: build_api is now async, but collaborate_example calls it synchronously
@@ -394,11 +394,11 @@ class TestBackendDeveloperAgentCLI:
     @pytest.fixture
     def agent(self):
         """Create a BackendDeveloperAgent instance for CLI testing."""
-        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_performance_monitor'), 
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_advanced_policy_engine'), 
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_sprite_library'), 
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BMADTracer'), 
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.PrefectWorkflowOrchestrator'), 
+        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_performance_monitor'),
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_advanced_policy_engine'),
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_sprite_library'),
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BMADTracer'),
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.PrefectWorkflowOrchestrator'),
              patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_framework_templates_manager') as mock_framework_manager:
             # Mock the framework manager to return a mock with get_template method
             mock_manager_instance = Mock()
@@ -549,11 +549,11 @@ class TestBackendDeveloperAgentIntegration:
     @pytest.fixture
     def agent(self):
         """Create a BackendDeveloperAgent instance for integration testing."""
-        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_performance_monitor'), 
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_advanced_policy_engine'), 
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_sprite_library'), 
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BMADTracer'), 
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.PrefectWorkflowOrchestrator'), 
+        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_performance_monitor'),
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_advanced_policy_engine'),
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_sprite_library'),
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BMADTracer'),
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.PrefectWorkflowOrchestrator'),
              patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_framework_templates_manager') as mock_framework_manager:
             # Mock the framework manager to return a mock with get_template method
             mock_manager_instance = Mock()
@@ -561,7 +561,6 @@ class TestBackendDeveloperAgentIntegration:
             mock_framework_manager.return_value = mock_manager_instance
             return BackendDeveloperAgent()
 
-    @pytest.mark.asyncio
     @pytest.mark.asyncio
     async def test_complete_api_workflow(self, agent):
         """Test complete API workflow from build to deploy."""

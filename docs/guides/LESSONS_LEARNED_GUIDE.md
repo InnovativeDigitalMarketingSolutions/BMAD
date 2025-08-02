@@ -484,6 +484,17 @@ class AsyncAgent:
 
 **Waarom**: Zorgt voor duidelijke project status en planning.
 
+### **Gitignore Maintenance**
+**Lesson**: Regelmatige `.gitignore` onderhoud voorkomt repository vervuiling.
+
+**Best Practice**:
+- **Weekly Check**: Controleer nieuwe file patterns
+- **Monthly Audit**: Comprehensive review en cleanup
+- **Per Feature**: Check bij nieuwe file types
+- **Per Sprint**: Full audit en update
+
+**Waarom**: Zorgt voor schone repository, security, en betere collaboration.
+
 ### **Documentation Workflow**
 **Lesson**: Documentatie updates moeten deel zijn van development workflow.
 
@@ -548,6 +559,25 @@ Voeg nieuwe lessons learned toe door:
 3. **Code Voorbeelden**: Alleen waar essentieel
 4. **Waarom**: Uitleg waarom dit belangrijk is
 5. **Update Version**: Update version history
+
+## Related Documentation
+
+### **Core Documentation**
+- **[Kanban Board](../deployment/KANBAN_BOARD.md)** - Huidige project status en taken
+- **[Master Planning](../deployment/BMAD_MASTER_PLANNING.md)** - Uitgebreide project planning en roadmap
+- **[Best Practices Guide](BEST_PRACTICES_GUIDE.md)** - Development best practices en guidelines
+- **[Quality Guide](QUALITY_GUIDE.md)** - Quality assurance en testing best practices
+- **[Development Workflow Guide](DEVELOPMENT_WORKFLOW_GUIDE.md)** - Development workflow en processen
+
+### **Technical Documentation**
+- **[MCP Integration Guide](MCP_INTEGRATION_GUIDE.md)** - MCP integration patterns en best practices
+- **[Test Workflow Guide](TEST_WORKFLOW_GUIDE.md)** - Testing strategies en workflows
+- **[Agent Optimization Guide](agent-optimization-guide.md)** - Agent optimalisatie en enhancement
+
+### **Implementation Documentation**
+- **[Implementation Details](../deployment/IMPLEMENTATION_DETAILS.md)** - Technische implementatie details
+- **[Microservices Status](../deployment/MICROSERVICES_IMPLEMENTATION_STATUS.md)** - Microservices implementatie status
+- **[Quality Guide](QUALITY_GUIDE.md)** - Quality assurance en testing
 
 ---
 

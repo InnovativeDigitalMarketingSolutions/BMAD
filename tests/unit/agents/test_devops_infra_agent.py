@@ -19,8 +19,8 @@ class TestDevOpsInfraAgentInitialization:
 
     def setup_method(self):
         """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor'), 
-             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'), 
+        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor'),
+             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'),
              patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_sprite_library'):
             self.agent = DevOpsInfraAgent()
 
@@ -37,13 +37,13 @@ class TestDevOpsInfraAgentInitialization:
     def test_show_help(self):
         """Test show_help functionality."""
         with patch('builtins.print') as mock_print:
-            self.await agent.show_help()
+            self.agent.show_help()
             mock_print.assert_called()
 
     def test_show_resource(self):
         """Test show_resource functionality."""
-        with patch('builtins.print') as mock_print, 
-             patch('pathlib.Path.exists', return_value=True), 
+        with patch('builtins.print') as mock_print,
+             patch('pathlib.Path.exists', return_value=True),
              patch('builtins.open', mock_open(read_data="Test content")):
             self.agent.show_resource("best-practices")
             mock_print.assert_called()
@@ -62,7 +62,7 @@ class TestDevOpsInfraAgentInitialization:
 
     def test_test_resource_completeness(self):
         """Test test_resource_completeness functionality."""
-        with patch('builtins.print') as mock_print, 
+        with patch('builtins.print') as mock_print,
              patch('pathlib.Path.exists', return_value=True):
             self.agent.test_resource_completeness()
             mock_print.assert_called()
@@ -73,8 +73,8 @@ class TestDevOpsInfraAgentPipelineAdvice:
 
     def setup_method(self):
         """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor') as mock_monitor, 
-             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'), 
+        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor') as mock_monitor,
+             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'),
              patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_sprite_library'):
             self.agent = DevOpsInfraAgent()
             self.mock_monitor = mock_monitor.return_value
@@ -112,8 +112,8 @@ class TestDevOpsInfraAgentIncidentResponse:
 
     def setup_method(self):
         """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor') as mock_monitor, 
-             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'), 
+        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor') as mock_monitor,
+             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'),
              patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_sprite_library'):
             self.agent = DevOpsInfraAgent()
             self.mock_monitor = mock_monitor.return_value
@@ -149,8 +149,8 @@ class TestDevOpsInfraAgentInfrastructureDeployment:
 
     def setup_method(self):
         """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor') as mock_monitor, 
-             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'), 
+        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor') as mock_monitor,
+             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'),
              patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_sprite_library'):
             self.agent = DevOpsInfraAgent()
             self.mock_monitor = mock_monitor.return_value
@@ -186,8 +186,8 @@ class TestDevOpsInfraAgentInfrastructureMonitoring:
 
     def setup_method(self):
         """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor') as mock_monitor, 
-             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'), 
+        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor') as mock_monitor,
+             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'),
              patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_sprite_library'):
             self.agent = DevOpsInfraAgent()
             self.mock_monitor = mock_monitor.return_value
@@ -223,8 +223,8 @@ class TestDevOpsInfraAgentExport:
 
     def setup_method(self):
         """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor'), 
-             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'), 
+        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor'),
+             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'),
              patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_sprite_library'):
             self.agent = DevOpsInfraAgent()
 
@@ -236,9 +236,9 @@ class TestDevOpsInfraAgentExport:
             "timestamp": datetime.now().isoformat()
         }
         
-        with patch('builtins.print') as mock_print, 
-             patch('pathlib.Path.exists', return_value=True), 
-             patch('builtins.open', mock_open()), 
+        with patch('builtins.print') as mock_print,
+             patch('pathlib.Path.exists', return_value=True),
+             patch('builtins.open', mock_open()),
              patch('pathlib.Path.mkdir'):
             self.agent.export_report("md", report_data)
             # The function may not call print directly, so we just check it doesn't raise an error
@@ -288,8 +288,8 @@ class TestDevOpsInfraAgentFileOperations:
 
     def setup_method(self):
         """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor'), 
-             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'), 
+        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor'),
+             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'),
              patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_sprite_library'):
             self.agent = DevOpsInfraAgent()
 
@@ -299,7 +299,7 @@ class TestDevOpsInfraAgentFileOperations:
         self.agent.infrastructure_history = []
         mock_data = "# Infrastructure Historynn- Infrastructure1n- Infrastructure2"
         
-        with patch('pathlib.Path.exists', return_value=True), 
+        with patch('pathlib.Path.exists', return_value=True),
              patch('builtins.open', mock_open(read_data=mock_data)):
             self.agent._load_infrastructure_history()
             assert len(self.agent.infrastructure_history) == 2
@@ -318,7 +318,7 @@ class TestDevOpsInfraAgentFileOperations:
         """Test _save_infrastructure_history functionality."""
         self.agent.infrastructure_history = ["Infrastructure1", "Infrastructure2"]
         
-        with patch('pathlib.Path.mkdir'), 
+        with patch('pathlib.Path.mkdir'),
              patch('builtins.open', mock_open()) as mock_file:
             self.agent._save_infrastructure_history()
             mock_file.assert_called_once()
@@ -329,7 +329,7 @@ class TestDevOpsInfraAgentFileOperations:
         self.agent.incident_history = []
         mock_data = "# Incident Historynn- Incident1n- Incident2"
         
-        with patch('pathlib.Path.exists', return_value=True), 
+        with patch('pathlib.Path.exists', return_value=True),
              patch('builtins.open', mock_open(read_data=mock_data)):
             self.agent._load_incident_history()
             assert len(self.agent.incident_history) == 2
@@ -348,7 +348,7 @@ class TestDevOpsInfraAgentFileOperations:
         """Test _save_incident_history functionality."""
         self.agent.incident_history = ["Incident1", "Incident2"]
         
-        with patch('pathlib.Path.mkdir'), 
+        with patch('pathlib.Path.mkdir'),
              patch('builtins.open', mock_open()) as mock_file:
             self.agent._save_incident_history()
             mock_file.assert_called_once()
@@ -359,14 +359,14 @@ class TestDevOpsInfraAgentLLMIntegration:
 
     def setup_method(self):
         """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor'), 
-             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'), 
+        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor'),
+             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'),
              patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_sprite_library'):
             self.agent = DevOpsInfraAgent()
 
     def test_pipeline_advice_with_llm(self):
         """Test pipeline_advice with LLM integration."""
-        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.ask_openai') as mock_llm, 
+        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.ask_openai') as mock_llm,
              patch('time.sleep'):
             mock_llm.return_value = "Pipeline optimization advice"
             
@@ -379,7 +379,7 @@ class TestDevOpsInfraAgentLLMIntegration:
 
     def test_incident_response_with_llm(self):
         """Test incident_response with LLM integration."""
-        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.ask_openai') as mock_llm, 
+        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.ask_openai') as mock_llm,
              patch('time.sleep'):
             mock_llm.return_value = "Incident response plan"
             
@@ -396,8 +396,8 @@ class TestDevOpsInfraAgentEventHandlers:
 
     def setup_method(self):
         """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor') as mock_monitor, 
-             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'), 
+        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor') as mock_monitor,
+             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'),
              patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_sprite_library'):
             self.agent = DevOpsInfraAgent()
             self.mock_monitor = mock_monitor.return_value
@@ -459,8 +459,8 @@ class TestDevOpsInfraAgentCollaboration:
 
     def setup_method(self):
         """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor') as mock_monitor, 
-             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'), 
+        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor') as mock_monitor,
+             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'),
              patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_sprite_library'):
             self.agent = DevOpsInfraAgent()
             self.mock_monitor = mock_monitor.return_value
@@ -468,12 +468,12 @@ class TestDevOpsInfraAgentCollaboration:
     @pytest.mark.asyncio
     async def test_collaborate_example(self):
         """Test collaborate_example functionality."""
-        with patch('builtins.print') as mock_print, 
-             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.publish') as mock_publish, 
-             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.save_context') as mock_save_context, 
+        with patch('builtins.print') as mock_print,
+             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.publish') as mock_publish,
+             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.save_context') as mock_save_context,
              patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_context') as mock_get_context:
             mock_get_context.return_value = {"status": "active"}
-            await self.await agent.collaborate_example()
+            await self.agent.collaborate_example()
             # The function may not call print directly, so we just check it doesn't raise an error
             assert True
 
@@ -483,8 +483,8 @@ class TestDevOpsInfraAgentRunMethod:
 
     def setup_method(self):
         """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor') as mock_monitor, 
-             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'), 
+        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor') as mock_monitor,
+             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'),
              patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_sprite_library'):
             self.agent = DevOpsInfraAgent()
             self.mock_monitor = mock_monitor.return_value
@@ -493,13 +493,13 @@ class TestDevOpsInfraAgentRunMethod:
         """Test run method functionality."""
         import bmad.agents.Agent.DevOpsInfra.devopsinfra as devops_module
         devops_module.subscribe = lambda *args, **kwargs: None
-        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.subscribe', create=True) as mock_subscribe, 
-             patch('builtins.print'), 
-             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.save_context') as mock_save_context, 
-             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_context') as mock_get_context, 
+        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.subscribe', create=True) as mock_subscribe,
+             patch('builtins.print'),
+             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.save_context') as mock_save_context,
+             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_context') as mock_get_context,
              patch('asyncio.run') as mock_asyncio_run:
             mock_get_context.return_value = {"status": "active"}
-            self.await agent.run()
+            self.agent.await agent.run()
             mock_asyncio_run.assert_called()
             assert True
         del devops_module.subscribe
@@ -510,8 +510,8 @@ class TestDevOpsInfraAgentErrorHandling:
 
     def setup_method(self):
         """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor'), 
-             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'), 
+        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor'),
+             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'),
              patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_sprite_library'):
             self.agent = DevOpsInfraAgent()
 
@@ -522,7 +522,7 @@ class TestDevOpsInfraAgentErrorHandling:
             
             # Should not raise exception
             try:
-                self.await agent.run()
+                self.agent.await agent.run()
             except Exception:
                 pass  # Expected behavior
 
@@ -532,8 +532,8 @@ class TestDevOpsInfraAgentIntegration:
 
     def setup_method(self):
         """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor'), 
-             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'), 
+        with patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_performance_monitor'),
+             patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_advanced_policy_engine'),
              patch('bmad.agents.Agent.DevOpsInfra.devopsinfra.get_sprite_library'):
             self.agent = DevOpsInfraAgent()
 
@@ -541,7 +541,7 @@ class TestDevOpsInfraAgentIntegration:
         """Test complete agent workflow."""
         with patch.object(self.agent, 'pipeline_advice') as mock_advice, 
              patch.object(self.agent, 'incident_response') as mock_response, 
-             patch.object(self.agent, 'export_report') as mock_export, 
+             patch.object(self.agent, 'export_report') as mock_export,
              patch('builtins.print'):
             
             mock_advice.return_value = {"status": "completed"}
