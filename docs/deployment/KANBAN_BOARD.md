@@ -144,6 +144,8 @@
 
 ## ✅ **Done** (Voltooide Taken)
 
+- Dependency isolation & lazy imports refactor (jan 2025): Alle psutil imports lazy gemaakt, agents werken nu zonder optionele dependencies. Zie guides voor best practice.
+
 ### **Week 11-12: MCP Phase 1: Core Implementation** ✅ **COMPLETE**
 - [x] **MCP Core Components**
   - MCP Client implementation

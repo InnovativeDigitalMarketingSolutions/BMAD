@@ -376,3 +376,36 @@ Deze guide waarborgt dat alle BMAD implementaties volledig en productieklaar zij
 - ✅ **Continuous Improvement**: Continue verbetering en learning
 
 **Remember**: Quality is not an afterthought - it's built into every step of the implementation process. 
+
+## 🧩 Best Practice: Dependency Isolation & Lazy Imports
+
+**Lesson Learned (jan 2025):**
+Bij het integreren van optionele dependencies (zoals `psutil` voor performance monitoring) in agents, moet altijd dependency isolation en lazy imports worden toegepast. Dit voorkomt dat agents of modules niet meer importeerbaar zijn als een optionele dependency ontbreekt.
+
+**Aanpak:**
+- Importeer optionele dependencies alleen binnen methodes of via een dependency manager.
+- Voeg altijd een fallback toe als de dependency niet beschikbaar is.
+- Gebruik een dependency manager om optionele modules veilig te importeren en beschikbaarheid te controleren.
+- Test agents altijd in een omgeving zonder optionele dependencies om te valideren dat ze correct degraderen.
+
+**Voorbeeld:**
+```python
+try:
+    import psutil
+    process = psutil.Process()
+except ImportError:
+    process = None  # Fallback
+```
+Of via een dependency manager:
+```python
+psutil = self.dependency_manager.safe_import('psutil')
+if psutil:
+    ...
+else:
+    ... # Fallback
+```
+
+**Resultaat:**
+- Agents blijven werken zonder optionele dependencies.
+- CI/CD pipelines falen niet op ontbrekende modules.
+- Productiekwaliteit en uitbreidbaarheid nemen toe. 

@@ -1,61 +1,71 @@
 #!/usr/bin/env python3
 """
-MCP (Model Context Protocol) Module for BMAD
+MCP (Model Context Protocol) Package for BMAD
+Following official MCP specification: https://modelcontextprotocol.io/docs
 """
 
+# Core MCP Classes
 from .mcp_client import (
     MCPClient,
     MCPTool,
     MCPContext,
     MCPRequest,
     MCPResponse,
+    MCPServerInfo,
+    MCPVersion,
+    MCPMessageType,
     get_mcp_client,
     initialize_mcp_client
 )
 
+# Tool Registry
 from .tool_registry import (
     MCPToolRegistry,
     ToolMetadata,
-    get_tool_registry,
-    register_tool,
-    get_tool,
-    get_tools_by_category,
+    ToolCategory,
+    get_mcp_tool_registry,
     execute_tool
 )
 
+# Framework Integration
 from .framework_integration import (
     FrameworkMCPIntegration,
+    FrameworkTool,
+    FrameworkType,
     get_framework_mcp_integration,
-    initialize_framework_mcp_integration,
-    call_framework_tool
+    initialize_framework_mcp_integration
 )
 
+# Version information
+__version__ = "1.1.0"
+__author__ = "BMAD Development Team"
+__description__ = "MCP (Model Context Protocol) implementation for BMAD system"
+
+# Export all public classes and functions
 __all__ = [
-    # MCP Client
+    # Core MCP Classes
     "MCPClient",
     "MCPTool", 
     "MCPContext",
     "MCPRequest",
     "MCPResponse",
+    "MCPServerInfo",
+    "MCPVersion",
+    "MCPMessageType",
     "get_mcp_client",
     "initialize_mcp_client",
     
     # Tool Registry
     "MCPToolRegistry",
     "ToolMetadata",
-    "get_tool_registry",
-    "register_tool",
-    "get_tool",
-    "get_tools_by_category",
+    "ToolCategory",
+    "get_mcp_tool_registry",
     "execute_tool",
     
     # Framework Integration
     "FrameworkMCPIntegration",
+    "FrameworkTool",
+    "FrameworkType",
     "get_framework_mcp_integration",
-    "initialize_framework_mcp_integration",
-    "call_framework_tool"
-]
-
-__version__ = "1.0.0"
-__author__ = "BMAD System"
-__description__ = "MCP (Model Context Protocol) integration for BMAD framework templates" 
+    "initialize_framework_mcp_integration"
+] 

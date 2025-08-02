@@ -38,6 +38,12 @@
 - Enhanced code analysis en test generation
 - Quality metrics integration
 
+### 🔒 Dependency Isolation & Lazy Imports
+
+Vanaf januari 2025 is dependency isolation en lazy imports een standaard best practice voor alle BMAD agents en MCP integraties. Optionele dependencies (zoals psutil) worden alleen binnen methodes geïmporteerd of via de dependency manager. Agents blijven hierdoor functioneel, ook als optionele dependencies ontbreken.
+
+**Lesson learned:** De FrontendDeveloper agent faalde initieel als psutil niet geïnstalleerd was. Door alle imports lazy te maken en een dependency manager te gebruiken, is dit structureel opgelost.
+
 ### **Phase 2: Agent Enhancement** 📋 **PLANNED**
 
 #### **Target Agents for MCP Integration**

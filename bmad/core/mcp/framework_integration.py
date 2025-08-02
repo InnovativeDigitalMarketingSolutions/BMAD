@@ -1,41 +1,77 @@
 #!/usr/bin/env python3
 """
-MCP Integration for Framework Templates
+MCP (Model Context Protocol) Framework Integration for BMAD
+Following official MCP specification: https://modelcontextprotocol.io/docs
 """
 
 import asyncio
+import json
 import logging
-from typing import Dict, List, Optional, Any, Union
-from pathlib import Path
+from typing import Dict, List, Optional, Any, Callable
+from dataclasses import dataclass
 from datetime import datetime
+from enum import Enum
 
 from .mcp_client import MCPClient, MCPTool, MCPContext, MCPResponse
-from .tool_registry import MCPToolRegistry, ToolMetadata, register_tool, get_tool_registry, execute_tool
+from .tool_registry import MCPToolRegistry, ToolMetadata, ToolCategory
 
 logger = logging.getLogger(__name__)
 
+class FrameworkType(Enum):
+    """Framework types for MCP integration."""
+    DEVELOPMENT = "development"
+    TESTING = "testing"
+    QUALITY = "quality"
+    DEPLOYMENT = "deployment"
+    DOCUMENTATION = "documentation"
+    MONITORING = "monitoring"
+
+@dataclass
+class FrameworkTool:
+    """Framework-specific tool definition."""
+    name: str
+    description: str
+    framework_type: FrameworkType
+    input_schema: Dict[str, Any]
+    output_schema: Dict[str, Any]
+    handler: Callable
+    version: str = "1.0.0"
+    dependencies: List[str] = None
+    
+    def __post_init__(self):
+        if self.dependencies is None:
+            self.dependencies = []
+
 class FrameworkMCPIntegration:
-    """MCP Integration for Framework Templates."""
+    """Framework MCP Integration following official specification."""
     
     def __init__(self):
         self.mcp_client: Optional[MCPClient] = None
         self.tool_registry: Optional[MCPToolRegistry] = None
-        self.framework_tools: Dict[str, MCPTool] = {}
+        self.framework_tools: Dict[str, FrameworkTool] = {}
         self.integration_enabled = False
+        self.framework_config: Dict[str, Any] = {}
         
         logger.info("Framework MCP Integration initialized")
     
-    async def initialize(self, config: Optional[Dict[str, Any]] = None) -> bool:
-        """Initialize MCP integration."""
+    async def initialize(self, mcp_client: Optional[MCPClient] = None, 
+                        tool_registry: Optional[MCPToolRegistry] = None) -> bool:
+        """Initialize framework MCP integration."""
         try:
             # Initialize MCP client
-            self.mcp_client = MCPClient(config)
-            await self.mcp_client.connect()
+            if mcp_client:
+                self.mcp_client = mcp_client
+            else:
+                self.mcp_client = MCPClient()
+                await self.mcp_client.connect()
             
             # Initialize tool registry
-            self.tool_registry = get_tool_registry()
+            if tool_registry:
+                self.tool_registry = tool_registry
+            else:
+                self.tool_registry = MCPToolRegistry()
             
-            # Register framework-specific tools
+            # Register framework tools
             await self._register_framework_tools()
             
             self.integration_enabled = True
@@ -47,209 +83,317 @@ class FrameworkMCPIntegration:
             return False
     
     async def _register_framework_tools(self):
-        """Register framework-specific MCP tools."""
+        """Register framework-specific tools following MCP specification."""
         framework_tools = [
             # Development Tools
-            MCPTool(
+            FrameworkTool(
                 name="code_analysis",
-                description="Code analysis and quality assessment",
+                description="Analyze code quality and provide recommendations following MCP specification",
+                framework_type=FrameworkType.DEVELOPMENT,
                 input_schema={
                     "type": "object",
                     "properties": {
                         "code": {"type": "string"},
                         "language": {"type": "string"},
-                        "analysis_type": {"type": "string", "enum": ["quality", "security", "performance"]}
+                        "analysis_type": {
+                            "type": "string",
+                            "enum": ["quality", "security", "performance", "complexity"]
+                        },
+                        "rules": {"type": "array", "items": {"type": "string"}}
                     },
-                    "required": ["code", "language"]
+                    "required": ["code", "language", "analysis_type"]
                 },
                 output_schema={
                     "type": "object",
                     "properties": {
-                        "success": {"type": "boolean"},
                         "score": {"type": "number"},
                         "issues": {"type": "array"},
-                        "recommendations": {"type": "array"}
+                        "recommendations": {"type": "array"},
+                        "metrics": {"type": "object"}
                     }
                 },
-                category="development"
+                handler=self._execute_code_analysis,
+                dependencies=["ast", "pylint"]
             ),
             
             # Testing Tools
-            MCPTool(
+            FrameworkTool(
                 name="test_generation",
-                description="Automated test generation",
+                description="Generate automated tests following MCP specification",
+                framework_type=FrameworkType.TESTING,
                 input_schema={
                     "type": "object",
                     "properties": {
                         "code": {"type": "string"},
                         "language": {"type": "string"},
                         "framework": {"type": "string"},
-                        "test_type": {"type": "string", "enum": ["unit", "integration", "e2e"]}
+                        "test_type": {
+                            "type": "string",
+                            "enum": ["unit", "integration", "e2e", "performance"]
+                        },
+                        "coverage_target": {"type": "number"}
                     },
-                    "required": ["code", "language"]
+                    "required": ["code", "language", "framework", "test_type"]
                 },
                 output_schema={
                     "type": "object",
                     "properties": {
-                        "success": {"type": "boolean"},
                         "tests": {"type": "array"},
-                        "coverage": {"type": "number"}
+                        "coverage": {"type": "number"},
+                        "test_count": {"type": "number"},
+                        "framework_specific": {"type": "object"}
                     }
                 },
-                category="development"
+                handler=self._execute_test_generation,
+                dependencies=["pytest", "unittest"]
             ),
             
             # Quality Tools
-            MCPTool(
+            FrameworkTool(
                 name="quality_gate",
-                description="Quality gate validation",
+                description="Quality gate validation following MCP specification",
+                framework_type=FrameworkType.QUALITY,
                 input_schema={
                     "type": "object",
                     "properties": {
-                        "code_changes": {"type": "array"},
-                        "quality_threshold": {"type": "number"},
-                        "checks": {"type": "array"}
+                        "metrics": {"type": "object"},
+                        "thresholds": {"type": "object"},
+                        "quality_rules": {"type": "array", "items": {"type": "string"}},
+                        "severity_levels": {"type": "object"}
                     },
-                    "required": ["code_changes"]
+                    "required": ["metrics", "thresholds"]
                 },
                 output_schema={
                     "type": "object",
                     "properties": {
-                        "success": {"type": "boolean"},
                         "passed": {"type": "boolean"},
                         "score": {"type": "number"},
-                        "violations": {"type": "array"}
-                    }
-                },
-                category="monitoring"
-            ),
-            
-            # Deployment Tools
-            MCPTool(
-                name="deployment_check",
-                description="Deployment readiness check",
-                input_schema={
-                    "type": "object",
-                    "properties": {
-                        "application": {"type": "string"},
-                        "environment": {"type": "string"},
-                        "checks": {"type": "array"}
-                    },
-                    "required": ["application", "environment"]
-                },
-                output_schema={
-                    "type": "object",
-                    "properties": {
-                        "success": {"type": "boolean"},
-                        "ready": {"type": "boolean"},
-                        "issues": {"type": "array"},
+                        "violations": {"type": "array"},
                         "recommendations": {"type": "array"}
                     }
                 },
-                category="development"
+                handler=self._execute_quality_gate,
+                dependencies=["sonarqube", "codecov"]
             ),
             
-            # Documentation Tools
-            MCPTool(
-                name="documentation_generator",
-                description="Automated documentation generation",
+            # Deployment Tools
+            FrameworkTool(
+                name="deployment_check",
+                description="Deployment readiness check following MCP specification",
+                framework_type=FrameworkType.DEPLOYMENT,
                 input_schema={
                     "type": "object",
                     "properties": {
-                        "code": {"type": "string"},
-                        "language": {"type": "string"},
-                        "doc_type": {"type": "string", "enum": ["api", "code", "user"]}
+                        "environment": {"type": "string"},
+                        "config": {"type": "object"},
+                        "dependencies": {"type": "array"},
+                        "security_scan": {"type": "boolean"},
+                        "performance_test": {"type": "boolean"}
                     },
-                    "required": ["code", "language"]
+                    "required": ["environment", "config"]
                 },
                 output_schema={
                     "type": "object",
                     "properties": {
-                        "success": {"type": "boolean"},
-                        "documentation": {"type": "string"},
-                        "format": {"type": "string"}
+                        "ready": {"type": "boolean"},
+                        "checks": {"type": "array"},
+                        "warnings": {"type": "array"},
+                        "blockers": {"type": "array"}
                     }
                 },
-                category="development"
+                handler=self._execute_deployment_check,
+                dependencies=["docker", "kubernetes"]
+            ),
+            
+            # Documentation Tools
+            FrameworkTool(
+                name="documentation_generator",
+                description="Generate documentation following MCP specification",
+                framework_type=FrameworkType.DOCUMENTATION,
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "source": {"type": "string"},
+                        "output_format": {
+                            "type": "string",
+                            "enum": ["markdown", "html", "pdf", "json"]
+                        },
+                        "template": {"type": "string"},
+                        "include_examples": {"type": "boolean"},
+                        "include_diagrams": {"type": "boolean"}
+                    },
+                    "required": ["source", "output_format"]
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "documentation": {"type": "string"},
+                        "sections": {"type": "array"},
+                        "metadata": {"type": "object"},
+                        "generated_at": {"type": "string"}
+                    }
+                },
+                handler=self._execute_documentation_generator,
+                dependencies=["sphinx", "mkdocs"]
+            ),
+            
+            # Monitoring Tools
+            FrameworkTool(
+                name="performance_monitor",
+                description="Performance monitoring and analysis following MCP specification",
+                framework_type=FrameworkType.MONITORING,
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "metrics": {"type": "array"},
+                        "timeframe": {"type": "string"},
+                        "thresholds": {"type": "object"},
+                        "alert_rules": {"type": "array"}
+                    },
+                    "required": ["metrics", "timeframe"]
+                },
+                output_schema={
+                    "type": "object",
+                    "properties": {
+                        "status": {"type": "string"},
+                        "metrics_data": {"type": "object"},
+                        "alerts": {"type": "array"},
+                        "trends": {"type": "object"}
+                    }
+                },
+                handler=self._execute_performance_monitor,
+                dependencies=["prometheus", "grafana"]
             )
         ]
         
-        # Register tools with executors
-        for tool in framework_tools:
-            metadata = ToolMetadata(
-                name=tool.name,
-                description=tool.description,
-                version=tool.version,
-                category=tool.category,
-                author="BMAD Framework",
-                tags=["framework", "automation"],
-                dependencies=[],
-                created_at=datetime.utcnow(),
-                updated_at=datetime.utcnow()
+        # Register each framework tool
+        for framework_tool in framework_tools:
+            await self._register_framework_tool(framework_tool)
+    
+    async def _register_framework_tool(self, framework_tool: FrameworkTool):
+        """Register a single framework tool."""
+        try:
+            # Create MCP tool from framework tool
+            mcp_tool = MCPTool(
+                name=framework_tool.name,
+                description=framework_tool.description,
+                input_schema=framework_tool.input_schema,
+                output_schema=framework_tool.output_schema,
+                category=framework_tool.framework_type.value,
+                version=framework_tool.version,
+                handler=framework_tool.handler
             )
             
-            # Get appropriate executor
-            executor = self._get_tool_executor(tool.name)
+            # Register with MCP client
+            if self.mcp_client:
+                self.mcp_client.register_tool(mcp_tool)
             
-            # Register tool
-            success = register_tool(tool, executor, metadata)
-            if success:
-                self.framework_tools[tool.name] = tool
-                logger.info(f"Registered framework tool: {tool.name}")
+            # Register with tool registry
+            if self.tool_registry:
+                metadata = ToolMetadata(
+                    name=framework_tool.name,
+                    description=framework_tool.description,
+                    version=framework_tool.version,
+                    category=framework_tool.framework_type.value,
+                    author="BMAD Framework",
+                    tags=[framework_tool.framework_type.value, "framework", "mcp"],
+                    dependencies=framework_tool.dependencies,
+                    created_at=datetime.utcnow(),
+                    updated_at=datetime.utcnow()
+                )
+                
+                self.tool_registry.register_tool(mcp_tool, framework_tool.handler, metadata)
+            
+            # Store framework tool
+            self.framework_tools[framework_tool.name] = framework_tool
+            
+            logger.info(f"Registered framework tool: {framework_tool.name}")
+            
+        except Exception as e:
+            logger.error(f"Error registering framework tool {framework_tool.name}: {e}")
+    
+    async def call_framework_tool(self, tool_name: str, parameters: Dict[str, Any], 
+                                context: MCPContext) -> MCPResponse:
+        """Call framework tool following MCP specification."""
+        try:
+            if not self.integration_enabled:
+                return MCPResponse(
+                    request_id="framework_integration_disabled",
+                    success=False,
+                    error="Framework MCP Integration not enabled"
+                )
+            
+            if tool_name not in self.framework_tools:
+                return MCPResponse(
+                    request_id="tool_not_found",
+                    success=False,
+                    error=f"Framework tool not found: {tool_name}"
+                )
+            
+            # Call through MCP client
+            if self.mcp_client:
+                return await self.mcp_client.call_tool(tool_name, parameters, context)
             else:
-                logger.error(f"Failed to register framework tool: {tool.name}")
+                return MCPResponse(
+                    request_id="no_mcp_client",
+                    success=False,
+                    error="MCP client not available"
+                )
+                
+        except Exception as e:
+            logger.error(f"Error calling framework tool {tool_name}: {e}")
+            return MCPResponse(
+                request_id="framework_error",
+                success=False,
+                error=str(e)
+            )
     
-    def _get_tool_executor(self, tool_name: str):
-        """Get executor function for a tool."""
-        executors = {
-            "code_analysis": self._execute_code_analysis,
-            "test_generation": self._execute_test_generation,
-            "quality_gate": self._execute_quality_gate,
-            "deployment_check": self._execute_deployment_check,
-            "documentation_generator": self._execute_documentation_generator
-        }
-        return executors.get(tool_name, self._execute_default_tool)
+    # Framework Tool Handlers
     
-    async def _execute_code_analysis(self, parameters: Dict[str, Any], context: MCPContext) -> MCPResponse:
-        """Execute code analysis tool."""
+    async def _execute_code_analysis(self, parameters: Dict[str, Any], context: MCPContext) -> Dict[str, Any]:
+        """Execute code analysis following MCP specification."""
         try:
             code = parameters.get("code", "")
             language = parameters.get("language", "python")
             analysis_type = parameters.get("analysis_type", "quality")
             
             # Simulate code analysis
-            score = 85.0  # Simulated quality score
-            issues = [
-                {"type": "warning", "message": "Consider adding type hints", "line": 10},
-                {"type": "info", "message": "Function is well documented", "line": 15}
-            ]
-            recommendations = [
-                "Add type hints to improve code quality",
-                "Consider breaking down large functions"
-            ]
+            analysis_result = {
+                "score": 85.5,
+                "issues": [
+                    {
+                        "type": "warning",
+                        "message": "Function too complex",
+                        "line": 15,
+                        "severity": "medium"
+                    }
+                ],
+                "recommendations": [
+                    "Consider breaking down complex functions",
+                    "Add more comprehensive error handling",
+                    "Improve code documentation"
+                ],
+                "metrics": {
+                    "cyclomatic_complexity": 8,
+                    "lines_of_code": 150,
+                    "maintainability_index": 75.2,
+                    "code_duplication": 5.3
+                }
+            }
             
-            return MCPResponse(
-                request_id=f"code_analysis_{datetime.utcnow().timestamp()}",
-                success=True,
-                data={
-                    "score": score,
-                    "issues": issues,
-                    "recommendations": recommendations,
-                    "language": language,
-                    "analysis_type": analysis_type
-                },
-                metadata={"tool": "code_analysis", "context": context.agent_id}
-            )
+            return analysis_result
             
         except Exception as e:
-            return MCPResponse(
-                request_id=f"code_analysis_{datetime.utcnow().timestamp()}",
-                success=False,
-                error=str(e)
-            )
+            logger.error(f"Error in code analysis: {e}")
+            return {
+                "score": 0,
+                "issues": [{"type": "error", "message": str(e)}],
+                "recommendations": [],
+                "metrics": {}
+            }
     
-    async def _execute_test_generation(self, parameters: Dict[str, Any], context: MCPContext) -> MCPResponse:
-        """Execute test generation tool."""
+    async def _execute_test_generation(self, parameters: Dict[str, Any], context: MCPContext) -> Dict[str, Any]:
+        """Execute test generation following MCP specification."""
         try:
             code = parameters.get("code", "")
             language = parameters.get("language", "python")
@@ -257,215 +401,241 @@ class FrameworkMCPIntegration:
             test_type = parameters.get("test_type", "unit")
             
             # Simulate test generation
-            tests = [
-                f"def test_function_{i}():\n    # Generated test for {language}\n    assert True" 
-                for i in range(3)
+            generated_tests = [
+                {
+                    "name": "test_function_basic",
+                    "code": "def test_function_basic():\n    assert True",
+                    "type": "unit",
+                    "framework": framework
+                },
+                {
+                    "name": "test_function_edge_cases",
+                    "code": "def test_function_edge_cases():\n    assert True",
+                    "type": "unit",
+                    "framework": framework
+                }
             ]
-            coverage = 75.0
             
-            return MCPResponse(
-                request_id=f"test_generation_{datetime.utcnow().timestamp()}",
-                success=True,
-                data={
-                    "tests": tests,
-                    "coverage": coverage,
-                    "language": language,
+            return {
+                "tests": generated_tests,
+                "coverage": 78.5,
+                "test_count": len(generated_tests),
+                "framework_specific": {
                     "framework": framework,
-                    "test_type": test_type
-                },
-                metadata={"tool": "test_generation", "context": context.agent_id}
-            )
+                    "test_type": test_type,
+                    "language": language
+                }
+            }
             
         except Exception as e:
-            return MCPResponse(
-                request_id=f"test_generation_{datetime.utcnow().timestamp()}",
-                success=False,
-                error=str(e)
-            )
+            logger.error(f"Error in test generation: {e}")
+            return {
+                "tests": [],
+                "coverage": 0,
+                "test_count": 0,
+                "framework_specific": {}
+            }
     
-    async def _execute_quality_gate(self, parameters: Dict[str, Any], context: MCPContext) -> MCPResponse:
-        """Execute quality gate tool."""
+    async def _execute_quality_gate(self, parameters: Dict[str, Any], context: MCPContext) -> Dict[str, Any]:
+        """Execute quality gate validation following MCP specification."""
         try:
-            code_changes = parameters.get("code_changes", [])
-            quality_threshold = parameters.get("quality_threshold", 80.0)
-            checks = parameters.get("checks", ["linting", "testing", "security"])
+            metrics = parameters.get("metrics", {})
+            thresholds = parameters.get("thresholds", {})
             
-            # Simulate quality gate check
-            score = 87.5
-            passed = score >= quality_threshold
-            violations = [] if passed else [
-                {"type": "quality", "message": "Code quality below threshold", "severity": "medium"}
-            ]
+            # Simulate quality gate validation
+            violations = []
+            passed = True
             
-            return MCPResponse(
-                request_id=f"quality_gate_{datetime.utcnow().timestamp()}",
-                success=True,
-                data={
-                    "passed": passed,
-                    "score": score,
-                    "violations": violations,
+            # Check code coverage
+            coverage = metrics.get("coverage", 0)
+            coverage_threshold = thresholds.get("coverage", 80)
+            if coverage < coverage_threshold:
+                violations.append({
+                    "metric": "coverage",
+                    "current": coverage,
+                    "threshold": coverage_threshold,
+                    "severity": "high"
+                })
+                passed = False
+            
+            # Check code quality score
+            quality_score = metrics.get("quality_score", 0)
+            quality_threshold = thresholds.get("quality_score", 70)
+            if quality_score < quality_threshold:
+                violations.append({
+                    "metric": "quality_score",
+                    "current": quality_score,
                     "threshold": quality_threshold,
-                    "checks": checks
-                },
-                metadata={"tool": "quality_gate", "context": context.agent_id}
-            )
+                    "severity": "medium"
+                })
+                passed = False
+            
+            return {
+                "passed": passed,
+                "score": quality_score,
+                "violations": violations,
+                "recommendations": [
+                    "Increase test coverage",
+                    "Improve code quality",
+                    "Address security vulnerabilities"
+                ] if not passed else []
+            }
             
         except Exception as e:
-            return MCPResponse(
-                request_id=f"quality_gate_{datetime.utcnow().timestamp()}",
-                success=False,
-                error=str(e)
-            )
+            logger.error(f"Error in quality gate: {e}")
+            return {
+                "passed": False,
+                "score": 0,
+                "violations": [{"metric": "error", "message": str(e)}],
+                "recommendations": []
+            }
     
-    async def _execute_deployment_check(self, parameters: Dict[str, Any], context: MCPContext) -> MCPResponse:
-        """Execute deployment check tool."""
+    async def _execute_deployment_check(self, parameters: Dict[str, Any], context: MCPContext) -> Dict[str, Any]:
+        """Execute deployment readiness check following MCP specification."""
         try:
-            application = parameters.get("application", "")
             environment = parameters.get("environment", "production")
-            checks = parameters.get("checks", ["tests", "security", "performance"])
+            config = parameters.get("config", {})
             
-            # Simulate deployment check
-            ready = True
-            issues = []
-            recommendations = [
-                "All tests passing",
-                "Security scan completed",
-                "Performance benchmarks met"
+            # Simulate deployment checks
+            checks = [
+                {"name": "security_scan", "status": "passed", "details": "No vulnerabilities found"},
+                {"name": "dependency_check", "status": "passed", "details": "All dependencies up to date"},
+                {"name": "configuration_validation", "status": "passed", "details": "Configuration valid"},
+                {"name": "resource_availability", "status": "passed", "details": "Resources available"}
             ]
             
-            return MCPResponse(
-                request_id=f"deployment_check_{datetime.utcnow().timestamp()}",
-                success=True,
-                data={
-                    "ready": ready,
-                    "issues": issues,
-                    "recommendations": recommendations,
-                    "application": application,
-                    "environment": environment
-                },
-                metadata={"tool": "deployment_check", "context": context.agent_id}
-            )
+            warnings = [
+                "Consider enabling additional security features",
+                "Monitor resource usage during deployment"
+            ]
+            
+            blockers = []
+            
+            return {
+                "ready": len(blockers) == 0,
+                "checks": checks,
+                "warnings": warnings,
+                "blockers": blockers
+            }
             
         except Exception as e:
-            return MCPResponse(
-                request_id=f"deployment_check_{datetime.utcnow().timestamp()}",
-                success=False,
-                error=str(e)
-            )
+            logger.error(f"Error in deployment check: {e}")
+            return {
+                "ready": False,
+                "checks": [],
+                "warnings": [],
+                "blockers": [{"error": str(e)}]
+            }
     
-    async def _execute_documentation_generator(self, parameters: Dict[str, Any], context: MCPContext) -> MCPResponse:
-        """Execute documentation generator tool."""
+    async def _execute_documentation_generator(self, parameters: Dict[str, Any], context: MCPContext) -> Dict[str, Any]:
+        """Execute documentation generation following MCP specification."""
         try:
-            code = parameters.get("code", "")
-            language = parameters.get("language", "python")
-            doc_type = parameters.get("doc_type", "api")
+            source = parameters.get("source", "")
+            output_format = parameters.get("output_format", "markdown")
             
             # Simulate documentation generation
-            documentation = f"""
-# Generated Documentation for {language}
+            documentation = f"""# Generated Documentation
 
 ## Overview
-This documentation was automatically generated from the provided code.
+This documentation was automatically generated from the source code.
 
-## API Reference
-- Function: `example_function`
-- Parameters: `param1`, `param2`
-- Returns: `result`
+## Source
+{source}
 
-## Usage Examples
-```{language}
-result = example_function(param1, param2)
-```
-            """.strip()
+## Format
+{output_format}
+
+## Generated At
+{datetime.utcnow().isoformat()}
+"""
             
-            return MCPResponse(
-                request_id=f"doc_generation_{datetime.utcnow().timestamp()}",
-                success=True,
-                data={
-                    "documentation": documentation,
-                    "format": "markdown",
-                    "language": language,
-                    "doc_type": doc_type
+            return {
+                "documentation": documentation,
+                "sections": ["Overview", "Source", "Format", "Generated At"],
+                "metadata": {
+                    "format": output_format,
+                    "source_length": len(source),
+                    "generation_time": datetime.utcnow().isoformat()
                 },
-                metadata={"tool": "documentation_generator", "context": context.agent_id}
-            )
+                "generated_at": datetime.utcnow().isoformat()
+            }
             
         except Exception as e:
-            return MCPResponse(
-                request_id=f"doc_generation_{datetime.utcnow().timestamp()}",
-                success=False,
-                error=str(e)
-            )
+            logger.error(f"Error in documentation generation: {e}")
+            return {
+                "documentation": "",
+                "sections": [],
+                "metadata": {},
+                "generated_at": datetime.utcnow().isoformat()
+            }
     
-    async def _execute_default_tool(self, parameters: Dict[str, Any], context: MCPContext) -> MCPResponse:
-        """Default tool executor."""
-        return MCPResponse(
-            request_id=f"default_{datetime.utcnow().timestamp()}",
-            success=True,
-            data={"message": "Default tool executed successfully"},
-            metadata={"tool": "default", "context": context.agent_id}
-        )
+    async def _execute_performance_monitor(self, parameters: Dict[str, Any], context: MCPContext) -> Dict[str, Any]:
+        """Execute performance monitoring following MCP specification."""
+        try:
+            metrics = parameters.get("metrics", [])
+            timeframe = parameters.get("timeframe", "1h")
+            
+            # Simulate performance monitoring
+            metrics_data = {
+                "cpu_usage": 45.2,
+                "memory_usage": 67.8,
+                "response_time": 125.5,
+                "throughput": 1500.0
+            }
+            
+            alerts = []
+            if metrics_data["cpu_usage"] > 80:
+                alerts.append({
+                    "type": "warning",
+                    "message": "High CPU usage detected",
+                    "metric": "cpu_usage",
+                    "value": metrics_data["cpu_usage"]
+                })
+            
+            return {
+                "status": "healthy",
+                "metrics_data": metrics_data,
+                "alerts": alerts,
+                "trends": {
+                    "cpu_trend": "stable",
+                    "memory_trend": "increasing",
+                    "response_time_trend": "stable"
+                }
+            }
+            
+        except Exception as e:
+            logger.error(f"Error in performance monitoring: {e}")
+            return {
+                "status": "error",
+                "metrics_data": {},
+                "alerts": [{"type": "error", "message": str(e)}],
+                "trends": {}
+            }
     
-    async def call_framework_tool(self, 
-                                 tool_name: str,
-                                 parameters: Dict[str, Any],
-                                 context: MCPContext) -> MCPResponse:
-        """Call a framework-specific tool."""
-        if not self.integration_enabled:
-            return MCPResponse(
-                request_id=f"disabled_{datetime.utcnow().timestamp()}",
-                success=False,
-                error="MCP Integration not enabled"
-            )
-        
-        if tool_name not in self.framework_tools:
-            return MCPResponse(
-                request_id=f"not_found_{datetime.utcnow().timestamp()}",
-                success=False,
-                error=f"Framework tool {tool_name} not found"
-            )
-        
-        return await execute_tool(tool_name, parameters, context)
-    
-    def get_available_framework_tools(self) -> List[MCPTool]:
-        """Get all available framework tools."""
+    def get_framework_tools(self, framework_type: Optional[FrameworkType] = None) -> List[FrameworkTool]:
+        """Get available framework tools."""
+        if framework_type:
+            return [tool for tool in self.framework_tools.values() if tool.framework_type == framework_type]
         return list(self.framework_tools.values())
     
-    def get_framework_tools_by_category(self, category: str) -> List[MCPTool]:
-        """Get framework tools by category."""
-        return [tool for tool in self.framework_tools.values() if tool.category == category]
-    
-    async def shutdown(self) -> bool:
-        """Shutdown MCP integration."""
-        try:
-            if self.mcp_client:
-                await self.mcp_client.disconnect()
-            
-            self.integration_enabled = False
-            logger.info("Framework MCP Integration shutdown successfully")
-            return True
-            
-        except Exception as e:
-            logger.error(f"Error shutting down Framework MCP Integration: {e}")
-            return False
-
-# Global framework MCP integration instance
-_framework_mcp_integration: Optional[FrameworkMCPIntegration] = None
+    def get_integration_status(self) -> Dict[str, Any]:
+        """Get integration status following MCP specification."""
+        return {
+            "enabled": self.integration_enabled,
+            "mcp_client_connected": self.mcp_client.connected if self.mcp_client else False,
+            "tool_registry_available": self.tool_registry is not None,
+            "framework_tools_count": len(self.framework_tools),
+            "framework_types": [ft.value for ft in FrameworkType],
+            "last_updated": datetime.utcnow().isoformat()
+        }
 
 def get_framework_mcp_integration() -> FrameworkMCPIntegration:
-    """Get global framework MCP integration instance."""
-    global _framework_mcp_integration
-    if _framework_mcp_integration is None:
-        _framework_mcp_integration = FrameworkMCPIntegration()
-    return _framework_mcp_integration
+    """Get framework MCP integration instance."""
+    return FrameworkMCPIntegration()
 
-async def initialize_framework_mcp_integration(config: Optional[Dict[str, Any]] = None) -> FrameworkMCPIntegration:
+async def initialize_framework_mcp_integration(mcp_client: Optional[MCPClient] = None,
+                                             tool_registry: Optional[MCPToolRegistry] = None) -> FrameworkMCPIntegration:
     """Initialize framework MCP integration."""
-    integration = get_framework_mcp_integration()
-    await integration.initialize(config)
-    return integration
-
-async def call_framework_tool(tool_name: str, parameters: Dict[str, Any], context: MCPContext) -> MCPResponse:
-    """Call a framework tool."""
-    integration = get_framework_mcp_integration()
-    return await integration.call_framework_tool(tool_name, parameters, context) 
+    integration = FrameworkMCPIntegration()
+    await integration.initialize(mcp_client, tool_registry)
+    return integration 
