@@ -98,7 +98,7 @@ async def verify_database_tables():
         # Check admin user
         admin_user = await conn.fetchrow(
             "SELECT id, email, username, status FROM auth_service.users WHERE email = $1",
-            'admin@bmad.com'
+            'innovativemarketinglisbon@gmail.com'
         )
         
         if admin_user:

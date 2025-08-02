@@ -35,7 +35,7 @@ class Notification(Base):
     subject: Mapped[Optional[str]] = mapped_column(String(500))
     content: Mapped[str] = mapped_column(Text, nullable=False)
     recipient: Mapped[str] = mapped_column(String(255), nullable=False)
-    metadata: Mapped[Dict[str, Any]] = mapped_column(JSONB, default=dict)
+    notification_metadata: Mapped[Dict[str, Any]] = mapped_column(JSONB, default=dict)
     status: Mapped[str] = mapped_column(String(50), default="pending", index=True)
     scheduled_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), index=True)
     sent_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))

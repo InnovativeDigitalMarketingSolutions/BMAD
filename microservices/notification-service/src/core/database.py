@@ -72,7 +72,7 @@ class DatabaseService:
                     subject=notification_data.subject,
                     content=notification_data.content,
                     recipient=notification_data.recipient,
-                    metadata=notification_data.metadata,
+                    notification_metadata=notification_data.metadata,
                     scheduled_at=notification_data.scheduled_at
                 )
                 

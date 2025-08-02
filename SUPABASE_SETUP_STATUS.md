@@ -11,7 +11,7 @@
 - ✅ **Cleanup functions** for data maintenance
 
 ### 2. Default Data
-- ✅ **Admin user** created (admin@bmad.com / admin123)
+- ✅ **Admin user** created (innovativemarketinglisbon@gmail.com / admin123)
 - ✅ **3 default roles** (admin, user, manager)
 - ✅ **4 notification templates** (email, slack, sms)
 - ✅ **5 default integrations** (auth0, postgresql, redis, sendgrid, twilio)
@@ -42,7 +42,7 @@
 
 ### Data Verification
 ```
-✅ Admin user: admin@bmad.com (admin)
+✅ Admin user: innovativemarketinglisbon@gmail.com (admin)
 ✅ Roles: 3 roles found (admin, user, manager)
 ✅ Templates: 4 notification templates
 ✅ Integrations: 5 default integrations
@@ -107,7 +107,7 @@
 - **Password**: [Configured in .env files]
 
 ### Admin Access
-- **Email**: admin@bmad.com
+- **Email**: innovativemarketinglisbon@gmail.com
 - **Password**: admin123
 - **Role**: admin
 
