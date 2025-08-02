@@ -25,6 +25,7 @@ Volg de development pyramid strategie zoals beschreven in `DEVELOPMENT_STRATEGY.
 
 ### Voor het implementeren van nieuwe functionaliteit:
 
+- [ ] **Agent Inventory Check**: Raadpleeg `bmad/agents/Agent/agents-overview.md` voor complete agent lijst (23 agents)
 - [ ] **Analyse**: Root cause analysis uitvoeren voor bugs
 - [ ] **Planning**: Development strategie bepalen (unit, integration, production)
 - [ ] **Review**: Bestaande guide files raadplegen voor best practices
@@ -94,6 +95,39 @@ cli/
 │   └── ...
 └── ...
 ```
+
+## 📋 **Agent Inventory Management**
+
+### **Mandatory Agent Overview Check**
+**VOOR ELKE NIEUWE IMPLEMENTATIE** moet je eerst de agent overview raadplegen:
+
+```bash
+# Check agent overview file
+cat bmad/agents/Agent/agents-overview.md
+```
+
+### **Agent Inventory Checklist**
+- [ ] **Total Count**: Controleer dat alle 23 agents zijn meegenomen
+- [ ] **MCP Status**: Verificeer MCP integration status van alle agents
+- [ ] **Dependencies**: Identificeer agent dependencies en integratie punten
+- [ ] **Categories**: Begrijp agent categorieën (Development, Design, Quality, etc.)
+- [ ] **Responsibilities**: Controleer agent verantwoordelijkheden en overlap
+
+### **Agent Categories Overview**
+1. **Core Development** (5 agents): Frontend, Backend, Fullstack, Mobile, AI
+2. **Architecture & Design** (3 agents): Architect, UX/UI, Accessibility
+3. **Quality & Testing** (2 agents): TestEngineer, QualityGuardian
+4. **Project Management** (3 agents): ProductOwner, Scrummaster, ReleaseManager
+5. **Infrastructure & Operations** (2 agents): DevOpsInfra, DataEngineer
+6. **Security & Compliance** (1 agent): SecurityDeveloper
+7. **Documentation & Communication** (2 agents): DocumentationAgent, FeedbackAgent
+8. **Process & Workflow** (3 agents): Orchestrator, WorkflowAutomator, Retrospective
+9. **Strategy & Innovation** (2 agents): StrategiePartner, RnD
+
+### **MCP Integration Tracking**
+- **Completed**: 7/23 agents (30.4%)
+- **Pending**: 16/23 agents (69.6%)
+- **Target**: 100% MCP integration voor alle agents
 
 ## Development Best Practices
 
