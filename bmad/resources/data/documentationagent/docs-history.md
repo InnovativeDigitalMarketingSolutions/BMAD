@@ -1,7 +1,5 @@
 # Documentation History
 
-- 2025-08-01T20:02:49.319338: API documentation created - BMAD API
-- 2025-08-01T20:02:50.323640: User guide created - BMAD System
 - 2025-08-01T20:02:50.328975: API documentation created - Test API
 - 2025-08-01T20:02:50.329287: User guide created - Test Product
 - 2025-08-01T20:02:51.794421: API documentation created - BMAD API
@@ -50,3 +48,5 @@
 - 2025-08-02T08:09:16.105368: User guide created - Test Product
 - 2025-08-02T08:09:17.601976: API documentation created - BMAD API
 - 2025-08-02T08:09:18.607152: User guide created - BMAD System
+- 2025-08-02T20:03:08.831274: API documentation created - Test API
+- 2025-08-02T20:03:51.503147: API documentation created - Test API

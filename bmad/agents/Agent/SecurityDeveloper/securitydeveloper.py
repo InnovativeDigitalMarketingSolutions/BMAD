@@ -98,6 +98,13 @@ class SecurityDeveloperAgent:
         self.active_threats = []
         self.security_policies = {}
         
+        # MCP Integration
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
+        
+        logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+        
         # Advanced security features
         self.real_time_monitoring = False
         self.compliance_frameworks = ["OWASP", "NIST", "ISO27001", "GDPR", "SOC2"]
@@ -149,7 +156,7 @@ class SecurityDeveloperAgent:
             return None
     
     async def use_security_specific_mcp_tools(self, security_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Use security-specific MCP tools voor vulnerability enhancement."""
+        """Use security-specific MCP tools voor enhanced security analysis."""
         if not self.mcp_enabled:
             return {}
         
@@ -157,31 +164,50 @@ class SecurityDeveloperAgent:
         
         try:
             # Vulnerability analysis
-            if "vulnerability_analysis" in self.mcp_config.custom_tools:
-                analysis_result = await self.use_mcp_tool("vulnerability_analysis", {
-                    "vulnerabilities": security_data.get("vulnerabilities", []),
-                    "target": security_data.get("target", ""),
-                    "analysis_type": "security"
-                })
-                if analysis_result:
-                    enhanced_data["vulnerability_analysis"] = analysis_result
+            vulnerability_result = await self.use_mcp_tool("vulnerability_analysis", {
+                "vulnerabilities": security_data.get("vulnerabilities", []),
+                "target": security_data.get("target", ""),
+                "analysis_type": "security",
+                "severity_thresholds": security_data.get("severity_thresholds", self.security_thresholds)
+            })
+            if vulnerability_result:
+                enhanced_data["vulnerability_analysis"] = vulnerability_result
             
             # Threat intelligence
-            if "threat_intelligence" in self.mcp_config.custom_tools:
-                threat_result = await self.use_mcp_tool("threat_intelligence", {
-                    "threats": security_data.get("threats", []),
-                    "threat_level": security_data.get("threat_level", "low")
-                })
-                if threat_result:
-                    enhanced_data["threat_intelligence"] = threat_result
+            threat_result = await self.use_mcp_tool("threat_intelligence", {
+                "threats": security_data.get("threats", []),
+                "threat_level": security_data.get("threat_level", "low"),
+                "active_threats": security_data.get("active_threats", self.active_threats)
+            })
+            if threat_result:
+                enhanced_data["threat_intelligence"] = threat_result
             
             # Compliance assessment
             compliance_result = await self.use_mcp_tool("compliance_assessment", {
                 "frameworks": security_data.get("frameworks", []),
-                "compliance_data": security_data.get("compliance_data", {})
+                "compliance_data": security_data.get("compliance_data", {}),
+                "security_policies": security_data.get("security_policies", self.security_policies)
             })
             if compliance_result:
                 enhanced_data["compliance_assessment"] = compliance_result
+            
+            # Security monitoring
+            monitoring_result = await self.use_mcp_tool("security_monitoring", {
+                "target": security_data.get("target", ""),
+                "monitoring_type": security_data.get("monitoring_type", "real_time"),
+                "alert_thresholds": security_data.get("alert_thresholds", self.security_thresholds)
+            })
+            if monitoring_result:
+                enhanced_data["security_monitoring"] = monitoring_result
+            
+            # Penetration testing
+            pentest_result = await self.use_mcp_tool("penetration_testing", {
+                "target": security_data.get("target", ""),
+                "scope": security_data.get("scope", "web"),
+                "test_type": security_data.get("test_type", "automated")
+            })
+            if pentest_result:
+                enhanced_data["penetration_testing"] = pentest_result
             
             logger.info(f"Security-specific MCP tools executed: {list(enhanced_data.keys())}")
             
@@ -612,42 +638,28 @@ Advanced features:
                 "scan_duration": "2.5s"
             }
 
-            # Try MCP-enhanced security scan first
-            if self.mcp_enabled and self.mcp_client:
-                try:
-                    mcp_result = await self.use_mcp_tool("security_scan", {
-                        "target": target,
-                        "vulnerabilities": vulnerabilities,
-                        "threat_level": threat_level,
-                        "include_compliance": True,
-                        "include_threat_intelligence": True
-                    })
-                    
-                    if mcp_result:
-                        logger.info("MCP-enhanced security scan completed")
-                        scan_result.update(mcp_result)
-                        scan_result["mcp_enhanced"] = True
-                    else:
-                        logger.warning("MCP security scan failed, using local scan")
-                except Exception as e:
-                    logger.warning(f"MCP security scan failed: {e}, using local scan")
+            # Use MCP tools for enhanced security analysis
+            security_data = {
+                "target": target,
+                "vulnerabilities": vulnerabilities,
+                "threat_level": threat_level,
+                "severity_thresholds": self.security_thresholds,
+                "active_threats": self.active_threats,
+                "security_policies": self.security_policies,
+                "frameworks": ["OWASP", "NIST", "ISO27001"],
+                "compliance_data": {"status": "pending", "score": 0},
+                "monitoring_type": "real_time",
+                "alert_thresholds": self.security_thresholds,
+                "scope": "web",
+                "test_type": "automated"
+            }
             
-            # Use security-specific MCP tools for additional enhancement
-            if self.mcp_enabled:
-                try:
-                    security_data = {
-                        "vulnerabilities": vulnerabilities,
-                        "target": target,
-                        "threats": self.active_threats,
-                        "threat_level": threat_level,
-                        "frameworks": self.compliance_frameworks,
-                        "compliance_data": {"score": security_score, "status": "compliant"}
-                    }
-                    security_enhanced = await self.use_security_specific_mcp_tools(security_data)
-                    if security_enhanced:
-                        scan_result["security_enhancements"] = security_enhanced
-                except Exception as e:
-                    logger.warning(f"Security-specific MCP tools failed: {e}")
+            mcp_enhanced_data = await self.use_security_specific_mcp_tools(security_data)
+            
+            # Integrate MCP enhanced data
+            if mcp_enhanced_data:
+                scan_result["mcp_enhanced_data"] = mcp_enhanced_data
+                logger.info("MCP enhanced data integrated into security scan")
             
             # Update metrics
             self._update_security_metrics(scan_result)
@@ -658,7 +670,10 @@ Advanced features:
             self._save_scan_history()
             
             # Record performance metric
-            self._record_security_metric("scan_success_rate", 95.0, "%")
+            try:
+                self._record_security_metric("scan_success_rate", 95.0, "%")
+            except AttributeError:
+                logger.info("Performance monitor _record_security_metric not available")
             
             logger.info(f"Security scan completed. Score: {security_score}%, Threat Level: {threat_level}")
             return scan_result
