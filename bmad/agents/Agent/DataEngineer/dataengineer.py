@@ -87,21 +87,21 @@ class DataEngineerAgent:
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
     
     async def initialize_mcp(self):
-        """Initialize MCP client voor enhanced data engineering capabilities."""
+        """Initialize MCP client and integration."""
         try:
             self.mcp_client = await get_mcp_client()
             self.mcp_integration = get_framework_mcp_integration()
             await initialize_framework_mcp_integration()
             self.mcp_enabled = True
-            logger.info("MCP client initialized successfully for DataEngineer")
+            logger.info("MCP client initialized successfully")
         except Exception as e:
-            logger.warning(f"MCP initialization failed for DataEngineer: {e}")
+            logger.warning(f"MCP initialization failed: {e}")
             self.mcp_enabled = False
-    
+
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Use MCP tool voor enhanced data engineering functionality."""
+        """Use MCP tool voor enhanced functionality."""
         if not self.mcp_enabled or not self.mcp_client:
-            logger.warning("MCP not available, using local data engineering tools")
+            logger.warning("MCP not available, using local tools")
             return None
         
         try:
@@ -111,46 +111,50 @@ class DataEngineerAgent:
         except Exception as e:
             logger.error(f"MCP tool {tool_name} execution failed: {e}")
             return None
-    
+
     async def use_data_specific_mcp_tools(self, data_engineering_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Use data engineering-specific MCP tools voor pipeline enhancement."""
-        if not self.mcp_enabled:
-            return {}
-        
+        """Use data-specific MCP tools voor enhanced functionality."""
         enhanced_data = {}
         
-        try:
-            # Data quality analysis
-            quality_result = await self.use_mcp_tool("data_quality_analysis", {
-                "data_summary": data_engineering_data.get("data_summary", ""),
-                "quality_metrics": data_engineering_data.get("quality_metrics", {}),
-                "analysis_type": "comprehensive"
-            })
-            if quality_result:
-                enhanced_data["data_quality_analysis"] = quality_result
-            
-            # Pipeline optimization
-            pipeline_result = await self.use_mcp_tool("pipeline_optimization", {
-                "pipeline_code": data_engineering_data.get("pipeline_code", ""),
-                "performance_metrics": data_engineering_data.get("performance_metrics", {}),
-                "optimization_target": "performance"
-            })
-            if pipeline_result:
-                enhanced_data["pipeline_optimization"] = pipeline_result
-            
-            # ETL enhancement
-            etl_result = await self.use_mcp_tool("etl_enhancement", {
-                "etl_config": data_engineering_data.get("etl_config", {}),
-                "data_sources": data_engineering_data.get("data_sources", []),
-                "transformation_rules": data_engineering_data.get("transformation_rules", [])
-            })
-            if etl_result:
-                enhanced_data["etl_enhancement"] = etl_result
-            
-            logger.info(f"Data engineering-specific MCP tools executed: {list(enhanced_data.keys())}")
-            
-        except Exception as e:
-            logger.error(f"Error in data engineering-specific MCP tools: {e}")
+        # Data pipeline development
+        pipeline_result = await self.use_mcp_tool("data_pipeline_development", {
+            "pipeline_name": data_engineering_data.get("pipeline_name", ""),
+            "pipeline_type": data_engineering_data.get("pipeline_type", "etl"),
+            "data_sources": data_engineering_data.get("data_sources", []),
+            "development_type": "comprehensive"
+        })
+        if pipeline_result:
+            enhanced_data["data_pipeline_development"] = pipeline_result
+        
+        # Data quality assessment
+        quality_result = await self.use_mcp_tool("data_quality_assessment", {
+            "data_summary": data_engineering_data.get("data_summary", ""),
+            "quality_metrics": data_engineering_data.get("quality_metrics", {}),
+            "assessment_type": "comprehensive",
+            "validation_rules": data_engineering_data.get("validation_rules", [])
+        })
+        if quality_result:
+            enhanced_data["data_quality_assessment"] = quality_result
+        
+        # ETL process optimization
+        etl_result = await self.use_mcp_tool("etl_process_optimization", {
+            "pipeline_code": data_engineering_data.get("pipeline_code", ""),
+            "performance_metrics": data_engineering_data.get("performance_metrics", {}),
+            "optimization_type": "comprehensive",
+            "scaling_strategy": data_engineering_data.get("scaling_strategy", "horizontal")
+        })
+        if etl_result:
+            enhanced_data["etl_process_optimization"] = etl_result
+        
+        # Data monitoring and alerting
+        monitoring_result = await self.use_mcp_tool("data_monitoring_alerting", {
+            "pipeline_id": data_engineering_data.get("pipeline_id", ""),
+            "monitoring_metrics": data_engineering_data.get("monitoring_metrics", {}),
+            "alert_thresholds": data_engineering_data.get("alert_thresholds", {}),
+            "notification_channels": data_engineering_data.get("notification_channels", ["slack", "email"])
+        })
+        if monitoring_result:
+            enhanced_data["data_monitoring_alerting"] = monitoring_result
         
         return enhanced_data
 
@@ -427,7 +431,7 @@ Data Engineer Agent Commands:
         return explanation_result
 
     async def build_pipeline(self, pipeline_name: str = "ETL Pipeline") -> Dict[str, Any]:
-        """Build new data pipeline."""
+        """Build new data pipeline met MCP enhancement."""
         # Input validation
         if not isinstance(pipeline_name, str):
             raise TypeError("pipeline_name must be a string")
@@ -437,140 +441,84 @@ Data Engineer Agent Commands:
         
         logger.info(f"Building data pipeline: {pipeline_name}")
 
+        # Use MCP tools for enhanced pipeline development
+        data_engineering_data = {
+            "pipeline_name": pipeline_name,
+            "pipeline_type": "etl",
+            "data_sources": ["database", "api", "files"],
+            "development_type": "comprehensive",
+            "data_summary": "Sample data summary for pipeline development",
+            "quality_metrics": {"completeness": 95, "accuracy": 98, "consistency": 92},
+            "validation_rules": ["not_null", "data_type", "range_check"],
+            "pipeline_code": "Sample ETL pipeline code",
+            "performance_metrics": {"processing_time": 120, "throughput": 1000},
+            "scaling_strategy": "horizontal",
+            "pipeline_id": "pipeline_001",
+            "monitoring_metrics": {"success_rate": 99.5, "error_rate": 0.5},
+            "alert_thresholds": {"error_rate": 1.0, "processing_time": 300},
+            "notification_channels": ["slack", "email"]
+        }
+        
+        enhanced_data = await self.use_data_specific_mcp_tools(data_engineering_data)
+
         # Simulate pipeline building
         time.sleep(2)
 
-        # Try MCP-enhanced pipeline building first
-        if self.mcp_enabled and self.mcp_client:
-            try:
-                mcp_result = await self.use_mcp_tool("build_pipeline", {
-                    "pipeline_name": pipeline_name,
-                    "pipeline_type": "ETL",
-                    "include_optimization": True,
-                    "include_monitoring": True
-                })
-                
-                if mcp_result:
-                    logger.info("MCP-enhanced pipeline building completed")
-                    pipeline_result = mcp_result.get("pipeline_result", {})
-                    pipeline_result["mcp_enhanced"] = True
-                else:
-                    logger.warning("MCP pipeline building failed, using local pipeline building")
-                    pipeline_result = {
-                        "pipeline_name": pipeline_name,
-                        "build_type": "ETL Pipeline",
-                        "status": "success",
-                        "components_created": {
-                            "extractors": ["database_extractor", "api_extractor", "file_extractor"],
-                            "transformers": ["data_cleaner", "data_validator", "data_enricher"],
-                            "loaders": ["database_loader", "warehouse_loader"]
-                        },
-                        "configuration": {
-                            "parallel_processing": True,
-                            "error_handling": "comprehensive",
-                            "monitoring": "enabled",
-                            "logging": "detailed"
-                        },
-                        "performance_optimization": {
-                            "caching": "enabled",
-                            "batch_processing": "optimized",
-                            "memory_usage": "efficient"
-                        },
-                        "quality_checks": [
-                            "data_completeness_check",
-                            "data_accuracy_check",
-                            "data_consistency_check"
-                        ],
-                        "timestamp": datetime.now().isoformat(),
-                        "agent": "DataEngineerAgent"
-                    }
-            except Exception as e:
-                logger.warning(f"MCP pipeline building failed: {e}, using local pipeline building")
-                pipeline_result = {
-                    "pipeline_name": pipeline_name,
-                    "build_type": "ETL Pipeline",
-                    "status": "success",
-                    "components_created": {
-                        "extractors": ["database_extractor", "api_extractor", "file_extractor"],
-                        "transformers": ["data_cleaner", "data_validator", "data_enricher"],
-                        "loaders": ["database_loader", "warehouse_loader"]
-                    },
-                    "configuration": {
-                        "parallel_processing": True,
-                        "error_handling": "comprehensive",
-                        "monitoring": "enabled",
-                        "logging": "detailed"
-                    },
-                    "performance_optimization": {
-                        "caching": "enabled",
-                        "batch_processing": "optimized",
-                        "memory_usage": "efficient"
-                    },
-                    "quality_checks": [
-                        "data_completeness_check",
-                        "data_accuracy_check",
-                        "data_consistency_check"
-                    ],
-                    "timestamp": datetime.now().isoformat(),
-                    "agent": "DataEngineerAgent"
-                }
-        else:
-            pipeline_result = {
-                "pipeline_name": pipeline_name,
-                "build_type": "ETL Pipeline",
-                "status": "success",
-                "components_created": {
-                    "extractors": ["database_extractor", "api_extractor", "file_extractor"],
-                    "transformers": ["data_cleaner", "data_validator", "data_enricher"],
-                    "loaders": ["database_loader", "warehouse_loader"]
-                },
-                "configuration": {
-                    "parallel_processing": True,
-                    "error_handling": "comprehensive",
-                    "monitoring": "enabled",
-                    "logging": "detailed"
-                },
-                "performance_optimization": {
-                    "caching": "enabled",
-                    "batch_processing": "optimized",
-                    "memory_usage": "efficient"
-                },
-                "quality_checks": [
-                    "data_completeness_check",
-                    "data_accuracy_check",
-                    "data_consistency_check"
-                ],
-                "timestamp": datetime.now().isoformat(),
-                "agent": "DataEngineerAgent"
-            }
-        
-        # Use data engineering-specific MCP tools for additional enhancement
-        if self.mcp_enabled:
-            try:
-                data_engineering_data = {
-                    "pipeline_code": f"ETL pipeline for {pipeline_name}",
-                    "data_summary": "Sample data summary for pipeline",
-                    "quality_metrics": {"completeness": "95%", "accuracy": "98%"},
-                    "performance_metrics": {"execution_time": "2.5s", "throughput": "1GB/s"},
-                    "etl_config": {"batch_size": 1000, "parallel_workers": 4},
-                    "data_sources": ["database", "api", "files"],
-                    "transformation_rules": ["clean", "validate", "enrich"]
-                }
-                data_enhanced = await self.use_data_specific_mcp_tools(data_engineering_data)
-                if data_enhanced:
-                    pipeline_result["data_engineering_enhancements"] = data_enhanced
-            except Exception as e:
-                logger.warning(f"Data engineering-specific MCP tools failed: {e}")
+        pipeline_result = {
+            "pipeline_name": pipeline_name,
+            "build_type": "ETL Pipeline",
+            "status": "success",
+            "components_created": {
+                "extractors": ["database_extractor", "api_extractor", "file_extractor"],
+                "transformers": ["data_cleaner", "data_validator", "data_enricher"],
+                "loaders": ["database_loader", "warehouse_loader"]
+            },
+            "configuration": {
+                "parallel_processing": True,
+                "error_handling": "comprehensive",
+                "monitoring": "enabled",
+                "logging": "detailed"
+            },
+            "performance_optimization": {
+                "caching": "enabled",
+                "batch_processing": "optimized",
+                "memory_usage": "efficient"
+            },
+            "quality_checks": [
+                "data_completeness_check",
+                "data_accuracy_check",
+                "data_consistency_check"
+            ],
+            "data_architecture": {
+                "data_lake": "configured",
+                "data_warehouse": "optimized",
+                "data_marts": "designed"
+            },
+            "etl_processes": {
+                "extract_processes": ["incremental", "full_load", "change_data_capture"],
+                "transform_processes": ["cleansing", "enrichment", "aggregation"],
+                "load_processes": ["append", "upsert", "replace"]
+            },
+            "monitoring_setup": {
+                "metrics_collection": "enabled",
+                "alerting": "configured",
+                "dashboard": "created"
+            },
+            "timestamp": datetime.now().isoformat(),
+            "agent": "DataEngineerAgent"
+        }
 
-        # Log performance metrics
-        self.monitor._record_metric("DataEngineer", MetricType.SUCCESS_RATE, 97, "%")
+        # Add MCP enhanced data if available
+        if enhanced_data:
+            pipeline_result["mcp_enhanced_data"] = enhanced_data
+            pipeline_result["mcp_enhanced"] = True
 
-        # Add to pipeline history
-        pipeline_entry = f"{datetime.now().isoformat()}: {pipeline_name} pipeline built successfully"
+        # Add to history
+        pipeline_entry = f"{pipeline_result['timestamp']}: {pipeline_name} - Status: {pipeline_result['status']}"
         self.pipeline_history.append(pipeline_entry)
         self._save_pipeline_history()
 
-        logger.info(f"Pipeline build completed: {pipeline_result}")
+        logger.info(f"Pipeline build result: {pipeline_result}")
         return pipeline_result
 
     def monitor_pipeline(self, pipeline_id: str = "pipeline_001") -> Dict[str, Any]:
@@ -858,42 +806,47 @@ def main():
 
     args = parser.parse_args()
 
-    agent = DataEngineerAgent()
+    try:
+        agent = DataEngineerAgent()
 
-    if args.command == "help":
-        agent.show_help()
-    elif args.command == "data-quality-check":
-        result = agent.data_quality_check(args.data_summary)
-        print(json.dumps(result, indent=2))
-    elif args.command == "explain-pipeline":
-        result = agent.explain_pipeline(args.pipeline_code)
-        print(json.dumps(result, indent=2))
-    elif args.command == "build-pipeline":
-        result = asyncio.run(agent.build_pipeline(args.pipeline_name))
-        print(json.dumps(result, indent=2))
-    elif args.command == "monitor-pipeline":
-        result = agent.monitor_pipeline(args.pipeline_id)
-        print(json.dumps(result, indent=2))
-    elif args.command == "show-pipeline-history":
-        agent.show_pipeline_history()
-    elif args.command == "show-quality-history":
-        agent.show_quality_history()
-    elif args.command == "show-best-practices":
-        agent.show_resource("best-practices")
-    elif args.command == "show-changelog":
-        agent.show_resource("changelog")
-    elif args.command == "export-report":
-        agent.export_report(args.format)
-    elif args.command == "test":
-        agent.test_resource_completeness()
-    elif args.command == "collaborate":
-        agent.collaborate_example()
-    elif args.command == "run":
-        asyncio.run(agent.run())
-    else:
-        print("Unknown command. Use 'help' to see available commands.")
+        if args.command == "help":
+            agent.show_help()
+        elif args.command == "data-quality-check":
+            result = agent.data_quality_check(args.data_summary)
+            print(json.dumps(result, indent=2))
+        elif args.command == "explain-pipeline":
+            result = agent.explain_pipeline(args.pipeline_code)
+            print(json.dumps(result, indent=2))
+        elif args.command == "build-pipeline":
+            result = asyncio.run(agent.build_pipeline(args.pipeline_name))
+            print(json.dumps(result, indent=2))
+        elif args.command == "monitor-pipeline":
+            result = agent.monitor_pipeline(args.pipeline_id)
+            print(json.dumps(result, indent=2))
+        elif args.command == "show-pipeline-history":
+            agent.show_pipeline_history()
+        elif args.command == "show-quality-history":
+            agent.show_quality_history()
+        elif args.command == "show-best-practices":
+            agent.show_resource("best-practices")
+        elif args.command == "show-changelog":
+            agent.show_resource("changelog")
+        elif args.command == "export-report":
+            agent.export_report(args.format)
+        elif args.command == "test":
+            agent.test_resource_completeness()
+        elif args.command == "collaborate":
+            asyncio.run(agent.collaborate_example())
+        elif args.command == "run":
+            asyncio.run(agent.run())
+        else:
+            print("Unknown command. Use 'help' to see available commands.")
+            sys.exit(1)
+
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+        print(f"❌ Unexpected error: {e}")
         sys.exit(1)
-        return
 
 if __name__ == "__main__":
     main()
