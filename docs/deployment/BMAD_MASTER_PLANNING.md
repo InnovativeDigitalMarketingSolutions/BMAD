@@ -45,6 +45,7 @@ Dit document consolideert alle planning documenten tot één master roadmap voor
 - **Microservices Architecture**: 6 core services implemented (Agent, Integration, Context, Workflow, API Gateway, Authentication)
 - **Test Workflow**: Comprehensive test workflow guide and unit tests for all services
 - **CLI Test Coverage**: Complete CLI testing with pragmatic mocking (55/55 tests passing, 100% success rate)
+- **Framework Templates**: Complete framework templates for agents (5 templates, 53,789 characters)
 - **Testing Strategy**: Test pyramid implementation with unit, integration, and E2E test frameworks
 
 ### 🔄 **In Progress**
@@ -298,6 +299,156 @@ sys.modules['psutil'] = MagicMock()
 **Documentation Created**:
 - `docs/guides/TESTING_STRATEGY.md` - Complete test strategie gids
 - `docs/reports/CLI_TESTING_COMPLETE_REPORT.md` - Volledige implementatie rapportage
+
+#### 1.5 Framework Templates voor Agents (Critical) ✅ **COMPLETE**
+**Timeline**: Week 5  
+**Status**: ✅ **COMPLETE** - Framework templates geïntegreerd voor alle agents
+
+**Implementation Success**:
+- ✅ **Framework Templates**: 5 complete templates geïmplementeerd
+- ✅ **Agent Integration**: AiDeveloper agent heeft volledige toegang tot templates
+- ✅ **CLI Commands**: Nieuwe commando's voor framework template toegang
+- ✅ **Utility Module**: FrameworkTemplatesManager voor centrale toegang
+
+**Framework Templates Implemented**:
+```
+📋 Available Framework Templates:
+  • development_strategy (7,166 characters)
+  • development_workflow (13,492 characters)
+  • testing_strategy (8,835 characters)
+  • testing_workflow (12,950 characters)
+  • frameworks_overview (11,346 characters)
+```
+
+**Agent Integration Results**:
+```
+✅ Framework templates module imported successfully
+✅ Framework templates manager created successfully
+✅ Available templates: ['development_strategy', 'development_workflow', 'testing_strategy', 'testing_workflow', 'frameworks_overview']
+✅ Template 'development_strategy' loaded successfully (7166 characters)
+✅ Template 'development_workflow' loaded successfully (13492 characters)
+✅ Template 'testing_strategy' loaded successfully (8835 characters)
+✅ Template 'testing_workflow' loaded successfully (12950 characters)
+✅ Template 'frameworks_overview' loaded successfully (11346 characters)
+✅ AI agent guidelines loaded: 2 categories
+✅ Quality gates loaded: 2 categories
+✅ Pyramid strategies loaded: 2 categories
+✅ Mocking strategy loaded (410 characters)
+✅ Workflow commands loaded: 2 categories
+✅ Linting config loaded (403 characters)
+```
+
+**New CLI Commands**:
+```bash
+# Framework Template Commando's
+show-framework-overview          # Complete framework overzicht
+show-framework-guidelines        # AI agent framework guidelines
+show-quality-gates              # Quality gates voor development/testing
+show-pyramid-strategies         # Development/testing pyramid strategies
+show-mocking-strategy           # Pragmatic mocking strategy
+show-workflow-commands          # Development/testing workflow commands
+show-linting-config             # Flake8 linting configuration
+show-framework-template [name]  # Specifieke framework template
+```
+
+**Agent-Specific Guidelines**:
+- **AI Agents**: LLM error handling, safety checks, fallback mechanisms
+- **Development Agents**: Pyramid strategie, unit tests, type hints
+- **Testing Agents**: Pragmatic mocking, test coverage, monitoring
+
+**Quality Gates Implemented**:
+```
+🔧 DEVELOPMENT QUALITY GATES:
+  • linting: No flake8 errors
+  • coverage: >90% line coverage
+  • tests: All tests passing
+  • documentation: Complete docstrings
+
+🧪 TESTING QUALITY GATES:
+  • unit_coverage: >90% line coverage
+  • integration_success: >95% success rate
+  • e2e_success: >90% success rate
+  • execution_time: <5 minutes for unit tests
+```
+
+**Pyramid Strategies**:
+```
+🔧 DEVELOPMENT PYRAMID:
+  • Unit: 70% van alle development (snel, geïsoleerd)
+  • Integration: 20% van alle development (service integratie)
+  • Production: 10% van alle development (volledige validatie)
+
+🧪 TESTING PYRAMID:
+  • Unit: 70% van alle tests (snel, gemockt)
+  • Integration: 20% van alle tests (echte dependencies)
+  • E2E: 10% van alle tests (volledige workflows)
+```
+
+**Documentation Created**:
+- `bmad/resources/templates/frameworks/` - 5 framework template bestanden
+- `bmad/agents/core/utils/framework_templates.py` - Framework templates utility module
+- `docs/reports/FRAMEWORK_TEMPLATES_ANALYSIS.md` - Analyse van framework templates behoeften
+- `test_framework_templates_simple.py` - Test script voor framework templates
+
+#### 1.6 Framework Templates voor Andere Agents (Planned)
+**Timeline**: Week 6-11  
+**Status**: 📋 **PLANNED** - Analyse complete, implementatie gepland
+
+**Analysis Results**:
+- **Totaal Agents**: 23 agents
+- **Hoogste Prioriteit**: 8 agents (Development + Testing)
+- **Gemiddelde Prioriteit**: 5 agents (AI + Design)
+- **Lage Prioriteit**: 10 agents (Management)
+
+**Priority Matrix**:
+```
+PRIORITEIT 1: Development Agents (Week 6-7)
+• BackendDeveloper     - Backend development frameworks
+• FrontendDeveloper    - Frontend development frameworks
+• FullstackDeveloper   - Full-stack development frameworks
+• MobileDeveloper      - Mobile development frameworks
+• DevOpsInfra          - Infrastructure frameworks
+• SecurityDeveloper    - Security development frameworks
+
+PRIORITEIT 1: Testing Agents (Week 7-8)
+• TestEngineer         - Testing frameworks
+• QualityGuardian      - Quality assurance frameworks
+
+PRIORITEIT 2: AI Agents (Week 8-9)
+• DataEngineer         - Data engineering frameworks
+• RnD                  - Research frameworks
+
+PRIORITEIT 2: Design Agents (Week 9-10)
+• UXUIDesigner         - Design frameworks
+• AccessibilityAgent   - Accessibility frameworks
+
+PRIORITEIT 3: Management Agents (Week 10-11)
+• ProductOwner         - Product management frameworks
+• Scrummaster          - Agile frameworks
+• Architect            - Architecture frameworks
+• Orchestrator         - Orchestration frameworks
+• ReleaseManager       - Release frameworks
+• DocumentationAgent   - Documentation frameworks
+• FeedbackAgent        - Feedback frameworks
+• Retrospective        - Retrospective frameworks
+• StrategiePartner     - Strategy frameworks
+• WorkflowAutomator    - Workflow frameworks
+```
+
+**Implementation Plan**:
+1. **Fase 1**: Development Agents (Week 6-7) - 6 agents
+2. **Fase 2**: Testing Agents (Week 7-8) - 2 agents
+3. **Fase 3**: AI Agents (Week 8-9) - 2 agents
+4. **Fase 4**: Design Agents (Week 9-10) - 2 agents
+5. **Fase 5**: Management Agents (Week 10-11) - 10 agents
+
+**Success Criteria**:
+- ✅ Alle 23 agents hebben framework templates
+- ✅ Framework templates zijn consistent
+- ✅ Framework templates zijn levende documenten
+- ✅ Agents kunnen framework templates gebruiken
+- ✅ Framework templates zijn gevalideerd
+- ✅ Framework templates zijn gedocumenteerd
 - `docs/reports/CLI_TEST_FAILURES_ANALYSIS.md` - Gedetailleerde failure analyse
 - `tests/integration/test_cli_integrations.py` - Framework voor toekomstige integration tests
 
@@ -929,11 +1080,13 @@ pytest tests/ -v --run-integration --run-e2e
 
 ### **Immediate Actions (Next 2 Weeks)**
 1. [x] **Complete CLI Test Coverage** (Priority 1) ✅ **COMPLETE**
-2. [ ] **Integration Testing Framework** (Priority 1) - Week 6-7
-3. [ ] Complete Notification Service implementation
-4. [ ] Begin Docker containerization
-5. [ ] Start Kubernetes deployment setup
-6. [ ] Implement production infrastructure
+2. [x] **Framework Templates voor Agents** (Priority 1) ✅ **COMPLETE**
+3. [ ] **Framework Templates voor Andere Agents** (Priority 1) - Week 6-11
+4. [ ] **Integration Testing Framework** (Priority 1) - Week 6-7
+5. [ ] Complete Notification Service implementation
+6. [ ] Begin Docker containerization
+7. [ ] Start Kubernetes deployment setup
+8. [ ] Implement production infrastructure
 
 ### **Integration Testing Framework Implementation (Week 6-7)**
 1. [ ] **Setup Integration Test Environment**
