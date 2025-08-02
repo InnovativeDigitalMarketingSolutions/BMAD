@@ -24,6 +24,16 @@ from bmad.agents.core.communication.message_bus import publish, subscribe
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 
+# MCP Integration
+from bmad.core.mcp import (
+    MCPClient,
+    MCPContext,
+    FrameworkMCPIntegration,
+    get_mcp_client,
+    get_framework_mcp_integration,
+    initialize_framework_mcp_integration
+)
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -99,6 +109,13 @@ class WorkflowAutomatorAgent:
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
         
+        # MCP Integration
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
+        
+        logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+        
         # Initialize logger
         self.logger = logger
         
@@ -129,10 +146,98 @@ class WorkflowAutomatorAgent:
         
         # Load workflow history
         self._load_workflow_history()
-        
-        # Note: Event subscription will be handled in the run() method
-        pass
+
+    async def initialize_mcp(self):
+        """Initialize MCP client voor enhanced workflow automation capabilities."""
+        try:
+            self.mcp_client = await get_mcp_client()
+            self.mcp_integration = get_framework_mcp_integration()
+            await initialize_framework_mcp_integration()
+            self.mcp_enabled = True
+            logger.info("MCP client initialized successfully for WorkflowAutomator")
+        except Exception as e:
+            logger.warning(f"MCP initialization failed for WorkflowAutomator: {e}")
+            self.mcp_enabled = False
     
+    async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Use MCP tool voor enhanced workflow automation functionality."""
+        if not self.mcp_enabled or not self.mcp_client:
+            logger.warning("MCP not available, using local workflow automation tools")
+            return None
+        
+        try:
+            result = await self.mcp_client.execute_tool(tool_name, parameters)
+            logger.info(f"MCP tool {tool_name} executed successfully")
+            return result
+        except Exception as e:
+            logger.error(f"MCP tool {tool_name} execution failed: {e}")
+            return None
+    
+    async def use_workflow_specific_mcp_tools(self, workflow_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use workflow-specific MCP tools voor enhanced workflow automation."""
+        if not self.mcp_enabled:
+            return {}
+        
+        enhanced_data = {}
+        
+        try:
+            # Workflow analysis
+            analysis_result = await self.use_mcp_tool("workflow_analysis", {
+                "workflow_id": workflow_data.get("workflow_id", ""),
+                "workflow_steps": workflow_data.get("workflow_steps", []),
+                "execution_history": workflow_data.get("execution_history", []),
+                "analysis_type": "workflow"
+            })
+            if analysis_result:
+                enhanced_data["workflow_analysis"] = analysis_result
+            
+            # Workflow optimization
+            optimization_result = await self.use_mcp_tool("workflow_optimization", {
+                "workflow_id": workflow_data.get("workflow_id", ""),
+                "performance_metrics": workflow_data.get("performance_metrics", {}),
+                "bottlenecks": workflow_data.get("bottlenecks", []),
+                "optimization_goals": workflow_data.get("optimization_goals", [])
+            })
+            if optimization_result:
+                enhanced_data["workflow_optimization"] = optimization_result
+            
+            # Workflow scheduling
+            scheduling_result = await self.use_mcp_tool("workflow_scheduling", {
+                "workflow_id": workflow_data.get("workflow_id", ""),
+                "schedule": workflow_data.get("schedule", ""),
+                "dependencies": workflow_data.get("dependencies", []),
+                "resource_constraints": workflow_data.get("resource_constraints", {})
+            })
+            if scheduling_result:
+                enhanced_data["workflow_scheduling"] = scheduling_result
+            
+            # Workflow monitoring
+            monitoring_result = await self.use_mcp_tool("workflow_monitoring", {
+                "workflow_id": workflow_data.get("workflow_id", ""),
+                "monitoring_metrics": workflow_data.get("monitoring_metrics", {}),
+                "alert_thresholds": workflow_data.get("alert_thresholds", {}),
+                "real_time_tracking": workflow_data.get("real_time_tracking", True)
+            })
+            if monitoring_result:
+                enhanced_data["workflow_monitoring"] = monitoring_result
+            
+            # Workflow recovery
+            recovery_result = await self.use_mcp_tool("workflow_recovery", {
+                "workflow_id": workflow_data.get("workflow_id", ""),
+                "failure_point": workflow_data.get("failure_point", ""),
+                "error_context": workflow_data.get("error_context", {}),
+                "recovery_strategy": workflow_data.get("recovery_strategy", "auto")
+            })
+            if recovery_result:
+                enhanced_data["workflow_recovery"] = recovery_result
+            
+            logger.info(f"Workflow-specific MCP tools executed: {list(enhanced_data.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Error in workflow-specific MCP tools: {e}")
+        
+        return enhanced_data
+
     def _validate_input(self, data: Any) -> bool:
         """Validate input data."""
         if data is None:
@@ -291,12 +396,19 @@ class WorkflowAutomatorAgent:
                 '%'
             )
             
+            # Convert enum values to strings for JSON serialization
+            steps_dict = []
+            for step in steps:
+                step_dict = asdict(step)
+                step_dict['status'] = step_dict['status'].value
+                steps_dict.append(step_dict)
+            
             return {
                 "workflow_id": workflow_id,
                 "name": name,
                 "description": description,
                 "status": "created",
-                "steps": steps,
+                "steps": steps_dict,
                 "priority": priority,
                 "steps_count": len(steps),
                 "message": f"Workflow '{name}' created successfully"
@@ -311,7 +423,7 @@ class WorkflowAutomatorAgent:
                 "status": "failed"
             }
     
-    def execute_workflow(self, workflow_id: str) -> Dict[str, Any]:
+    async def execute_workflow(self, workflow_id: str) -> Dict[str, Any]:
         """Execute a workflow with automatic agent coordination."""
         try:
             if workflow_id not in self.workflows:
@@ -367,7 +479,28 @@ class WorkflowAutomatorAgent:
                 }
             )
             
-            return {
+            # Use MCP tools for enhanced workflow analysis
+            workflow_data = {
+                "workflow_id": workflow_id,
+                "workflow_steps": [{"id": step.id, "agent": step.agent, "command": step.command, "status": step.status.value} for step in workflow.steps],
+                "execution_history": self.execution_history,
+                "performance_metrics": {"execution_time": execution_time, "steps_completed": len([r for r in execution_results if r["status"] == "success"]), "total_steps": len(workflow.steps)},
+                "bottlenecks": [],
+                "optimization_goals": ["reduce_execution_time", "improve_success_rate"],
+                "schedule": "",
+                "dependencies": [],
+                "resource_constraints": {},
+                "monitoring_metrics": {"status": workflow.status.value, "execution_time": execution_time},
+                "alert_thresholds": {"execution_time": 300, "success_rate": 90},
+                "real_time_tracking": True,
+                "failure_point": workflow.error_message if workflow.error_message else "",
+                "error_context": {"status": workflow.status.value, "error_message": workflow.error_message},
+                "recovery_strategy": "auto"
+            }
+            
+            mcp_enhanced_data = await self.use_workflow_specific_mcp_tools(workflow_data)
+            
+            result = {
                 "workflow_id": workflow_id,
                 "status": "executed" if workflow.status == WorkflowStatus.COMPLETED else workflow.status.value,
                 "execution_time": execution_time,
@@ -375,6 +508,13 @@ class WorkflowAutomatorAgent:
                 "total_steps": len(workflow.steps),
                 "results": execution_results
             }
+            
+            # Integrate MCP enhanced data
+            if mcp_enhanced_data:
+                result["mcp_enhanced_data"] = mcp_enhanced_data
+                logger.info("MCP enhanced data integrated into workflow execution")
+            
+            return result
             
         except WorkflowExecutionError:
             raise
@@ -895,8 +1035,11 @@ class WorkflowAutomatorAgent:
             result = self.monitor_workflow(workflow_id)
             self.logger.info(f"Workflow monitoring requested: {result}")
 
-    def run(self):
-        """Run the agent with event handling."""
+    async def run(self):
+        """Run the agent with event handling met MCP integration."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
         logger.info(f"Starting {self.agent_name} agent...")
         
         # Subscribe to events
@@ -909,10 +1052,13 @@ class WorkflowAutomatorAgent:
         
         logger.info(f"{self.agent_name} agent is running and listening for events...")
         
+        # Run collaboration example
+        await self.collaborate_example()
+        
         # Keep the agent running
         try:
             while True:
-                time.sleep(1)
+                await asyncio.sleep(1)
         except KeyboardInterrupt:
             logger.info(f"{self.agent_name} agent stopped.")
 
@@ -949,7 +1095,7 @@ class WorkflowAutomatorAgent:
                 "message": "All required resources are available"
             }
 
-    def collaborate_example(self):
+    async def collaborate_example(self):
         """Example of collaboration with other agents."""
         logger.info("WorkflowAutomator collaboration example...")
         
@@ -966,7 +1112,7 @@ class WorkflowAutomatorAgent:
             workflow_id = workflow_result["workflow_id"]
             
             # Execute the workflow
-            execution_result = self.execute_workflow(workflow_id)
+            execution_result = await self.execute_workflow(workflow_id)
             logger.info(f"Workflow execution result: {execution_result}")
             
             # Monitor the workflow
@@ -982,6 +1128,7 @@ class WorkflowAutomatorAgent:
 
 def main():
     """Main CLI function for WorkflowAutomator agent."""
+    import asyncio
     import argparse
     
     parser = argparse.ArgumentParser(description="WorkflowAutomator Agent CLI")
@@ -1023,7 +1170,7 @@ def main():
                 print("Error: workflow-id is required")
                 return
             
-            result = agent.execute_workflow(args.workflow_id)
+            result = asyncio.run(agent.execute_workflow(args.workflow_id))
             print(json.dumps(result, indent=2))
         
         elif args.command == "optimize-workflow":
@@ -1120,7 +1267,7 @@ def main():
             print(json.dumps(result, indent=2))
         
         elif args.command == "run":
-            agent.run()
+            asyncio.run(agent.run())
         
         else:
             print(f"Unknown command: {args.command}")

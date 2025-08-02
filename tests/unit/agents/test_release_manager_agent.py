@@ -25,9 +25,10 @@ class TestReleaseManagerAgent:
         assert hasattr(agent, 'template_paths')
         assert hasattr(agent, 'data_paths')
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Release History\n\n- Release 1.2.0\n- Release 1.1.0")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Release Historynn- Release 1.2.0n- Release 1.1.0")
     @patch('pathlib.Path.exists', return_value=True)
-    def test_load_release_history_success(self, mock_exists, mock_file, agent):
+    @pytest.mark.asyncio
+    async def test_load_release_history_success(self, mock_exists, mock_file, agent):
         """Test successful release history loading."""
         agent.release_history = []  # Reset history
         agent._load_release_history()
@@ -50,9 +51,10 @@ class TestReleaseManagerAgent:
         agent._save_release_history()
         mock_file.assert_called()
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Rollback History\n\n- Rollback 1.2.0\n- Rollback 1.1.0")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Rollback Historynn- Rollback 1.2.0n- Rollback 1.1.0")
     @patch('pathlib.Path.exists', return_value=True)
-    def test_load_rollback_history_success(self, mock_exists, mock_file, agent):
+    @pytest.mark.asyncio
+    async def test_load_rollback_history_success(self, mock_exists, mock_file, agent):
         """Test successful rollback history loading."""
         agent.rollback_history = []  # Reset history
         agent._load_rollback_history()
@@ -77,13 +79,13 @@ class TestReleaseManagerAgent:
 
     def test_show_help(self, agent, capsys):
         """Test show_help method."""
-        agent.show_help()
+        await agent.show_help()
         captured = capsys.readouterr()
         assert "Release Manager Agent Commands:" in captured.out
         assert "create-release" in captured.out
         assert "approve-release" in captured.out
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Best Practices\n\nTest content")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Best PracticesnnTest content")
     @patch('pathlib.Path.exists', return_value=True)
     def test_show_resource_best_practices(self, mock_exists, mock_file, agent, capsys):
         """Test show_resource method for best-practices."""
@@ -111,7 +113,8 @@ class TestReleaseManagerAgent:
         captured = capsys.readouterr()
         assert "No release history available." in captured.out
 
-    def test_show_release_history_with_data(self, agent, capsys):
+    @pytest.mark.asyncio
+    async def test_show_release_history_with_data(self, agent, capsys):
         """Test show_release_history with data."""
         agent.release_history = ["Release 1.2.0", "Release 1.1.0"]
         agent.show_release_history()
@@ -126,7 +129,8 @@ class TestReleaseManagerAgent:
         captured = capsys.readouterr()
         assert "No rollback history available." in captured.out
 
-    def test_show_rollback_history_with_data(self, agent, capsys):
+    @pytest.mark.asyncio
+    async def test_show_rollback_history_with_data(self, agent, capsys):
         """Test show_rollback_history with data."""
         agent.rollback_history = ["Rollback 1.2.0", "Rollback 1.1.0"]
         agent.show_rollback_history()
@@ -135,7 +139,8 @@ class TestReleaseManagerAgent:
         assert "Rollback 1.2.0" in captured.out
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
-    def test_create_release(self, mock_monitor, agent):
+    @pytest.mark.asyncio
+    async def test_create_release(self, mock_monitor, agent):
         """Test create_release method."""
         mock_monitor_instance = MagicMock()
         mock_monitor.return_value = mock_monitor_instance
@@ -153,7 +158,8 @@ class TestReleaseManagerAgent:
         assert result["agent"] == "ReleaseManagerAgent"
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
-    def test_approve_release(self, mock_monitor, agent):
+    @pytest.mark.asyncio
+    async def test_approve_release(self, mock_monitor, agent):
         """Test approve_release method."""
         mock_monitor_instance = MagicMock()
         mock_monitor.return_value = mock_monitor_instance
@@ -169,12 +175,13 @@ class TestReleaseManagerAgent:
         assert result["agent"] == "ReleaseManagerAgent"
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
-    def test_deploy_release(self, mock_monitor, agent):
+    @pytest.mark.asyncio
+    async def test_deploy_release(self, mock_monitor, agent):
         """Test deploy_release method."""
         mock_monitor_instance = MagicMock()
         mock_monitor.return_value = mock_monitor_instance
         
-        result = agent.deploy_release("1.3.0")
+        result = await agent.deploy_release("1.3.0")
         
         assert result["status"] == "deployed"
         assert result["version"] == "1.3.0"
@@ -186,7 +193,8 @@ class TestReleaseManagerAgent:
         assert result["agent"] == "ReleaseManagerAgent"
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
-    def test_rollback_release(self, mock_monitor, agent):
+    @pytest.mark.asyncio
+    async def test_rollback_release(self, mock_monitor, agent):
         """Test rollback_release method."""
         mock_monitor_instance = MagicMock()
         mock_monitor.return_value = mock_monitor_instance
@@ -243,7 +251,8 @@ class TestReleaseManagerAgent:
     @patch('bmad.agents.core.communication.message_bus.publish')
     @patch('bmad.agents.core.data.supabase_context.save_context')
     @patch('bmad.agents.core.data.supabase_context.get_context')
-    def test_collaborate_example(self, mock_get_context, mock_save_context, mock_publish, agent):
+    @pytest.mark.asyncio
+    async def test_collaborate_example(self, mock_get_context, mock_save_context, mock_publish, agent):
         """Test collaborate_example method."""
         mock_get_context.return_value = {"release_projects": ["Project1"]}
         mock_save_context.return_value = None
@@ -251,7 +260,7 @@ class TestReleaseManagerAgent:
         # Mock the entire collaborate_example method to avoid Supabase API calls
         with patch.object(agent, 'collaborate_example') as mock_collaborate:
             mock_collaborate.return_value = None
-            agent.collaborate_example()
+            await agent.collaborate_example()
         
         # Verify the method was called
         mock_collaborate.assert_called_once()
@@ -279,28 +288,32 @@ class TestReleaseManagerAgent:
         # Mock the entire run method to avoid Supabase API calls
         with patch.object(agent, 'run') as mock_run:
             mock_run.return_value = None
-            agent.run()
+            await agent.run()
         
         # Verify the method was called
         mock_run.assert_called_once()
 
     # Error handling tests
-    def test_create_release_invalid_input(self, agent):
+    @pytest.mark.asyncio
+    async def test_create_release_invalid_input(self, agent):
         """Test create_release with invalid input."""
         with pytest.raises(TypeError):
             agent.create_release(123, "description")
 
-    def test_approve_release_invalid_input(self, agent):
+    @pytest.mark.asyncio
+    async def test_approve_release_invalid_input(self, agent):
         """Test approve_release with invalid input."""
         with pytest.raises(TypeError):
             agent.approve_release(123)
 
-    def test_deploy_release_invalid_input(self, agent):
+    @pytest.mark.asyncio
+    async def test_deploy_release_invalid_input(self, agent):
         """Test deploy_release with invalid input."""
         with pytest.raises(TypeError):
-            agent.deploy_release(123)
+            await agent.deploy_release(123)
 
-    def test_rollback_release_invalid_input(self, agent):
+    @pytest.mark.asyncio
+    async def test_rollback_release_invalid_input(self, agent):
         """Test rollback_release with invalid input."""
         with pytest.raises(TypeError):
             agent.rollback_release(123, "reason")
@@ -308,25 +321,27 @@ class TestReleaseManagerAgent:
     # Integration workflow test
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
     @patch('bmad.agents.core.communication.message_bus.publish')
-    def test_complete_release_workflow(self, mock_publish, mock_monitor, agent):
+    @pytest.mark.asyncio
+    @pytest.mark.asyncio
+    async def test_complete_release_workflow(self, mock_publish, mock_monitor, agent):
         """Test complete release workflow from creation to deployment."""
         mock_monitor_instance = MagicMock()
         mock_monitor.return_value = mock_monitor_instance
         
         # Create release
-        release_result = agent.create_release("1.3.0", "Feature release")
+        release_result = await agent.create_release("1.3.0", "Feature release")
         assert release_result["status"] == "created"
         
         # Approve release
-        approval_result = agent.approve_release("1.3.0")
+        approval_result = await agent.approve_release("1.3.0")
         assert approval_result["status"] == "approved"
         
         # Deploy release
-        deployment_result = agent.deploy_release("1.3.0")
+        deployment_result = await agent.deploy_release("1.3.0")
         assert deployment_result["status"] == "deployed"
         
         # Rollback release (if needed)
-        rollback_result = agent.rollback_release("1.3.0", "High error rate")
+        rollback_result = await agent.rollback_release("1.3.0", "High error rate")
         assert rollback_result["status"] == "rolled_back"
         
         # Verify that all methods were called successfully
@@ -470,7 +485,7 @@ class TestReleaseManagerAgent:
     def test_deploy_release_empty_version(self, agent):
         """Test deploy_release with empty version."""
         with pytest.raises(ValueError, match="version cannot be empty"):
-            agent.deploy_release("")
+            await agent.deploy_release("")
 
     def test_rollback_release_empty_version(self, agent):
         """Test rollback_release with empty version."""
@@ -564,7 +579,8 @@ class TestReleaseManagerAgentCLI:
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.save_context')
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.publish')
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.get_context', return_value={"status": "active"})
-    def test_cli_create_release(self, mock_get_context, mock_publish, mock_save_context):
+    @pytest.mark.asyncio
+    async def test_cli_create_release(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.ReleaseManager.releasemanager import main
         with patch('bmad.agents.Agent.ReleaseManager.releasemanager.ReleaseManagerAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
@@ -576,7 +592,8 @@ class TestReleaseManagerAgentCLI:
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.save_context')
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.publish')
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.get_context', return_value={"status": "active"})
-    def test_cli_approve_release(self, mock_get_context, mock_publish, mock_save_context):
+    @pytest.mark.asyncio
+    async def test_cli_approve_release(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.ReleaseManager.releasemanager import main
         with patch('bmad.agents.Agent.ReleaseManager.releasemanager.ReleaseManagerAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
@@ -588,7 +605,8 @@ class TestReleaseManagerAgentCLI:
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.save_context')
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.publish')
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.get_context', return_value={"status": "active"})
-    def test_cli_deploy_release(self, mock_get_context, mock_publish, mock_save_context):
+    @pytest.mark.asyncio
+    async def test_cli_deploy_release(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.ReleaseManager.releasemanager import main
         with patch('bmad.agents.Agent.ReleaseManager.releasemanager.ReleaseManagerAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
@@ -600,7 +618,8 @@ class TestReleaseManagerAgentCLI:
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.save_context')
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.publish')
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.get_context', return_value={"status": "active"})
-    def test_cli_rollback_release(self, mock_get_context, mock_publish, mock_save_context):
+    @pytest.mark.asyncio
+    async def test_cli_rollback_release(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.ReleaseManager.releasemanager import main
         with patch('bmad.agents.Agent.ReleaseManager.releasemanager.ReleaseManagerAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
@@ -672,7 +691,8 @@ class TestReleaseManagerAgentCLI:
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.save_context')
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.publish')
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.get_context', return_value={"status": "active"})
-    def test_cli_test(self, mock_get_context, mock_publish, mock_save_context):
+    @pytest.mark.asyncio
+    async def test_cli_test(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.ReleaseManager.releasemanager import main
         with patch('bmad.agents.Agent.ReleaseManager.releasemanager.ReleaseManagerAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
@@ -684,7 +704,8 @@ class TestReleaseManagerAgentCLI:
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.save_context')
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.publish')
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.get_context', return_value={"status": "active"})
-    def test_cli_collaborate(self, mock_get_context, mock_publish, mock_save_context):
+    @pytest.mark.asyncio
+    async def test_cli_collaborate(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.ReleaseManager.releasemanager import main
         with patch('bmad.agents.Agent.ReleaseManager.releasemanager.ReleaseManagerAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
@@ -696,7 +717,8 @@ class TestReleaseManagerAgentCLI:
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.save_context')
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.publish')
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.get_context', return_value={"status": "active"})
-    def test_cli_run(self, mock_get_context, mock_publish, mock_save_context):
+    @pytest.mark.asyncio
+    async def test_cli_run(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.ReleaseManager.releasemanager import main
         with patch('bmad.agents.Agent.ReleaseManager.releasemanager.ReleaseManagerAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value

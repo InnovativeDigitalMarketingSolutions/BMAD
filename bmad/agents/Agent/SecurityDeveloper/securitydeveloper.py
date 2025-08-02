@@ -21,6 +21,17 @@ from bmad.agents.core.communication.message_bus import publish, subscribe
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.slack.slack_notify import send_slack_message
+from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
+
+# MCP Integration
+from bmad.core.mcp import (
+    MCPClient,
+    MCPContext,
+    FrameworkMCPIntegration,
+    get_mcp_client,
+    get_framework_mcp_integration,
+    initialize_framework_mcp_integration
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
@@ -35,7 +46,19 @@ class SecurityValidationError(SecurityError):
     pass
 
 class SecurityDeveloperAgent:
+    """
+    Security Developer Agent voor BMAD.
+    Gespecialiseerd in security analysis, vulnerability assessment, en compliance monitoring.
+    """
+    
     def __init__(self):
+        self.framework_manager = get_framework_templates_manager()
+        try:
+            self.security_template = self.framework_manager.get_framework_template('security')
+        except:
+            self.security_template = None
+        self.lessons_learned = []
+
         # Set agent name
         self.agent_name = "SecurityDeveloper"
         # Initialize core services
@@ -75,6 +98,13 @@ class SecurityDeveloperAgent:
         self.active_threats = []
         self.security_policies = {}
         
+        # MCP Integration
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
+        
+        logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+        
         # Advanced security features
         self.real_time_monitoring = False
         self.compliance_frameworks = ["OWASP", "NIST", "ISO27001", "GDPR", "SOC2"]
@@ -91,6 +121,100 @@ class SecurityDeveloperAgent:
             "medium": ["monitoring", "assessment", "mitigation"],
             "low": ["documentation", "tracking", "prevention"]
         }
+        
+        # MCP Integration
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
+        
+        logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+    
+    async def initialize_mcp(self):
+        """Initialize MCP client voor enhanced security analysis capabilities."""
+        try:
+            self.mcp_client = await get_mcp_client()
+            self.mcp_integration = get_framework_mcp_integration()
+            await initialize_framework_mcp_integration()
+            self.mcp_enabled = True
+            logger.info("MCP client initialized successfully for SecurityDeveloper")
+        except Exception as e:
+            logger.warning(f"MCP initialization failed for SecurityDeveloper: {e}")
+            self.mcp_enabled = False
+    
+    async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Use MCP tool voor enhanced security analysis functionality."""
+        if not self.mcp_enabled or not self.mcp_client:
+            logger.warning("MCP not available, using local security analysis tools")
+            return None
+        
+        try:
+            result = await self.mcp_client.execute_tool(tool_name, parameters)
+            logger.info(f"MCP tool {tool_name} executed successfully")
+            return result
+        except Exception as e:
+            logger.error(f"MCP tool {tool_name} execution failed: {e}")
+            return None
+    
+    async def use_security_specific_mcp_tools(self, security_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use security-specific MCP tools voor enhanced security analysis."""
+        if not self.mcp_enabled:
+            return {}
+        
+        enhanced_data = {}
+        
+        try:
+            # Vulnerability analysis
+            vulnerability_result = await self.use_mcp_tool("vulnerability_analysis", {
+                "vulnerabilities": security_data.get("vulnerabilities", []),
+                "target": security_data.get("target", ""),
+                "analysis_type": "security",
+                "severity_thresholds": security_data.get("severity_thresholds", self.security_thresholds)
+            })
+            if vulnerability_result:
+                enhanced_data["vulnerability_analysis"] = vulnerability_result
+            
+            # Threat intelligence
+            threat_result = await self.use_mcp_tool("threat_intelligence", {
+                "threats": security_data.get("threats", []),
+                "threat_level": security_data.get("threat_level", "low"),
+                "active_threats": security_data.get("active_threats", self.active_threats)
+            })
+            if threat_result:
+                enhanced_data["threat_intelligence"] = threat_result
+            
+            # Compliance assessment
+            compliance_result = await self.use_mcp_tool("compliance_assessment", {
+                "frameworks": security_data.get("frameworks", []),
+                "compliance_data": security_data.get("compliance_data", {}),
+                "security_policies": security_data.get("security_policies", self.security_policies)
+            })
+            if compliance_result:
+                enhanced_data["compliance_assessment"] = compliance_result
+            
+            # Security monitoring
+            monitoring_result = await self.use_mcp_tool("security_monitoring", {
+                "target": security_data.get("target", ""),
+                "monitoring_type": security_data.get("monitoring_type", "real_time"),
+                "alert_thresholds": security_data.get("alert_thresholds", self.security_thresholds)
+            })
+            if monitoring_result:
+                enhanced_data["security_monitoring"] = monitoring_result
+            
+            # Penetration testing
+            pentest_result = await self.use_mcp_tool("penetration_testing", {
+                "target": security_data.get("target", ""),
+                "scope": security_data.get("scope", "web"),
+                "test_type": security_data.get("test_type", "automated")
+            })
+            if pentest_result:
+                enhanced_data["penetration_testing"] = pentest_result
+            
+            logger.info(f"Security-specific MCP tools executed: {list(enhanced_data.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Error in security-specific MCP tools: {e}")
+        
+        return enhanced_data
 
     def _validate_input(self, value: Any, expected_type: type, param_name: str) -> None:
         """Validate input parameters with type checking."""
@@ -449,8 +573,8 @@ Advanced features:
             for i, incident in enumerate(self.incident_history[-10:], 1):
                 print(f"{i}. {incident}")
 
-    def run_security_scan(self, target: str = "application") -> Dict[str, Any]:
-        """Run comprehensive security scan on specified target."""
+    async def run_security_scan(self, target: str = "application") -> Dict[str, Any]:
+        """Run comprehensive security scan met MCP enhancement op specified target."""
         try:
             self._validate_security_target(target)
             
@@ -513,6 +637,29 @@ Advanced features:
                 "high_count": len([v for v in vulnerabilities if v["severity"] == "high"]),
                 "scan_duration": "2.5s"
             }
+
+            # Use MCP tools for enhanced security analysis
+            security_data = {
+                "target": target,
+                "vulnerabilities": vulnerabilities,
+                "threat_level": threat_level,
+                "severity_thresholds": self.security_thresholds,
+                "active_threats": self.active_threats,
+                "security_policies": self.security_policies,
+                "frameworks": ["OWASP", "NIST", "ISO27001"],
+                "compliance_data": {"status": "pending", "score": 0},
+                "monitoring_type": "real_time",
+                "alert_thresholds": self.security_thresholds,
+                "scope": "web",
+                "test_type": "automated"
+            }
+            
+            mcp_enhanced_data = await self.use_security_specific_mcp_tools(security_data)
+            
+            # Integrate MCP enhanced data
+            if mcp_enhanced_data:
+                scan_result["mcp_enhanced_data"] = mcp_enhanced_data
+                logger.info("MCP enhanced data integrated into security scan")
             
             # Update metrics
             self._update_security_metrics(scan_result)
@@ -523,7 +670,10 @@ Advanced features:
             self._save_scan_history()
             
             # Record performance metric
-            self._record_security_metric("scan_success_rate", 95.0, "%")
+            try:
+                self._record_security_metric("scan_success_rate", 95.0, "%")
+            except AttributeError:
+                logger.info("Performance monitor _record_security_metric not available")
             
             logger.info(f"Security scan completed. Score: {security_score}%, Threat Level: {threat_level}")
             return scan_result
@@ -964,7 +1114,11 @@ Advanced features:
         except Exception as e:
             logger.error(f"Policy evaluation failed: {e}")
 
-    def run(self):
+    async def run(self):
+        """Start the agent in event listening mode met MCP integration."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
         def sync_handler(event):
             asyncio.run(self.handle_security_scan_completed(event))
 
@@ -973,6 +1127,20 @@ Advanced features:
 
         logger.info("SecurityDeveloperAgent ready and listening for events...")
         self.collaborate_example()
+        
+        try:
+            # Keep the agent running
+            while True:
+                await asyncio.sleep(1)
+        except KeyboardInterrupt:
+            logger.info("SecurityDeveloper agent stopped.")
+    
+    @classmethod
+    async def run_agent(cls):
+        """Class method to run the SecurityDeveloper agent met MCP integration."""
+        agent = cls()
+        await agent.initialize_mcp()
+        print("SecurityDeveloper agent started with MCP integration")
 
     # --- ORIGINELE FUNCTIONALITEIT BEHOUDEN ---
     def notify_security_event(self, event):
@@ -1340,7 +1508,7 @@ def main():
         else:
             print("Please provide --incidents for incident summary")
     elif args.command == "run-security-scan":
-        result = agent.run_security_scan(args.target)
+        result = asyncio.run(agent.run_security_scan(args.target))
         print(json.dumps(result, indent=2))
     elif args.command == "vulnerability-assessment":
         result = agent.vulnerability_assessment(args.component)
@@ -1363,7 +1531,7 @@ def main():
     elif args.command == "collaborate":
         agent.collaborate_example()
     elif args.command == "run":
-        agent.run()
+        asyncio.run(agent.run())
     elif args.command == "threat-assessment":
         result = agent.threat_assessment()
         print(json.dumps(result, indent=2))

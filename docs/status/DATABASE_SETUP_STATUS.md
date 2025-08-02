@@ -41,7 +41,7 @@ De BMAD database setup is **100% voltooid** en klaar voor productie gebruik. All
 - ✅ Environment templates voor alle microservices
 
 ### **3. Default Data**
-- ✅ **Admin User**: admin@bmad.com / admin123
+- ✅ **Admin User**: innovativemarketinglisbon@gmail.com / admin123
 - ✅ **Roles**: admin, user, manager
 - ✅ **Templates**: 4 notification templates
 - ✅ **Integrations**: 5 default integrations
@@ -59,7 +59,7 @@ De BMAD database setup is **100% voltooid** en klaar voor productie gebruik. All
 
 ### **Data Verification**
 ```
-✅ Admin user: admin@bmad.com (admin)
+✅ Admin user: innovativemarketinglisbon@gmail.com (admin)
 ✅ Roles: 3 roles found (admin, user, manager)
 ✅ Templates: 4 notification templates
 ✅ Integrations: 5 default integrations
@@ -117,7 +117,7 @@ De BMAD database setup is **100% voltooid** en klaar voor productie gebruik. All
 - **Password**: [Configured in .env files]
 
 ### **Admin Access**
-- **Email**: admin@bmad.com
+- **Email**: innovativemarketinglisbon@gmail.com
 - **Password**: admin123
 - **Role**: admin (full system access)
 

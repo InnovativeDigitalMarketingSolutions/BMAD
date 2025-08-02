@@ -41,20 +41,22 @@ class TestWorkflowAutomatorAgent:
         assert isinstance(agent.performance_metrics, dict)
         assert isinstance(agent.scheduled_workflows, dict)
 
-    def test_validate_input_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_input_success(self, agent):
         """Test successful input validation."""
         assert agent._validate_input("test")
         assert agent._validate_input(42)
         assert agent._validate_input(True)
 
-    def test_validate_input_failure(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_input_failure(self, agent):
         """Test input validation failure."""
         assert not agent._validate_input(None)
         assert not agent._validate_input("")
 
     def test_show_help(self, agent, capsys):
         """Test show_help method."""
-        agent.show_help()
+        await agent.show_help()
         captured = capsys.readouterr()
         assert "WorkflowAutomator Agent" in captured.out
         assert "create-workflow" in captured.out
@@ -62,7 +64,8 @@ class TestWorkflowAutomatorAgent:
         assert "optimize-workflow" in captured.out
         assert "monitor-workflow" in captured.out
 
-    def test_create_workflow_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_create_workflow_success(self, agent):
         """Test successful workflow creation."""
         result = agent.create_workflow(
             name="Test Workflow",
@@ -99,10 +102,11 @@ class TestWorkflowAutomatorAgent:
                 commands=["create-story"]
             )
 
-    def test_execute_workflow_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_execute_workflow_success(self, agent):
         """Test successful workflow execution."""
         # First create a workflow
-        workflow_result = agent.create_workflow(
+        workflow_result = await agent.create_workflow(
             name="Test Workflow",
             description="Test workflow",
             agents=["ProductOwner"],
@@ -112,7 +116,7 @@ class TestWorkflowAutomatorAgent:
         workflow_id = workflow_result["workflow_id"]
         
         # Then execute it
-        result = agent.execute_workflow(workflow_id)
+        result = await agent.execute_workflow(workflow_id)
         
         assert result["status"] == "executed"
         assert result["workflow_id"] == workflow_id
@@ -121,12 +125,13 @@ class TestWorkflowAutomatorAgent:
     def test_execute_workflow_not_found(self, agent):
         """Test workflow execution with non-existent workflow."""
         with pytest.raises(WorkflowExecutionError, match="Workflow non-existent-id not found"):
-            agent.execute_workflow("non-existent-id")
+            await agent.execute_workflow("non-existent-id")
 
-    def test_optimize_workflow_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_optimize_workflow_success(self, agent):
         """Test successful workflow optimization."""
         # First create a workflow
-        workflow_result = agent.create_workflow(
+        workflow_result = await agent.create_workflow(
             name="Test Workflow",
             description="Test workflow",
             agents=["ProductOwner"],
@@ -147,10 +152,11 @@ class TestWorkflowAutomatorAgent:
         with pytest.raises(WorkflowExecutionError, match="Workflow non-existent-id not found"):
             agent.optimize_workflow("non-existent-id")
 
-    def test_monitor_workflow_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_monitor_workflow_success(self, agent):
         """Test successful workflow monitoring."""
         # First create a workflow
-        workflow_result = agent.create_workflow(
+        workflow_result = await agent.create_workflow(
             name="Test Workflow",
             description="Test workflow",
             agents=["ProductOwner"],
@@ -171,10 +177,11 @@ class TestWorkflowAutomatorAgent:
         with pytest.raises(WorkflowExecutionError, match="Workflow non-existent-id not found"):
             agent.monitor_workflow("non-existent-id")
 
-    def test_schedule_workflow_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_schedule_workflow_success(self, agent):
         """Test successful workflow scheduling."""
         # First create a workflow
-        workflow_result = agent.create_workflow(
+        workflow_result = await agent.create_workflow(
             name="Test Workflow",
             description="Test workflow",
             agents=["ProductOwner"],
@@ -190,10 +197,11 @@ class TestWorkflowAutomatorAgent:
         assert result["workflow_id"] == workflow_id
         assert "schedule" in result
 
-    def test_pause_workflow_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_pause_workflow_success(self, agent):
         """Test successful workflow pausing."""
         # First create a workflow
-        workflow_result = agent.create_workflow(
+        workflow_result = await agent.create_workflow(
             name="Test Workflow",
             description="Test workflow",
             agents=["ProductOwner"],
@@ -213,10 +221,11 @@ class TestWorkflowAutomatorAgent:
         assert result["status"] == "paused"
         assert result["workflow_id"] == workflow_id
 
-    def test_resume_workflow_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_resume_workflow_success(self, agent):
         """Test successful workflow resuming."""
         # First create a workflow
-        workflow_result = agent.create_workflow(
+        workflow_result = await agent.create_workflow(
             name="Test Workflow",
             description="Test workflow",
             agents=["ProductOwner"],
@@ -236,10 +245,11 @@ class TestWorkflowAutomatorAgent:
         assert result["status"] == "resumed"
         assert result["workflow_id"] == workflow_id
 
-    def test_cancel_workflow_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_cancel_workflow_success(self, agent):
         """Test successful workflow cancellation."""
         # First create a workflow
-        workflow_result = agent.create_workflow(
+        workflow_result = await agent.create_workflow(
             name="Test Workflow",
             description="Test workflow",
             agents=["ProductOwner"],
@@ -254,10 +264,11 @@ class TestWorkflowAutomatorAgent:
         assert result["status"] == "cancelled"
         assert result["workflow_id"] == workflow_id
 
-    def test_analyze_workflow_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_analyze_workflow_success(self, agent):
         """Test successful workflow analysis."""
         # First create a workflow
-        workflow_result = agent.create_workflow(
+        workflow_result = await agent.create_workflow(
             name="Test Workflow",
             description="Test workflow",
             agents=["ProductOwner"],
@@ -273,10 +284,11 @@ class TestWorkflowAutomatorAgent:
         assert result["workflow_id"] == workflow_id
         assert "analysis" in result
 
-    def test_auto_recover_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_auto_recover_success(self, agent):
         """Test successful auto recovery."""
         # First create a workflow
-        workflow_result = agent.create_workflow(
+        workflow_result = await agent.create_workflow(
             name="Test Workflow",
             description="Test workflow",
             agents=["ProductOwner"],
@@ -291,7 +303,8 @@ class TestWorkflowAutomatorAgent:
         assert result["status"] == "recovered"
         assert result["workflow_id"] == workflow_id
 
-    def test_parallel_execution_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_parallel_execution_success(self, agent):
         """Test successful parallel execution."""
         # Create multiple workflows
         workflow1 = agent.create_workflow(
@@ -315,10 +328,11 @@ class TestWorkflowAutomatorAgent:
         assert result["status"] == "executed"
         assert len(result["results"]) == 2
 
-    def test_conditional_execution_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_conditional_execution_success(self, agent):
         """Test successful conditional execution."""
         # First create a workflow
-        workflow_result = agent.create_workflow(
+        workflow_result = await agent.create_workflow(
             name="Test Workflow",
             description="Test workflow",
             agents=["ProductOwner"],
@@ -328,7 +342,7 @@ class TestWorkflowAutomatorAgent:
         workflow_id = workflow_result["workflow_id"]
         
         # Then execute conditionally
-        result = agent.conditional_execution(workflow_id, "true")
+        result = await agent.conditional_execution(workflow_id, "true")
         
         assert result["status"] == "executed"
         assert result["workflow_id"] == workflow_id
@@ -357,15 +371,16 @@ class TestWorkflowAutomatorAgent:
         assert result["status"] == "complete"
         assert len(result["missing_resources"]) == 0
 
-    def test_collaborate_example(self, agent, capsys):
+    @pytest.mark.asyncio
+    async def test_collaborate_example(self, agent, capsys):
         """Test collaborate_example method."""
-        result = agent.collaborate_example()
+        result = await agent.collaborate_example()
         assert result["status"] == "collaboration_completed"
 
     def test_handle_workflow_execution_requested(self, agent):
         """Test workflow execution requested event handler."""
         # Create a workflow first
-        workflow_result = agent.create_workflow(
+        workflow_result = await agent.create_workflow(
             name="Test Workflow",
             description="Test workflow",
             agents=["ProductOwner"],
@@ -399,7 +414,7 @@ class TestWorkflowAutomatorAgent:
     def test_handle_workflow_optimization_requested(self, agent):
         """Test workflow optimization requested event handler."""
         # Create a workflow first
-        workflow_result = agent.create_workflow(
+        workflow_result = await agent.create_workflow(
             name="Test Workflow",
             description="Test workflow",
             agents=["ProductOwner"],
@@ -415,7 +430,7 @@ class TestWorkflowAutomatorAgent:
     def test_handle_workflow_monitoring_requested(self, agent):
         """Test workflow monitoring requested event handler."""
         # Create a workflow first
-        workflow_result = agent.create_workflow(
+        workflow_result = await agent.create_workflow(
             name="Test Workflow",
             description="Test workflow",
             agents=["ProductOwner"],

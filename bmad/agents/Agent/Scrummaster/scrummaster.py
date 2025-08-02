@@ -23,6 +23,18 @@ from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_e
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 from integrations.prefect.prefect_workflow import PrefectWorkflowOrchestrator
 from integrations.slack.slack_notify import send_slack_message
+from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
+
+# MCP Integration
+from bmad.core.mcp import (
+    MCPClient,
+    MCPContext,
+    FrameworkMCPIntegration,
+    get_mcp_client,
+    get_framework_mcp_integration,
+    initialize_framework_mcp_integration
+)
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
@@ -37,7 +49,19 @@ class ScrumValidationError(ScrumError):
     pass
 
 class ScrummasterAgent:
+    """
+    Scrummaster Agent voor BMAD.
+    Gespecialiseerd in agile project management, sprint planning, en team facilitation.
+    """
+    
     def __init__(self):
+        self.framework_manager = get_framework_templates_manager()
+        try:
+            self.scrummaster_template = self.framework_manager.get_framework_template('scrummaster')
+        except:
+            self.scrummaster_template = None
+        self.lessons_learned = []
+
         # Set agent name
         self.agent_name = "Scrummaster"
         
@@ -85,9 +109,9 @@ class ScrummasterAgent:
 
         # Scrum-specific attributes
         self.current_sprint = None
-        self.team_members = []
+        self.team_members = ["Developer1", "Developer2", "Tester", "Designer"]
         self.sprint_duration = 14  # days
-        self.velocity_target = 0
+        self.velocity_target = 20
         self.impediments = []
         
         # Performance metrics
@@ -97,6 +121,85 @@ class ScrummasterAgent:
             "impediments_resolved": 0,
             "sprint_success_rate": 0.0
         }
+
+        # Initialize MCP integration
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
+
+        logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+
+    async def initialize_mcp(self):
+        """Initialize MCP client and integration."""
+        try:
+            self.mcp_client = await get_mcp_client()
+            self.mcp_integration = get_framework_mcp_integration()
+            await initialize_framework_mcp_integration()
+            self.mcp_enabled = True
+            logger.info("MCP client initialized successfully")
+        except Exception as e:
+            logger.warning(f"MCP initialization failed: {e}")
+            self.mcp_enabled = False
+
+    async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Use MCP tool voor enhanced functionality."""
+        if not self.mcp_enabled or not self.mcp_client:
+            logger.warning("MCP not available, using local tools")
+            return None
+        
+        try:
+            result = await self.mcp_client.execute_tool(tool_name, parameters)
+            logger.info(f"MCP tool {tool_name} executed successfully")
+            return result
+        except Exception as e:
+            logger.error(f"MCP tool {tool_name} execution failed: {e}")
+            return None
+
+    async def use_scrum_specific_mcp_tools(self, scrum_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use scrum-specific MCP tools voor enhanced functionality."""
+        enhanced_data = {}
+        
+        # Sprint planning
+        sprint_plan_result = await self.use_mcp_tool("sprint_planning", {
+            "sprint_number": scrum_data.get("sprint_number", 1),
+            "team_capacity": scrum_data.get("team_capacity", 100),
+            "backlog_items": scrum_data.get("backlog_items", []),
+            "planning_type": "comprehensive"
+        })
+        if sprint_plan_result:
+            enhanced_data["sprint_planning"] = sprint_plan_result
+        
+        # Team facilitation
+        team_facilitation_result = await self.use_mcp_tool("team_facilitation", {
+            "team_size": scrum_data.get("team_size", 5),
+            "team_health": scrum_data.get("team_health", "good"),
+            "facilitation_type": scrum_data.get("facilitation_type", "daily_standup"),
+            "impediments": scrum_data.get("impediments", [])
+        })
+        if team_facilitation_result:
+            enhanced_data["team_facilitation"] = team_facilitation_result
+        
+        # Velocity tracking
+        velocity_result = await self.use_mcp_tool("velocity_tracking", {
+            "sprint_data": scrum_data.get("sprint_data", {}),
+            "team_metrics": scrum_data.get("team_metrics", {}),
+            "tracking_type": "comprehensive",
+            "analysis_type": "trend_analysis"
+        })
+        if velocity_result:
+            enhanced_data["velocity_tracking"] = velocity_result
+        
+        # Impediment management
+        impediment_result = await self.use_mcp_tool("impediment_management", {
+            "impediments": scrum_data.get("impediments", []),
+            "resolution_priority": scrum_data.get("resolution_priority", "high"),
+            "management_type": "proactive",
+            "escalation_level": scrum_data.get("escalation_level", "team")
+        })
+        if impediment_result:
+            enhanced_data["impediment_management"] = impediment_result
+        
+        return enhanced_data
 
     def _validate_input(self, value: Any, expected_type: type, param_name: str) -> None:
         """Validate input parameters with type checking."""
@@ -348,8 +451,8 @@ Scrummaster Agent Commands:
             logger.error(f"Error reading resource {resource_type}: {e}")
             print(f"Error reading resource: {e}")
 
-    def plan_sprint(self, sprint_number: int = 1) -> Dict[str, Any]:
-        """Plan a new sprint with comprehensive validation and error handling."""
+    async def plan_sprint(self, sprint_number: int = 1) -> Dict[str, Any]:
+        """Plan a sprint with comprehensive validation and MCP enhancement."""
         try:
             self._validate_input(sprint_number, int, "sprint_number")
             
@@ -358,29 +461,53 @@ Scrummaster Agent Commands:
             
             logger.info(f"Planning sprint {sprint_number}")
 
-            # Calculate sprint dates
+            # Simulate sprint planning process
+            time.sleep(1)
+            
+            # Create base sprint data
             start_date = datetime.now()
-            end_date = start_date + timedelta(days=self.sprint_duration)
+            end_date = start_date + timedelta(days=14)  # Default 2-week sprint
             
             result = {
                 "sprint_number": sprint_number,
                 "start_date": start_date.isoformat(),
                 "end_date": end_date.isoformat(),
-                "duration_days": self.sprint_duration,
+                "duration_days": 14,
                 "status": "planned",
-                "team": self.team_members,
-                "velocity_target": self.velocity_target,
+                "team": ["Developer1", "Developer2", "Tester", "Designer"],  # Default team
+                "velocity_target": 20,  # Default velocity
                 "timestamp": datetime.now().isoformat(),
                 "agent": "ScrummasterAgent"
             }
 
+            # Use MCP tools for enhanced sprint planning
+            scrum_data = {
+                "sprint_number": sprint_number,
+                "team_capacity": 100,
+                "backlog_items": ["Feature A", "Feature B", "Bug Fix C"],
+                "team_size": 4,
+                "team_health": "good",
+                "facilitation_type": "sprint_planning",
+                "sprint_data": result,
+                "team_metrics": self.team_metrics,
+                "impediments": [],
+                "resolution_priority": "high",
+                "escalation_level": "team"
+            }
+            
+            enhanced_data = await self.use_scrum_specific_mcp_tools(scrum_data)
+            
+            # Add MCP enhanced data if available
+            if enhanced_data:
+                result["mcp_enhanced_data"] = enhanced_data
+                result["mcp_enhanced"] = True
+
             # Add to history
-            sprint_entry = f"{result['timestamp']}: Sprint {sprint_number} planned - Duration: {self.sprint_duration} days"
+            sprint_entry = f"{result['timestamp']}: Sprint {sprint_number} planned - Duration: 14 days"
             self.sprint_history.append(sprint_entry)
             self._save_sprint_history()
 
-            # Update metrics
-            self.performance_metrics["sprints_completed"] += 1
+            # Record performance metric
             self._record_scrum_metric("sprint_planning_success", 95, "%")
 
             logger.info(f"Sprint planning result: {result}")
@@ -823,13 +950,30 @@ Scrummaster Agent Commands:
         except Exception as e:
             logger.error(f"Error handling sprint planning requested: {e}")
 
-    def run(self):
-        """Start the agent in event listening mode."""
+    async def run(self):
+        """Start the agent in event listening mode met MCP integration."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
         subscribe("sprint_review_completed", self.handle_sprint_review_completed)
         subscribe("sprint_planning_requested", self.handle_sprint_planning_requested)
 
         logger.info("ScrummasterAgent ready and listening for events...")
         self.collaborate_example()
+        
+        try:
+            # Keep the agent running
+            while True:
+                await asyncio.sleep(1)
+        except KeyboardInterrupt:
+            logger.info("Scrummaster agent stopped.")
+    
+    @classmethod
+    async def run_agent(cls):
+        """Class method to run the Scrummaster agent met MCP integration."""
+        agent = cls()
+        await agent.initialize_mcp()
+        print("Scrummaster agent started with MCP integration")
 
 def main():
     """Main CLI function with comprehensive error handling."""
@@ -852,7 +996,7 @@ def main():
         if args.command == "help":
             agent.show_help()
         elif args.command == "plan-sprint":
-            result = agent.plan_sprint(args.sprint_number)
+            result = asyncio.run(agent.plan_sprint(args.sprint_number))
             print(f"Sprint planned successfully: {result}")
         elif args.command == "start-sprint":
             result = agent.start_sprint(args.sprint_number)

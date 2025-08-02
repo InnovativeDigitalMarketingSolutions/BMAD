@@ -1,0 +1,31 @@
+{
+  "name": "APITester_sprite",
+  "sprite_type": "SpriteType.COMPONENT",
+  "component_name": "APITester",
+  "states": [
+    "SpriteState.DEFAULT",
+    "SpriteState.LOADING",
+    "SpriteState.SUCCESS",
+    "SpriteState.ERROR"
+  ],
+  "attributes": {},
+  "accessibility_checks": [
+    "aria-label",
+    "form-controls",
+    "error-messages"
+  ],
+  "visual_checks": [
+    "form-layout",
+    "button-styles",
+    "error-styles"
+  ],
+  "interaction_tests": [
+    "click",
+    "hover",
+    "focus",
+    "keyboard"
+  ],
+  "screenshot_path": null,
+  "baseline_path": null,
+  "metadata": {}
+}

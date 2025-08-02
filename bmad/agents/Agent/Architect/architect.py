@@ -2,13 +2,28 @@ import logging
 import os
 import sys
 import time
+import asyncio
+import json
+from datetime import datetime
 from pathlib import Path
+from typing import Any, Dict, Optional
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 
 from bmad.agents.core.ai.llm_client import ask_openai
 from bmad.agents.core.communication.message_bus import publish, subscribe
 from bmad.agents.core.data.supabase_context import get_context, save_context
+from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
+
+# MCP Integration
+from bmad.core.mcp import (
+    MCPClient,
+    MCPContext,
+    FrameworkMCPIntegration,
+    get_mcp_client,
+    get_framework_mcp_integration,
+    initialize_framework_mcp_integration
+)
 
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
@@ -38,9 +53,123 @@ TEMPLATE_PATHS = {
 
 
 class ArchitectAgent:
+    """
+    Architect Agent voor BMAD.
+    Gespecialiseerd in software architectuur, API design, en system design.
+    """
+    
     def __init__(self):
-        # Set agent name
+        self.framework_manager = get_framework_templates_manager()
+        try:
+            self.architecture_template = self.framework_manager.get_framework_template('architecture')
+        except:
+            self.architecture_template = None
+        self.lessons_learned = []
+
+        """Initialize Architect agent met MCP integration."""
         self.agent_name = "Architect"
+        self.architecture_history = []
+        self.design_patterns = []
+        
+        # MCP Integration
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
+        
+        # Resource paths
+        self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
+        self.template_paths = {
+            "design-api": self.resource_base / "templates/api/design-api.md",
+            "microservices": self.resource_base / "templates/architecture/microservices.md",
+            "event-flow": self.resource_base / "templates/architecture/event-flow.md",
+            "memory-design": self.resource_base / "templates/architecture/memory-design.md",
+            "nfrs": self.resource_base / "templates/architecture/nfrs.md",
+            "adr": self.resource_base / "templates/general/adr.md",
+            "risk-analysis": self.resource_base / "templates/general/risk-analysis.md",
+            "review": self.resource_base / "templates/general/review.md",
+            "refactor": self.resource_base / "templates/general/refactor.md",
+            "infra-as-code": self.resource_base / "templates/devops/infra-as-code.md",
+            "release-strategy": self.resource_base / "templates/devops/release-strategy.md",
+            "poc": self.resource_base / "templates/general/poc.md",
+            "security-review": self.resource_base / "templates/security/security-review.md",
+            "tech-stack-eval": self.resource_base / "templates/general/tech-stack-eval.md",
+            "checklist": self.resource_base / "templates/general/checklist.md",
+            "api-contract": self.resource_base / "templates/api/api-contract.md",
+            "test-strategy": self.resource_base / "templates/testing/test-strategy.md",
+            "best-practices": self.resource_base / "templates/general/best-practices.md",
+            "export": self.resource_base / "data/architect/architecture-examples.md",
+            "changelog": self.resource_base / "data/general/changelog.md",
+        }
+        
+        logging.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+    
+    async def initialize_mcp(self):
+        """Initialize MCP client voor enhanced architecture design capabilities."""
+        try:
+            self.mcp_client = await get_mcp_client()
+            self.mcp_integration = get_framework_mcp_integration()
+            await initialize_framework_mcp_integration()
+            self.mcp_enabled = True
+            logging.info("MCP client initialized successfully for Architect")
+        except Exception as e:
+            logging.warning(f"MCP initialization failed for Architect: {e}")
+            self.mcp_enabled = False
+    
+    async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Use MCP tool voor enhanced architecture design functionality."""
+        if not self.mcp_enabled or not self.mcp_client:
+            logging.warning("MCP not available, using local architecture design tools")
+            return None
+        
+        try:
+            result = await self.mcp_client.execute_tool(tool_name, parameters)
+            logging.info(f"MCP tool {tool_name} executed successfully")
+            return result
+        except Exception as e:
+            logging.error(f"MCP tool {tool_name} execution failed: {e}")
+            return None
+    
+    async def use_architecture_specific_mcp_tools(self, design_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use architecture-specific MCP tools voor design enhancement."""
+        if not self.mcp_enabled:
+            return {}
+        
+        enhanced_data = {}
+        
+        try:
+            # Architecture analysis
+            if "architecture_analysis" in self.mcp_config.custom_tools:
+                analysis_result = await self.use_mcp_tool("architecture_analysis", {
+                    "design": design_data.get("design", ""),
+                    "patterns": design_data.get("patterns", []),
+                    "analysis_type": "quality"
+                })
+                if analysis_result:
+                    enhanced_data["architecture_analysis"] = analysis_result
+            
+            # Performance analysis
+            if "performance_analysis" in self.mcp_config.custom_tools:
+                performance_result = await self.use_mcp_tool("performance_analysis", {
+                    "architecture": design_data.get("architecture", ""),
+                    "metrics": design_data.get("performance_metrics", {})
+                })
+                if performance_result:
+                    enhanced_data["performance_analysis"] = performance_result
+            
+            # Security review
+            security_result = await self.use_mcp_tool("security_review", {
+                "design": design_data.get("design", ""),
+                "security_requirements": design_data.get("security_requirements", [])
+            })
+            if security_result:
+                enhanced_data["security_review"] = security_result
+            
+            logging.info(f"Architecture-specific MCP tools executed: {list(enhanced_data.keys())}")
+            
+        except Exception as e:
+            logging.error(f"Error in architecture-specific MCP tools: {e}")
+        
+        return enhanced_data
 
     def show_help(self):
         print(
@@ -145,8 +274,8 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
         print(f"[LLM API-design]: {result}")
         return result
 
-    def design_frontend(self):
-        """Ontwerp de BMAD frontend architectuur."""
+    async def design_frontend(self):
+        """Ontwerp de BMAD frontend architectuur met MCP enhancement."""
         print("🏗️ Architect Agent - Frontend Design")
         print("=" * 50)
 
@@ -207,19 +336,60 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
             prompt = f"Opdracht: {choice}\n\nContext: {stories}"
 
         print("\n🔄 Architect aan het werk...")
-        result = ask_openai(prompt)
+        
+        # Try MCP-enhanced architecture design first
+        if self.mcp_enabled and self.mcp_client:
+            try:
+                mcp_result = await self.use_mcp_tool("design_architecture", {
+                    "prompt": prompt,
+                    "architecture_type": "frontend",
+                    "framework": "react/nextjs",
+                    "include_performance": True,
+                    "include_security": True
+                })
+                
+                if mcp_result:
+                    logging.info("MCP-enhanced architecture design completed")
+                    result = mcp_result.get("architecture", "")
+                    result += "\n\n[MCP Enhanced] - Architecture design enhanced with MCP tools"
+                else:
+                    logging.warning("MCP architecture design failed, using local design")
+                    result = ask_openai(prompt)
+            except Exception as e:
+                logging.warning(f"MCP architecture design failed: {e}, using local design")
+                result = ask_openai(prompt)
+        else:
+            result = ask_openai(prompt)
 
         print("\n🏗️ BMAD Frontend Architectuur:")
         print("=" * 60)
         print(result)
         print("=" * 60)
 
+        # Use architecture-specific MCP tools for additional enhancement
+        if self.mcp_enabled:
+            try:
+                design_data = {
+                    "design": result,
+                    "architecture_type": "frontend",
+                    "patterns": ["component-based", "state-management", "api-integration"],
+                    "performance_metrics": {"load_time": "target_2s", "bundle_size": "target_500kb"}
+                }
+                architecture_enhanced = await self.use_architecture_specific_mcp_tools(design_data)
+                if architecture_enhanced:
+                    print("\n🔧 Architecture Enhancements:")
+                    for key, value in architecture_enhanced.items():
+                        print(f"- {key}: {value}")
+            except Exception as e:
+                logging.warning(f"Architecture-specific MCP tools failed: {e}")
+
         # Sla het ontwerp op
         save_context("Architect", "frontend_architecture", {
             "timestamp": time.time(),
             "architecture": result,
             "status": "designed",
-            "prompt": prompt
+            "prompt": prompt,
+            "mcp_enhanced": self.mcp_enabled
         })
 
         # Publiceer event
@@ -339,11 +509,15 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
                 print(f"❌ Fout: {e}")
                 print("Probeer 'help' voor beschikbare commando's.")
 
-    def run(self, command):
+    async def run(self, command):
+        """Run the Architect agent met MCP integration."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
         if command == "help" or command is None:
             self.show_help()
             return
-        path = TEMPLATE_PATHS.get(command)
+        path = self.template_paths.get(command)
         if path and path.exists():
             logging.info(f"Resource-bestand geladen: {path}")
             print(path.read_text())
@@ -352,12 +526,22 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
         func = getattr(self, command.replace("-", "_"), None)
         if callable(func):
             logging.info(f"Fallback Python-methode aangeroepen: {command}")
-            func()
+            if asyncio.iscoroutinefunction(func):
+                await func()
+            else:
+                func()
         else:
             logging.error(
                 f"Onbekend commando of ontbrekend resource-bestand: {command}"
             )
             self.show_help()
+    
+    @classmethod
+    async def run_agent(cls):
+        """Class method to run the Architect agent met MCP integration."""
+        agent = cls()
+        await agent.initialize_mcp()
+        print("Architect agent started with MCP integration")
 
 
 def on_api_design_requested(event):
@@ -394,7 +578,7 @@ def main():
     if args.interactive:
         agent.start_conversation()
     else:
-        agent.run(args.command)
+        asyncio.run(agent.run(args.command))
 
 if __name__ == "__main__":
     main()

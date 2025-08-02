@@ -12,7 +12,7 @@ from pathlib import Path
 
 # BMAD imports
 sys.path.append(str(Path(__file__).parent.parent.parent.parent))
-from bmad_clickup_workflow import BMADClickUpWorkflow
+from integrations.clickup.bmad_clickup_workflow import BMADClickUpWorkflow
 
 class ClickUpHandlers:
     """Handlers for ClickUp CLI commands."""

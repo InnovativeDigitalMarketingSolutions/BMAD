@@ -21,6 +21,18 @@ from bmad.agents.core.communication.message_bus import publish, subscribe
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.slack.slack_notify import send_slack_message
+from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
+
+# MCP Integration
+from bmad.core.mcp import (
+    MCPClient,
+    MCPContext,
+    FrameworkMCPIntegration,
+    get_mcp_client,
+    get_framework_mcp_integration,
+    initialize_framework_mcp_integration
+)
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
@@ -28,6 +40,13 @@ logger = logging.getLogger(__name__)
 
 class RnDAgent:
     def __init__(self):
+        self.framework_manager = get_framework_templates_manager()
+        try:
+            self.rnd_template = self.framework_manager.get_framework_template('rnd')
+        except:
+            self.rnd_template = None
+        self.lessons_learned = []
+
         # Set agent name
         self.agent_name = "RnD"
         self.monitor = get_performance_monitor()
@@ -55,6 +74,103 @@ class RnDAgent:
         self.research_history = []
         self._load_experiment_history()
         self._load_research_history()
+        
+        # MCP Integration
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
+        
+        logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+
+    async def initialize_mcp(self):
+        """Initialize MCP client voor enhanced research and development capabilities."""
+        try:
+            self.mcp_client = await get_mcp_client()
+            self.mcp_integration = get_framework_mcp_integration()
+            await initialize_framework_mcp_integration()
+            self.mcp_enabled = True
+            logger.info("MCP client initialized successfully for RnD")
+        except Exception as e:
+            logger.warning(f"MCP initialization failed for RnD: {e}")
+            self.mcp_enabled = False
+    
+    async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Use MCP tool voor enhanced research and development functionality."""
+        if not self.mcp_enabled or not self.mcp_client:
+            logger.warning("MCP not available, using local research and development tools")
+            return None
+        
+        try:
+            result = await self.mcp_client.execute_tool(tool_name, parameters)
+            logger.info(f"MCP tool {tool_name} executed successfully")
+            return result
+        except Exception as e:
+            logger.error(f"MCP tool {tool_name} execution failed: {e}")
+            return None
+    
+    async def use_rnd_specific_mcp_tools(self, rnd_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use R&D-specific MCP tools voor enhanced research and development."""
+        if not self.mcp_enabled:
+            return {}
+        
+        enhanced_data = {}
+        
+        try:
+            # Research analysis
+            research_result = await self.use_mcp_tool("research_analysis", {
+                "research_topic": rnd_data.get("research_topic", ""),
+                "research_type": rnd_data.get("research_type", ""),
+                "research_data": rnd_data.get("research_data", {}),
+                "analysis_type": "rnd"
+            })
+            if research_result:
+                enhanced_data["research_analysis"] = research_result
+            
+            # Experiment design
+            experiment_result = await self.use_mcp_tool("experiment_design", {
+                "experiment_name": rnd_data.get("experiment_name", ""),
+                "hypothesis": rnd_data.get("hypothesis", ""),
+                "experiment_type": rnd_data.get("experiment_type", "pilot"),
+                "success_criteria": rnd_data.get("success_criteria", [])
+            })
+            if experiment_result:
+                enhanced_data["experiment_design"] = experiment_result
+            
+            # Innovation generation
+            innovation_result = await self.use_mcp_tool("innovation_generation", {
+                "innovation_area": rnd_data.get("innovation_area", ""),
+                "focus_area": rnd_data.get("focus_area", ""),
+                "constraints": rnd_data.get("constraints", []),
+                "opportunities": rnd_data.get("opportunities", [])
+            })
+            if innovation_result:
+                enhanced_data["innovation_generation"] = innovation_result
+            
+            # Prototype development
+            prototype_result = await self.use_mcp_tool("prototype_development", {
+                "prototype_name": rnd_data.get("prototype_name", ""),
+                "solution_type": rnd_data.get("solution_type", ""),
+                "requirements": rnd_data.get("requirements", []),
+                "technology_stack": rnd_data.get("technology_stack", [])
+            })
+            if prototype_result:
+                enhanced_data["prototype_development"] = prototype_result
+            
+            # Results evaluation
+            evaluation_result = await self.use_mcp_tool("results_evaluation", {
+                "experiment_results": rnd_data.get("experiment_results", {}),
+                "success_metrics": rnd_data.get("success_metrics", []),
+                "evaluation_criteria": rnd_data.get("evaluation_criteria", [])
+            })
+            if evaluation_result:
+                enhanced_data["results_evaluation"] = evaluation_result
+            
+            logger.info(f"R&D-specific MCP tools executed: {list(enhanced_data.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Error in R&D-specific MCP tools: {e}")
+        
+        return enhanced_data
 
     def _load_experiment_history(self):
         """Load experiment history from data file"""
@@ -207,7 +323,7 @@ RnD Agent Commands:
         for i, research in enumerate(self.research_history[-10:], 1):
             print(f"{i}. {research}")
 
-    def conduct_research(self, research_topic: str = "AI-powered automation", research_type: str = "Technology Research") -> Dict[str, Any]:
+    async def conduct_research(self, research_topic: str = "AI-powered automation", research_type: str = "Technology Research") -> Dict[str, Any]:
         """Conduct new research with enhanced functionality."""
         # Input validation
         if not isinstance(research_topic, str):
@@ -267,6 +383,21 @@ RnD Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "RnDAgent"
         }
+
+        # Use MCP tools for enhanced research analysis
+        rnd_data = {
+            "research_topic": research_topic,
+            "research_type": research_type,
+            "research_data": research_result,
+            "analysis_type": "rnd"
+        }
+        
+        mcp_enhanced_data = await self.use_rnd_specific_mcp_tools(rnd_data)
+        
+        # Integrate MCP enhanced data
+        if mcp_enhanced_data:
+            research_result["mcp_enhanced_data"] = mcp_enhanced_data
+            logger.info("MCP enhanced data integrated into research")
 
         # Log performance metrics
         self.monitor._record_metric("RnDAgent", MetricType.SUCCESS_RATE, 95, "%")
@@ -866,7 +997,7 @@ RnD Agent Commands:
         else:
             print("All resources are available!")
 
-    def collaborate_example(self):
+    async def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         logger.info("Starting RnD collaboration example...")
 
@@ -878,7 +1009,7 @@ RnD Agent Commands:
         })
 
         # Conduct research
-        self.conduct_research("AI-powered automation", "Technology Research")
+        await self.conduct_research("AI-powered automation", "Technology Research")
 
         # Design experiment
         self.design_experiment("AI Automation Pilot", "AI automation will improve efficiency by 30%")
@@ -923,14 +1054,19 @@ RnD Agent Commands:
             logger.warning(f"Could not send Slack notification: {e}")
         # Evaluate results (stub)
 
-    def run(self):
-        """Run the agent and listen for events."""
+    async def run(self):
+        """Run the agent and listen for events met MCP integration."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
         subscribe("experiment_completed", self.handle_experiment_completed)
         logger.info("RnDAgent ready and listening for events...")
         print("[RnDAgent] Ready and listening for events...")
-        self.collaborate_example()
+        await self.collaborate_example()
 
 def main():
+    import asyncio
+    
     parser = argparse.ArgumentParser(description="RnD Agent CLI")
     parser.add_argument("command", nargs="?", default="help",
                        choices=["help", "conduct-research", "design-experiment", "run-experiment",
@@ -955,7 +1091,7 @@ def main():
     if args.command == "help":
         agent.show_help()
     elif args.command == "conduct-research":
-        result = agent.conduct_research(args.research_topic, args.research_type)
+        result = asyncio.run(agent.conduct_research(args.research_topic, args.research_type))
         print(json.dumps(result, indent=2))
     elif args.command == "design-experiment":
         result = agent.design_experiment(args.experiment_name, args.hypothesis)
@@ -985,9 +1121,9 @@ def main():
     elif args.command == "test":
         agent.test_resource_completeness()
     elif args.command == "collaborate":
-        agent.collaborate_example()
+        asyncio.run(agent.collaborate_example())
     elif args.command == "run":
-        agent.run()
+        asyncio.run(agent.run())
     else:
         print("Unknown command. Use 'help' to see available commands.")
         sys.exit(1)

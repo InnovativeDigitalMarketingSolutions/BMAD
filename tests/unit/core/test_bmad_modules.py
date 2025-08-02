@@ -43,7 +43,10 @@ class TestBMADRun:
             pytest.skip(f"bmad-run module not available: {e}")
     
     @patch('subprocess.run')
-    def test_bmad_run_with_workflow(self, mock_run):
+    @pytest.mark.asyncio
+    async @pytest.mark.asyncio
+    async @pytest.mark.asyncio
+    async def test_bmad_run_with_workflow(self, mock_run):
         """Test bmad-run with workflow argument."""
         try:
             from bmad.bmad_run import main

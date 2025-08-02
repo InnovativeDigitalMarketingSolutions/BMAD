@@ -23,6 +23,17 @@ from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_e
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 from integrations.prefect.prefect_workflow import PrefectWorkflowOrchestrator
 from integrations.slack.slack_notify import send_slack_message
+from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
+
+# MCP Integration
+from bmad.core.mcp import (
+    MCPClient,
+    MCPContext,
+    FrameworkMCPIntegration,
+    get_mcp_client,
+    get_framework_mcp_integration,
+    initialize_framework_mcp_integration
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
@@ -38,6 +49,10 @@ class BackendValidationError(BackendError):
 
 class BackendDeveloperAgent:
     def __init__(self):
+        self.framework_manager = get_framework_templates_manager()
+        self.backend_development_template = self.framework_manager.get_template('backend_development')
+        self.lessons_learned = []
+        
         # Set agent name
         self.agent_name = "BackendDeveloper"
         # Initialize core services
@@ -89,11 +104,90 @@ class BackendDeveloperAgent:
         # Performance metrics
         self.performance_metrics = {
             "total_apis": 0,
-            "avg_response_time": 0.0,
-            "success_rate": 0.0,
-            "deployment_success_rate": 0.0
+            "deployment_success_rate": 0.0,
+            "api_build_success_rate": 0.0,
+            "average_response_time": 0.0
         }
+        
+        # Initialize MCP integration
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
 
+        logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+
+    async def initialize_mcp(self):
+        """Initialize MCP client and integration."""
+        try:
+            self.mcp_client = await get_mcp_client()
+            self.mcp_integration = get_framework_mcp_integration()
+            await initialize_framework_mcp_integration()
+            self.mcp_enabled = True
+            logger.info("MCP client initialized successfully")
+        except Exception as e:
+            logger.warning(f"MCP initialization failed: {e}")
+            self.mcp_enabled = False
+
+    async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Use MCP tool voor enhanced functionality."""
+        if not self.mcp_enabled or not self.mcp_client:
+            logger.warning("MCP not available, using local tools")
+            return None
+        
+        try:
+            result = await self.mcp_client.execute_tool(tool_name, parameters)
+            logger.info(f"MCP tool {tool_name} executed successfully")
+            return result
+        except Exception as e:
+            logger.error(f"MCP tool {tool_name} execution failed: {e}")
+            return None
+
+    async def use_backend_specific_mcp_tools(self, backend_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use backend-specific MCP tools voor enhanced functionality."""
+        enhanced_data = {}
+        
+        # API development
+        api_dev_result = await self.use_mcp_tool("api_development", {
+            "endpoint": backend_data.get("endpoint", ""),
+            "method": backend_data.get("method", "GET"),
+            "framework": backend_data.get("framework", "fastapi"),
+            "development_type": "comprehensive"
+        })
+        if api_dev_result:
+            enhanced_data["api_development"] = api_dev_result
+        
+        # Database design
+        db_result = await self.use_mcp_tool("database_design", {
+            "database_type": backend_data.get("database_type", "postgresql"),
+            "schema_requirements": backend_data.get("schema_requirements", {}),
+            "design_type": "optimized",
+            "scalability": backend_data.get("scalability", "medium")
+        })
+        if db_result:
+            enhanced_data["database_design"] = db_result
+        
+        # Security implementation
+        security_result = await self.use_mcp_tool("security_implementation", {
+            "security_level": backend_data.get("security_level", "standard"),
+            "authentication": backend_data.get("authentication", "jwt"),
+            "authorization": backend_data.get("authorization", "rbac"),
+            "compliance": backend_data.get("compliance", ["gdpr", "sox"])
+        })
+        if security_result:
+            enhanced_data["security_implementation"] = security_result
+        
+        # Performance optimization
+        performance_result = await self.use_mcp_tool("performance_optimization", {
+            "performance_metrics": backend_data.get("performance_metrics", {}),
+            "optimization_type": "comprehensive",
+            "target_latency": backend_data.get("target_latency", 100),
+            "scaling_strategy": backend_data.get("scaling_strategy", "horizontal")
+        })
+        if performance_result:
+            enhanced_data["performance_optimization"] = performance_result
+        
+        return enhanced_data
+    
     def _validate_input(self, value: Any, expected_type: type, param_name: str) -> None:
         """Validate input parameters with type checking."""
         if not isinstance(value, expected_type):
@@ -337,28 +431,99 @@ BackendDeveloper Agent Commands:
         for i, deploy in enumerate(self.deployment_history[-10:], 1):
             print(f"{i}. {deploy}")
 
-    def build_api(self, endpoint: str = "/api/v1/users") -> Dict[str, Any]:
-        """Build API endpoint with comprehensive validation and error handling."""
+    async def build_api(self, endpoint: str = "/api/v1/users") -> Dict[str, Any]:
+        """Build API endpoint with comprehensive validation and MCP enhancement."""
         try:
             self._validate_endpoint(endpoint)
             
             logger.info(f"Building API endpoint: {endpoint}")
 
+            # Use MCP tools for enhanced API development
+            backend_data = {
+                "endpoint": endpoint,
+                "method": "GET",
+                "framework": "fastapi",
+                "development_type": "comprehensive",
+                "database_type": "postgresql",
+                "schema_requirements": {"users": ["id", "name", "email"]},
+                "scalability": "medium",
+                "security_level": "standard",
+                "authentication": "jwt",
+                "authorization": "rbac",
+                "compliance": ["gdpr", "sox"],
+                "performance_metrics": {"response_time": 100, "throughput": 1000},
+                "target_latency": 100,
+                "scaling_strategy": "horizontal"
+            }
+            
+            enhanced_data = await self.use_backend_specific_mcp_tools(backend_data)
+
             # Simulate API building process
-            time.sleep(1)
+            time.sleep(2)
             
             result = {
                 "endpoint": endpoint,
                 "method": "GET",
-                "status": "created",
-                "response_time": "150ms",
-                "throughput": "1000 req/s",
+                "status": "built",
+                "framework": "FastAPI",
+                "version": "1.0.0",
                 "timestamp": datetime.now().isoformat(),
                 "agent": "BackendDeveloperAgent",
-                "version": "1.0.0",
-                "security": "enabled",
-                "rate_limiting": "enabled"
+                "api_spec": {
+                    "openapi": "3.0.0",
+                    "info": {
+                        "title": f"API for {endpoint}",
+                        "version": "1.0.0",
+                        "description": "Auto-generated API endpoint"
+                    },
+                    "paths": {
+                        endpoint: {
+                            "get": {
+                                "summary": f"Get data from {endpoint}",
+                                "responses": {
+                                    "200": {
+                                        "description": "Successful response",
+                                        "content": {
+                                            "application/json": {
+                                                "schema": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "data": {"type": "array"},
+                                                        "status": {"type": "string"}
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "database_schema": {
+                    "tables": ["users", "sessions", "logs"],
+                    "relationships": ["one_to_many", "many_to_many"],
+                    "indexes": ["primary_key", "foreign_key", "unique_constraints"]
+                },
+                "security_config": {
+                    "authentication": "JWT",
+                    "authorization": "RBAC",
+                    "rate_limiting": "enabled",
+                    "cors": "configured",
+                    "ssl": "enabled"
+                },
+                "performance_config": {
+                    "caching": "redis",
+                    "load_balancing": "nginx",
+                    "monitoring": "prometheus",
+                    "logging": "structured"
+                }
             }
+
+            # Add MCP enhanced data if available
+            if enhanced_data:
+                result["mcp_enhanced_data"] = enhanced_data
+                result["mcp_enhanced"] = True
 
             # Add to history
             api_entry = f"{result['timestamp']}: {result['method']} {endpoint} - Status: {result['status']}"
@@ -654,8 +819,11 @@ BackendDeveloper Agent Commands:
         except Exception as e:
             logger.error(f"Error handling API deployment completed: {e}")
 
-    def run(self):
-        """Start the agent in event listening mode."""
+    async def run(self):
+        """Start the agent in event listening mode met MCP integration."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
         def sync_handler(event):
             asyncio.run(self.handle_api_change_completed(event))
 
@@ -668,7 +836,21 @@ BackendDeveloper Agent Commands:
         subscribe("api_deployment_requested", self.handle_api_deployment_requested)
 
         logger.info("BackendDeveloperAgent ready and listening for events...")
-        self.collaborate_example()
+        print("🔧 BackendDeveloper Agent is running...")
+        print("Listening for events: api_change_completed, api_change_requested, api_deployment_completed, api_deployment_requested")
+        print("Press Ctrl+C to stop")
+        
+        try:
+            while True:
+                await asyncio.sleep(1)
+        except KeyboardInterrupt:
+            print("\n🛑 BackendDeveloper Agent stopped.")
+
+    @classmethod
+    async def run_agent(cls):
+        """Class method to run the BackendDeveloper agent met MCP integration."""
+        agent = cls()
+        await agent.run()
 
 def main():
     """Main CLI function with comprehensive error handling."""
@@ -688,7 +870,7 @@ def main():
         if args.command == "help":
             agent.show_help()
         elif args.command == "build-api":
-            result = agent.build_api(args.endpoint)
+            result = asyncio.run(agent.build_api(args.endpoint))
             print(f"API built successfully: {result}")
         elif args.command == "deploy-api":
             result = agent.deploy_api(args.endpoint)
@@ -714,16 +896,18 @@ def main():
         elif args.command == "collaborate":
             agent.collaborate_example()
         elif args.command == "run":
-            agent.run()
-            
-    except BackendValidationError as e:
-        print(f"Validation error: {e}")
-        sys.exit(1)
+            asyncio.run(agent.run())
+        else:
+            print("Unknown command. Use 'help' to see available commands.")
+            sys.exit(1)
+
     except BackendError as e:
-        print(f"Backend error: {e}")
+        logger.error(f"Backend error: {e}")
+        print(f"❌ Backend error: {e}")
         sys.exit(1)
     except Exception as e:
-        print(f"Unexpected error: {e}")
+        logger.error(f"Unexpected error: {e}")
+        print(f"❌ Unexpected error: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":

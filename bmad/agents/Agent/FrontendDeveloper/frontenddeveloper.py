@@ -23,6 +23,18 @@ from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_e
 from bmad.agents.core.communication.message_bus import publish, subscribe
 from integrations.figma.figma_client import FigmaClient
 from integrations.slack.slack_notify import send_slack_message
+from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
+
+# MCP Integration
+from bmad.core.mcp import (
+    MCPClient,
+    MCPContext,
+    FrameworkMCPIntegration,
+    get_mcp_client,
+    get_framework_mcp_integration,
+    initialize_framework_mcp_integration
+)
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
@@ -35,10 +47,19 @@ class FrontendDeveloperAgent:
     """
     
     def __init__(self):
+        self.framework_manager = get_framework_templates_manager()
+        self.frontend_development_template = self.framework_manager.get_framework_template('frontend_development')
+        self.lessons_learned = []
+
         """Initialize FrontendDeveloper agent met lazy loading."""
         self.agent_name = "FrontendDeveloper"
         self.component_history = []
         self.performance_history = []
+        
+        # MCP Integration
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
         
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
@@ -66,18 +87,102 @@ class FrontendDeveloperAgent:
         # Basic initialization only
         logger.info(f"{self.agent_name} Agent geïnitialiseerd (lazy loading)")
     
+    async def initialize_mcp(self):
+        """Initialize MCP client voor enhanced frontend development capabilities."""
+        try:
+            self.mcp_client = await get_mcp_client()
+            self.mcp_integration = get_framework_mcp_integration()
+            await initialize_framework_mcp_integration()
+            self.mcp_enabled = True
+            logger.info("MCP client initialized successfully for FrontendDeveloper")
+        except Exception as e:
+            logger.warning(f"MCP initialization failed for FrontendDeveloper: {e}")
+            self.mcp_enabled = False
+    
+    async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Use MCP tool voor enhanced frontend development functionality."""
+        if not self.mcp_enabled or not self.mcp_client:
+            logger.warning("MCP not available, using local frontend development tools")
+            return None
+        
+        try:
+            result = await self.mcp_client.execute_tool(tool_name, parameters)
+            logger.info(f"MCP tool {tool_name} executed successfully")
+            return result
+        except Exception as e:
+            logger.error(f"MCP tool {tool_name} execution failed: {e}")
+            return None
+    
+    async def use_frontend_specific_mcp_tools(self, component_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use frontend-specific MCP tools for component enhancement."""
+        if not self.mcp_enabled:
+            return {}
+        
+        enhanced_data = {}
+        
+        try:
+            # Component analysis
+            if "component_analysis" in self.mcp_config.custom_tools:
+                analysis_result = await self.use_mcp_tool("code_analysis", {
+                    "code": component_data.get("code", ""),
+                    "language": "typescript",
+                    "analysis_type": "quality"
+                })
+                if analysis_result:
+                    enhanced_data["component_analysis"] = analysis_result
+            
+            # Accessibility check
+            if "accessibility_check" in self.mcp_config.custom_tools:
+                accessibility_result = await self.use_mcp_tool("quality_gate", {
+                    "metrics": {
+                        "accessibility_score": component_data.get("accessibility_score", 0),
+                        "wcag_compliance": component_data.get("wcag_compliance", False)
+                    },
+                    "thresholds": {
+                        "accessibility_score": 90,
+                        "wcag_compliance": True
+                    }
+                })
+                if accessibility_result:
+                    enhanced_data["accessibility_check"] = accessibility_result
+            
+            # Documentation generation
+            doc_result = await self.use_mcp_tool("documentation_generator", {
+                "source": component_data.get("code", ""),
+                "output_format": "markdown",
+                "include_examples": True
+            })
+            if doc_result:
+                enhanced_data["documentation"] = doc_result
+            
+            logger.info(f"Frontend-specific MCP tools executed: {list(enhanced_data.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Error in frontend-specific MCP tools: {e}")
+        
+        return enhanced_data
+    
     def _ensure_message_bus_initialized(self):
         """Lazy initialize MessageBus only when needed."""
-        if not self._message_bus_initialized:
-            from bmad.agents.core.message_bus import message_bus
-            
-            # Register event handlers
-            message_bus.subscribe("figma_design_feedback", self.on_figma_design_feedback)
-            message_bus.subscribe("figma_components_generated", self.on_figma_components_generated)
-            message_bus.subscribe("figma_analysis_completed", self.on_figma_analysis_completed)
-            
-            self._message_bus_initialized = True
-            logger.debug(f"{self.agent_name} MessageBus geïnitialiseerd")
+        if not hasattr(self, '_message_bus_initialized'):
+            try:
+                # Use dependency manager for safe import
+                psutil = self.dependency_manager.safe_import('psutil')
+                if psutil:
+                    # Import MessageBus only when needed
+                    from bmad.agents.core.message_bus import MessageBus
+                    self.message_bus = MessageBus()
+                    self._message_bus_initialized = True
+                    logger.debug("MessageBus initialized with psutil support")
+                else:
+                    # Fallback without psutil
+                    self.message_bus = None
+                    self._message_bus_initialized = True
+                    logger.debug("MessageBus initialized without psutil support")
+            except Exception as e:
+                logger.warning(f"MessageBus initialization failed: {e}")
+                self.message_bus = None
+                self._message_bus_initialized = True
     
     def _ensure_services_initialized(self):
         """Lazy initialize core services only when needed."""
@@ -222,12 +327,17 @@ FrontendDeveloper Agent Commands:
         for i, perf in enumerate(self.performance_history[-10:], 1):
             print(f"{i}. {perf}")
 
-    def build_shadcn_component(self, component_name: str = "Button") -> Dict[str, Any]:
-        """Build a Shadcn/ui component with accessibility and performance optimization."""
+    async def build_shadcn_component(self, component_name: str = "Button") -> Dict[str, Any]:
+        """Build a Shadcn/ui component with enhanced features and MCP integration."""
         # Validate input
         self.validate_input(component_name)
         
         logger.info(f"Building Shadcn component: {component_name}")
+
+        # Ensure services are initialized
+        self._ensure_services_initialized()
+        
+        start_time = time.time()
 
         # Simulate Shadcn component build with accessibility focus
         time.sleep(1)
@@ -250,9 +360,33 @@ FrontendDeveloper Agent Commands:
             "agent": "FrontendDeveloperAgent"
         }
 
-        # Log performance metrics
-        self.performance_monitor._record_metric("FrontendDeveloper", MetricType.SUCCESS_RATE, result["accessibility_score"], "%")
-        self.performance_monitor._record_metric("FrontendDeveloper", MetricType.RESPONSE_TIME, result["performance_score"], "ms")
+        # Try MCP-enhanced component building first
+        if self.mcp_enabled and self.mcp_client:
+            try:
+                mcp_result = await self.use_mcp_tool("build_component", {
+                    "component_name": component_name,
+                    "framework": "shadcn/ui",
+                    "include_accessibility": True,
+                    "include_performance": True
+                })
+                
+                if mcp_result:
+                    logger.info("MCP-enhanced component building completed")
+                    result.update(mcp_result)
+                    result["mcp_enhanced"] = True
+                else:
+                    logger.warning("MCP component building failed, using local building")
+            except Exception as e:
+                logger.warning(f"MCP component building failed: {e}, using local building")
+        
+        # Use frontend-specific MCP tools for additional enhancement
+        if self.mcp_enabled:
+            try:
+                frontend_enhanced = await self.use_frontend_specific_mcp_tools(result)
+                if frontend_enhanced:
+                    result["frontend_enhancements"] = frontend_enhanced
+            except Exception as e:
+                logger.warning(f"Frontend-specific MCP tools failed: {e}")
 
         # Add to component history
         comp_entry = f"{datetime.now().isoformat()}: Shadcn {component_name} component built with {result['accessibility_score']}% accessibility score"
@@ -384,7 +518,7 @@ FrontendDeveloper Agent Commands:
 
     def get_status(self) -> Dict[str, Any]:
         """Get the current status of the FrontendDeveloper agent."""
-        return {
+        base_status = {
             "agent_name": self.agent_name,
             "component_history_count": len(self.component_history),
             "performance_history_count": len(self.performance_history),
@@ -394,6 +528,28 @@ FrontendDeveloper Agent Commands:
             "resources_loaded": self._resources_loaded,
             "status": "active"
         }
+        
+        # Add dependency status if using MCP mixin
+        if hasattr(self, 'get_dependency_status'):
+            base_status["dependency_status"] = self.get_dependency_status()
+        
+        return base_status
+    
+    def check_dependencies(self) -> Dict[str, Any]:
+        """Check dependency status and provide recommendations."""
+        if hasattr(self, 'get_dependency_status'):
+            return self.get_dependency_status()
+        else:
+            # Fallback for agents without MCP mixin
+            return {
+                "agent_name": self.agent_name,
+                "missing_dependencies": [],
+                "degraded_features": [],
+                "dependency_warnings": [],
+                "recommendations": [],
+                "dependency_health": True,
+                "note": "Dependency checking not available for this agent"
+            }
 
     def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
@@ -570,7 +726,11 @@ FrontendDeveloper Agent Commands:
             logger.error(f"[FrontendDeveloper][Figma Codegen Error]: {e!s}")
             return {"error": str(e)}
 
-    def run(self):
+    async def run(self):
+        """Run the FrontendDeveloper agent met MCP integration."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
         def sync_handler(event):
             asyncio.run(self.handle_component_build_completed(event))
 
@@ -579,32 +739,51 @@ FrontendDeveloper Agent Commands:
 
         logger.info("FrontendDeveloperAgent ready and listening for events...")
         self.collaborate_example()
+        
+        try:
+            # Keep the agent running
+            while True:
+                await asyncio.sleep(1)
+        except KeyboardInterrupt:
+            logger.info("FrontendDeveloper agent stopped.")
     
     @classmethod
-    def run_agent(cls):
-        """Class method to run the FrontendDeveloper agent."""
+    async def run_agent(cls):
+        """Class method to run the FrontendDeveloper agent met MCP integration."""
         agent = cls()
-        agent.run()
+        await agent.run()
 
 def main():
     parser = argparse.ArgumentParser(description="FrontendDeveloper Agent CLI")
     parser.add_argument("command", nargs="?", default="help",
                        choices=["help", "build-component", "build-shadcn-component", "run-accessibility-check", "show-component-history",
                                "show-performance", "show-best-practices", "show-changelog", "export-component",
-                               "test", "collaborate", "run"])
+                               "test", "collaborate", "run", "initialize-mcp", "use-mcp-tool", "get-mcp-status", "use-frontend-mcp-tools", "check-dependencies"])
     parser.add_argument("--name", default="Button", help="Component name")
     parser.add_argument("--format", choices=["md", "json"], default="md", help="Export format")
+    parser.add_argument("--tool-name", help="MCP tool name")
+    parser.add_argument("--parameters", help="MCP tool parameters (JSON string)")
+    parser.add_argument("--component-data", help="Component data for frontend MCP tools (JSON string)")
 
     args = parser.parse_args()
 
     agent = FrontendDeveloperAgent()
+    
+    # Show dependency warnings on startup
+    if hasattr(agent, 'get_dependency_status'):
+        dep_status = agent.get_dependency_status()
+        if dep_status.get('missing_dependencies'):
+            print(f"[DEPENDENCY WARNING] {len(dep_status['missing_dependencies'])} dependencies missing")
+            for dep in dep_status['missing_dependencies']:
+                print(f"  - {dep}: {dep_status['degraded_features'][dep_status['missing_dependencies'].index(dep)]}")
+            print("Use 'check-dependencies' command for detailed information and recommendations.")
 
     if args.command == "help":
         agent.show_help()
     elif args.command == "build-component":
         agent.build_component(args.name)
     elif args.command == "build-shadcn-component":
-        agent.build_shadcn_component(args.name)
+        asyncio.run(agent.build_shadcn_component(args.name))
     elif args.command == "run-accessibility-check":
         agent.run_accessibility_check(args.name)
     elif args.command == "show-component-history":
@@ -622,7 +801,30 @@ def main():
     elif args.command == "collaborate":
         agent.collaborate_example()
     elif args.command == "run":
-        agent.run()
+        asyncio.run(agent.run())
+    elif args.command == "initialize-mcp":
+        success = asyncio.run(agent.initialize_mcp())
+        print(f"MCP initialization: {'Success' if success else 'Failed'}")
+    elif args.command == "use-mcp-tool":
+        if not args.tool_name:
+            print("Error: --tool-name is required for use-mcp-tool command")
+            return
+        parameters = json.loads(args.parameters) if args.parameters else {}
+        result = asyncio.run(agent.use_mcp_tool(args.tool_name, parameters))
+        print(f"MCP tool result: {result}")
+    elif args.command == "get-mcp-status":
+        status = agent.get_status()
+        print(json.dumps(status, indent=2, default=str))
+    elif args.command == "use-frontend-mcp-tools":
+        if not args.component_data:
+            print("Error: --component-data is required for use-frontend-mcp-tools command")
+            return
+        component_data = json.loads(args.component_data)
+        result = asyncio.run(agent.use_frontend_specific_mcp_tools(component_data))
+        print(f"Frontend MCP tools result: {result}")
+    elif args.command == "check-dependencies":
+        status = agent.check_dependencies()
+        print(json.dumps(status, indent=2, default=str))
 
 if __name__ == "__main__":
     main()

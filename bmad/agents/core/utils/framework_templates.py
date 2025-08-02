@@ -26,7 +26,17 @@ class FrameworkTemplatesManager:
             "development_workflow": self.frameworks_path / "development_workflow_template.md",
             "testing_strategy": self.frameworks_path / "testing_strategy_template.md",
             "testing_workflow": self.frameworks_path / "testing_workflow_template.md",
-            "frameworks_overview": self.frameworks_path / "frameworks_overview_template.md"
+            "frameworks_overview": self.frameworks_path / "frameworks_overview_template.md",
+            "backend_development": self.frameworks_path / "backend_development_template.md",
+            "frontend_development": self.frameworks_path / "frontend_development_template.md",
+            "fullstack_development": self.frameworks_path / "fullstack_development_template.md",
+            "testing_engineer": self.frameworks_path / "testing_engineer_template.md",
+            "quality_guardian": self.frameworks_path / "quality_guardian_template.md",
+            "data_engineer": self.frameworks_path / "data_engineer_template.md",
+            "rnd": self.frameworks_path / "rnd_template.md",
+            "product_owner": self.frameworks_path / "product_owner_template.md",
+            "scrummaster": self.frameworks_path / "scrummaster_template.md",
+            "release_manager": self.frameworks_path / "release_manager_template.md"
         }
         
         # Validate template paths
@@ -90,12 +100,141 @@ class FrameworkTemplatesManager:
                     "Test fallback mechanismen voor API failures"
                 ]
             },
+            "backend_agents": {
+                "development": [
+                    "Volg microservices architecture patterns",
+                    "Implementeer proper database schema design",
+                    "Gebruik FastAPI voor REST API development",
+                    "Implementeer comprehensive error handling",
+                    "Volg security best practices (JWT, RBAC, input validation)",
+                    "Gebruik connection pooling en caching strategies",
+                    "Implementeer proper logging en monitoring"
+                ],
+                "testing": [
+                    "Test database operations met proper fixtures",
+                    "Mock external service dependencies",
+                    "Test API endpoints met comprehensive scenarios",
+                    "Implementeer integration tests voor service communication",
+                    "Test security measures en authentication flows"
+                ]
+            },
+            "frontend_agents": {
+                "development": [
+                    "Gebruik component-based architecture",
+                    "Implementeer proper state management (React Query + Zustand)",
+                    "Volg TypeScript best practices voor type safety",
+                    "Gebruik Tailwind CSS voor consistent styling",
+                    "Implementeer proper form validation met React Hook Form",
+                    "Gebruik proper error boundaries en loading states",
+                    "Implementeer responsive design patterns"
+                ],
+                "testing": [
+                    "Test component rendering en user interactions",
+                    "Mock API calls in component tests",
+                    "Test form validation en error handling",
+                    "Implementeer accessibility testing",
+                    "Test responsive design op verschillende screen sizes"
+                ]
+            },
+            "fullstack_agents": {
+                "development": [
+                    "Coördineer frontend en backend development",
+                    "Gebruik shared type definitions tussen frontend en backend",
+                    "Implementeer end-to-end workflows",
+                    "Volg consistent API design patterns",
+                    "Gebruik proper authentication flows",
+                    "Implementeer real-time features met WebSockets",
+                    "Test complete user journeys"
+                ],
+                "testing": [
+                    "Implementeer end-to-end tests voor complete workflows",
+                    "Test API integration tussen frontend en backend",
+                    "Test real-time features en WebSocket communication",
+                    "Test complete user registration en authentication flows",
+                    "Implementeer performance testing voor fullstack applications"
+                ]
+            },
+            "testing_agents": {
+                "development": [
+                    "Implementeer comprehensive test strategies",
+                    "Volg test pyramid approach (70% unit, 20% integration, 10% E2E)",
+                    "Gebruik test data factories en fixtures",
+                    "Implementeer proper test isolation en cleanup",
+                    "Gebruik mocking strategies voor external dependencies",
+                    "Implementeer test automation en CI/CD integration",
+                    "Volg test-driven development (TDD) principles"
+                ],
+                "testing": [
+                    "Test test frameworks en test utilities",
+                    "Valideer test coverage en quality metrics",
+                    "Test test data management en seeding",
+                    "Implementeer test performance monitoring",
+                    "Test test reporting en analytics"
+                ]
+            },
+            "quality_agents": {
+                "development": [
+                    "Implementeer quality gates en enforcement",
+                    "Gebruik code quality analysis tools",
+                    "Implementeer security scanning en vulnerability detection",
+                    "Monitor performance metrics en benchmarks",
+                    "Implementeer compliance checking en validation",
+                    "Gebruik quality metrics dashboards en reporting",
+                    "Implementeer quality trend analysis en prediction"
+                ],
+                "testing": [
+                    "Test quality gate implementations",
+                    "Valideer code quality analysis accuracy",
+                    "Test security scanning effectiveness",
+                    "Implementeer quality metrics validation",
+                    "Test compliance checking accuracy"
+                ]
+            },
+            "ai_agents": {
+                "development": [
+                    "Implementeer data pipeline architecture en ETL/ELT processes",
+                    "Gebruik data quality management en validation frameworks",
+                    "Implementeer technology research en evaluation methodologies",
+                    "Gebruik proof-of-concept development en validation",
+                    "Implementeer innovation pipeline management",
+                    "Gebruik knowledge management en collaboration tools",
+                    "Implementeer performance monitoring en optimization"
+                ],
+                "testing": [
+                    "Test data pipeline functionality en performance",
+                    "Valideer data quality metrics en validation accuracy",
+                    "Test technology evaluation frameworks en decision processes",
+                    "Implementeer POC testing en validation workflows",
+                    "Test innovation tracking en metrics accuracy"
+                ]
+            },
+            "management_agents": {
+                "development": [
+                    "Implementeer product management en backlog management frameworks",
+                    "Gebruik scrum process facilitation en team coaching methodologies",
+                    "Implementeer release planning en deployment management",
+                    "Gebruik stakeholder management en communication strategies",
+                    "Implementeer sprint planning en retrospective facilitation",
+                    "Gebruik quality gates en release coordination",
+                    "Implementeer changelog management en documentation"
+                ],
+                "testing": [
+                    "Test product management workflows en backlog health",
+                    "Valideer scrum process effectiveness en team performance",
+                    "Test release planning accuracy en deployment success",
+                    "Implementeer stakeholder satisfaction metrics",
+                    "Test sprint planning en retrospective effectiveness"
+                ]
+            },
             "development_agents": {
                 "development": [
                     "Volg de development pyramid strategie",
                     "Implementeer unit tests voor alle nieuwe functionaliteit",
                     "Gebruik type hints en comprehensive docstrings",
-                    "Valideer code quality met linting tools"
+                    "Valideer code quality met linting tools",
+                    "Gebruik framework templates voor consistente development",
+                    "Implementeer proper error handling en logging",
+                    "Volg security best practices voor input validation"
                 ],
                 "testing": [
                     "Volg de test pyramid strategie",

@@ -20,6 +20,10 @@ from bmad.agents.core.ai.llm_client import ask_openai
 from bmad.agents.core.communication.message_bus import publish, subscribe
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
+from bmad.core.mcp import (
+    MCPClient, MCPContext, FrameworkMCPIntegration,
+    get_mcp_client, get_framework_mcp_integration, initialize_framework_mcp_integration
+)
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 from integrations.slack.slack_notify import send_slack_message
 
@@ -51,6 +55,11 @@ class StrategiePartnerAgent:
             "sample_rate": 1.0,
             "exporters": []
         })())
+
+        # MCP Integration
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
 
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
@@ -96,6 +105,80 @@ class StrategiePartnerAgent:
             "risk_assessments_completed": 0,
             "strategy_success_rate": 0.0
         }
+
+        logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+
+    async def initialize_mcp(self):
+        """Initialize MCP client and integration."""
+        try:
+            self.mcp_client = await get_mcp_client()
+            self.mcp_integration = get_framework_mcp_integration()
+            await initialize_framework_mcp_integration()
+            self.mcp_enabled = True
+            logger.info("MCP client initialized successfully")
+        except Exception as e:
+            logger.warning(f"MCP initialization failed: {e}")
+            self.mcp_enabled = False
+
+    async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Use MCP tool voor enhanced functionality."""
+        if not self.mcp_enabled or not self.mcp_client:
+            logger.warning("MCP not available, using local tools")
+            return None
+        
+        try:
+            result = await self.mcp_client.execute_tool(tool_name, parameters)
+            logger.info(f"MCP tool {tool_name} executed successfully")
+            return result
+        except Exception as e:
+            logger.error(f"MCP tool {tool_name} execution failed: {e}")
+            return None
+
+    async def use_strategy_specific_mcp_tools(self, strategy_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use strategy-specific MCP tools voor enhanced functionality."""
+        enhanced_data = {}
+        
+        # Strategy development
+        strategy_result = await self.use_mcp_tool("strategy_development", {
+            "strategy_name": strategy_data.get("strategy_name", ""),
+            "business_context": strategy_data.get("business_context", ""),
+            "market_conditions": strategy_data.get("market_conditions", ""),
+            "analysis_type": "comprehensive"
+        })
+        if strategy_result:
+            enhanced_data["strategy_development"] = strategy_result
+        
+        # Market analysis
+        market_result = await self.use_mcp_tool("market_analysis", {
+            "sector": strategy_data.get("sector", ""),
+            "market_size": strategy_data.get("market_size", ""),
+            "growth_rate": strategy_data.get("growth_rate", ""),
+            "analysis_depth": "detailed"
+        })
+        if market_result:
+            enhanced_data["market_analysis"] = market_result
+        
+        # Competitive analysis
+        competitive_result = await self.use_mcp_tool("competitive_analysis", {
+            "competitors": strategy_data.get("competitors", []),
+            "market_position": strategy_data.get("market_position", ""),
+            "competitive_advantage": strategy_data.get("competitive_advantage", ""),
+            "analysis_scope": "comprehensive"
+        })
+        if competitive_result:
+            enhanced_data["competitive_analysis"] = competitive_result
+        
+        # Risk assessment
+        risk_result = await self.use_mcp_tool("risk_assessment", {
+            "strategy": strategy_data.get("strategy", ""),
+            "risk_factors": strategy_data.get("risk_factors", []),
+            "mitigation_strategies": strategy_data.get("mitigation_strategies", []),
+            "assessment_type": "comprehensive"
+        })
+        if risk_result:
+            enhanced_data["risk_assessment"] = risk_result
+        
+        return enhanced_data
 
     def _validate_input(self, value: Any, expected_type: type, param_name: str) -> None:
         """Validate input parameters with type checking."""
@@ -350,7 +433,7 @@ StrategiePartner Agent Commands:
             logger.error(f"Error reading resource {resource_type}: {e}")
             print(f"Error reading resource: {e}")
 
-    def develop_strategy(self, strategy_name: str = "Digital Transformation Strategy") -> Dict[str, Any]:
+    async def develop_strategy(self, strategy_name: str = "Digital Transformation Strategy") -> Dict[str, Any]:
         """Develop a new strategy with comprehensive validation and error handling."""
         try:
             self._validate_input(strategy_name, str, "strategy_name")
@@ -359,6 +442,24 @@ StrategiePartner Agent Commands:
                 raise StrategyValidationError("Strategy name cannot be empty")
             
             logger.info(f"Developing strategy: {strategy_name}")
+
+            # Use MCP tools for enhanced strategy development
+            strategy_data = {
+                "strategy_name": strategy_name,
+                "business_context": "Digital transformation initiative",
+                "market_conditions": "Evolving technology landscape",
+                "sector": "Technology",
+                "market_size": "$500B",
+                "growth_rate": "8.5%",
+                "competitors": ["Company A", "Company B", "Company C"],
+                "market_position": "Emerging",
+                "competitive_advantage": "Innovation focus",
+                "strategy": strategy_name,
+                "risk_factors": ["Market volatility", "Technology changes"],
+                "mitigation_strategies": ["Agile approach", "Continuous monitoring"]
+            }
+            
+            enhanced_data = await self.use_strategy_specific_mcp_tools(strategy_data)
 
             # Simulate strategy development process
             time.sleep(1)
@@ -373,6 +474,10 @@ StrategiePartner Agent Commands:
                 "timestamp": datetime.now().isoformat(),
                 "agent": "StrategiePartnerAgent"
             }
+
+            # Add MCP enhanced data if available
+            if enhanced_data:
+                result["mcp_enhanced_data"] = enhanced_data
 
             # Add to history
             strategy_entry = f"{result['timestamp']}: Strategy '{strategy_name}' developed - Timeline: {result['timeline']}"
@@ -1261,8 +1366,7 @@ StrategiePartner Agent Commands:
     # Async wrapper methods for parallel execution
     async def _async_develop_strategy(self, strategy_name: str):
         """Async wrapper for develop_strategy."""
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, self.develop_strategy, strategy_name)
+        return await self.develop_strategy(strategy_name)
     
     async def _async_analyze_market(self, sector: str):
         """Async wrapper for analyze_market."""
@@ -1386,8 +1490,11 @@ StrategiePartner Agent Commands:
         except Exception as e:
             logger.error(f"Error handling epic creation requested: {e}")
 
-    def run(self):
+    async def run(self):
         """Start the agent in event listening mode."""
+        # Initialize MCP
+        await self.initialize_mcp()
+        
         subscribe("alignment_check_completed", self.handle_alignment_check_completed)
         subscribe("strategy_development_requested", self.handle_strategy_development_requested)
         subscribe("strategiepartner_validate_idea", self.handle_idea_validation_requested)
@@ -1395,7 +1502,14 @@ StrategiePartner Agent Commands:
         subscribe("strategiepartner_create_epic", self.handle_epic_creation_requested)
 
         logger.info("StrategiePartnerAgent ready and listening for events...")
-        self.collaborate_example()
+        await self.collaborate_example()
+
+    @classmethod
+    async def run_agent(cls):
+        """Class method to run the agent with proper async setup."""
+        agent = cls()
+        await agent.run()
+        return agent
 
 def main():
     """Main CLI function with comprehensive error handling."""
@@ -1422,7 +1536,7 @@ def main():
         if args.command == "help":
             agent.show_help()
         elif args.command == "develop-strategy":
-            result = agent.develop_strategy(args.strategy_name)
+            result = asyncio.run(agent.develop_strategy(args.strategy_name))
             print(f"Strategy developed successfully: {result}")
         elif args.command == "analyze-market":
             result = agent.analyze_market(args.sector)
@@ -1473,9 +1587,9 @@ def main():
             else:
                 print("Resource completeness test failed!")
         elif args.command == "collaborate":
-            agent.collaborate_example()
+            asyncio.run(agent.collaborate_example())
         elif args.command == "run":
-            agent.run()
+            agent = asyncio.run(StrategiePartnerAgent.run_agent())
             
     except StrategyValidationError as e:
         print(f"Validation error: {e}")

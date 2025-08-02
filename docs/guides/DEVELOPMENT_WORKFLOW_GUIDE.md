@@ -4,7 +4,8 @@
 
 Dit document beschrijft de verplichte development workflow voor alle nieuwe functionaliteit en uitbreidingen in het BMAD systeem. Het doel is om ervoor te zorgen dat alle code kwalitatief is geïmplementeerd en goed ontwikkeld wordt.
 
-**Voor development strategie en filosofie, zie**: `DEVELOPMENT_STRATEGY.md`
+**Voor development strategie en filosofie, zie**: `DEVELOPMENT_STRATEGY.md`  
+**Voor quality assurance, zie**: `QUALITY_GUIDE.md`
 
 ## Development Pyramid Implementatie
 
@@ -25,10 +26,20 @@ Volg de development pyramid strategie zoals beschreven in `DEVELOPMENT_STRATEGY.
 
 ### Voor het implementeren van nieuwe functionaliteit:
 
+- [ ] **Work Item Refinement**: Gebruik `docs/guides/WORK_ITEM_TEMPLATE.md` voor kwalitatieve work items
+- [ ] **Agent Inventory Check**: Raadpleeg `bmad/agents/Agent/agents-overview.md` voor complete agent lijst (23 agents)
+- [ ] **Project Planning Check**: Raadpleeg project planning files voor context en requirements:
+  - `docs/deployment/KANBAN_BOARD.md` - Huidige taken en status
+  - `docs/deployment/BMAD_MASTER_PLANNING.md` - Uitgebreide backlog en roadmap
+  - `docs/deployment/IMPLEMENTATION_DETAILS.md` - Gedetailleerde implementatie uitleg
 - [ ] **Analyse**: Root cause analysis uitvoeren voor bugs
 - [ ] **Planning**: Development strategie bepalen (unit, integration, production)
 - [ ] **Review**: Bestaande guide files raadplegen voor best practices
 - [ ] **Strategy Review**: Bekijk `DEVELOPMENT_STRATEGY.md` voor development type keuze
+- [ ] **MCP Integration Planning**: Voor MCP integratie, raadpleeg:
+  - `docs/guides/MCP_INTEGRATION_GUIDE.md` - MCP integration patterns
+  - `docs/guides/MCP_TROUBLESHOOTING_GUIDE.md` - Common issues en solutions
+  - `docs/guides/LESSONS_LEARNED_GUIDE.md` - Lessons from previous MCP integrations
 
 ### Tijdens implementatie:
 
@@ -37,14 +48,78 @@ Volg de development pyramid strategie zoals beschreven in `DEVELOPMENT_STRATEGY.
 - [ ] **Quality Checks**: Gebruik linting en code quality tools
 - [ ] **Validation**: Test edge cases en error scenarios
 - [ ] **Code Quality**: Volg quality standards uit `DEVELOPMENT_STRATEGY.md`
+- [ ] **MCP Integration**: Voor MCP integratie:
+  - [ ] **MCP Setup**: Voeg MCP imports en attributes toe aan `__init__`
+  - [ ] **Async Methods**: Maak relevante methodes async met `async def`
+  - [ ] **MCP Tools**: Implementeer agent-specifieke MCP tools
+  - [ ] **Fallback Logic**: Zorg voor graceful fallback naar lokale tools
+  - [ ] **CLI Updates**: Update CLI calls voor async methodes met `asyncio.run()`
+  - [ ] **Test Updates**: Update tests met `@pytest.mark.asyncio` en `AsyncMock`
 
 ### Na implementatie:
 
 - [ ] **Quality Validation**: Alle quality checks uitvoeren
 - [ ] **Coverage Check**: Code coverage controleren
+- [ ] **Test Execution**: Uitvoeren van unit, integration en e2e tests
+- [ ] **Test Reporting**: Allure test reports genereren en analyseren
 - [ ] **Documentation**: Code documenteren
+- [ ] **Documentation Updates**: Regelmatige documentatie updates uitvoeren
 - [ ] **Review**: Code review inclusief quality checks
 - [ ] **Strategy Validation**: Controleer of development strategie correct is toegepast
+- [ ] **MCP Validation**: Voor MCP integratie:
+  - [ ] **MCP Functionality**: Test MCP tools en fallback behavior
+  - [ ] **Async Compatibility**: Verificeer alle async methodes werken correct
+  - [ ] **CLI Functionality**: Test CLI commands met async methodes
+  - [ ] **Test Coverage**: Zorg voor 100% test success rate
+  - [ ] **Performance Check**: Verificeer geen performance regressions
+  - [ ] **Documentation Update**: Update MCP guides met nieuwe patterns
+
+## Test Reporting & Quality Assurance
+
+### Allure Test Reporting
+Voor complete test inzichten en kwaliteitscontrole moet Allure worden gebruikt:
+
+#### **Allure Setup & Usage**
+```bash
+# Install Allure (indien nog niet geïnstalleerd)
+pip install allure-pytest
+
+# Run tests met Allure reporting
+pytest --alluredir=./allure-results
+
+# Generate en open Allure report
+allure serve ./allure-results
+
+# Generate static report
+allure generate ./allure-results --clean
+```
+
+#### **Test Reporting Workflow**
+1. **Test Execution**: Run alle tests met `pytest --alluredir=./allure-results`
+2. **Report Generation**: Generate Allure report voor analyse
+3. **Quality Analysis**: Analyseer test results, coverage en failures
+4. **Issue Tracking**: Documenteer en fix test failures
+5. **Coverage Validation**: Controleer coverage targets (>90-95% voor critical, >70% voor general)
+
+#### **Allure Report Features**
+- **Test Results Overview**: Pass/fail statistics
+- **Test Execution Timeline**: Performance analysis
+- **Coverage Reports**: Code coverage per module
+- **Failure Analysis**: Detailed failure information
+- **Trend Analysis**: Historical test performance
+
+#### **Quality Gates**
+- **Pre-commit**: Alle tests moeten slagen
+- **Pre-merge**: Coverage thresholds moeten gehaald worden
+- **Pre-deploy**: Volledige test suite moet slagen
+- **Post-deploy**: Smoke tests moeten slagen
+
+### Test Quality Metrics
+- **Test Success Rate**: 100% (alle tests moeten slagen)
+- **Critical Components Coverage**: >90-95% (MCP core, agent integration, enterprise)
+- **General Components Coverage**: >70% (overige modules en utilities)
+- **Test Execution Time**: <5 minuten voor complete test suite
+- **Test Reliability**: 100% (geen flaky tests)
 
 ## Development Structure
 
@@ -94,6 +169,51 @@ cli/
 │   └── ...
 └── ...
 ```
+
+## 📋 **Project Planning & Agent Inventory Management**
+
+### **Mandatory Project Planning Check**
+**VOOR ELKE NIEUWE IMPLEMENTATIE** moet je eerst de project planning files raadplegen:
+
+```bash
+# Check project planning files
+cat docs/deployment/KANBAN_BOARD.md
+cat docs/deployment/BMAD_MASTER_PLANNING.md
+cat docs/deployment/IMPLEMENTATION_DETAILS.md
+cat bmad/agents/Agent/agents-overview.md
+```
+
+### **Project Planning Files Overview**
+- **KANBAN_BOARD.md**: Huidige taken, status, en sprint planning
+- **BMAD_MASTER_PLANNING.md**: Uitgebreide backlog, roadmap, en implementatie strategie
+- **IMPLEMENTATION_DETAILS.md**: Gedetailleerde technische implementatie uitleg
+- **agents-overview.md**: Complete agent inventory en status
+
+### **Project Planning Checklist**
+- [ ] **Kanban Status**: Controleer huidige taken en sprint planning
+- [ ] **Backlog Items**: Verificeer relevante backlog items in master planning
+- [ ] **Implementation Context**: Raadpleeg implementatie details voor technische context
+- [ ] **Agent Inventory**: Controleer dat alle 23 agents zijn meegenomen
+- [ ] **MCP Status**: Verificeer MCP integration status van alle agents
+- [ ] **Dependencies**: Identificeer agent dependencies en integratie punten
+- [ ] **Categories**: Begrijp agent categorieën (Development, Design, Quality, etc.)
+- [ ] **Responsibilities**: Controleer agent verantwoordelijkheden en overlap
+
+### **Agent Categories Overview**
+1. **Core Development** (5 agents): Frontend, Backend, Fullstack, Mobile, AI
+2. **Architecture & Design** (3 agents): Architect, UX/UI, Accessibility
+3. **Quality & Testing** (2 agents): TestEngineer, QualityGuardian
+4. **Project Management** (3 agents): ProductOwner, Scrummaster, ReleaseManager
+5. **Infrastructure & Operations** (2 agents): DevOpsInfra, DataEngineer
+6. **Security & Compliance** (1 agent): SecurityDeveloper
+7. **Documentation & Communication** (2 agents): DocumentationAgent, FeedbackAgent
+8. **Process & Workflow** (3 agents): Orchestrator, WorkflowAutomator, Retrospective
+9. **Strategy & Innovation** (2 agents): StrategiePartner, RnD
+
+### **MCP Integration Tracking**
+- **Completed**: 7/23 agents (30.4%)
+- **Pending**: 16/23 agents (69.6%)
+- **Target**: 100% MCP integration voor alle agents
 
 ## Development Best Practices
 
@@ -401,6 +521,19 @@ python bmad/api.py
 - Document development patterns
 - Share best practices
 
+#### **Documentation Maintenance Workflow**
+- **Weekly**: Documentatie review en updates
+- **Monthly**: Guide review en consolidatie
+- **After Changes**: Reference updates en version history
+- **Quality Check**: Documentatie completeness en accuracy
+
+#### **Documentation Standards**
+- **Code Documentation**: Complete docstrings en inline comments
+- **API Documentation**: OpenAPI/Swagger documentation
+- **User Documentation**: User guides en tutorials
+- **Architecture Documentation**: System architecture en design docs
+- **Guide Maintenance**: Regelmatige consolidatie en updates
+
 ## Troubleshooting
 
 ### Common Issues
@@ -507,6 +640,468 @@ class WorkflowManager:
             logger.error(f"Failed to create workflow {name}: {e}")
             raise
 ```
+
+## 🚀 Nieuwe Lessons Learned (Januari 2025)
+
+### **MCP Integration Development Lessons**
+
+#### **1. Async Development Patterns**
+**Lesson**: MCP integration vereist async-first development patterns.
+
+**Best Practice**:
+```python
+# Voor MCP client development
+class MCPClient:
+    async def __aenter__(self):
+        """Async context manager voor MCP client."""
+        await self.connect()
+        return self
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Graceful cleanup bij context exit."""
+        await self.disconnect()
+    
+    async def execute_tool(self, tool_name: str, **kwargs):
+        """Async tool execution met proper error handling."""
+        try:
+            return await self._execute_tool_internal(tool_name, **kwargs)
+        except MCPConnectionError:
+            logger.warning("MCP connection failed, using fallback")
+            return await self._fallback_execution(tool_name, **kwargs)
+```
+
+**Voordelen**:
+- ✅ Proper resource management
+- ✅ Graceful error handling
+- ✅ Async performance benefits
+
+#### **2. Tool Registry Development**
+**Lesson**: Tool registry moet extensible en maintainable zijn.
+
+**Best Practice**:
+```python
+# Voor tool registry development
+class MCPToolRegistry:
+    def __init__(self):
+        self._tools = {}
+        self._statistics = {}
+        self._lock = asyncio.Lock()
+    
+    async def register_tool(self, tool: MCPTool):
+        """Thread-safe tool registration."""
+        async with self._lock:
+            self._tools[tool.name] = tool
+            self._statistics[tool.name] = ToolStatistics()
+    
+    async def get_tool(self, tool_name: str) -> Optional[MCPTool]:
+        """Thread-safe tool retrieval."""
+        async with self._lock:
+            return self._tools.get(tool_name)
+```
+
+**Voordelen**:
+- ✅ Thread-safe operations
+- ✅ Extensible architecture
+- ✅ Performance monitoring
+
+#### **3. Agent MCP Integration**
+**Lesson**: Agent MCP integration moet backward compatible zijn.
+
+**Best Practice**:
+```python
+# Voor agent MCP integration
+class MCPEnhancedAgent:
+    def __init__(self):
+        self.mcp_client = None
+        self.mcp_enabled = False
+    
+    async def initialize_mcp(self):
+        """Initialize MCP client als beschikbaar."""
+        try:
+            self.mcp_client = await MCPClient.create()
+            await self.mcp_client.connect()
+            self.mcp_enabled = True
+            logger.info("MCP client initialized successfully")
+        except Exception as e:
+            logger.warning(f"MCP initialization failed: {e}")
+            self.mcp_enabled = False
+    
+    async def execute_task(self, task_name: str, **kwargs):
+        """Execute task met MCP fallback."""
+        if self.mcp_enabled and self.mcp_client:
+            try:
+                return await self.mcp_client.execute_tool(task_name, **kwargs)
+            except Exception:
+                logger.warning("MCP execution failed, using local execution")
+        
+        # Fallback naar lokale execution
+        return await self._local_execution(task_name, **kwargs)
+```
+
+**Voordelen**:
+- ✅ Backward compatibility
+- ✅ Graceful degradation
+- ✅ Progressive enhancement
+
+#### **4. Async Wrapper Development**
+**Lesson**: Async wrapper methods moeten correct omgaan met reeds async methodes.
+
+**Best Practice**:
+```python
+# ❌ VERKEERD: Async wrapper voor reeds async methode
+async def _async_quality_gate_check(self, deployment: bool):
+    """Async wrapper for quality_gate_check."""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, self.quality_gate_check, deployment)  # ❌ Dit werkt niet!
+
+# ✅ CORRECT: Directe async call voor reeds async methode
+async def _async_quality_gate_check(self, deployment: bool):
+    """Async wrapper for quality_gate_check."""
+    return await self.quality_gate_check(deployment)  # ✅ Directe async call
+```
+
+**Waarom dit belangrijk is**:
+- `run_in_executor()` is bedoeld voor **sync** methodes die je async wilt maken
+- Als een methode **al async** is, moet je direct `await` gebruiken
+- Dit voorkomt `'coroutine' object is not subscriptable` errors
+
+**Test Pattern**:
+```python
+# Test async wrapper correctheid
+async def test_async_wrapper():
+    agent = QualityGuardianAgent()
+    
+    # Test directe async call
+    result = await agent.quality_gate_check(deployment=True)
+    assert result['all_gates_passed'] is not None
+    
+    # Test wrapper call
+    result = await agent._async_quality_gate_check(deployment=True)
+    assert result['all_gates_passed'] is not None
+```
+
+**Voordelen**:
+- ✅ Voorkomt async/sync confusion
+- ✅ Correcte error handling
+- ✅ Proper async patterns
+
+#### **5. Async Development Best Practices**
+**Lesson**: Async development vereist consistente patterns en proper testing.
+
+**Best Practice Checklist**:
+```python
+# ✅ Async Development Checklist
+class AsyncAgent:
+    def __init__(self):
+        # 1. Initialize async attributes
+        self.mcp_client = None
+        self.mcp_enabled = False
+    
+    async def initialize_mcp(self):
+        # 2. Proper async initialization
+        try:
+            self.mcp_client = await get_mcp_client()
+            self.mcp_enabled = True
+        except Exception as e:
+            logger.warning(f"MCP initialization failed: {e}")
+            self.mcp_enabled = False
+    
+    async def execute_task(self, task_name: str, **kwargs):
+        # 3. Async task execution met fallback
+        if self.mcp_enabled:
+            try:
+                return await self.mcp_client.execute_tool(task_name, **kwargs)
+            except Exception:
+                logger.warning("MCP failed, using local execution")
+        
+        # 4. Fallback naar lokale execution
+        return await self._local_execution(task_name, **kwargs)
+    
+    async def _local_execution(self, task_name: str, **kwargs):
+        # 5. Lokale async execution
+        return await self._execute_local_task(task_name, **kwargs)
+    
+    # 6. Sync wrapper methods voor backward compatibility
+    def sync_execute_task(self, task_name: str, **kwargs):
+        """Sync wrapper voor async execute_task."""
+        return asyncio.run(self.execute_task(task_name, **kwargs))
+```
+
+**Async Testing Pattern**:
+```python
+# ✅ Async Testing Best Practice
+async def test_async_agent():
+    agent = AsyncAgent()
+    
+    # Test initialization
+    await agent.initialize_mcp()
+    assert agent.mcp_enabled in [True, False]  # Both are valid
+    
+    # Test async execution
+    result = await agent.execute_task("test_task")
+    assert result is not None
+    
+    # Test sync wrapper
+    result = agent.sync_execute_task("test_task")
+    assert result is not None
+```
+
+**Voordelen**:
+- ✅ Consistente async patterns
+- ✅ Proper error handling
+- ✅ Backward compatibility
+- ✅ Testable async code
+
+### **Kanban Board Development Lessons**
+
+#### **1. Cursor AI Integration**
+**Lesson**: Kanban board moet Cursor AI-vriendelijk zijn voor development workflow.
+
+**Best Practice**:
+```markdown
+# Voor Cursor AI optimale Kanban structuur
+## 📋 Backlog (Toekomstige Taken)
+
+### **Priority 1 - High Priority**
+- [ ] **Feature Name** (Week X-Y)
+  - [ ] Subtask 1
+  - [ ] Subtask 2
+  - [ ] Subtask 3
+
+### **Priority 2 - Medium Priority**
+- [ ] **Feature Name** (Week X-Y)
+  - [ ] Subtask 1
+  - [ ] Subtask 2
+```
+
+**Voordelen**:
+- ✅ Cursor AI kan taken herkennen
+- ✅ Duidelijke task structuur
+- ✅ Progress tracking
+
+#### **2. Implementation Details Integration**
+**Lesson**: Technische details moeten gescheiden blijven van project management.
+
+**Best Practice**:
+```python
+# Voor implementation details management
+class ImplementationTracker:
+    def __init__(self):
+        self.kanban_board = "docs/deployment/KANBAN_BOARD.md"
+        self.implementation_details = "docs/deployment/IMPLEMENTATION_DETAILS.md"
+    
+    def update_task_status(self, task_name: str, status: str):
+        """Update task status in Kanban board."""
+        # Update Kanban board
+        self._update_kanban_status(task_name, status)
+        
+        # Update implementation details
+        self._update_implementation_details(task_name, status)
+    
+    def _update_kanban_status(self, task_name: str, status: str):
+        """Update status in Kanban board."""
+        # Implementation voor Kanban board update
+        pass
+    
+    def _update_implementation_details(self, task_name: str, status: str):
+        """Update technical details."""
+        # Implementation voor technical details update
+        pass
+```
+
+**Voordelen**:
+- ✅ Separation of concerns
+- ✅ Maintainable documentation
+- ✅ Clear information hierarchy
+
+### **Guide Files Development Lessons**
+
+#### **1. Regular Updates Workflow**
+**Lesson**: Guide files moeten regelmatig geüpdatet worden met development insights.
+
+**Best Practice**:
+```python
+# Voor guide files management
+class GuideManager:
+    def __init__(self):
+        self.guides_path = "docs/guides/"
+        self.required_sections = ['Doel', 'Checklist', 'Lessons Learned']
+    
+    def update_guide_with_lessons(self, guide_name: str, lessons: List[str]):
+        """Update guide met nieuwe lessons learned."""
+        guide_path = f"{self.guides_path}{guide_name}"
+        
+        # Read current guide
+        with open(guide_path, 'r') as f:
+            content = f.read()
+        
+        # Add new lessons learned
+        lessons_section = self._format_lessons_section(lessons)
+        updated_content = self._add_lessons_to_guide(content, lessons_section)
+        
+        # Write updated guide
+        with open(guide_path, 'w') as f:
+            f.write(updated_content)
+    
+    def _format_lessons_section(self, lessons: List[str]) -> str:
+        """Format lessons learned section."""
+        section = "\n## 🚀 Nieuwe Lessons Learned\n\n"
+        for lesson in lessons:
+            section += f"- {lesson}\n"
+        return section
+```
+
+**Voordelen**:
+- ✅ Automated guide updates
+- ✅ Consistent formatting
+- ✅ Knowledge preservation
+
+#### **2. Cross-Reference Management**
+**Lesson**: Guide files moeten elkaar refereren voor complete coverage.
+
+**Best Practice**:
+```python
+# Voor cross-reference management
+class GuideCrossReference:
+    def __init__(self):
+        self.guide_references = {
+            'DEVELOPMENT_WORKFLOW_GUIDE.md': [
+                'DEVELOPMENT_STRATEGY.md',
+                'TESTING_STRATEGY.md',
+                'DEVELOPMENT_QUALITY_GUIDE.md'
+            ],
+            'TEST_WORKFLOW_GUIDE.md': [
+                'TESTING_STRATEGY.md',
+                'TEST_QUALITY_GUIDE.md'
+            ]
+        }
+    
+    def validate_cross_references(self):
+        """Validate of alle cross-references correct zijn."""
+        for guide, references in self.guide_references.items():
+            for reference in references:
+                if not self._reference_exists(reference):
+                    logger.warning(f"Missing reference in {guide}: {reference}")
+    
+    def _reference_exists(self, reference: str) -> bool:
+        """Check of reference file bestaat."""
+        return os.path.exists(f"docs/guides/{reference}")
+```
+
+**Voordelen**:
+- ✅ Consistent documentation
+- ✅ No broken links
+- ✅ Complete coverage
+
+### **Quality Assurance Development Lessons**
+
+#### **1. Automated Quality Checks**
+**Lesson**: Automated quality checks zijn essentieel voor development consistency.
+
+**Best Practice**:
+```python
+# Voor automated quality checks
+class DevelopmentQualityChecker:
+    def __init__(self):
+        self.quality_checks = [
+            self._check_guide_completeness,
+            self._check_cross_references,
+            self._check_implementation_details,
+            self._check_kanban_board
+        ]
+    
+    async def run_quality_checks(self):
+        """Run alle quality checks."""
+        results = []
+        for check in self.quality_checks:
+            try:
+                result = await check()
+                results.append(result)
+            except Exception as e:
+                logger.error(f"Quality check failed: {e}")
+                results.append(False)
+        
+        return all(results)
+    
+    async def _check_guide_completeness(self) -> bool:
+        """Check of alle guides complete zijn."""
+        # Implementation voor guide completeness check
+        return True
+    
+    async def _check_cross_references(self) -> bool:
+        """Check of alle cross-references correct zijn."""
+        # Implementation voor cross-reference check
+        return True
+```
+
+**Voordelen**:
+- ✅ Consistent quality
+- ✅ Automated validation
+- ✅ Early error detection
+
+### **Development Workflow Integration**
+
+#### **1. MCP-Enhanced Development**
+**Lesson**: MCP integration verbetert development workflow significant.
+
+**Best Practice**:
+```python
+# Voor MCP-enhanced development
+class MCPDevelopmentWorkflow:
+    def __init__(self):
+        self.mcp_client = None
+        self.workflow_tools = [
+            'code_analysis',
+            'test_generation',
+            'documentation_generation',
+            'quality_check'
+        ]
+    
+    async def initialize_workflow(self):
+        """Initialize MCP-enhanced development workflow."""
+        self.mcp_client = await MCPClient.create()
+        await self.mcp_client.connect()
+        
+        # Register workflow tools
+        for tool in self.workflow_tools:
+            await self.mcp_client.register_tool(tool)
+    
+    async def execute_development_task(self, task_name: str, **kwargs):
+        """Execute development task met MCP enhancement."""
+        if self.mcp_client:
+            try:
+                return await self.mcp_client.execute_tool(task_name, **kwargs)
+            except Exception:
+                logger.warning("MCP execution failed, using local execution")
+        
+        # Fallback naar lokale execution
+        return await self._local_development_execution(task_name, **kwargs)
+```
+
+**Voordelen**:
+- ✅ Enhanced development capabilities
+- ✅ Automated tool execution
+- ✅ Quality improvement
+
+### **Implementation Recommendations**
+
+#### **Voor Nieuwe Development**:
+1. **Check Kanban Board**: Bekijk huidige development planning
+2. **Update Guides**: Voeg development lessons learned toe
+3. **Follow MCP Patterns**: Gebruik MCP integration waar mogelijk
+4. **Quality Checks**: Run automated quality checks
+
+#### **Voor Guide Maintenance**:
+1. **Regular Updates**: Maandelijkse guide updates
+2. **Lessons Learned**: Capture development lessons learned
+3. **Cross-References**: Maintain cross-reference integrity
+4. **Quality Validation**: Validate guide completeness
+
+#### **Voor Workflow Integration**:
+1. **MCP Integration**: Integreer MCP tools in development workflow
+2. **Quality Assurance**: Automated quality checks
+3. **Documentation**: Complete en up-to-date documentation
+4. **Best Practices**: Consistent best practices application
 
 ## Conclusion
 

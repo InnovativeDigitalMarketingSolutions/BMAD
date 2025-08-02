@@ -1,17 +1,5 @@
 # Retrospective History
 
-- 2025-07-31T15:50:55.926063: Retrospective completed - Sprint 16
-- 2025-07-31T15:51:01.934072: Retrospective completed - Sprint 16
-- 2025-07-31T15:59:08.481144: Retrospective completed - Sprint 16
-- 2025-07-31T15:59:14.545930: Retrospective completed - Sprint 16
-- 2025-07-31T16:02:20.027975: Retrospective completed - Sprint 16
-- 2025-07-31T16:02:26.179641: Retrospective completed - Sprint 16
-- 2025-07-31T16:08:25.839824: Retrospective completed - Sprint 16
-- 2025-07-31T16:08:31.850926: Retrospective completed - Sprint 16
-- 2025-07-31T16:16:44.113583: Retrospective completed - Sprint 16
-- 2025-07-31T16:16:50.116878: Retrospective completed - Sprint 16
-- 2025-07-31T16:26:43.716689: Retrospective completed - Sprint 16
-- 2025-07-31T16:26:49.649954: Retrospective completed - Sprint 16
 - 2025-07-31T16:39:19.957793: Retrospective completed - Sprint 16
 - 2025-07-31T16:39:26.037940: Retrospective completed - Sprint 16
 - 2025-07-31T16:50:50.878669: Retrospective completed - Sprint 16
@@ -50,3 +38,15 @@
 - 2025-08-01T22:08:43.894371: Retrospective completed - Sprint 16
 - 2025-08-02T08:10:47.795133: Retrospective completed - Sprint 16
 - 2025-08-02T08:10:54.222984: Retrospective completed - Sprint 16
+- 2025-08-02T22:24:07.364581: Sprint 16 retrospective completed - Team size: 10
+- 2025-08-02T22:24:29.601808: Sprint 16 retrospective completed - Team size: 10
+- 2025-08-02T22:24:39.152159: Sprint 16 retrospective completed - Team size: 10
+- 2025-08-02T22:24:45.244131: Sprint 16 retrospective completed - Team size: 10
+- 2025-08-02T22:25:10.305310: Sprint 16 retrospective completed - Team size: 10
+- 2025-08-02T22:25:37.527529: Sprint 16 retrospective completed - Team size: 10
+- 2025-08-02T22:25:49.080049: Sprint 16 retrospective completed - Team size: 10
+- 2025-08-02T22:25:55.139100: Sprint 16 retrospective completed - Team size: 10
+- 2025-08-02T23:02:02.487755: Sprint 16 retrospective completed - Team size: 10
+- 2025-08-02T23:02:08.718122: Sprint 16 retrospective completed - Team size: 10
+- 2025-08-02T23:19:55.010349: Sprint 16 retrospective completed - Team size: 10
+- 2025-08-02T23:20:01.091992: Sprint 16 retrospective completed - Team size: 10

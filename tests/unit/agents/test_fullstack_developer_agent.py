@@ -35,18 +35,21 @@ class TestFullstackDeveloperAgent:
         assert isinstance(agent.development_history, list)
         assert isinstance(agent.performance_history, list)
 
-    def test_validate_input_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_input_success(self, agent):
         """Test successful input validation."""
         agent._validate_input("test", str, "test_param")
         agent._validate_input(123, int, "test_param")
         agent._validate_input([1, 2, 3], list, "test_param")
 
-    def test_validate_input_failure(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_input_failure(self, agent):
         """Test input validation failure."""
         with pytest.raises(DevelopmentValidationError):
             agent._validate_input(123, str, "test_param")
 
-    def test_validate_feature_name_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_feature_name_success(self, agent):
         """Test successful feature name validation."""
         agent._validate_feature_name("ValidFeatureName")
         agent._validate_feature_name("Another Valid Name")
@@ -67,7 +70,8 @@ class TestFullstackDeveloperAgent:
         with pytest.raises(DevelopmentValidationError):
             agent._validate_feature_name(123)
 
-    def test_validate_component_name_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_component_name_success(self, agent):
         """Test successful component name validation."""
         agent._validate_component_name("Button")
         agent._validate_component_name("UserProfile")
@@ -87,7 +91,8 @@ class TestFullstackDeveloperAgent:
         with pytest.raises(DevelopmentValidationError):
             agent._validate_component_name(123)
 
-    def test_validate_format_type_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_format_type_success(self, agent):
         """Test successful format type validation."""
         agent._validate_format_type("md")
         agent._validate_format_type("json")
@@ -102,13 +107,15 @@ class TestFullstackDeveloperAgent:
         with pytest.raises(DevelopmentValidationError):
             agent._validate_format_type(123)
 
-    def test_record_development_metric_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_record_development_metric_success(self, agent):
         """Test successful development metric recording."""
         with patch.object(agent.monitor, '_record_metric') as mock_record:
             agent._record_development_metric("test_metric", 95.0, "%")
             mock_record.assert_called_once()
 
-    def test_record_development_metric_failure(self, agent):
+    @pytest.mark.asyncio
+    async def test_record_development_metric_failure(self, agent):
         """Test development metric recording failure."""
         with patch.object(agent.monitor, '_record_metric', side_effect=Exception("Test error")):
             agent._record_development_metric("test_metric", 95.0, "%")
@@ -147,9 +154,10 @@ class TestFullstackDeveloperAgent:
         assert len(recommendations) >= 6
         assert "Keep implementation simple and focused" in recommendations
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Development History\n\n- Test entry 1\n- Test entry 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Development Historynn- Test entry 1n- Test entry 2")
     @patch('pathlib.Path.exists', return_value=True)
-    def test_load_development_history_success(self, mock_exists, mock_file, agent):
+    @pytest.mark.asyncio
+    async def test_load_development_history_success(self, mock_exists, mock_file, agent):
         """Test successful development history loading."""
         agent._load_development_history()
         assert len(agent.development_history) >= 2
@@ -164,7 +172,8 @@ class TestFullstackDeveloperAgent:
     @patch('builtins.open', new_callable=mock_open)
     @patch('pathlib.Path.exists', return_value=True)
     @patch('pathlib.Path.mkdir')
-    def test_save_development_history_success(self, mock_mkdir, mock_exists, mock_file, agent):
+    @pytest.mark.asyncio
+    async def test_save_development_history_success(self, mock_mkdir, mock_exists, mock_file, agent):
         """Test successful development history saving."""
         agent.development_history = ["Test entry 1", "Test entry 2"]
         agent._save_development_history()
@@ -179,9 +188,10 @@ class TestFullstackDeveloperAgent:
         agent._save_development_history()
         # Should not raise exception, just log error
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Performance History\n\n- Test entry 1\n- Test entry 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Performance Historynn- Test entry 1n- Test entry 2")
     @patch('pathlib.Path.exists', return_value=True)
-    def test_load_performance_history_success(self, mock_exists, mock_file, agent):
+    @pytest.mark.asyncio
+    async def test_load_performance_history_success(self, mock_exists, mock_file, agent):
         """Test successful performance history loading."""
         agent._load_performance_history()
         assert len(agent.performance_history) >= 2
@@ -196,7 +206,8 @@ class TestFullstackDeveloperAgent:
     @patch('builtins.open', new_callable=mock_open)
     @patch('pathlib.Path.exists', return_value=True)
     @patch('pathlib.Path.mkdir')
-    def test_save_performance_history_success(self, mock_mkdir, mock_exists, mock_file, agent):
+    @pytest.mark.asyncio
+    async def test_save_performance_history_success(self, mock_mkdir, mock_exists, mock_file, agent):
         """Test successful performance history saving."""
         agent.performance_history = ["Test entry 1", "Test entry 2"]
         agent._save_performance_history()
@@ -204,13 +215,13 @@ class TestFullstackDeveloperAgent:
 
     def test_show_help(self, agent, capsys):
         """Test show_help method."""
-        agent.show_help()
+        await agent.show_help()
         captured = capsys.readouterr()
         assert "FullstackDeveloper Agent Commands:" in captured.out
 
     def test_show_resource_best_practices(self, agent, capsys):
         """Test show_resource method for best practices."""
-        with patch('builtins.open', new_callable=mock_open, read_data="# Best Practices\n\nTest content"):
+        with patch('builtins.open', new_callable=mock_open, read_data="# Best PracticesnnTest content"):
             with patch('pathlib.Path.exists', return_value=True):
                 agent.show_resource("best-practices")
                 captured = capsys.readouterr()
@@ -230,7 +241,8 @@ class TestFullstackDeveloperAgent:
         captured = capsys.readouterr()
         assert "No development history available." in captured.out
 
-    def test_show_development_history_with_data(self, agent, capsys):
+    @pytest.mark.asyncio
+    async def test_show_development_history_with_data(self, agent, capsys):
         """Test show_development_history method with data."""
         agent.development_history = ["Entry 1", "Entry 2", "Entry 3"]
         agent.show_development_history()
@@ -245,7 +257,8 @@ class TestFullstackDeveloperAgent:
         captured = capsys.readouterr()
         assert "No performance history available." in captured.out
 
-    def test_show_performance_with_data(self, agent, capsys):
+    @pytest.mark.asyncio
+    async def test_show_performance_with_data(self, agent, capsys):
         """Test show_performance method with data."""
         agent.performance_history = ["Performance 1", "Performance 2"]
         agent.show_performance()
@@ -287,9 +300,10 @@ class TestFullstackDeveloperAgent:
         assert "Testing resource completeness" in captured.out
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
-    def test_build_shadcn_component_success(self, mock_monitor, agent):
+    @pytest.mark.asyncio
+    async def test_build_shadcn_component_success(self, mock_monitor, agent):
         """Test successful Shadcn component building."""
-        result = agent.build_shadcn_component("Button")
+        result = await agent.build_shadcn_component("Button")
         assert result["success"] is True
         assert result["component_name"] == "Button"
         assert "component_code" in result
@@ -297,19 +311,19 @@ class TestFullstackDeveloperAgent:
 
     def test_build_shadcn_component_empty_name(self, agent):
         """Test Shadcn component building with empty name."""
-        result = agent.build_shadcn_component("")
+        result = await agent.build_shadcn_component("")
         assert result["success"] is False
         assert "error" in result
 
     def test_build_shadcn_component_lowercase(self, agent):
         """Test Shadcn component building with lowercase name."""
-        result = agent.build_shadcn_component("button")
+        result = await agent.build_shadcn_component("button")
         assert result["success"] is False
         assert "error" in result
 
     def test_build_shadcn_component_invalid_type(self, agent):
         """Test Shadcn component building with invalid type."""
-        result = agent.build_shadcn_component(123)
+        result = await agent.build_shadcn_component(123)
         assert result["success"] is False
         assert "error" in result
 
@@ -317,7 +331,8 @@ class TestFullstackDeveloperAgent:
     @patch('bmad.agents.Agent.FullstackDeveloper.fullstackdeveloper.save_context')
     @patch('bmad.agents.Agent.FullstackDeveloper.fullstackdeveloper.get_context')
     @patch('bmad.agents.Agent.FullstackDeveloper.fullstackdeveloper.send_slack_message')
-    def test_collaborate_example(self, mock_slack, mock_get_context, mock_save_context, mock_publish, agent):
+    @pytest.mark.asyncio
+    async def test_collaborate_example(self, mock_slack, mock_get_context, mock_save_context, mock_publish, agent):
         """Test collaborate_example method."""
         # Mock all external dependencies to avoid API calls
         mock_get_context.return_value = [{"id": "test-id", "agent": "FullstackDeveloper"}]
@@ -329,7 +344,7 @@ class TestFullstackDeveloperAgent:
             mock_build_frontend.return_value = None
             
             # Test the method
-            agent.collaborate_example()
+            await agent.collaborate_example()
             
             # Verify the method called the expected functions
             mock_get_context.assert_called()
@@ -360,7 +375,7 @@ class TestFullstackDeveloperAgent:
             mock_collaborate.return_value = None
             
             # Test the method
-            agent.run()
+            await agent.run()
             
             # Verify subscribe was called for the expected events
             assert mock_subscribe.call_count >= 2
@@ -378,7 +393,8 @@ class TestFullstackDeveloperAgent:
         captured = capsys.readouterr()
         assert "@router.post" in captured.out
 
-    def test_build_frontend(self, agent, capsys):
+    @pytest.mark.asyncio
+    async def test_build_frontend(self, agent, capsys):
         """Test build_frontend method."""
         # Mock the entire build_frontend method to avoid API calls
         with patch.object(agent, 'build_frontend') as mock_build_frontend:
@@ -391,9 +407,10 @@ class TestFullstackDeveloperAgent:
             mock_build_frontend.assert_called_once()
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
-    def test_develop_feature_success(self, mock_monitor, agent):
+    @pytest.mark.asyncio
+    async def test_develop_feature_success(self, mock_monitor, agent):
         """Test successful feature development."""
-        result = agent.develop_feature("TestFeature", "A test feature description")
+        result = await agent.develop_feature("TestFeature", "A test feature description")
         assert result["success"] is True
         assert result["feature_name"] == "TestFeature"
         assert "development_time" in result
@@ -402,36 +419,36 @@ class TestFullstackDeveloperAgent:
 
     def test_develop_feature_empty_name(self, agent):
         """Test feature development with empty name."""
-        result = agent.develop_feature("", "Description")
+        result = await agent.develop_feature("", "Description")
         assert result["success"] is False
         assert "error" in result
 
     def test_develop_feature_invalid_name_type(self, agent):
         """Test feature development with invalid name type."""
-        result = agent.develop_feature(123, "Description")
+        result = await agent.develop_feature(123, "Description")
         assert result["success"] is False
         assert "error" in result
 
     def test_develop_feature_invalid_description_type(self, agent):
         """Test feature development with invalid description type."""
-        result = agent.develop_feature("TestFeature", 123)
+        result = await agent.develop_feature("TestFeature", 123)
         assert result["success"] is False
         assert "error" in result
 
     def test_develop_feature_high_complexity(self, agent):
         """Test feature development with high complexity description."""
-        result = agent.develop_feature("TestFeature", "This is a complex enterprise scalable system")
+        result = await agent.develop_feature("TestFeature", "This is a complex enterprise scalable system")
         assert result["success"] is True
         assert result["complexity"] == "high"
 
     def test_develop_feature_medium_complexity(self, agent):
         """Test feature development with medium complexity description."""
-        result = agent.develop_feature("TestFeature", "This is a standard basic feature")
+        result = await agent.develop_feature("TestFeature", "This is a standard basic feature")
         assert result["complexity"] == "medium"
 
     def test_develop_feature_low_complexity(self, agent):
         """Test feature development with low complexity description."""
-        result = agent.develop_feature("TestFeature", "")
+        result = await agent.develop_feature("TestFeature", "")
         assert result["complexity"] == "low"
 
     @patch('bmad.agents.Agent.FullstackDeveloper.fullstackdeveloper.publish')

@@ -1,0 +1,48 @@
+{
+  "policy_id": "data_access",
+  "policy_name": "Data Access Policy",
+  "policy_type": "security_policies",
+  "version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "data_protection",
+      "rule_name": "Data Protection Check",
+      "policy_type": "security_policies",
+      "conditions": [
+        {
+          "condition_id": "data_security",
+          "condition_type": "context_based",
+          "parameters": {
+            "encryption": true,
+            "access_control": true,
+            "audit_logging": true
+          },
+          "description": "Data security requirements",
+          "severity": "high",
+          "enabled": true
+        }
+      ],
+      "actions": [
+        "allow"
+      ],
+      "priority": 200,
+      "enabled": true,
+      "description": "Data access requirements",
+      "metadata": {}
+    }
+  ],
+  "parent_policy": null,
+  "inheritance_rules": {},
+  "status": "active",
+  "created_at": "2025-08-02T20:03:50.496149",
+  "updated_at": "2025-08-02T20:03:50.496150",
+  "expires_at": null,
+  "metadata": {
+    "category": "data",
+    "tags": [
+      "data",
+      "security",
+      "access"
+    ]
+  }
+}

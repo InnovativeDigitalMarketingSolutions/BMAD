@@ -3,10 +3,15 @@
 Product Owner Agent voor BMAD
 """
 import argparse
+import asyncio
+import json
 import logging
 import os
 import sys
 import time
+from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 from dotenv import load_dotenv
@@ -20,17 +25,140 @@ from bmad.agents.core.ai.llm_client import ask_openai_with_confidence
 from bmad.agents.core.communication.message_bus import publish, subscribe
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.projects.project_manager import project_manager
+from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
+
+# MCP Integration
+from bmad.core.mcp import (
+    MCPClient,
+    MCPContext,
+    FrameworkMCPIntegration,
+    get_mcp_client,
+    get_framework_mcp_integration,
+    initialize_framework_mcp_integration
+)
+
 
 load_dotenv()
 
 
 class ProductOwnerAgent:
+    """
+    Product Owner Agent voor BMAD.
+    Gespecialiseerd in product management, user stories, en product vision.
+    """
+    
     def __init__(self):
+        self.framework_manager = get_framework_templates_manager()
+        try:
+            self.product_owner_template = self.framework_manager.get_framework_template('product_owner')
+        except:
+            self.product_owner_template = None
+        self.lessons_learned = []
+
+        """Initialize ProductOwner agent met MCP integration."""
         self.agent_name = "ProductOwnerAgent"
         self.story_history = []
         self.vision_history = []
+        
+        # MCP Integration
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
+        
+        # Resource paths
+        self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
+        self.template_paths = {
+            "best-practices": self.resource_base / "templates/productowner/best-practices.md",
+            "user-story-template": self.resource_base / "templates/productowner/user-story-template.md",
+            "vision-template": self.resource_base / "templates/productowner/vision-template.md",
+            "backlog-template": self.resource_base / "templates/productowner/backlog-template.md",
+            "roadmap-template": self.resource_base / "templates/productowner/roadmap-template.md",
+            "acceptance-criteria": self.resource_base / "templates/productowner/acceptance-criteria.md",
+            "stakeholder-analysis": self.resource_base / "templates/productowner/stakeholder-analysis.md"
+        }
+        self.data_paths = {
+            "story-history": self.resource_base / "data/productowner/story-history.md",
+            "vision-history": self.resource_base / "data/productowner/vision-history.md",
+            "backlog": self.resource_base / "data/productowner/backlog.md"
+        }
+        
         self._load_story_history()
         self._load_vision_history()
+        
+        logging.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+    
+    async def initialize_mcp(self):
+        """Initialize MCP client and integration."""
+        try:
+            self.mcp_client = await get_mcp_client()
+            self.mcp_integration = get_framework_mcp_integration()
+            await initialize_framework_mcp_integration()
+            self.mcp_enabled = True
+            logging.info("MCP client initialized successfully")
+        except Exception as e:
+            logging.warning(f"MCP initialization failed: {e}")
+            self.mcp_enabled = False
+
+    async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Use MCP tool voor enhanced functionality."""
+        if not self.mcp_enabled or not self.mcp_client:
+            logging.warning("MCP not available, using local tools")
+            return None
+        
+        try:
+            result = await self.mcp_client.execute_tool(tool_name, parameters)
+            logging.info(f"MCP tool {tool_name} executed successfully")
+            return result
+        except Exception as e:
+            logging.error(f"MCP tool {tool_name} execution failed: {e}")
+            return None
+
+    async def use_product_specific_mcp_tools(self, product_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use product-specific MCP tools voor enhanced functionality."""
+        enhanced_data = {}
+        
+        # User story creation
+        story_result = await self.use_mcp_tool("user_story_creation", {
+            "requirement": product_data.get("requirement", ""),
+            "user_type": product_data.get("user_type", "end_user"),
+            "story_type": product_data.get("story_type", "feature"),
+            "priority": product_data.get("priority", "medium"),
+            "acceptance_criteria": product_data.get("acceptance_criteria", True)
+        })
+        if story_result:
+            enhanced_data["user_story_creation"] = story_result
+        
+        # Product vision
+        vision_result = await self.use_mcp_tool("product_vision", {
+            "product_name": product_data.get("product_name", ""),
+            "vision_type": product_data.get("vision_type", "strategic"),
+            "timeframe": product_data.get("timeframe", "long_term"),
+            "stakeholders": product_data.get("stakeholders", [])
+        })
+        if vision_result:
+            enhanced_data["product_vision"] = vision_result
+        
+        # Backlog management
+        backlog_result = await self.use_mcp_tool("backlog_management", {
+            "backlog_items": product_data.get("backlog_items", []),
+            "prioritization_method": product_data.get("prioritization_method", "value_effort"),
+            "sprint_planning": product_data.get("sprint_planning", True),
+            "refinement": product_data.get("refinement", True)
+        })
+        if backlog_result:
+            enhanced_data["backlog_management"] = backlog_result
+        
+        # Stakeholder analysis
+        stakeholder_result = await self.use_mcp_tool("stakeholder_analysis", {
+            "stakeholders": product_data.get("stakeholders", []),
+            "analysis_type": product_data.get("analysis_type", "comprehensive"),
+            "engagement_strategy": product_data.get("engagement_strategy", True),
+            "communication_plan": product_data.get("communication_plan", True)
+        })
+        if stakeholder_result:
+            enhanced_data["stakeholder_analysis"] = stakeholder_result
+        
+        return enhanced_data
 
     def show_help(self):
         print("""
@@ -45,8 +173,8 @@ Voorbeelden:
   python -m bmad.agents.Agent.ProductOwner.product_owner create-story --input "Dashboard voor agent monitoring"
 """)
 
-    def create_user_story(self, requirement):
-        """Create a user story based on the requirement."""
+    async def create_user_story(self, requirement):
+        """Create a user story based on the requirement met MCP enhancement."""
         # Input validation
         if not isinstance(requirement, str):
             raise TypeError("Requirement must be a string")
@@ -54,7 +182,39 @@ Voorbeelden:
         if not requirement or not requirement.strip():
             raise ValueError("Requirement must be a non-empty string")
         
-        return create_user_story(requirement)
+        # Use MCP tools for enhanced story creation
+        product_data = {
+            "requirement": requirement,
+            "user_type": "end_user",
+            "story_type": "feature",
+            "priority": "medium",
+            "acceptance_criteria": True,
+            "product_name": "BMAD",
+            "vision_type": "strategic",
+            "timeframe": "long_term",
+            "stakeholders": ["developers", "users", "stakeholders"],
+            "backlog_items": [],
+            "prioritization_method": "value_effort",
+            "sprint_planning": True,
+            "refinement": True,
+            "analysis_type": "comprehensive",
+            "engagement_strategy": True,
+            "communication_plan": True
+        }
+        
+        enhanced_data = await self.use_product_specific_mcp_tools(product_data)
+        
+        # Create base story (local fallback if MCP not available)
+        story = create_user_story(requirement)
+        
+        # Add MCP enhanced data if available
+        if enhanced_data:
+            story += "\n\n[MCP Enhanced] - User story enhanced with MCP tools"
+            story += "\n\n🔧 Product Enhancements:"
+            for key, value in enhanced_data.items():
+                story += f"\n- {key}: {value}"
+        
+        return story
 
     def show_vision(self):
         """Show the BMAD vision."""
@@ -222,15 +382,18 @@ Voorbeelden:
         except Exception as e:
             logging.error(f"Error saving report: {e}")
 
-    def run(self):
-        """Main event loop for the agent."""
+    async def run(self):
+        """Main event loop for the agent met MCP integration."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
         print("🎯 ProductOwner Agent is running...")
         print("Listening for events: user_story_requested, feedback_sentiment_analyzed, feature_planned")
         print("Press Ctrl+C to stop")
         
         try:
             while True:
-                time.sleep(1)
+                await asyncio.sleep(1)
         except KeyboardInterrupt:
             print("\n🛑 ProductOwner Agent stopped.")
 
@@ -245,6 +408,13 @@ Voorbeelden:
         except Exception as e:
             logging.error(f"Collaboration example failed: {e}")
             print(f"❌ Error in collaboration: {e}")
+    
+    @classmethod
+    async def run_agent(cls):
+        """Class method to run the ProductOwner agent met MCP integration."""
+        agent = cls()
+        await agent.initialize_mcp()
+        print("ProductOwner agent started with MCP integration")
 
 
 def main():
@@ -259,7 +429,7 @@ def main():
         show_help()
     elif args.command == "create-story":
         if args.input:
-            create_user_story(args.input)
+            asyncio.run(create_user_story(args.input))
         else:
             create_bmad_frontend_story()
     elif args.command == "show-vision":

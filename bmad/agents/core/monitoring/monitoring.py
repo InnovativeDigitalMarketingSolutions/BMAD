@@ -275,14 +275,15 @@ class HealthChecker:
     def _check_system(self) -> HealthCheck:
         """Check basic system health."""
         try:
-            import psutil
+            # Remove top-level import of psutil
+            # import psutil
 
             # Check CPU usage
-            cpu_percent = psutil.cpu_percent(interval=1)
-            memory = psutil.virtual_memory()
+            cpu_percent = get_cpu_percent()
+            memory = get_memory()
 
             status = "healthy"
-            if cpu_percent > 90 or memory.percent > 90:
+            if cpu_percent is None or cpu_percent > 90 or memory is None or memory.percent > 90:
                 status = "degraded"
 
             return HealthCheck(
@@ -712,6 +713,20 @@ def log_event(event_type: str, message: str, **kwargs):
     from . import get_structured_logger
     get_structured_logger().log_event(event_type, message, **kwargs)
 
+def get_cpu_percent():
+    try:
+        import psutil
+        return psutil.cpu_percent(interval=1)
+    except ImportError:
+        return None
+
+def get_memory():
+    try:
+        import psutil
+        return psutil.virtual_memory()
+    except ImportError:
+        return None
+
 class PerformanceMonitor:
     """
     Enhanced Performance Monitor voor BMAD agents.
@@ -870,11 +885,9 @@ class PerformanceMonitor:
     
     def get_system_performance_summary(self) -> Dict[str, Any]:
         """Get overall system performance summary."""
-        import psutil
-        
         # System metrics
-        cpu_usage = psutil.cpu_percent(interval=1)
-        memory = psutil.virtual_memory()
+        cpu_usage = get_cpu_percent()
+        memory = get_memory()
         
         # Agent metrics
         agent_summaries = {}
@@ -884,8 +897,8 @@ class PerformanceMonitor:
         return {
             "system": {
                 "cpu_usage": cpu_usage,
-                "memory_usage": memory.percent,
-                "memory_available": memory.available / (1024**3),  # GB
+                "memory_usage": memory.percent if memory else 0,
+                "memory_available": memory.available / (1024**3) if memory else 0,  # GB
                 "timestamp": time.time()
             },
             "agents": agent_summaries,
