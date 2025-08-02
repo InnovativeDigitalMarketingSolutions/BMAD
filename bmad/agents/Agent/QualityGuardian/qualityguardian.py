@@ -1101,8 +1101,7 @@ Examples:
     
     async def _async_quality_gate_check(self, deployment: bool):
         """Async wrapper for quality_gate_check."""
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, self.quality_gate_check, deployment)
+        return await self.quality_gate_check(deployment)
 
     def on_test_completed(self, event):
         """Handle test completion events."""

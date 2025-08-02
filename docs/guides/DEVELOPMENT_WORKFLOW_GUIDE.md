@@ -660,6 +660,115 @@ class MCPEnhancedAgent:
 - ✅ Graceful degradation
 - ✅ Progressive enhancement
 
+#### **4. Async Wrapper Development**
+**Lesson**: Async wrapper methods moeten correct omgaan met reeds async methodes.
+
+**Best Practice**:
+```python
+# ❌ VERKEERD: Async wrapper voor reeds async methode
+async def _async_quality_gate_check(self, deployment: bool):
+    """Async wrapper for quality_gate_check."""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, self.quality_gate_check, deployment)  # ❌ Dit werkt niet!
+
+# ✅ CORRECT: Directe async call voor reeds async methode
+async def _async_quality_gate_check(self, deployment: bool):
+    """Async wrapper for quality_gate_check."""
+    return await self.quality_gate_check(deployment)  # ✅ Directe async call
+```
+
+**Waarom dit belangrijk is**:
+- `run_in_executor()` is bedoeld voor **sync** methodes die je async wilt maken
+- Als een methode **al async** is, moet je direct `await` gebruiken
+- Dit voorkomt `'coroutine' object is not subscriptable` errors
+
+**Test Pattern**:
+```python
+# Test async wrapper correctheid
+async def test_async_wrapper():
+    agent = QualityGuardianAgent()
+    
+    # Test directe async call
+    result = await agent.quality_gate_check(deployment=True)
+    assert result['all_gates_passed'] is not None
+    
+    # Test wrapper call
+    result = await agent._async_quality_gate_check(deployment=True)
+    assert result['all_gates_passed'] is not None
+```
+
+**Voordelen**:
+- ✅ Voorkomt async/sync confusion
+- ✅ Correcte error handling
+- ✅ Proper async patterns
+
+#### **5. Async Development Best Practices**
+**Lesson**: Async development vereist consistente patterns en proper testing.
+
+**Best Practice Checklist**:
+```python
+# ✅ Async Development Checklist
+class AsyncAgent:
+    def __init__(self):
+        # 1. Initialize async attributes
+        self.mcp_client = None
+        self.mcp_enabled = False
+    
+    async def initialize_mcp(self):
+        # 2. Proper async initialization
+        try:
+            self.mcp_client = await get_mcp_client()
+            self.mcp_enabled = True
+        except Exception as e:
+            logger.warning(f"MCP initialization failed: {e}")
+            self.mcp_enabled = False
+    
+    async def execute_task(self, task_name: str, **kwargs):
+        # 3. Async task execution met fallback
+        if self.mcp_enabled:
+            try:
+                return await self.mcp_client.execute_tool(task_name, **kwargs)
+            except Exception:
+                logger.warning("MCP failed, using local execution")
+        
+        # 4. Fallback naar lokale execution
+        return await self._local_execution(task_name, **kwargs)
+    
+    async def _local_execution(self, task_name: str, **kwargs):
+        # 5. Lokale async execution
+        return await self._execute_local_task(task_name, **kwargs)
+    
+    # 6. Sync wrapper methods voor backward compatibility
+    def sync_execute_task(self, task_name: str, **kwargs):
+        """Sync wrapper voor async execute_task."""
+        return asyncio.run(self.execute_task(task_name, **kwargs))
+```
+
+**Async Testing Pattern**:
+```python
+# ✅ Async Testing Best Practice
+async def test_async_agent():
+    agent = AsyncAgent()
+    
+    # Test initialization
+    await agent.initialize_mcp()
+    assert agent.mcp_enabled in [True, False]  # Both are valid
+    
+    # Test async execution
+    result = await agent.execute_task("test_task")
+    assert result is not None
+    
+    # Test sync wrapper
+    result = agent.sync_execute_task("test_task")
+    assert result is not None
+```
+
+**Voordelen**:
+- ✅ Consistente async patterns
+- ✅ Proper error handling
+- ✅ Backward compatibility
+- ✅ Testable async code
+
 ### **Kanban Board Development Lessons**
 
 #### **1. Cursor AI Integration**
