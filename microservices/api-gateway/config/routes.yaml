@@ -1,0 +1,56 @@
+# Routes configuration for API Gateway
+routes:
+  - path: /api/v1/agents
+    service: agent-service
+    method: GET
+    timeout: 30
+    retries: 3
+    cache_ttl: 60
+    rate_limit: 100
+    auth_required: true
+    transform_request: false
+    transform_response: false
+    
+  - path: /api/v1/agents
+    service: agent-service
+    method: POST
+    timeout: 30
+    retries: 3
+    cache_ttl: 0
+    rate_limit: 50
+    auth_required: true
+    transform_request: false
+    transform_response: false
+    
+  - path: /api/v1/integrations
+    service: integration-service
+    method: GET
+    timeout: 30
+    retries: 3
+    cache_ttl: 300
+    rate_limit: 50
+    auth_required: true
+    transform_request: false
+    transform_response: false
+    
+  - path: /api/v1/contexts
+    service: context-service
+    method: GET
+    timeout: 30
+    retries: 3
+    cache_ttl: 60
+    rate_limit: 200
+    auth_required: true
+    transform_request: false
+    transform_response: false
+    
+  - path: /api/v1/workflows
+    service: workflow-service
+    method: GET
+    timeout: 30
+    retries: 3
+    cache_ttl: 120
+    rate_limit: 50
+    auth_required: true
+    transform_request: false
+    transform_response: false 
