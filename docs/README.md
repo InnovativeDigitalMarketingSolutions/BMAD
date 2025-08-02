@@ -26,8 +26,8 @@ Handleidingen, best practices en development guides:
 - **[Agent Optimization Guide](guides/agent-optimization-guide.md)** - Agent optimalisatie en enhancement
 - **[Backend Optimization](guides/BACKEND_OPTIMIZATION_README.md)** - Backend optimalisatie
 - **[Contributing](guides/CONTRIBUTING.md)** - Bijdragen aan het project
-- **[Development Overview](guides/DEVELOPMENT_OVERVIEW.md)** - Development overzicht
-- **[Development Quality Guide](guides/DEVELOPMENT_QUALITY_GUIDE.md)** - Development quality assurance
+- **[Development Strategy](guides/DEVELOPMENT_STRATEGY.md)** - Development strategie
+- **[Quality Guide](guides/QUALITY_GUIDE.md)** - Geconsolideerde quality assurance
 - **[Development Setup](guides/DEVELOPMENT_SETUP.md)** - Development setup
 - **[Development Strategy](guides/DEVELOPMENT_STRATEGY.md)** - Development strategie
 - **[Development Workflow Guide](guides/DEVELOPMENT_WORKFLOW_GUIDE.md)** - Development workflow
@@ -36,14 +36,12 @@ Handleidingen, best practices en development guides:
 - **[Guiding Principles](guides/GUIDING-PRINCIPLES.md)** - BMAD guiding principles
 - **[Implementation Quality Guide](guides/IMPLEMENTATION_QUALITY_GUIDE.md)** - Implementation quality assurance
 - **[Integration Requirements](guides/INTEGRATION_REQUIREMENTS.md)** - Integration requirements
-- **[How to Contribute](guides/how-to-contribute-with-pull-requests.md)** - Contributing met pull requests
-- **[Project Management](guides/project-management.md)** - Project management guide
-- **[Test Quality Guide](guides/TEST_QUALITY_GUIDE.md)** - Test quality assurance
+- **[Contributing](guides/CONTRIBUTING.md)** - Contributing met pull requests
+- **[Quality Guide](guides/QUALITY_GUIDE.md)** - Geconsolideerde quality assurance
 - **[Test Workflow Guide](guides/TEST_WORKFLOW_GUIDE.md)** - Test workflow
-- **[Testing Overview](guides/TESTING_OVERVIEW.md)** - Testing overzicht
 - **[Testing Strategy](guides/TESTING_STRATEGY.md)** - Testing strategie
-- **[Versioning and Releases](guides/versioning-and-releases.md)** - Versioning en releases
-- **[Versions](guides/versions.md)** - Version history
+- **[Testing Strategy](guides/TESTING_STRATEGY.md)** - Testing strategie
+- **[Versioning and Releases](guides/VERSIONING_AND_RELEASES.md)** - Versioning en releases
 
 ### **🔗 Integrations**
 Documentatie voor alle geïntegreerde systemen en tools:
@@ -91,7 +89,7 @@ Test resultaten en planning documenten:
 ### **Voor Project Management**
 1. Check [Kanban Board](deployment/KANBAN_BOARD.md) voor huidige taken
 2. Lees [Implementation Details](deployment/IMPLEMENTATION_DETAILS.md) voor technische context
-3. Bekijk [Project Management Guide](guides/project-management.md)
+3. Bekijk [Kanban Board](deployment/KANBAN_BOARD.md)
 
 ### **Voor Integraties**
 1. Bekijk [Repository Integrations](integrations/REPOSITORY_INTEGRATIONS_README.md)

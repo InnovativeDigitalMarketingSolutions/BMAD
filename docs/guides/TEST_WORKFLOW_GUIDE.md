@@ -4,7 +4,8 @@
 
 Dit document beschrijft de verplichte test workflow voor alle nieuwe functionaliteit en uitbreidingen in het BMAD systeem. Het doel is om ervoor te zorgen dat alle code kwalitatief is geïmplementeerd en goed getest wordt.
 
-**Voor test strategie en filosofie, zie**: `TESTING_STRATEGY.md`
+**Voor test strategie en filosofie, zie**: `TESTING_STRATEGY.md`  
+**Voor quality assurance, zie**: `QUALITY_GUIDE.md`
 
 ## Test Pyramid Implementatie
 
