@@ -29,7 +29,9 @@ class FrameworkTemplatesManager:
             "frameworks_overview": self.frameworks_path / "frameworks_overview_template.md",
             "backend_development": self.frameworks_path / "backend_development_template.md",
             "frontend_development": self.frameworks_path / "frontend_development_template.md",
-            "fullstack_development": self.frameworks_path / "fullstack_development_template.md"
+            "fullstack_development": self.frameworks_path / "fullstack_development_template.md",
+            "testing_engineer": self.frameworks_path / "testing_engineer_template.md",
+            "quality_guardian": self.frameworks_path / "quality_guardian_template.md"
         }
         
         # Validate template paths
@@ -145,6 +147,42 @@ class FrameworkTemplatesManager:
                     "Test real-time features en WebSocket communication",
                     "Test complete user registration en authentication flows",
                     "Implementeer performance testing voor fullstack applications"
+                ]
+            },
+            "testing_agents": {
+                "development": [
+                    "Implementeer comprehensive test strategies",
+                    "Volg test pyramid approach (70% unit, 20% integration, 10% E2E)",
+                    "Gebruik test data factories en fixtures",
+                    "Implementeer proper test isolation en cleanup",
+                    "Gebruik mocking strategies voor external dependencies",
+                    "Implementeer test automation en CI/CD integration",
+                    "Volg test-driven development (TDD) principles"
+                ],
+                "testing": [
+                    "Test test frameworks en test utilities",
+                    "Valideer test coverage en quality metrics",
+                    "Test test data management en seeding",
+                    "Implementeer test performance monitoring",
+                    "Test test reporting en analytics"
+                ]
+            },
+            "quality_agents": {
+                "development": [
+                    "Implementeer quality gates en enforcement",
+                    "Gebruik code quality analysis tools",
+                    "Implementeer security scanning en vulnerability detection",
+                    "Monitor performance metrics en benchmarks",
+                    "Implementeer compliance checking en validation",
+                    "Gebruik quality metrics dashboards en reporting",
+                    "Implementeer quality trend analysis en prediction"
+                ],
+                "testing": [
+                    "Test quality gate implementations",
+                    "Valideer code quality analysis accuracy",
+                    "Test security scanning effectiveness",
+                    "Implementeer quality metrics validation",
+                    "Test compliance checking accuracy"
                 ]
             },
             "development_agents": {
