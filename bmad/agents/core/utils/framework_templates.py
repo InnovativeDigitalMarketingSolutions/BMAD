@@ -31,7 +31,9 @@ class FrameworkTemplatesManager:
             "frontend_development": self.frameworks_path / "frontend_development_template.md",
             "fullstack_development": self.frameworks_path / "fullstack_development_template.md",
             "testing_engineer": self.frameworks_path / "testing_engineer_template.md",
-            "quality_guardian": self.frameworks_path / "quality_guardian_template.md"
+            "quality_guardian": self.frameworks_path / "quality_guardian_template.md",
+            "data_engineer": self.frameworks_path / "data_engineer_template.md",
+            "rnd": self.frameworks_path / "rnd_template.md"
         }
         
         # Validate template paths
@@ -183,6 +185,24 @@ class FrameworkTemplatesManager:
                     "Test security scanning effectiveness",
                     "Implementeer quality metrics validation",
                     "Test compliance checking accuracy"
+                ]
+            },
+            "ai_agents": {
+                "development": [
+                    "Implementeer data pipeline architecture en ETL/ELT processes",
+                    "Gebruik data quality management en validation frameworks",
+                    "Implementeer technology research en evaluation methodologies",
+                    "Gebruik proof-of-concept development en validation",
+                    "Implementeer innovation pipeline management",
+                    "Gebruik knowledge management en collaboration tools",
+                    "Implementeer performance monitoring en optimization"
+                ],
+                "testing": [
+                    "Test data pipeline functionality en performance",
+                    "Valideer data quality metrics en validation accuracy",
+                    "Test technology evaluation frameworks en decision processes",
+                    "Implementeer POC testing en validation workflows",
+                    "Test innovation tracking en metrics accuracy"
                 ]
             },
             "development_agents": {
