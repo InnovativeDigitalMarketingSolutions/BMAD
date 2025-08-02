@@ -521,3 +521,341 @@ def main():
 - **Zero Silent Failures**: No features fail silently due to missing dependencies
 - **Clear Action Items**: Users know exactly what to install to enable features
 - **Consistent Experience**: Same feedback pattern across all agents 
+
+## 🎭 **Mocking Strategy & Dependency Visibility Integration**
+
+**Doel:** Toon hoe de bestaande Mocking Strategy en nieuwe Dependency Visibility Strategy samenwerken voor optimale test- en runtime kwaliteit.
+
+### **Complementaire Strategieën**
+
+#### **1. Mocking Strategy (Development/Testing)**
+```python
+# Voor unit tests - Mock externe dependencies
+import sys
+from unittest.mock import MagicMock
+
+# Mock externe modules voor snelle tests
+sys.modules['opentelemetry'] = MagicMock()
+sys.modules['supabase'] = MagicMock()
+sys.modules['psutil'] = MagicMock()
+```
+
+**Voordelen:**
+- ✅ Snelle unit tests (milliseconden)
+- ✅ Geen externe dependencies nodig
+- ✅ CI/CD pipeline vriendelijk
+- ✅ Hoge test coverage
+
+#### **2. Dependency Visibility Strategy (Runtime/Production)**
+```python
+# Voor runtime - Graceful degradation met feedback
+class DependencyAwareAgent:
+    def __init__(self):
+        self.dependency_manager = get_dependency_manager()
+        self._check_dependencies()
+    
+    def _check_dependencies(self):
+        warnings = self.dependency_manager.get_dependency_warnings()
+        for warning in warnings:
+            logger.warning(f"{self.agent_name}: {warning}")
+```
+
+**Voordelen:**
+- ✅ Geen stille failures
+- ✅ Duidelijke status feedback
+- ✅ Actionable recommendations
+- ✅ Graceful degradation
+
+### **Geïntegreerde Aanpak**
+
+#### **Development Workflow**
+1. **Unit Tests**: Gebruik Mocking Strategy voor snelle feedback
+2. **Integration Tests**: Gebruik Dependency Visibility voor echte dependency checks
+3. **Runtime**: Gebruik Dependency Visibility voor productie feedback
+
+#### **Best Practice Pattern**
+```python
+class QualityAgent:
+    def __init__(self):
+        # Runtime dependency checking
+        self.dependency_manager = get_dependency_manager()
+        self._check_dependencies()
+    
+    def _check_dependencies(self):
+        """Runtime dependency visibility."""
+        warnings = self.dependency_manager.get_dependency_warnings()
+        for warning in warnings:
+            logger.warning(f"[DEPENDENCY WARNING] {warning}")
+    
+    def run_tests(self):
+        """Development testing with mocking."""
+        # Mock dependencies for unit tests
+        import sys
+        from unittest.mock import MagicMock
+        
+        # Apply mocking strategy
+        sys.modules['psutil'] = MagicMock()
+        sys.modules['requests'] = MagicMock()
+        
+        # Run tests with mocked dependencies
+        return self._execute_tests()
+    
+    def run_production(self):
+        """Production runtime with dependency visibility."""
+        # Use real dependencies with graceful degradation
+        return self._execute_production_workflow()
+```
+
+### **Strategie Integratie Voordelen**
+
+1. **Complete Coverage**: Mocking voor tests, visibility voor runtime
+2. **Optimal Performance**: Snelle tests + betrouwbare runtime
+3. **Quality Assurance**: Geen compromis tussen test snelheid en runtime feedback
+4. **Developer Experience**: Duidelijke feedback in beide contexten
+
+### **Implementation Guidelines**
+
+#### **Voor Tests (Mocking Strategy)**
+- Gebruik mocking voor alle unit tests
+- Mock zware externe dependencies (psutil, requests, aiohttp)
+- Zorg voor snelle CI/CD feedback
+
+#### **Voor Runtime (Dependency Visibility)**
+- Implementeer graceful degradation
+- Log alle dependency warnings
+- Geef actionable feedback aan gebruikers
+
+#### **Voor Integration Tests**
+- Combineer beide strategieën
+- Test echte dependencies waar mogelijk
+- Fallback naar mocking voor CI/CD stabiliteit 
+
+## 🚀 Nieuwe Lessons Learned (Januari 2025)
+
+### **MCP Integration Lessons Learned**
+
+#### **1. Async-First Architecture**
+**Lesson**: MCP integration vereist async-first architectuur voor optimale performance.
+
+**Best Practice**:
+```python
+class MCPEnhancedAgent:
+    async def initialize_mcp(self):
+        """Async MCP initialization voor betere performance."""
+        self.mcp_client = await MCPClient.create()
+        await self.mcp_client.connect()
+    
+    async def use_mcp_tool(self, tool_name: str, **kwargs):
+        """Async tool execution met proper error handling."""
+        try:
+            result = await self.mcp_client.execute_tool(tool_name, **kwargs)
+            return result
+        except MCPConnectionError:
+            logger.warning("MCP connection failed, falling back to local tools")
+            return self._fallback_execution(tool_name, **kwargs)
+```
+
+**Voordelen**:
+- ✅ Betere performance bij externe tool calls
+- ✅ Graceful degradation bij connection failures
+- ✅ Non-blocking operations
+
+#### **2. Tool Registry Management**
+**Lesson**: Centralized tool registry is essentieel voor scalable MCP integration.
+
+**Best Practice**:
+```python
+class MCPToolRegistry:
+    def __init__(self):
+        self.tools = {}
+        self.statistics = {}
+    
+    def register_tool(self, tool: MCPTool):
+        """Register tool met metadata en statistics."""
+        self.tools[tool.name] = tool
+        self.statistics[tool.name] = {
+            'usage_count': 0,
+            'success_rate': 0.0,
+            'last_used': None
+        }
+    
+    def get_tool_statistics(self, tool_name: str):
+        """Get comprehensive tool usage statistics."""
+        return self.statistics.get(tool_name, {})
+```
+
+**Voordelen**:
+- ✅ Tool discovery en management
+- ✅ Usage analytics en monitoring
+- ✅ Performance tracking
+
+#### **3. Context-Aware Tool Execution**
+**Lesson**: MCP tools moeten context-aware zijn voor betere agent collaboration.
+
+**Best Practice**:
+```python
+@dataclass
+class MCPContext:
+    session_id: str
+    user_id: Optional[str] = None
+    agent_id: Optional[str] = None
+    project_id: Optional[str] = None
+    metadata: Dict[str, Any] = None
+    timestamp: datetime = None
+
+class MCPClient:
+    async def execute_tool_with_context(self, tool_name: str, context: MCPContext, **kwargs):
+        """Execute tool met context voor betere collaboration."""
+        context.timestamp = datetime.now()
+        return await self.execute_tool(tool_name, context=context, **kwargs)
+```
+
+**Voordelen**:
+- ✅ Inter-agent communication
+- ✅ Session tracking
+- ✅ Audit trail
+
+### **Kanban Board Implementation Lessons Learned**
+
+#### **1. Cursor AI Compatibiliteit**
+**Lesson**: Kanban board moet Cursor AI-vriendelijk zijn voor optimale project management.
+
+**Best Practice**:
+```markdown
+## 📋 Backlog (Toekomstige Taken)
+
+### **Priority 1 - High Priority**
+- [ ] **Task Name** (Week X-Y)
+  - Subtask 1
+  - Subtask 2
+  - Subtask 3
+
+### **Priority 2 - Medium Priority**
+- [ ] **Task Name** (Week X-Y)
+  - Subtask 1
+  - Subtask 2
+```
+
+**Voordelen**:
+- ✅ Duidelijke task structuur
+- ✅ Priority-based organization
+- ✅ Timeline tracking
+
+#### **2. Status Tracking Workflow**
+**Lesson**: Consistent status tracking is essentieel voor project visibility.
+
+**Best Practice**:
+```markdown
+## 🔄 To Do (Geplande Taken)
+## 🚧 In Progress (Huidige Taken)
+## ✅ Done (Voltooide Taken)
+```
+
+**Voordelen**:
+- ✅ Duidelijke progress tracking
+- ✅ Team visibility
+- ✅ Sprint planning
+
+#### **3. Implementation Details Integration**
+**Lesson**: Technische details moeten gescheiden blijven van project management.
+
+**Best Practice**:
+- **KANBAN_BOARD.md**: Project management en task tracking
+- **IMPLEMENTATION_DETAILS.md**: Technische implementatie details
+- **README.md**: Project overview en quick start
+
+**Voordelen**:
+- ✅ Separation of concerns
+- ✅ Maintainable documentation
+- ✅ Clear information hierarchy
+
+### **Guide Files Integration Lessons Learned**
+
+#### **1. Regular Updates**
+**Lesson**: Guide files moeten regelmatig geüpdatet worden met lessons learned.
+
+**Best Practice**:
+- Update guides na elke major implementatie
+- Document lessons learned in dedicated sections
+- Share best practices tussen teams
+
+#### **2. Consistent Structure**
+**Lesson**: Consistente structuur in guide files verbetert usability.
+
+**Best Practice**:
+```markdown
+## 🎯 Doel
+## 📋 Checklist
+## 🚀 Lessons Learned
+## 📊 Best Practices
+```
+
+#### **3. Cross-Reference Integration**
+**Lesson**: Guide files moeten elkaar refereren voor complete coverage.
+
+**Best Practice**:
+- Link tussen gerelateerde guides
+- Consistent terminology
+- Shared best practices
+
+### **Quality Assurance Integration**
+
+#### **1. Automated Quality Checks**
+**Lesson**: Automated quality checks zijn essentieel voor consistentie.
+
+**Best Practice**:
+```python
+class QualityChecker:
+    def check_guide_completeness(self):
+        """Check of alle guides up-to-date zijn."""
+        required_sections = ['Doel', 'Checklist', 'Lessons Learned']
+        for guide in self.guides:
+            missing_sections = self._check_missing_sections(guide, required_sections)
+            if missing_sections:
+                logger.warning(f"Guide {guide} missing sections: {missing_sections}")
+```
+
+#### **2. Documentation Quality Metrics**
+**Lesson**: Documentation quality moet gemeten worden.
+
+**Best Practice**:
+- Completeness score per guide
+- Update frequency tracking
+- User feedback integration
+
+### **Implementation Recommendations**
+
+#### **Voor Nieuwe Features**:
+1. **Check Kanban Board**: Bekijk huidige planning
+2. **Update Guides**: Voeg lessons learned toe
+3. **Follow Standards**: Gebruik best practices uit guides
+4. **Document Progress**: Update implementation details
+
+#### **Voor Quality Assurance**:
+1. **Regular Reviews**: Maandelijkse guide reviews
+2. **Lessons Learned**: Capture en document lessons learned
+3. **Best Practices**: Share best practices tussen teams
+4. **Continuous Improvement**: Iterative guide updates
+
+#### **Voor Project Management**:
+1. **Kanban Updates**: Regelmatige status updates
+2. **Progress Tracking**: Consistent progress tracking
+3. **Team Communication**: Duidelijke team communication
+4. **Sprint Planning**: Effective sprint planning
+
+### **Success Metrics**
+
+#### **Guide Quality Metrics**:
+- **Completeness**: 100% van guides hebben alle required sections
+- **Currency**: Guides worden maandelijks geüpdatet
+- **Usability**: Team feedback score > 4.0/5.0
+
+#### **Project Management Metrics**:
+- **Task Completion**: 90%+ task completion rate
+- **Sprint Velocity**: Consistent sprint velocity
+- **Team Satisfaction**: High team satisfaction scores
+
+#### **Quality Assurance Metrics**:
+- **Test Coverage**: 90%+ test coverage
+- **Code Quality**: A+ code quality scores
+- **Documentation**: Complete en up-to-date documentation 
