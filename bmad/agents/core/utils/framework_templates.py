@@ -33,7 +33,10 @@ class FrameworkTemplatesManager:
             "testing_engineer": self.frameworks_path / "testing_engineer_template.md",
             "quality_guardian": self.frameworks_path / "quality_guardian_template.md",
             "data_engineer": self.frameworks_path / "data_engineer_template.md",
-            "rnd": self.frameworks_path / "rnd_template.md"
+            "rnd": self.frameworks_path / "rnd_template.md",
+            "product_owner": self.frameworks_path / "product_owner_template.md",
+            "scrummaster": self.frameworks_path / "scrummaster_template.md",
+            "release_manager": self.frameworks_path / "release_manager_template.md"
         }
         
         # Validate template paths
@@ -203,6 +206,24 @@ class FrameworkTemplatesManager:
                     "Test technology evaluation frameworks en decision processes",
                     "Implementeer POC testing en validation workflows",
                     "Test innovation tracking en metrics accuracy"
+                ]
+            },
+            "management_agents": {
+                "development": [
+                    "Implementeer product management en backlog management frameworks",
+                    "Gebruik scrum process facilitation en team coaching methodologies",
+                    "Implementeer release planning en deployment management",
+                    "Gebruik stakeholder management en communication strategies",
+                    "Implementeer sprint planning en retrospective facilitation",
+                    "Gebruik quality gates en release coordination",
+                    "Implementeer changelog management en documentation"
+                ],
+                "testing": [
+                    "Test product management workflows en backlog health",
+                    "Valideer scrum process effectiveness en team performance",
+                    "Test release planning accuracy en deployment success",
+                    "Implementeer stakeholder satisfaction metrics",
+                    "Test sprint planning en retrospective effectiveness"
                 ]
             },
             "development_agents": {
