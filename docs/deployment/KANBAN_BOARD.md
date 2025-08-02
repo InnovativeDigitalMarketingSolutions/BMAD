@@ -54,19 +54,27 @@ Voor uitgebreide backlog items met implementatie details, zie:
   - Data encryption
 
 ### **Priority 3 - Low Priority**
-- [ ] **Documentation Automation** (Week 20-21)
+- [ ] **Test Quality & Coverage Enhancement** (Week 26-27)
+  - Test success rate: 100% (alle tests moeten slagen)
+  - Critical components coverage: >90-95% (MCP core, agent integration, enterprise)
+  - General components coverage: >70% (overige modules en utilities)
+  - Async test configuration en pytest-asyncio setup
+  - Test isolation en reliability improvements
+  - **Zie**: `docs/deployment/BMAD_MASTER_PLANNING.md` voor details
+
+- [ ] **Documentation Automation** (Week 27-28)
   - Auto-generated API docs
   - Code documentation
   - Architecture diagrams
   - User guides
 
-- [ ] **Performance Optimization** (Week 21-22)
+- [ ] **Performance Optimization** (Week 28-29)
   - Database optimization
   - Caching implementation
   - Code optimization
   - Resource optimization
 
-- [ ] **Dependency Visibility Strategy Implementation** (Week 13-14)
+- [ ] **Dependency Visibility Strategy Implementation** (Week 29-30)
   - Implement dependency visibility across all agents
   - Add dependency checking to all CLI interfaces
   - Create dependency health monitoring dashboard
@@ -76,7 +84,7 @@ Voor uitgebreide backlog items met implementatie details, zie:
   - Create dependency audit tools for CI/CD
   - Document dependency visibility best practices
 
-- [ ] **Strategy Integration Documentation & Guidelines** (Week 14-15)
+- [ ] **Strategy Integration Documentation & Guidelines** (Week 30-31)
   - Document Mocking Strategy & Dependency Visibility integration patterns
   - Create best practice guidelines for when to use each strategy
   - Develop training materials for developers on strategy usage
@@ -151,12 +159,27 @@ Voor uitgebreide backlog items met implementatie details, zie:
   - ETL enhancement met MCP tools
   - Backward compatibility behouden
 
-- [ ] **Remaining Agents MCP Integration (15/23)**
-  - Update alle 15 overige agents met MCP integratie
+- [x] **QualityGuardian Agent MCP Integration** ✅ **COMPLETE**
+  - MCP client geïmplementeerd in QualityGuardian agent
+  - Async MCP integration met fallback naar lokale tools
+  - MCP-enhanced quality gate checking en analysis
+  - Quality-specific MCP tools voor code quality analysis, security analysis, en performance analysis
+  - Quality gate validation met MCP tools
+  - Backward compatibility behouden
+
+- [x] **ReleaseManager Agent MCP Integration** ✅ **COMPLETE**
+  - MCP client geïmplementeerd in ReleaseManager agent
+  - Async MCP integration met fallback naar lokale tools
+  - MCP-enhanced deployment coordination en release management
+  - Release-specific MCP tools voor release creation, approval, deployment coordination, en version control
+  - Backward compatibility behouden
+
+- [ ] **Remaining Agents MCP Integration (13/23)**
+  - Update alle 13 overige agents met MCP integratie
   - Implementeer MCP client in elke agent
   - Test MCP functionaliteit per agent
   - Documenteer agent-specifieke MCP features
-  - **Agents**: BackendDeveloper, FullstackDeveloper, MobileDeveloper, AiDeveloper, UXUIDesigner, AccessibilityAgent, QualityGuardian, ReleaseManager, DocumentationAgent, FeedbackAgent, Orchestrator, WorkflowAutomator, StrategiePartner, Retrospective, RnD
+  - **Agents**: BackendDeveloper, FullstackDeveloper, MobileDeveloper, AiDeveloper, UXUIDesigner, AccessibilityAgent, DocumentationAgent, FeedbackAgent, Orchestrator, WorkflowAutomator, StrategiePartner, Retrospective, RnD
 
 - [ ] **Inter-Agent Communication**
   - MCP-based agent communication
@@ -286,11 +309,11 @@ Voor uitgebreide backlog items met implementatie details, zie:
 
 ### **Completion Rate**
 - **Total Tasks**: 46
-- **Completed**: 20
+- **Completed**: 22
 - **In Progress**: 0
-- **To Do**: 15
+- **To Do**: 13
 - **Backlog**: 11
-- **Completion Rate**: 43.5% (20/46 tasks completed)
+- **Completion Rate**: 47.8% (22/46 tasks completed)
 
 ### **Priority Distribution**
 - **Priority 1**: 15 tasks (32.6%)

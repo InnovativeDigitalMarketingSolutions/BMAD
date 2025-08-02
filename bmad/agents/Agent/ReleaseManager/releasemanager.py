@@ -3,6 +3,7 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import argparse
+import asyncio
 import csv
 import json
 import logging
@@ -22,15 +23,32 @@ from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_e
 from integrations.slack.slack_notify import send_slack_message
 from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
 
+# MCP Integration
+from bmad.core.mcp import (
+    MCPClient,
+    MCPContext,
+    FrameworkMCPIntegration,
+    get_mcp_client,
+    get_framework_mcp_integration,
+    initialize_framework_mcp_integration
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
 class ReleaseManagerAgent:
+    """
+    Release Manager Agent voor BMAD.
+    Gespecialiseerd in release management, deployment coordination, en version control.
+    """
+    
     def __init__(self):
         self.framework_manager = get_framework_templates_manager()
-        self.release_manager_template = self.framework_manager.get_template('release_manager')
+        try:
+            self.release_manager_template = self.framework_manager.get_framework_template('release_manager')
+        except:
+            self.release_manager_template = None
         self.lessons_learned = []
 
         # Set agent name
@@ -60,6 +78,92 @@ class ReleaseManagerAgent:
         self.rollback_history = []
         self._load_release_history()
         self._load_rollback_history()
+        
+        # MCP Integration
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
+        
+        logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+    
+    async def initialize_mcp(self):
+        """Initialize MCP client voor enhanced release management capabilities."""
+        try:
+            self.mcp_client = await get_mcp_client()
+            self.mcp_integration = get_framework_mcp_integration()
+            await initialize_framework_mcp_integration()
+            self.mcp_enabled = True
+            logger.info("MCP client initialized successfully for ReleaseManager")
+        except Exception as e:
+            logger.warning(f"MCP initialization failed for ReleaseManager: {e}")
+            self.mcp_enabled = False
+    
+    async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Use MCP tool voor enhanced release management functionality."""
+        if not self.mcp_enabled or not self.mcp_client:
+            logger.warning("MCP not available, using local release management tools")
+            return None
+        
+        try:
+            result = await self.mcp_client.execute_tool(tool_name, parameters)
+            logger.info(f"MCP tool {tool_name} executed successfully")
+            return result
+        except Exception as e:
+            logger.error(f"MCP tool {tool_name} execution failed: {e}")
+            return None
+    
+    async def use_release_specific_mcp_tools(self, release_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use release-specific MCP tools voor enhanced release management."""
+        if not self.mcp_enabled:
+            return {}
+        
+        enhanced_data = {}
+        
+        try:
+            # Release creation
+            release_result = await self.use_mcp_tool("release_creation", {
+                "version": release_data.get("version", ""),
+                "description": release_data.get("description", ""),
+                "release_type": release_data.get("release_type", "feature"),
+                "target_environment": release_data.get("target_environment", "production")
+            })
+            if release_result:
+                enhanced_data["release_creation"] = release_result
+            
+            # Release approval
+            approval_result = await self.use_mcp_tool("release_approval", {
+                "version": release_data.get("version", ""),
+                "approval_criteria": release_data.get("approval_criteria", {}),
+                "stakeholder_approval": release_data.get("stakeholder_approval", True)
+            })
+            if approval_result:
+                enhanced_data["release_approval"] = approval_result
+            
+            # Deployment coordination
+            deployment_result = await self.use_mcp_tool("deployment_coordination", {
+                "version": release_data.get("version", ""),
+                "deployment_strategy": release_data.get("deployment_strategy", "rolling"),
+                "rollback_plan": release_data.get("rollback_plan", {}),
+                "monitoring_setup": release_data.get("monitoring_setup", True)
+            })
+            if deployment_result:
+                enhanced_data["deployment_coordination"] = deployment_result
+            
+            # Version control
+            version_result = await self.use_mcp_tool("version_control", {
+                "version": release_data.get("version", ""),
+                "version_strategy": release_data.get("version_strategy", "semantic"),
+                "changelog_generation": release_data.get("changelog_generation", True)
+            })
+            if version_result:
+                enhanced_data["version_control"] = version_result
+            
+            logger.info(f"Release-specific MCP tools executed: {list(enhanced_data.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Error in release-specific MCP tools: {e}")
+        
+        return enhanced_data
 
     def _load_release_history(self):
         """Load release history from data file"""
@@ -354,7 +458,7 @@ Release Manager Agent Commands:
         logger.info(f"Release approved: {approval_result}")
         return approval_result
 
-    def deploy_release(self, version: str = "1.2.0") -> Dict[str, Any]:
+    async def deploy_release(self, version: str = "1.2.0") -> Dict[str, Any]:
         """Deploy release to production with enhanced functionality."""
         # Input validation
         if not isinstance(version, str):
@@ -365,10 +469,71 @@ Release Manager Agent Commands:
             
         logger.info(f"Deploying release version {version}")
 
+        # Try MCP-enhanced deployment first
+        if self.mcp_enabled and self.mcp_client:
+            try:
+                mcp_result = await self.use_mcp_tool("deploy_release", {
+                    "version": version,
+                    "deployment_strategy": "Blue-green deployment",
+                    "target_environment": "production",
+                    "rollback_plan": {
+                        "rollback_available": True,
+                        "rollback_window": "30 minutes",
+                        "previous_version": "1.1.0"
+                    },
+                    "monitoring_setup": True
+                })
+                
+                if mcp_result:
+                    logger.info("MCP-enhanced deployment completed")
+                    result = mcp_result.get("deployment_result", {})
+                    result["mcp_enhanced"] = True
+                else:
+                    logger.warning("MCP deployment failed, using local deployment")
+                    result = self._create_local_deployment_result(version)
+            except Exception as e:
+                logger.warning(f"MCP deployment failed: {e}, using local deployment")
+                result = self._create_local_deployment_result(version)
+        else:
+            result = self._create_local_deployment_result(version)
+        
+        # Use release-specific MCP tools for additional enhancement
+        if self.mcp_enabled:
+            try:
+                release_data = {
+                    "version": version,
+                    "deployment_strategy": "Blue-green deployment",
+                    "rollback_plan": {
+                        "rollback_available": True,
+                        "rollback_window": "30 minutes",
+                        "previous_version": "1.1.0"
+                    },
+                    "monitoring_setup": True,
+                    "target_environment": "production"
+                }
+                release_enhanced = await self.use_release_specific_mcp_tools(release_data)
+                if release_enhanced:
+                    result["release_enhancements"] = release_enhanced
+            except Exception as e:
+                logger.warning(f"Release-specific MCP tools failed: {e}")
+
+        # Log performance metrics
+        self.monitor._record_metric("ReleaseManagerAgent", MetricType.SUCCESS_RATE, 90, "%")
+
+        # Add to release history
+        deployment_entry = f"{datetime.now().isoformat()}: Release deployed - {version}"
+        self.release_history.append(deployment_entry)
+        self._save_release_history()
+
+        logger.info(f"Release deployed: {result}")
+        return result
+    
+    def _create_local_deployment_result(self, version: str) -> Dict[str, Any]:
+        """Create local deployment result when MCP is not available."""
         # Simulate deployment process
         time.sleep(2)
-
-        deployment_result = {
+        
+        return {
             "version": version,
             "deployment_type": "Production Deployment",
             "status": "deployed",
@@ -416,17 +581,6 @@ Release Manager Agent Commands:
             "timestamp": datetime.now().isoformat(),
             "agent": "ReleaseManagerAgent"
         }
-
-        # Log performance metrics
-        self.monitor._record_metric("ReleaseManagerAgent", MetricType.SUCCESS_RATE, 90, "%")
-
-        # Add to release history
-        deployment_entry = f"{datetime.now().isoformat()}: Release deployed - {version}"
-        self.release_history.append(deployment_entry)
-        self._save_release_history()
-
-        logger.info(f"Release deployed: {deployment_result}")
-        return deployment_result
 
     def rollback_release(self, version: str = "1.2.0", reason: str = "High error rate") -> Dict[str, Any]:
         """Rollback failed release with enhanced functionality."""
@@ -731,14 +885,17 @@ Release Manager Agent Commands:
             logger.warning(f"Could not send Slack notification: {e}")
         # Start rollback (stub)
 
-    def run(self):
-        """Run the agent and listen for events."""
+    async def run(self):
+        """Run the agent and listen for events met MCP integration."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
         subscribe("tests_passed", self.on_tests_passed)
         subscribe("release_approved", self.on_release_approved)
         subscribe("deployment_failed", self.on_deployment_failed)
 
         logger.info("ReleaseManagerAgent ready and listening for events...")
-        self.collaborate_example()
+        await self.collaborate_example()
 
 def main():
     parser = argparse.ArgumentParser(description="Release Manager Agent CLI")
@@ -765,7 +922,7 @@ def main():
         result = agent.approve_release(args.version)
         print(json.dumps(result, indent=2))
     elif args.command == "deploy-release":
-        result = agent.deploy_release(args.version)
+        result = asyncio.run(agent.deploy_release(args.version))
         print(json.dumps(result, indent=2))
     elif args.command == "rollback-release":
         result = agent.rollback_release(args.version, args.reason)
@@ -783,9 +940,9 @@ def main():
     elif args.command == "test":
         agent.test_resource_completeness()
     elif args.command == "collaborate":
-        agent.collaborate_example()
+        asyncio.run(agent.collaborate_example())
     elif args.command == "run":
-        agent.run()
+        asyncio.run(agent.run())
     else:
         print("Unknown command. Use 'help' to see available commands.")
         sys.exit(1)
