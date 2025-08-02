@@ -56,6 +56,14 @@ Deze guide waarborgt dat alle nieuwe functionaliteiten en integraties volledig e
 
 ### **1. Volledige Implementatie Vereisten**
 
+#### **Project Planning & Context Check**
+- [ ] **Kanban Board Check**: Raadpleeg `docs/deployment/KANBAN_BOARD.md` voor huidige taken en status
+- [ ] **Master Planning Check**: Raadpleeg `docs/deployment/BMAD_MASTER_PLANNING.md` voor uitgebreide backlog en roadmap
+- [ ] **Implementation Details Check**: Raadpleeg `docs/deployment/IMPLEMENTATION_DETAILS.md` voor gedetailleerde implementatie uitleg
+- [ ] **Agent Overview Check**: Raadpleeg `bmad/agents/Agent/agents-overview.md` voor complete agent lijst (23 agents)
+- [ ] **Agent Status Verification**: Controleer MCP integration status van alle agents
+- [ ] **Agent Dependencies**: Identificeer agent dependencies en integratie punten
+
 #### **Core Functionaliteit**
 - [ ] **Complete Feature Set**: Alle geplande features zijn geïmplementeerd
 - [ ] **Error Handling**: Comprehensive error handling en logging

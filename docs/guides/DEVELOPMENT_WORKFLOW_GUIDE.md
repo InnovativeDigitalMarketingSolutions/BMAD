@@ -25,6 +25,11 @@ Volg de development pyramid strategie zoals beschreven in `DEVELOPMENT_STRATEGY.
 
 ### Voor het implementeren van nieuwe functionaliteit:
 
+- [ ] **Agent Inventory Check**: Raadpleeg `bmad/agents/Agent/agents-overview.md` voor complete agent lijst (23 agents)
+- [ ] **Project Planning Check**: Raadpleeg project planning files voor context en requirements:
+  - `docs/deployment/KANBAN_BOARD.md` - Huidige taken en status
+  - `docs/deployment/BMAD_MASTER_PLANNING.md` - Uitgebreide backlog en roadmap
+  - `docs/deployment/IMPLEMENTATION_DETAILS.md` - Gedetailleerde implementatie uitleg
 - [ ] **Analyse**: Root cause analysis uitvoeren voor bugs
 - [ ] **Planning**: Development strategie bepalen (unit, integration, production)
 - [ ] **Review**: Bestaande guide files raadplegen voor best practices
@@ -94,6 +99,51 @@ cli/
 │   └── ...
 └── ...
 ```
+
+## 📋 **Project Planning & Agent Inventory Management**
+
+### **Mandatory Project Planning Check**
+**VOOR ELKE NIEUWE IMPLEMENTATIE** moet je eerst de project planning files raadplegen:
+
+```bash
+# Check project planning files
+cat docs/deployment/KANBAN_BOARD.md
+cat docs/deployment/BMAD_MASTER_PLANNING.md
+cat docs/deployment/IMPLEMENTATION_DETAILS.md
+cat bmad/agents/Agent/agents-overview.md
+```
+
+### **Project Planning Files Overview**
+- **KANBAN_BOARD.md**: Huidige taken, status, en sprint planning
+- **BMAD_MASTER_PLANNING.md**: Uitgebreide backlog, roadmap, en implementatie strategie
+- **IMPLEMENTATION_DETAILS.md**: Gedetailleerde technische implementatie uitleg
+- **agents-overview.md**: Complete agent inventory en status
+
+### **Project Planning Checklist**
+- [ ] **Kanban Status**: Controleer huidige taken en sprint planning
+- [ ] **Backlog Items**: Verificeer relevante backlog items in master planning
+- [ ] **Implementation Context**: Raadpleeg implementatie details voor technische context
+- [ ] **Agent Inventory**: Controleer dat alle 23 agents zijn meegenomen
+- [ ] **MCP Status**: Verificeer MCP integration status van alle agents
+- [ ] **Dependencies**: Identificeer agent dependencies en integratie punten
+- [ ] **Categories**: Begrijp agent categorieën (Development, Design, Quality, etc.)
+- [ ] **Responsibilities**: Controleer agent verantwoordelijkheden en overlap
+
+### **Agent Categories Overview**
+1. **Core Development** (5 agents): Frontend, Backend, Fullstack, Mobile, AI
+2. **Architecture & Design** (3 agents): Architect, UX/UI, Accessibility
+3. **Quality & Testing** (2 agents): TestEngineer, QualityGuardian
+4. **Project Management** (3 agents): ProductOwner, Scrummaster, ReleaseManager
+5. **Infrastructure & Operations** (2 agents): DevOpsInfra, DataEngineer
+6. **Security & Compliance** (1 agent): SecurityDeveloper
+7. **Documentation & Communication** (2 agents): DocumentationAgent, FeedbackAgent
+8. **Process & Workflow** (3 agents): Orchestrator, WorkflowAutomator, Retrospective
+9. **Strategy & Innovation** (2 agents): StrategiePartner, RnD
+
+### **MCP Integration Tracking**
+- **Completed**: 7/23 agents (30.4%)
+- **Pending**: 16/23 agents (69.6%)
+- **Target**: 100% MCP integration voor alle agents
 
 ## Development Best Practices
 
