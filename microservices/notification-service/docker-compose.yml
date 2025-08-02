@@ -1,0 +1,110 @@
+version: '3.8'
+
+services:
+  notification-service:
+    build: .
+    ports:
+      - "8002:8000"
+    environment:
+      - DATABASE_URL=postgresql://notification_user:notification_password@notification-db:5432/notification_service
+      - REDIS_URL=redis://notification-redis:6379
+      - SENDGRID_API_KEY=${SENDGRID_API_KEY:-your-sendgrid-api-key}
+      - MAILGUN_API_KEY=${MAILGUN_API_KEY:-your-mailgun-api-key}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-your-twilio-account-sid}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-your-twilio-auth-token}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL:-your-slack-webhook-url}
+      - RATE_LIMIT_PER_MINUTE=60
+      - MAX_RETRY_ATTEMPTS=3
+      - RETRY_DELAY_SECONDS=30
+      - LOG_LEVEL=INFO
+    depends_on:
+      - notification-db
+      - notification-redis
+    networks:
+      - notification-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  notification-db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=notification_service
+      - POSTGRES_USER=notification_user
+      - POSTGRES_PASSWORD=notification_password
+    volumes:
+      - notification_db_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5433:5432"
+    networks:
+      - notification-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notification_user -d notification_service"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  notification-redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    volumes:
+      - notification_redis_data:/data
+    networks:
+      - notification-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  notification-prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9092:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - notification_prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - notification-network
+    restart: unless-stopped
+
+  notification-grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3002:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - notification_grafana_data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - notification-network
+    restart: unless-stopped
+    depends_on:
+      - notification-prometheus
+
+volumes:
+  notification_db_data:
+  notification_redis_data:
+  notification_prometheus_data:
+  notification_grafana_data:
+
+networks:
+  notification-network:
+    driver: bridge 
