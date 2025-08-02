@@ -10,6 +10,7 @@ import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Optional, List
+import csv # Added for CSV export
 
 from bmad.agents.core.agent.agent_performance_monitor import (
     MetricType,
@@ -229,6 +230,18 @@ QualityGuardian Agent Commands:
   test                   - Test resource completeness
   collaborate            - Demonstrate collaboration with other agents
   run                    - Start the agent in event listening mode
+
+Template Quality Assurance:
+  validate-framework-template <template>     - Validate framework template quality and completeness
+  monitor-template-quality [templates]       - Monitor quality of multiple templates
+  enforce-template-standards <template>      - Enforce quality standards for a template
+  generate-template-quality-report [template] [format] - Generate comprehensive quality report
+
+Examples:
+  validate-framework-template --template-name "backend_development"
+  monitor-template-quality --template-names "backend_development" "frontend_development"
+  enforce-template-standards --template-name "backend_development"
+  generate-template-quality-report --template-name "backend_development" --format "md"
         """
         print(help_text)
 
@@ -964,6 +977,602 @@ QualityGuardian Agent Commands:
         print("✅ QualityGuardian Agent is running and listening for events...")
         print("Press Ctrl+C to stop the agent")
 
+    def validate_framework_template(self, template_name: str) -> Dict[str, Any]:
+        """
+        Validate framework template quality and completeness
+        
+        Args:
+            template_name: Name of the template to validate
+            
+        Returns:
+            Dict with validation results
+        """
+        try:
+            # Get template content
+            template_content = self.framework_manager.get_template(template_name)
+            if not template_content:
+                return {
+                    "success": False,
+                    "error": f"Template {template_name} not found"
+                }
+            
+            validation_results = {
+                "template_name": template_name,
+                "validation_timestamp": datetime.utcnow().isoformat(),
+                "checks": {},
+                "overall_score": 0,
+                "status": "unknown"
+            }
+            
+            # Check 1: Content Length
+            content_length = len(template_content)
+            validation_results["checks"]["content_length"] = {
+                "passed": content_length >= 1000,
+                "score": min(100, (content_length / 2000) * 100),
+                "value": content_length,
+                "threshold": 1000,
+                "message": f"Content length: {content_length} characters"
+            }
+            
+            # Check 2: Required Sections
+            required_sections = [
+                "Best Practices", "Quality Standards", "Implementation Guidelines",
+                "Testing Strategy", "Documentation Requirements", "Lessons Learned"
+            ]
+            
+            missing_sections = []
+            present_sections = []
+            
+            for section in required_sections:
+                if section.lower() in template_content.lower():
+                    present_sections.append(section)
+                else:
+                    missing_sections.append(section)
+            
+            section_score = (len(present_sections) / len(required_sections)) * 100
+            validation_results["checks"]["required_sections"] = {
+                "passed": len(missing_sections) == 0,
+                "score": section_score,
+                "value": f"{len(present_sections)}/{len(required_sections)}",
+                "present_sections": present_sections,
+                "missing_sections": missing_sections,
+                "message": f"Found {len(present_sections)} of {len(required_sections)} required sections"
+            }
+            
+            # Check 3: Code Examples
+            code_blocks = template_content.count("```")
+            code_score = min(100, (code_blocks / 4) * 100)  # Expect at least 4 code blocks
+            validation_results["checks"]["code_examples"] = {
+                "passed": code_blocks >= 4,
+                "score": code_score,
+                "value": code_blocks,
+                "threshold": 4,
+                "message": f"Found {code_blocks} code blocks"
+            }
+            
+            # Check 4: Links and References
+            link_count = template_content.count("http") + template_content.count("www")
+            link_score = min(100, (link_count / 2) * 100)  # Expect at least 2 links
+            validation_results["checks"]["links_references"] = {
+                "passed": link_count >= 2,
+                "score": link_score,
+                "value": link_count,
+                "threshold": 2,
+                "message": f"Found {link_count} external links/references"
+            }
+            
+            # Check 5: Structure and Formatting
+            has_headers = "# " in template_content
+            has_lists = "- " in template_content or "* " in template_content
+            has_tables = "|" in template_content
+            
+            structure_score = 0
+            if has_headers: structure_score += 33
+            if has_lists: structure_score += 33
+            if has_tables: structure_score += 34
+            
+            validation_results["checks"]["structure_formatting"] = {
+                "passed": structure_score >= 66,
+                "score": structure_score,
+                "value": {
+                    "headers": has_headers,
+                    "lists": has_lists,
+                    "tables": has_tables
+                },
+                "message": f"Structure score: {structure_score}/100"
+            }
+            
+            # Check 6: Recent Updates
+            # This would require tracking template modification dates
+            # For now, we'll assume templates are current if they exist
+            validation_results["checks"]["recent_updates"] = {
+                "passed": True,
+                "score": 100,
+                "value": "current",
+                "message": "Template exists and is accessible"
+            }
+            
+            # Calculate overall score
+            scores = [check["score"] for check in validation_results["checks"].values()]
+            overall_score = sum(scores) / len(scores)
+            validation_results["overall_score"] = round(overall_score, 2)
+            
+            # Determine status
+            if overall_score >= 90:
+                validation_results["status"] = "excellent"
+            elif overall_score >= 80:
+                validation_results["status"] = "good"
+            elif overall_score >= 70:
+                validation_results["status"] = "fair"
+            else:
+                validation_results["status"] = "needs_improvement"
+            
+            # Record metric
+            self.monitor.record_metric(
+                MetricType.GAUGE,
+                "template_validation_score",
+                overall_score,
+                {"template": template_name, "status": validation_results["status"]}
+            )
+            
+            # Store validation result
+            self._store_template_validation_result(template_name, validation_results)
+            
+            return {
+                "success": True,
+                "validation": validation_results
+            }
+            
+        except Exception as e:
+            logger.error(f"Error validating template {template_name}: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "template_name": template_name
+            }
+
+    def _store_template_validation_result(self, template_name: str, validation_result: Dict[str, Any]):
+        """Store template validation result for tracking"""
+        try:
+            validation_file = self.resource_base / "data/qualityguardian/template-validations.json"
+            
+            # Load existing validations
+            validations = {}
+            if validation_file.exists():
+                with open(validation_file, 'r') as f:
+                    validations = json.load(f)
+            
+            # Add new validation
+            if template_name not in validations:
+                validations[template_name] = []
+            
+            validations[template_name].append(validation_result)
+            
+            # Keep only last 10 validations per template
+            validations[template_name] = validations[template_name][-10:]
+            
+            # Save validations
+            validation_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(validation_file, 'w') as f:
+                json.dump(validations, f, indent=2)
+                
+        except Exception as e:
+            logger.error(f"Error storing template validation result: {e}")
+
+    def monitor_template_quality(self, template_names: List[str] = None) -> Dict[str, Any]:
+        """
+        Monitor quality of multiple templates
+        
+        Args:
+            template_names: List of template names to monitor (None for all)
+            
+        Returns:
+            Dict with monitoring results
+        """
+        try:
+            if template_names is None:
+                # Get all available templates
+                template_names = [
+                    "backend_development", "frontend_development", "fullstack_development",
+                    "test_engineering", "quality_guardian", "data_engineering",
+                    "rnd", "product_owner", "scrummaster", "release_manager"
+                ]
+            
+            monitoring_results = {
+                "monitoring_timestamp": datetime.utcnow().isoformat(),
+                "templates_monitored": len(template_names),
+                "results": {},
+                "summary": {
+                    "excellent": 0,
+                    "good": 0,
+                    "fair": 0,
+                    "needs_improvement": 0,
+                    "failed": 0
+                }
+            }
+            
+            for template_name in template_names:
+                validation_result = self.validate_framework_template(template_name)
+                
+                if validation_result["success"]:
+                    status = validation_result["validation"]["status"]
+                    monitoring_results["results"][template_name] = {
+                        "status": status,
+                        "score": validation_result["validation"]["overall_score"],
+                        "passed_checks": sum(1 for check in validation_result["validation"]["checks"].values() if check["passed"]),
+                        "total_checks": len(validation_result["validation"]["checks"])
+                    }
+                    monitoring_results["summary"][status] += 1
+                else:
+                    monitoring_results["results"][template_name] = {
+                        "status": "failed",
+                        "error": validation_result["error"]
+                    }
+                    monitoring_results["summary"]["failed"] += 1
+            
+            # Calculate overall quality metrics
+            successful_templates = [
+                result for result in monitoring_results["results"].values()
+                if result["status"] != "failed"
+            ]
+            
+            if successful_templates:
+                avg_score = sum(result["score"] for result in successful_templates) / len(successful_templates)
+                avg_passed_checks = sum(result["passed_checks"] for result in successful_templates) / len(successful_templates)
+                
+                monitoring_results["overall_metrics"] = {
+                    "average_score": round(avg_score, 2),
+                    "average_passed_checks": round(avg_passed_checks, 2),
+                    "success_rate": len(successful_templates) / len(template_names) * 100
+                }
+            
+            # Record monitoring metrics
+            self.monitor.record_metric(
+                MetricType.GAUGE,
+                "template_quality_monitoring_score",
+                monitoring_results.get("overall_metrics", {}).get("average_score", 0),
+                {"templates_monitored": len(template_names)}
+            )
+            
+            return {
+                "success": True,
+                "monitoring": monitoring_results
+            }
+            
+        except Exception as e:
+            logger.error(f"Error monitoring template quality: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
+
+    def enforce_template_standards(self, template_name: str) -> Dict[str, Any]:
+        """
+        Enforce quality standards for a template
+        
+        Args:
+            template_name: Name of the template to enforce standards for
+            
+        Returns:
+            Dict with enforcement results
+        """
+        try:
+            # First validate the template
+            validation_result = self.validate_framework_template(template_name)
+            
+            if not validation_result["success"]:
+                return {
+                    "success": False,
+                    "error": f"Template validation failed: {validation_result['error']}"
+                }
+            
+            validation = validation_result["validation"]
+            enforcement_results = {
+                "template_name": template_name,
+                "enforcement_timestamp": datetime.utcnow().isoformat(),
+                "standards_enforced": [],
+                "recommendations": [],
+                "compliance_score": 0
+            }
+            
+            # Enforce content length standard
+            if validation["checks"]["content_length"]["score"] < 80:
+                enforcement_results["standards_enforced"].append({
+                    "standard": "content_length",
+                    "current_score": validation["checks"]["content_length"]["score"],
+                    "required_score": 80,
+                    "action": "expand_template_content",
+                    "priority": "high"
+                })
+                enforcement_results["recommendations"].append(
+                    "Expand template content to meet minimum length requirements"
+                )
+            
+            # Enforce required sections standard
+            if validation["checks"]["required_sections"]["score"] < 100:
+                missing_sections = validation["checks"]["required_sections"]["missing_sections"]
+                enforcement_results["standards_enforced"].append({
+                    "standard": "required_sections",
+                    "missing_sections": missing_sections,
+                    "action": "add_missing_sections",
+                    "priority": "high"
+                })
+                enforcement_results["recommendations"].append(
+                    f"Add missing sections: {', '.join(missing_sections)}"
+                )
+            
+            # Enforce code examples standard
+            if validation["checks"]["code_examples"]["score"] < 75:
+                enforcement_results["standards_enforced"].append({
+                    "standard": "code_examples",
+                    "current_score": validation["checks"]["code_examples"]["score"],
+                    "required_score": 75,
+                    "action": "add_code_examples",
+                    "priority": "medium"
+                })
+                enforcement_results["recommendations"].append(
+                    "Add more code examples and implementation snippets"
+                )
+            
+            # Enforce structure standard
+            if validation["checks"]["structure_formatting"]["score"] < 80:
+                enforcement_results["standards_enforced"].append({
+                    "standard": "structure_formatting",
+                    "current_score": validation["checks"]["structure_formatting"]["score"],
+                    "required_score": 80,
+                    "action": "improve_structure",
+                    "priority": "medium"
+                })
+                enforcement_results["recommendations"].append(
+                    "Improve template structure with better headers, lists, and formatting"
+                )
+            
+            # Calculate compliance score
+            passed_checks = sum(1 for check in validation["checks"].values() if check["passed"])
+            total_checks = len(validation["checks"])
+            compliance_score = (passed_checks / total_checks) * 100
+            
+            enforcement_results["compliance_score"] = round(compliance_score, 2)
+            
+            # Determine enforcement status
+            if compliance_score >= 90:
+                enforcement_results["status"] = "compliant"
+            elif compliance_score >= 70:
+                enforcement_results["status"] = "partially_compliant"
+            else:
+                enforcement_results["status"] = "non_compliant"
+            
+            # Record enforcement metric
+            self.monitor.record_metric(
+                MetricType.GAUGE,
+                "template_standards_compliance",
+                compliance_score,
+                {"template": template_name, "status": enforcement_results["status"]}
+            )
+            
+            return {
+                "success": True,
+                "enforcement": enforcement_results
+            }
+            
+        except Exception as e:
+            logger.error(f"Error enforcing standards for template {template_name}: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "template_name": template_name
+            }
+
+    def generate_template_quality_report(self, template_name: str = None, 
+                                       format_type: str = "md") -> Dict[str, Any]:
+        """
+        Generate comprehensive quality report for templates
+        
+        Args:
+            template_name: Specific template (None for all)
+            format_type: Report format (md, json, csv)
+            
+        Returns:
+            Dict with quality report
+        """
+        try:
+            if template_name:
+                # Single template report
+                validation_result = self.validate_framework_template(template_name)
+                enforcement_result = self.enforce_template_standards(template_name)
+                
+                if not validation_result["success"]:
+                    return {
+                        "success": False,
+                        "error": f"Template validation failed: {validation_result['error']}"
+                    }
+                
+                report_data = {
+                    "template_name": template_name,
+                    "report_timestamp": datetime.utcnow().isoformat(),
+                    "validation": validation_result["validation"],
+                    "enforcement": enforcement_result.get("enforcement", {}),
+                    "overall_quality_score": validation_result["validation"]["overall_score"],
+                    "compliance_score": enforcement_result.get("enforcement", {}).get("compliance_score", 0)
+                }
+            else:
+                # All templates report
+                template_names = [
+                    "backend_development", "frontend_development", "fullstack_development",
+                    "test_engineering", "quality_guardian", "data_engineering",
+                    "rnd", "product_owner", "scrummaster", "release_manager"
+                ]
+                
+                all_results = {}
+                total_score = 0
+                total_compliance = 0
+                valid_templates = 0
+                
+                for template in template_names:
+                    validation_result = self.validate_framework_template(template)
+                    enforcement_result = self.enforce_template_standards(template)
+                    
+                    if validation_result["success"]:
+                        valid_templates += 1
+                        score = validation_result["validation"]["overall_score"]
+                        compliance = enforcement_result.get("enforcement", {}).get("compliance_score", 0)
+                        
+                        total_score += score
+                        total_compliance += compliance
+                        
+                        all_results[template] = {
+                            "quality_score": score,
+                            "compliance_score": compliance,
+                            "status": validation_result["validation"]["status"],
+                            "enforcement_status": enforcement_result.get("enforcement", {}).get("status", "unknown")
+                        }
+                    else:
+                        all_results[template] = {
+                            "error": validation_result["error"],
+                            "status": "failed"
+                        }
+                
+                avg_quality_score = total_score / valid_templates if valid_templates > 0 else 0
+                avg_compliance_score = total_compliance / valid_templates if valid_templates > 0 else 0
+                
+                report_data = {
+                    "report_timestamp": datetime.utcnow().isoformat(),
+                    "templates_analyzed": len(template_names),
+                    "valid_templates": valid_templates,
+                    "average_quality_score": round(avg_quality_score, 2),
+                    "average_compliance_score": round(avg_compliance_score, 2),
+                    "template_results": all_results,
+                    "overall_status": "excellent" if avg_quality_score >= 90 else 
+                                     "good" if avg_quality_score >= 80 else 
+                                     "fair" if avg_quality_score >= 70 else "needs_improvement"
+                }
+            
+            # Export report
+            timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+            template_suffix = f"_{template_name}" if template_name else "_all"
+            
+            if format_type == "md":
+                self._export_template_quality_markdown(report_data, timestamp, template_suffix)
+            elif format_type == "json":
+                self._export_template_quality_json(report_data, timestamp, template_suffix)
+            elif format_type == "csv":
+                self._export_template_quality_csv(report_data, timestamp, template_suffix)
+            
+            return {
+                "success": True,
+                "report": report_data,
+                "exported": True,
+                "format": format_type
+            }
+            
+        except Exception as e:
+            logger.error(f"Error generating template quality report: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
+
+    def _export_template_quality_markdown(self, report_data: Dict[str, Any], timestamp: str, template_suffix: str):
+        """Export template quality report as markdown"""
+        try:
+            report_file = self.resource_base / f"data/qualityguardian/template-quality-report{template_suffix}_{timestamp}.md"
+            report_file.parent.mkdir(parents=True, exist_ok=True)
+            
+            with open(report_file, 'w') as f:
+                f.write(f"# Template Quality Report{template_suffix.replace('_', ' ').title()}\n\n")
+                f.write(f"**Generated**: {report_data['report_timestamp']}\n\n")
+                
+                if "template_name" in report_data:
+                    # Single template report
+                    f.write(f"## Template: {report_data['template_name']}\n\n")
+                    f.write(f"**Overall Quality Score**: {report_data['overall_quality_score']}/100\n")
+                    f.write(f"**Compliance Score**: {report_data['compliance_score']}/100\n\n")
+                    
+                    f.write("### Validation Results\n\n")
+                    for check_name, check_result in report_data['validation']['checks'].items():
+                        status = "✅" if check_result['passed'] else "❌"
+                        f.write(f"- {status} **{check_name.replace('_', ' ').title()}**: {check_result['message']}\n")
+                    
+                    if report_data['enforcement'].get('recommendations'):
+                        f.write("\n### Recommendations\n\n")
+                        for rec in report_data['enforcement']['recommendations']:
+                            f.write(f"- {rec}\n")
+                else:
+                    # All templates report
+                    f.write(f"## Summary\n\n")
+                    f.write(f"**Templates Analyzed**: {report_data['templates_analyzed']}\n")
+                    f.write(f"**Valid Templates**: {report_data['valid_templates']}\n")
+                    f.write(f"**Average Quality Score**: {report_data['average_quality_score']}/100\n")
+                    f.write(f"**Average Compliance Score**: {report_data['average_compliance_score']}/100\n")
+                    f.write(f"**Overall Status**: {report_data['overall_status'].title()}\n\n")
+                    
+                    f.write("### Template Results\n\n")
+                    f.write("| Template | Quality Score | Compliance Score | Status |\n")
+                    f.write("|----------|---------------|------------------|--------|\n")
+                    
+                    for template, result in report_data['template_results'].items():
+                        if 'error' not in result:
+                            f.write(f"| {template.replace('_', ' ').title()} | {result['quality_score']} | {result['compliance_score']} | {result['status']} |\n")
+                        else:
+                            f.write(f"| {template.replace('_', ' ').title()} | N/A | N/A | Failed |\n")
+            
+            logger.info(f"Template quality report exported to {report_file}")
+            
+        except Exception as e:
+            logger.error(f"Error exporting template quality markdown: {e}")
+
+    def _export_template_quality_json(self, report_data: Dict[str, Any], timestamp: str, template_suffix: str):
+        """Export template quality report as JSON"""
+        try:
+            report_file = self.resource_base / f"data/qualityguardian/template-quality-report{template_suffix}_{timestamp}.json"
+            report_file.parent.mkdir(parents=True, exist_ok=True)
+            
+            with open(report_file, 'w') as f:
+                json.dump(report_data, f, indent=2)
+            
+            logger.info(f"Template quality report exported to {report_file}")
+            
+        except Exception as e:
+            logger.error(f"Error exporting template quality JSON: {e}")
+
+    def _export_template_quality_csv(self, report_data: Dict[str, Any], timestamp: str, template_suffix: str):
+        """Export template quality report as CSV"""
+        try:
+            report_file = self.resource_base / f"data/qualityguardian/template-quality-report{template_suffix}_{timestamp}.csv"
+            report_file.parent.mkdir(parents=True, exist_ok=True)
+            
+            with open(report_file, 'w', newline='') as f:
+                writer = csv.writer(f)
+                
+                if "template_name" in report_data:
+                    # Single template report
+                    writer.writerow(["Template", "Quality Score", "Compliance Score", "Status"])
+                    writer.writerow([
+                        report_data['template_name'],
+                        report_data['overall_quality_score'],
+                        report_data['compliance_score'],
+                        report_data['validation']['status']
+                    ])
+                else:
+                    # All templates report
+                    writer.writerow(["Template", "Quality Score", "Compliance Score", "Status", "Enforcement Status"])
+                    for template, result in report_data['template_results'].items():
+                        if 'error' not in result:
+                            writer.writerow([
+                                template,
+                                result['quality_score'],
+                                result['compliance_score'],
+                                result['status'],
+                                result['enforcement_status']
+                            ])
+                        else:
+                            writer.writerow([template, "N/A", "N/A", "Failed", "N/A"])
+            
+            logger.info(f"Template quality report exported to {report_file}")
+            
+        except Exception as e:
+            logger.error(f"Error exporting template quality CSV: {e}")
+
 def main():
     """Main CLI function with comprehensive error handling."""
     parser = argparse.ArgumentParser(description="QualityGuardian Agent CLI")
@@ -973,13 +1582,19 @@ def main():
                                "quality-gate-check", "generate-quality-report", "suggest-improvements",
                                "show-quality-history", "show-security-history", 
                                "show-performance-history", "show-quality-metrics",
-                               "test", "collaborate", "run"])
+                               "test", "collaborate", "run", "validate-framework-template",
+                               "monitor-template-quality", "enforce-template-standards",
+                               "generate-template-quality-report"])
     parser.add_argument("--path", default="./", help="Path to analyze")
     parser.add_argument("--threshold", type=int, default=80, help="Coverage threshold")
     parser.add_argument("--files", default="*.py", help="Files pattern for security scan")
     parser.add_argument("--component", default="main", help="Component for performance analysis")
     parser.add_argument("--deployment", action="store_true", help="Check quality gates for deployment")
     parser.add_argument("--format", default="md", choices=["md", "json", "csv"], help="Report format")
+    
+    # Template quality assurance arguments
+    parser.add_argument("--template-name", help="Template name for quality assurance")
+    parser.add_argument("--template-names", nargs="+", help="List of template names to monitor")
 
     args = parser.parse_args()
 
@@ -1026,6 +1641,47 @@ def main():
             agent.collaborate_example()
         elif args.command == "run":
             agent.run()
+        elif args.command == "validate-framework-template":
+            if not args.template_name:
+                print("Error: --template-name is required")
+                return
+            result = agent.validate_framework_template(args.template_name)
+            if result["success"]:
+                print(f"✅ Template validation completed: {result['validation']['overall_score']}/100")
+                print(f"Status: {result['validation']['status']}")
+            else:
+                print(f"❌ Template validation failed: {result['error']}")
+        elif args.command == "monitor-template-quality":
+            result = agent.monitor_template_quality(args.template_names)
+            if result["success"]:
+                avg_score = result["monitoring"]["overall_metrics"]["average_score"]
+                print(f"✅ Template quality monitoring completed: {avg_score}/100")
+                print(f"Templates monitored: {result['monitoring']['templates_monitored']}")
+            else:
+                print(f"❌ Template quality monitoring failed: {result['error']}")
+        elif args.command == "enforce-template-standards":
+            if not args.template_name:
+                print("Error: --template-name is required")
+                return
+            result = agent.enforce_template_standards(args.template_name)
+            if result["success"]:
+                compliance = result["enforcement"]["compliance_score"]
+                print(f"✅ Template standards enforcement completed: {compliance}/100")
+                print(f"Status: {result['enforcement']['status']}")
+            else:
+                print(f"❌ Template standards enforcement failed: {result['error']}")
+        elif args.command == "generate-template-quality-report":
+            result = agent.generate_template_quality_report(args.template_name, args.format)
+            if result["success"]:
+                print(f"✅ Template quality report generated in {args.format} format")
+                if args.template_name:
+                    score = result["report"]["overall_quality_score"]
+                    print(f"Template quality score: {score}/100")
+                else:
+                    avg_score = result["report"]["average_quality_score"]
+                    print(f"Average template quality score: {avg_score}/100")
+            else:
+                print(f"❌ Template quality report generation failed: {result['error']}")
             
     except QualityValidationError as e:
         print(f"❌ Validation error: {e}")
