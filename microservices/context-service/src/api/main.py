@@ -31,6 +31,18 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+# Initialize core components
+from ..context.context_manager import ContextManager
+from ..context.context_store import ContextStore
+from ..context.context_validator import ContextValidator
+from ..analytics.analytics_manager import AnalyticsManager
+
+# Initialize components (will be configured in startup)
+context_validator = ContextValidator()
+context_store = None
+context_manager = None
+analytics_manager = None
+
 # Add middleware
 app.add_middleware(
     CORSMiddleware,
@@ -519,12 +531,41 @@ async def startup_event():
     """Application startup event"""
     logger.info(f"Starting {SERVICE_NAME} v{SERVICE_VERSION}")
     logger.info("Context Service is starting up...")
+    
+    # Initialize core components
+    global context_store, context_manager, analytics_manager
+    
+    # Initialize context store if database URLs are configured
+    postgres_url = os.getenv("DATABASE_URL")
+    redis_url = os.getenv("REDIS_URL")
+    
+    if postgres_url and redis_url:
+        try:
+            context_store = ContextStore(postgres_url, redis_url)
+            await context_store.connect()
+            logger.info("Context store initialized")
+        except Exception as e:
+            logger.warning(f"Failed to initialize context store: {e}")
+            context_store = None
+    
+    # Initialize context manager
+    context_manager = ContextManager(context_store)
+    logger.info("Context manager initialized")
+    
+    # Initialize analytics manager
+    analytics_manager = AnalyticsManager(context_store)
+    logger.info("Analytics manager initialized")
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Application shutdown event"""
     logger.info(f"Shutting down {SERVICE_NAME}")
     logger.info("Context Service is shutting down...")
+    
+    # Cleanup core components
+    if context_store:
+        await context_store.disconnect()
+        logger.info("Context store disconnected")
 
 # Main entry point
 if __name__ == "__main__":

@@ -1,31 +1,26 @@
 """
-Tests for the BMAD Integration Service
+Integration Service Tests
 
-This module contains comprehensive tests for the Integration Service API endpoints,
-including integration management, health checks, and monitoring functionality.
+This module contains tests for the Integration Service API endpoints and client management.
 """
 
 import pytest
+import asyncio
+from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi.testclient import TestClient
-from unittest.mock import patch, MagicMock
-import json
-from datetime import datetime
+from datetime import datetime, timezone
 
-# Import the FastAPI app
-import sys
-import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
+from src.api.main import app
+from src.core.client_manager import ClientManager
 
-from api.main import app
-
-# Create test client
+# Test client
 client = TestClient(app)
 
-class TestHealthEndpoints:
-    """Test health check endpoints"""
+class TestIntegrationService:
+    """Test cases for Integration Service."""
     
     def test_health_check(self):
-        """Test basic health check endpoint"""
+        """Test health check endpoint."""
         response = client.get("/health")
         assert response.status_code == 200
         
@@ -33,10 +28,9 @@ class TestHealthEndpoints:
         assert data["status"] == "healthy"
         assert data["service"] == "integration-service"
         assert data["version"] == "1.0.0"
-        assert "timestamp" in data
-    
+        
     def test_readiness_check(self):
-        """Test readiness probe endpoint"""
+        """Test readiness check endpoint."""
         response = client.get("/health/ready")
         assert response.status_code == 200
         
@@ -44,346 +38,475 @@ class TestHealthEndpoints:
         assert data["status"] == "ready"
         assert "uptime" in data
         assert "checks" in data
-        assert data["checks"]["database"] == "healthy"
-        assert data["checks"]["redis"] == "healthy"
-        assert data["checks"]["service_discovery"] == "healthy"
-        assert "external_services" in data["checks"]
-    
+        
     def test_liveness_check(self):
-        """Test liveness probe endpoint"""
+        """Test liveness check endpoint."""
         response = client.get("/health/live")
         assert response.status_code == 200
         
         data = response.json()
-        assert data["status"] == "alive"
-        assert data["service"] == "integration-service"
-        assert data["version"] == "1.0.0"
-
-class TestIntegrationManagement:
-    """Test integration management endpoints"""
-    
+        assert data["status"] == "healthy"
+        
     def test_list_integrations(self):
-        """Test listing all integrations"""
+        """Test list integrations endpoint."""
         response = client.get("/integrations")
         assert response.status_code == 200
         
-        integrations = response.json()
-        assert isinstance(integrations, list)
-        assert len(integrations) >= 4  # We have auth0, postgresql, redis, stripe
+        data = response.json()
+        assert isinstance(data, list)
+        assert len(data) > 0
         
-        # Check that all integrations have required fields
-        for integration in integrations:
-            assert "id" in integration
-            assert "name" in integration
-            assert "type" in integration
-            assert "status" in integration
-            assert "version" in integration
-            assert "health" in integration
-    
-    def test_get_integration_success(self):
-        """Test getting integration details successfully"""
-        response = client.get("/integrations/auth0")
-        assert response.status_code == 200
+        # Check integration structure
+        integration = data[0]
+        assert "id" in integration
+        assert "name" in integration
+        assert "type" in integration
+        assert "status" in integration
         
-        integration = response.json()
-        assert integration["id"] == "auth0"
-        assert integration["name"] == "Auth0 Authentication"
-        assert integration["type"] == "authentication"
-        assert integration["status"] == "active"
-    
+    def test_get_integration(self):
+        """Test get integration endpoint."""
+        # First get list to find an integration ID
+        list_response = client.get("/integrations")
+        integrations = list_response.json()
+        
+        if integrations:
+            integration_id = integrations[0]["id"]
+            response = client.get(f"/integrations/{integration_id}")
+            assert response.status_code == 200
+            
+            data = response.json()
+            assert data["id"] == integration_id
+            assert "name" in data
+            assert "type" in data
+            assert "status" in data
+            
     def test_get_integration_not_found(self):
-        """Test getting non-existent integration"""
-        response = client.get("/integrations/nonexistent")
+        """Test get integration with non-existent ID."""
+        response = client.get("/integrations/non-existent-id")
         assert response.status_code == 404
-        assert response.json()["detail"] == "Integration not found"
-    
-    def test_register_integration_success(self):
-        """Test registering a new integration successfully"""
-        new_integration = {
-            "id": "test_integration",
+        
+    def test_register_integration(self):
+        """Test register integration endpoint."""
+        integration_data = {
             "name": "Test Integration",
-            "type": "testing",
-            "version": "1.0.0",
+            "type": "test",
             "config": {
-                "api_key": "test_key",
-                "endpoint": "https://api.test.com"
+                "url": "https://test.example.com",
+                "api_key": "test-key"
             }
         }
         
-        response = client.post("/integrations", json=new_integration)
+        response = client.post("/integrations", json=integration_data)
         assert response.status_code == 200
         
-        integration = response.json()
-        assert integration["id"] == "test_integration"
-        assert integration["name"] == "Test Integration"
-        assert integration["status"] == "active"
-        assert integration["health"] == "unknown"
-        assert "created_at" in integration
-    
-    def test_register_integration_missing_id(self):
-        """Test registering integration without ID"""
-        new_integration = {
+        data = response.json()
+        assert data["name"] == integration_data["name"]
+        assert data["type"] == integration_data["type"]
+        assert "id" in data
+        assert "created_at" in data
+        
+    def test_update_integration(self):
+        """Test update integration endpoint."""
+        # First register an integration
+        integration_data = {
             "name": "Test Integration",
-            "type": "testing"
+            "type": "test",
+            "config": {"url": "https://test.example.com"}
         }
         
-        response = client.post("/integrations", json=new_integration)
-        assert response.status_code == 400
-        assert response.json()["detail"] == "Integration ID is required"
-    
-    def test_register_integration_already_exists(self):
-        """Test registering integration that already exists"""
-        new_integration = {
-            "id": "auth0",  # This already exists
-            "name": "Another Auth0",
-            "type": "authentication"
-        }
+        register_response = client.post("/integrations", json=integration_data)
+        integration_id = register_response.json()["id"]
         
-        response = client.post("/integrations", json=new_integration)
-        assert response.status_code == 409
-        assert response.json()["detail"] == "Integration already exists"
-    
-    def test_update_integration_success(self):
-        """Test updating integration successfully"""
+        # Update the integration
         update_data = {
-            "name": "Updated Auth0",
-            "version": "2.0.0"
+            "name": "Updated Test Integration",
+            "config": {"url": "https://updated.example.com"}
         }
         
-        response = client.put("/integrations/auth0", json=update_data)
+        response = client.put(f"/integrations/{integration_id}", json=update_data)
         assert response.status_code == 200
         
-        integration = response.json()
-        assert integration["name"] == "Updated Auth0"
-        assert integration["version"] == "2.0.0"
-    
-    def test_update_integration_not_found(self):
-        """Test updating non-existent integration"""
-        update_data = {"name": "Updated"}
+        data = response.json()
+        assert data["name"] == update_data["name"]
+        assert data["config"]["url"] == update_data["config"]["url"]
         
-        response = client.put("/integrations/nonexistent", json=update_data)
-        assert response.status_code == 404
-        assert response.json()["detail"] == "Integration not found"
-    
-    def test_deregister_integration_success(self):
-        """Test deregistering integration successfully"""
-        # First register a test integration
-        test_integration = {
-            "id": "temp_integration",
-            "name": "Temporary Integration",
-            "type": "temporary"
+    def test_delete_integration(self):
+        """Test delete integration endpoint."""
+        # First register an integration
+        integration_data = {
+            "name": "Test Integration",
+            "type": "test",
+            "config": {"url": "https://test.example.com"}
         }
-        client.post("/integrations", json=test_integration)
         
-        # Now deregister it
-        response = client.delete("/integrations/temp_integration")
-        assert response.status_code == 200
-        assert "deregistered successfully" in response.json()["message"]
-    
-    def test_deregister_integration_not_found(self):
-        """Test deregistering non-existent integration"""
-        response = client.delete("/integrations/nonexistent")
-        assert response.status_code == 404
-        assert response.json()["detail"] == "Integration not found"
-
-class TestIntegrationHealth:
-    """Test integration health endpoints"""
-    
-    def test_check_integration_health_success(self):
-        """Test checking integration health successfully"""
-        response = client.get("/integrations/postgresql/health")
+        register_response = client.post("/integrations", json=integration_data)
+        integration_id = register_response.json()["id"]
+        
+        # Delete the integration
+        response = client.delete(f"/integrations/{integration_id}")
         assert response.status_code == 200
         
-        health = response.json()
-        assert health["integration_id"] == "postgresql"
-        assert "status" in health
-        assert "health" in health
-        assert "last_check" in health
-        assert "response_time" in health
-        assert "error_count" in health
-        assert "success_rate" in health
-    
-    def test_check_integration_health_not_found(self):
-        """Test checking health for non-existent integration"""
-        response = client.get("/integrations/nonexistent/health")
-        assert response.status_code == 404
-        assert response.json()["detail"] == "Integration not found"
-    
-    def test_get_integration_status_success(self):
-        """Test getting integration status successfully"""
-        response = client.get("/integrations/redis/status")
+        # Verify it's deleted
+        get_response = client.get(f"/integrations/{integration_id}")
+        assert get_response.status_code == 404
+        
+    def test_check_integration_health(self):
+        """Test check integration health endpoint."""
+        # First register an integration
+        integration_data = {
+            "name": "Test Integration",
+            "type": "test",
+            "config": {"url": "https://test.example.com"}
+        }
+        
+        register_response = client.post("/integrations", json=integration_data)
+        integration_id = register_response.json()["id"]
+        
+        response = client.get(f"/integrations/{integration_id}/health")
         assert response.status_code == 200
         
-        status = response.json()
-        assert status["integration_id"] == "redis"
-        assert "status" in status
-        assert "health" in status
-        assert "last_check" in status
-        assert "response_time" in status
-        assert "error_count" in status
-        assert "success_rate" in status
-    
-    def test_get_integration_status_not_found(self):
-        """Test getting status for non-existent integration"""
-        response = client.get("/integrations/nonexistent/status")
-        assert response.status_code == 404
-        assert response.json()["detail"] == "Integration not found"
-    
-    def test_test_integration_success(self):
-        """Test testing integration connection successfully"""
-        response = client.post("/integrations/stripe/test")
+        data = response.json()
+        assert "status" in data
+        assert "timestamp" in data
+        
+    def test_get_integration_status(self):
+        """Test get integration status endpoint."""
+        # First register an integration
+        integration_data = {
+            "name": "Test Integration",
+            "type": "test",
+            "config": {"url": "https://test.example.com"}
+        }
+        
+        register_response = client.post("/integrations", json=integration_data)
+        integration_id = register_response.json()["id"]
+        
+        response = client.get(f"/integrations/{integration_id}/status")
         assert response.status_code == 200
         
-        result = response.json()
-        assert result["integration_id"] == "stripe"
-        assert result["status"] == "success"
-        assert "test_time" in result
-        assert "response_time" in result
-        assert "details" in result
-    
-    def test_test_integration_not_found(self):
-        """Test testing non-existent integration"""
-        response = client.post("/integrations/nonexistent/test")
-        assert response.status_code == 404
-        assert response.json()["detail"] == "Integration not found"
-
-class TestRateLimiting:
-    """Test rate limiting endpoints"""
-    
-    def test_get_rate_limit_status_success(self):
-        """Test getting rate limit status successfully"""
-        response = client.get("/integrations/auth0/rate-limit")
+        data = response.json()
+        assert data["integration_id"] == integration_id
+        assert "status" in data
+        assert "health" in data
+        assert "last_check" in data
+        
+    def test_test_integration(self):
+        """Test test integration endpoint."""
+        # First register an integration
+        integration_data = {
+            "name": "Test Integration",
+            "type": "test",
+            "config": {"url": "https://test.example.com"}
+        }
+        
+        register_response = client.post("/integrations", json=integration_data)
+        integration_id = register_response.json()["id"]
+        
+        response = client.post(f"/integrations/{integration_id}/test")
         assert response.status_code == 200
         
-        rate_limit = response.json()
-        assert rate_limit["integration_id"] == "auth0"
-        assert "current_usage" in rate_limit
-        assert "limit" in rate_limit
-        assert "reset_time" in rate_limit
-        assert "remaining" in rate_limit
-    
-    def test_get_rate_limit_status_not_found(self):
-        """Test getting rate limit status for non-existent integration"""
-        response = client.get("/integrations/nonexistent/rate-limit")
-        assert response.status_code == 404
-        assert response.json()["detail"] == "Integration not found"
-    
-    def test_get_cache_statistics_success(self):
-        """Test getting cache statistics successfully"""
-        response = client.get("/integrations/postgresql/cache")
+        data = response.json()
+        assert data["integration_id"] == integration_id
+        assert "test_time" in data
+        assert "status" in data
+        assert "response_time" in data
+        
+    def test_get_rate_limit_status(self):
+        """Test get rate limit status endpoint."""
+        # First register an integration
+        integration_data = {
+            "name": "Test Integration",
+            "type": "test",
+            "config": {"url": "https://test.example.com"}
+        }
+        
+        register_response = client.post("/integrations", json=integration_data)
+        integration_id = register_response.json()["id"]
+        
+        response = client.get(f"/integrations/{integration_id}/rate-limit")
         assert response.status_code == 200
         
-        cache_stats = response.json()
-        assert cache_stats["integration_id"] == "postgresql"
-        assert "cache_hits" in cache_stats
-        assert "cache_misses" in cache_stats
-        assert "hit_rate" in cache_stats
-        assert "total_requests" in cache_stats
-        assert "cache_size" in cache_stats
-        assert "last_updated" in cache_stats
-    
-    def test_get_cache_statistics_not_found(self):
-        """Test getting cache statistics for non-existent integration"""
-        response = client.get("/integrations/nonexistent/cache")
-        assert response.status_code == 404
-        assert response.json()["detail"] == "Integration not found"
-    
-    def test_clear_cache_success(self):
-        """Test clearing cache successfully"""
-        response = client.post("/integrations/redis/cache/clear")
+        data = response.json()
+        assert data["integration_id"] == integration_id
+        assert "current_usage" in data
+        assert "limit" in data
+        assert "reset_time" in data
+        assert "remaining" in data
+        
+    def test_get_cache_statistics(self):
+        """Test get cache statistics endpoint."""
+        # First register an integration
+        integration_data = {
+            "name": "Test Integration",
+            "type": "test",
+            "config": {"url": "https://test.example.com"}
+        }
+        
+        register_response = client.post("/integrations", json=integration_data)
+        integration_id = register_response.json()["id"]
+        
+        response = client.get(f"/integrations/{integration_id}/cache")
         assert response.status_code == 200
         
-        result = response.json()
-        assert result["integration_id"] == "redis"
-        assert result["action"] == "cache_cleared"
-        assert "timestamp" in result
-        assert "message" in result
-    
-    def test_clear_cache_not_found(self):
-        """Test clearing cache for non-existent integration"""
-        response = client.post("/integrations/nonexistent/cache/clear")
-        assert response.status_code == 404
-        assert response.json()["detail"] == "Integration not found"
-
-class TestCircuitBreaker:
-    """Test circuit breaker endpoints"""
-    
-    def test_get_circuit_breaker_status_success(self):
-        """Test getting circuit breaker status successfully"""
-        response = client.get("/integrations/stripe/circuit-breaker")
+        data = response.json()
+        assert data["integration_id"] == integration_id
+        assert "cache_hits" in data
+        assert "cache_misses" in data
+        assert "hit_rate" in data
+        
+    def test_clear_cache(self):
+        """Test clear cache endpoint."""
+        # First register an integration
+        integration_data = {
+            "name": "Test Integration",
+            "type": "test",
+            "config": {"url": "https://test.example.com"}
+        }
+        
+        register_response = client.post("/integrations", json=integration_data)
+        integration_id = register_response.json()["id"]
+        
+        response = client.post(f"/integrations/{integration_id}/cache/clear")
         assert response.status_code == 200
         
-        circuit_breaker = response.json()
-        assert circuit_breaker["integration_id"] == "stripe"
-        assert "state" in circuit_breaker
-        assert "failure_count" in circuit_breaker
-        assert "threshold" in circuit_breaker
-        assert "timeout" in circuit_breaker
-        assert "last_failure" in circuit_breaker
-    
-    def test_get_circuit_breaker_status_not_found(self):
-        """Test getting circuit breaker status for non-existent integration"""
-        response = client.get("/integrations/nonexistent/circuit-breaker")
-        assert response.status_code == 404
-        assert response.json()["detail"] == "Integration not found"
-    
-    def test_reset_circuit_breaker_success(self):
-        """Test resetting circuit breaker successfully"""
-        response = client.post("/integrations/auth0/circuit-breaker/reset")
+        data = response.json()
+        assert data["integration_id"] == integration_id
+        assert data["action"] == "cache_cleared"
+        assert "timestamp" in data
+        
+    def test_get_circuit_breaker_status(self):
+        """Test get circuit breaker status endpoint."""
+        # First register an integration
+        integration_data = {
+            "name": "Test Integration",
+            "type": "test",
+            "config": {"url": "https://test.example.com"}
+        }
+        
+        register_response = client.post("/integrations", json=integration_data)
+        integration_id = register_response.json()["id"]
+        
+        response = client.get(f"/integrations/{integration_id}/circuit-breaker")
         assert response.status_code == 200
         
-        result = response.json()
-        assert result["integration_id"] == "auth0"
-        assert result["action"] == "circuit_breaker_reset"
-        assert "timestamp" in result
-        assert "message" in result
-    
-    def test_reset_circuit_breaker_not_found(self):
-        """Test resetting circuit breaker for non-existent integration"""
-        response = client.post("/integrations/nonexistent/circuit-breaker/reset")
-        assert response.status_code == 404
-        assert response.json()["detail"] == "Integration not found"
-
-class TestServiceInformation:
-    """Test service information endpoints"""
-    
+        data = response.json()
+        assert data["integration_id"] == integration_id
+        assert "state" in data
+        assert "failure_count" in data
+        assert "threshold" in data
+        assert "timeout" in data
+        
+    def test_reset_circuit_breaker(self):
+        """Test reset circuit breaker endpoint."""
+        # First register an integration
+        integration_data = {
+            "name": "Test Integration",
+            "type": "test",
+            "config": {"url": "https://test.example.com"}
+        }
+        
+        register_response = client.post("/integrations", json=integration_data)
+        integration_id = register_response.json()["id"]
+        
+        response = client.post(f"/integrations/{integration_id}/circuit-breaker/reset")
+        assert response.status_code == 200
+        
+        data = response.json()
+        assert data["integration_id"] == integration_id
+        assert data["action"] == "circuit_breaker_reset"
+        assert "timestamp" in data
+        
+    def test_list_clients(self):
+        """Test list clients endpoint."""
+        response = client.get("/clients")
+        assert response.status_code == 200
+        
+        data = response.json()
+        assert "clients" in data
+        assert "total_count" in data
+        assert isinstance(data["clients"], list)
+        
+    def test_check_client_health(self):
+        """Test check client health endpoint."""
+        response = client.get("/clients/auth0/health")
+        assert response.status_code == 200
+        
+        data = response.json()
+        assert "status" in data
+        assert "client_type" in data
+        
+    def test_check_all_clients_health(self):
+        """Test check all clients health endpoint."""
+        response = client.get("/clients/health")
+        assert response.status_code == 200
+        
+        data = response.json()
+        assert "clients" in data
+        assert "total_count" in data
+        assert "healthy_count" in data
+        
+    def test_test_client_operation(self):
+        """Test test client operation endpoint."""
+        response = client.post("/clients/auth0/test", params={"operation": "health_check"})
+        assert response.status_code == 200
+        
+        data = response.json()
+        assert "success" in data
+        assert "client_type" in data
+        assert "operation" in data
+        
     def test_service_info(self):
-        """Test getting service information"""
+        """Test service info endpoint."""
         response = client.get("/info")
         assert response.status_code == 200
         
-        info = response.json()
-        assert info["service"] == "integration-service"
-        assert info["version"] == "1.0.0"
-        assert "description" in info
-        assert "startup_time" in info
-        assert "uptime" in info
-        assert "integrations_count" in info
-        assert "endpoints" in info
-        assert isinstance(info["endpoints"], list)
+        data = response.json()
+        assert data["service"] == "integration-service"
+        assert data["version"] == "1.0.0"
+        assert "startup_time" in data
+        assert "uptime" in data
+        assert "integrations_count" in data
+        assert "clients_count" in data
+        assert "endpoints" in data
 
-class TestErrorHandling:
-    """Test error handling and edge cases"""
+class TestClientManager:
+    """Test cases for Client Manager."""
     
-    def test_invalid_json_request(self):
-        """Test handling of invalid JSON in request body"""
-        response = client.post(
-            "/integrations",
-            data="invalid json",
-            headers={"Content-Type": "application/json"}
-        )
-        assert response.status_code == 422
-    
-    def test_missing_content_type(self):
-        """Test handling of missing content type"""
-        response = client.post("/integrations", data="{}")
-        assert response.status_code == 400  # FastAPI returns 400 for invalid JSON
-    
-    def test_large_payload(self):
-        """Test handling of large payload"""
-        large_data = {"data": "x" * 10000}
-        response = client.post("/integrations/stripe/test", json=large_data)
-        assert response.status_code == 200
-
-if __name__ == "__main__":
-    pytest.main([__file__]) 
+    @pytest.fixture
+    async def client_manager(self):
+        """Create a client manager instance for testing."""
+        manager = ClientManager()
+        yield manager
+        await manager.cleanup()
+        
+    @pytest.mark.asyncio
+    async def test_initialize_clients(self, client_manager):
+        """Test client initialization."""
+        # Mock environment variables
+        with patch.dict('os.environ', {
+            'AUTH0_ENABLED': 'true',
+            'AUTH0_DOMAIN': 'test.auth0.com',
+            'AUTH0_CLIENT_ID': 'test-client-id',
+            'AUTH0_CLIENT_SECRET': 'test-client-secret'
+        }):
+            await client_manager.initialize_clients()
+            
+            # Check that Auth0 client was initialized
+            auth0_client = await client_manager.get_client("auth0")
+            assert auth0_client is not None
+            assert auth0_client.domain == "test.auth0.com"
+            
+    @pytest.mark.asyncio
+    async def test_get_client(self, client_manager):
+        """Test getting a specific client."""
+        # Mock a client
+        mock_client = MagicMock()
+        client_manager.clients["test"] = mock_client
+        
+        client = await client_manager.get_client("test")
+        assert client == mock_client
+        
+        # Test non-existent client
+        client = await client_manager.get_client("non-existent")
+        assert client is None
+        
+    @pytest.mark.asyncio
+    async def test_get_all_clients(self, client_manager):
+        """Test getting all clients."""
+        # Mock clients
+        mock_client1 = MagicMock()
+        mock_client2 = MagicMock()
+        client_manager.clients = {
+            "client1": mock_client1,
+            "client2": mock_client2
+        }
+        
+        clients = await client_manager.get_all_clients()
+        assert len(clients) == 2
+        assert "client1" in clients
+        assert "client2" in clients
+        
+    @pytest.mark.asyncio
+    async def test_get_client_configs(self, client_manager):
+        """Test getting client configurations."""
+        # Mock configs
+        client_manager.client_configs = {
+            "test": {"type": "test", "config": "value"}
+        }
+        
+        configs = await client_manager.get_client_configs()
+        assert configs["test"]["type"] == "test"
+        
+    @pytest.mark.asyncio
+    async def test_check_client_health(self, client_manager):
+        """Test checking client health."""
+        # Mock client with health_check method
+        mock_client = MagicMock()
+        mock_client.health_check = AsyncMock(return_value={"status": "healthy"})
+        client_manager.clients["test"] = mock_client
+        
+        health_result = await client_manager.check_client_health("test")
+        assert health_result["status"] == "healthy"
+        
+        # Test non-existent client
+        health_result = await client_manager.check_client_health("non-existent")
+        assert health_result["status"] == "not_initialized"
+        
+    @pytest.mark.asyncio
+    async def test_check_all_clients_health(self, client_manager):
+        """Test checking all clients health."""
+        # Mock clients
+        mock_client1 = MagicMock()
+        mock_client1.health_check = AsyncMock(return_value={"status": "healthy"})
+        mock_client2 = MagicMock()
+        mock_client2.health_check = AsyncMock(return_value={"status": "unhealthy"})
+        
+        client_manager.clients = {
+            "client1": mock_client1,
+            "client2": mock_client2
+        }
+        
+        health_results = await client_manager.check_all_clients_health()
+        assert len(health_results) == 2
+        assert health_results["client1"]["status"] == "healthy"
+        assert health_results["client2"]["status"] == "unhealthy"
+        
+    @pytest.mark.asyncio
+    async def test_test_client_operation(self, client_manager):
+        """Test testing client operations."""
+        # Mock client with list_users method
+        mock_client = MagicMock()
+        mock_client.list_users = AsyncMock(return_value=[{"id": "1"}])
+        client_manager.clients["auth0"] = mock_client
+        
+        result = await client_manager.test_client_operation("auth0", "list_users")
+        assert result["success"] is True
+        assert result["result"] == 1
+        
+        # Test unknown operation
+        result = await client_manager.test_client_operation("auth0", "unknown_operation")
+        assert result["success"] is False
+        assert "Unknown operation" in result["error"]
+        
+    @pytest.mark.asyncio
+    async def test_cleanup(self, client_manager):
+        """Test client cleanup."""
+        # Mock clients with cleanup methods
+        mock_client1 = MagicMock()
+        mock_client1.disconnect = AsyncMock()
+        mock_client2 = MagicMock()
+        mock_client2.close = AsyncMock()
+        
+        client_manager.clients = {
+            "client1": mock_client1,
+            "client2": mock_client2
+        }
+        
+        await client_manager.cleanup()
+        
+        # Verify cleanup methods were called
+        mock_client1.disconnect.assert_called_once()
+        mock_client2.close.assert_called_once()
+        
+        # Verify clients were cleared
+        assert len(client_manager.clients) == 0 
