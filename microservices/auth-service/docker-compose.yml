@@ -1,0 +1,111 @@
+version: '3.8'
+
+services:
+  auth-service:
+    build: .
+    ports:
+      - "8001:8000"
+    environment:
+      - DATABASE_URL=postgresql://auth_user:auth_password@auth-db:5432/auth_service
+      - REDIS_URL=redis://auth-redis:6379
+      - AUTH0_DOMAIN=${AUTH0_DOMAIN:-your-domain.auth0.com}
+      - AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID:-your-client-id}
+      - AUTH0_CLIENT_SECRET=${AUTH0_CLIENT_SECRET:-your-client-secret}
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-your-secret-key-change-in-production}
+      - JWT_ALGORITHM=HS256
+      - JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - JWT_REFRESH_TOKEN_EXPIRE_DAYS=7
+      - BCRYPT_ROUNDS=12
+      - RATE_LIMIT_PER_MINUTE=60
+      - LOG_LEVEL=INFO
+    depends_on:
+      - auth-db
+      - auth-redis
+    networks:
+      - auth-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  auth-db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=auth_service
+      - POSTGRES_USER=auth_user
+      - POSTGRES_PASSWORD=auth_password
+    volumes:
+      - auth-db-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5433:5432"
+    networks:
+      - auth-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U auth_user -d auth_service"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth-redis:
+    image: redis:7-alpine
+    ports:
+      - "6380:6379"
+    volumes:
+      - auth-redis-data:/data
+    networks:
+      - auth-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth-prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+      - auth-prometheus-data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - auth-network
+    restart: unless-stopped
+
+  auth-grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3001:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - auth-grafana-data:/var/lib/grafana
+      - ./grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - auth-network
+    restart: unless-stopped
+    depends_on:
+      - auth-prometheus
+
+volumes:
+  auth-db-data:
+  auth-redis-data:
+  auth-prometheus-data:
+  auth-grafana-data:
+
+networks:
+  auth-network:
+    driver: bridge 
