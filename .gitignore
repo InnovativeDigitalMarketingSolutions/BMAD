@@ -245,6 +245,10 @@ bmad/agents/core/shared_context.json
 # Agent history files (auto-generated during runtime)
 bmad/resources/data/*/history.md
 bmad/resources/data/*/*-history.md
+bmad/resources/data/*/experiment-history.md
+bmad/resources/data/*/model-history.md
+bmad/resources/data/*/workflow-history.md
+bmad/resources/data/*/test-history.md
 *-history.md
 
 # Policy files (auto-updated during testing)

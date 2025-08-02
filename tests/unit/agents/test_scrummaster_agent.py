@@ -23,10 +23,10 @@ class TestScrummasterAgent:
     @pytest.fixture
     def agent(self):
         """Create a ScrummasterAgent instance for testing."""
-        with patch('bmad.agents.Agent.Scrummaster.scrummaster.get_performance_monitor'), 
-             patch('bmad.agents.Agent.Scrummaster.scrummaster.get_advanced_policy_engine'), 
-             patch('bmad.agents.Agent.Scrummaster.scrummaster.get_sprite_library'), 
-             patch('bmad.agents.Agent.Scrummaster.scrummaster.BMADTracer'), 
+        with patch('bmad.agents.Agent.Scrummaster.scrummaster.get_performance_monitor'),
+             patch('bmad.agents.Agent.Scrummaster.scrummaster.get_advanced_policy_engine'),
+             patch('bmad.agents.Agent.Scrummaster.scrummaster.get_sprite_library'),
+             patch('bmad.agents.Agent.Scrummaster.scrummaster.BMADTracer'),
              patch('bmad.agents.Agent.Scrummaster.scrummaster.PrefectWorkflowOrchestrator'):
             return ScrummasterAgent()
 
@@ -133,14 +133,14 @@ class TestScrummasterAgent:
 
     def test_show_help(self, agent, capsys):
         """Test help display."""
-        await agent.show_help()
+        agent.show_help()
         captured = capsys.readouterr()
         assert "Scrummaster Agent Commands:" in captured.out
 
     @pytest.mark.asyncio
     async def test_show_resource_success(self, agent, capsys):
         """Test resource display with valid resource type."""
-        with patch('builtins.open', create=True) as mock_open, 
+        with patch('builtins.open', create=True) as mock_open,
              patch('pathlib.Path.exists', return_value=True):
             mock_open.return_value.__enter__.return_value.read.return_value = "Sprint planning content"
             agent.show_resource("sprint-planning")
@@ -389,7 +389,7 @@ class TestScrummasterAgent:
              patch.object(agent, 'resolve_impediment') as mock_resolve, 
              patch.object(agent, 'end_sprint') as mock_end, 
              patch.object(agent, 'calculate_velocity') as mock_velocity:
-            await agent.collaborate_example()
+            agent.collaborate_example()
             
             mock_publish.assert_called()
             mock_plan.assert_called()
@@ -441,10 +441,10 @@ class TestScrummasterAgentCLI:
     @pytest.fixture
     def agent(self):
         """Create a ScrummasterAgent instance for CLI testing."""
-        with patch('bmad.agents.Agent.Scrummaster.scrummaster.get_performance_monitor'), 
-             patch('bmad.agents.Agent.Scrummaster.scrummaster.get_advanced_policy_engine'), 
-             patch('bmad.agents.Agent.Scrummaster.scrummaster.get_sprite_library'), 
-             patch('bmad.agents.Agent.Scrummaster.scrummaster.BMADTracer'), 
+        with patch('bmad.agents.Agent.Scrummaster.scrummaster.get_performance_monitor'),
+             patch('bmad.agents.Agent.Scrummaster.scrummaster.get_advanced_policy_engine'),
+             patch('bmad.agents.Agent.Scrummaster.scrummaster.get_sprite_library'),
+             patch('bmad.agents.Agent.Scrummaster.scrummaster.BMADTracer'),
              patch('bmad.agents.Agent.Scrummaster.scrummaster.PrefectWorkflowOrchestrator'):
             return ScrummasterAgent()
 
@@ -650,14 +650,13 @@ class TestScrummasterAgentIntegration:
     @pytest.fixture
     def agent(self):
         """Create a ScrummasterAgent instance for integration testing."""
-        with patch('bmad.agents.Agent.Scrummaster.scrummaster.get_performance_monitor'), 
-             patch('bmad.agents.Agent.Scrummaster.scrummaster.get_advanced_policy_engine'), 
-             patch('bmad.agents.Agent.Scrummaster.scrummaster.get_sprite_library'), 
-             patch('bmad.agents.Agent.Scrummaster.scrummaster.BMADTracer'), 
+        with patch('bmad.agents.Agent.Scrummaster.scrummaster.get_performance_monitor'),
+             patch('bmad.agents.Agent.Scrummaster.scrummaster.get_advanced_policy_engine'),
+             patch('bmad.agents.Agent.Scrummaster.scrummaster.get_sprite_library'),
+             patch('bmad.agents.Agent.Scrummaster.scrummaster.BMADTracer'),
              patch('bmad.agents.Agent.Scrummaster.scrummaster.PrefectWorkflowOrchestrator'):
             return ScrummasterAgent()
 
-    @pytest.mark.asyncio
     @pytest.mark.asyncio
     async def test_complete_scrum_workflow(self, agent):
         """Test complete scrum workflow from planning to completion."""

@@ -324,9 +324,27 @@ def update_context(self, key, value, layer=None):
 - [ ] User acceptance testing is completed
 - [ ] Rollback plan is ready
 
+## Related Documentation
+
+### **Core Documentation**
+- **[Kanban Board](../deployment/KANBAN_BOARD.md)** - Huidige project status en taken
+- **[Master Planning](../deployment/BMAD_MASTER_PLANNING.md)** - Uitgebreide project planning en roadmap
+- **[Lessons Learned Guide](LESSONS_LEARNED_GUIDE.md)** - Lessons learned van development process
+- **[Best Practices Guide](BEST_PRACTICES_GUIDE.md)** - Development best practices en guidelines
+- **[Development Workflow Guide](DEVELOPMENT_WORKFLOW_GUIDE.md)** - Development workflow en processen
+
+### **Technical Documentation**
+- **[MCP Integration Guide](MCP_INTEGRATION_GUIDE.md)** - MCP integration patterns en best practices
+- **[Test Workflow Guide](TEST_WORKFLOW_GUIDE.md)** - Testing strategies en workflows
+- **[Agent Optimization Guide](agent-optimization-guide.md)** - Agent optimalisatie en enhancement
+
+### **Implementation Documentation**
+- **[Implementation Details](../deployment/IMPLEMENTATION_DETAILS.md)** - Technische implementatie details
+- **[Microservices Status](../deployment/MICROSERVICES_IMPLEMENTATION_STATUS.md)** - Microservices implementatie status
+
 ---
 
 **Document Status**: Active  
-**Last Updated**: 2 augustus 2025  
+**Last Updated**: 27 januari 2025  
 **Next Review**: Weekly during development  
 **Owner**: Development Team 

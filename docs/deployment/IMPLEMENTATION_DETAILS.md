@@ -368,4 +368,17 @@ class QualityAgent:
 **Implementation Guidelines:**
 - **Tests**: Use mocking for all unit tests, mock heavy external dependencies
 - **Runtime**: Implement graceful degradation, log all dependency warnings
-- **Integration**: Combine both strategies, test real dependencies where possible 
+- **Integration**: Combine both strategies, test real dependencies where possible
+
+## Related Documentation
+
+### **Core Documentation**
+- **[Kanban Board](KANBAN_BOARD.md)** - Huidige project status en taken
+- **[Master Planning](BMAD_MASTER_PLANNING.md)** - Uitgebreide project planning en roadmap
+- **[Microservices Status](MICROSERVICES_IMPLEMENTATION_STATUS.md)** - Microservices implementatie status
+
+### **Guides**
+- **[Lessons Learned Guide](../guides/LESSONS_LEARNED_GUIDE.md)** - Lessons learned van development process
+- **[Best Practices Guide](../guides/BEST_PRACTICES_GUIDE.md)** - Development best practices en guidelines
+- **[Quality Guide](../guides/QUALITY_GUIDE.md)** - Quality assurance en testing best practices
+- **[Development Workflow Guide](../guides/DEVELOPMENT_WORKFLOW_GUIDE.md)** - Development workflow en processen 

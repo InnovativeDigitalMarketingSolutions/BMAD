@@ -29,7 +29,6 @@ Handleidingen, best practices en development guides:
 - **[Development Strategy](guides/DEVELOPMENT_STRATEGY.md)** - Development strategie
 - **[Quality Guide](guides/QUALITY_GUIDE.md)** - Geconsolideerde quality assurance
 - **[Development Setup](guides/DEVELOPMENT_SETUP.md)** - Development setup
-- **[Development Strategy](guides/DEVELOPMENT_STRATEGY.md)** - Development strategie
 - **[Development Workflow Guide](guides/DEVELOPMENT_WORKFLOW_GUIDE.md)** - Development workflow
 - **[Environment Setup](guides/ENVIRONMENT_SETUP.md)** - Omgeving configuratie
 - **[Expansion Packs](guides/expansion-packs.md)** - Expansion packs documentatie
@@ -37,9 +36,7 @@ Handleidingen, best practices en development guides:
 - **[Implementation Quality Guide](guides/IMPLEMENTATION_QUALITY_GUIDE.md)** - Implementation quality assurance
 - **[Integration Requirements](guides/INTEGRATION_REQUIREMENTS.md)** - Integration requirements
 - **[Contributing](guides/CONTRIBUTING.md)** - Contributing met pull requests
-- **[Quality Guide](guides/QUALITY_GUIDE.md)** - Geconsolideerde quality assurance
 - **[Test Workflow Guide](guides/TEST_WORKFLOW_GUIDE.md)** - Test workflow
-- **[Testing Strategy](guides/TESTING_STRATEGY.md)** - Testing strategie
 - **[Testing Strategy](guides/TESTING_STRATEGY.md)** - Testing strategie
 - **[Versioning and Releases](guides/VERSIONING_AND_RELEASES.md)** - Versioning en releases
 

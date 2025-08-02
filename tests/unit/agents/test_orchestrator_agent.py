@@ -155,7 +155,7 @@ class TestOrchestratorAgent:
 
     def test_show_help(self, agent, capsys):
         """Test show_help method."""
-        await agent.show_help()
+        agent.show_help()
         captured = capsys.readouterr()
         
         assert "Orchestrator Agent Commands:" in captured.out
@@ -384,7 +384,7 @@ class TestOrchestratorAgent:
         mock_get_context.return_value = {"status": "active"}
         mock_slack.return_value = None
         
-        await agent.collaborate_example()
+        agent.collaborate_example()
         
         # Verify that publish was called at least once (workflow_started)
         assert mock_publish.call_count >= 1
@@ -732,8 +732,8 @@ class TestOrchestratorCLI:
 
     def setup_method(self):
         """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.Orchestrator.orchestrator.get_performance_monitor'), 
-             patch('bmad.agents.Agent.Orchestrator.orchestrator.get_advanced_policy_engine'), 
+        with patch('bmad.agents.Agent.Orchestrator.orchestrator.get_performance_monitor'),
+             patch('bmad.agents.Agent.Orchestrator.orchestrator.get_advanced_policy_engine'),
              patch('bmad.agents.Agent.Orchestrator.orchestrator.get_sprite_library'):
             self.agent = OrchestratorAgent()
 
@@ -748,7 +748,6 @@ class TestOrchestratorCLI:
     @patch('sys.argv', ['orchestrator.py', 'start-workflow', '--workflow', 'test_workflow'])
     @patch('builtins.print')
     @patch('bmad.agents.Agent.Orchestrator.orchestrator.OrchestratorAgent.start_workflow')
-    @pytest.mark.asyncio
     @pytest.mark.asyncio
     async def test_cli_start_workflow(self, mock_start_workflow, mock_print):
         """Test CLI start-workflow command."""
@@ -913,7 +912,6 @@ class TestOrchestratorCLI:
     @patch('builtins.print')
     @patch('bmad.agents.Agent.Orchestrator.orchestrator.OrchestratorAgent.start_workflow')
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
     async def test_cli_start_workflow_missing_workflow(self, mock_start_workflow, mock_print, mock_exit):
         """Test CLI start-workflow command with missing workflow."""
         from bmad.agents.Agent.Orchestrator.orchestrator import main
@@ -925,7 +923,6 @@ class TestOrchestratorCLI:
     @patch('sys.exit')
     @patch('builtins.print')
     @patch('bmad.agents.Agent.Orchestrator.orchestrator.OrchestratorAgent.get_workflow_status')
-    @pytest.mark.asyncio
     @pytest.mark.asyncio
     async def test_cli_show_workflow_status_missing_workflow(self, mock_get_workflow_status, mock_print, mock_exit):
         """Test CLI show-workflow-status command with missing workflow."""
