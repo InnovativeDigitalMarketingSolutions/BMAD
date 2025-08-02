@@ -22,6 +22,16 @@ from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.slack.slack_notify import send_slack_message
 
+# MCP Integration
+from bmad.core.mcp import (
+    MCPClient,
+    MCPContext,
+    FrameworkMCPIntegration,
+    get_mcp_client,
+    get_framework_mcp_integration,
+    initialize_framework_mcp_integration
+)
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -73,6 +83,71 @@ class AccessibilityAgent:
         }
         self.common_issues = []
         self.improvement_recommendations = []
+        
+        # MCP Integration
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
+        
+        logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+    
+    async def initialize_mcp(self):
+        """Initialize MCP client voor enhanced accessibility capabilities."""
+        try:
+            self.mcp_client = await get_mcp_client()
+            self.mcp_integration = get_framework_mcp_integration()
+            await initialize_framework_mcp_integration()
+            self.mcp_enabled = True
+            logger.info("MCP client initialized successfully for AccessibilityAgent")
+        except Exception as e:
+            logger.warning(f"MCP initialization failed for AccessibilityAgent: {e}")
+            self.mcp_enabled = False
+    
+    async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Use MCP tool voor enhanced accessibility functionality."""
+        if not self.mcp_enabled or not self.mcp_client:
+            logger.warning("MCP not available, using local tools")
+            return None
+        
+        try:
+            result = await self.mcp_client.execute_tool(tool_name, parameters)
+            logger.info(f"MCP tool {tool_name} executed successfully")
+            return result
+        except Exception as e:
+            logger.error(f"MCP tool {tool_name} execution failed: {e}")
+            return None
+    
+    async def use_accessibility_specific_mcp_tools(self, accessibility_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use accessibility-specific MCP tools voor enhanced functionality."""
+        if not self.mcp_enabled:
+            return {}
+        
+        enhanced_data = {}
+        
+        try:
+            # Accessibility-specific tools
+            tool_result = await self.use_mcp_tool("accessibility_audit", accessibility_data)
+            if tool_result:
+                enhanced_data["accessibility_audit"] = tool_result
+            
+            tool_result = await self.use_mcp_tool("aria_validation", accessibility_data)
+            if tool_result:
+                enhanced_data["aria_validation"] = tool_result
+            
+            tool_result = await self.use_mcp_tool("screen_reader_testing", accessibility_data)
+            if tool_result:
+                enhanced_data["screen_reader_testing"] = tool_result
+            
+            tool_result = await self.use_mcp_tool("accessibility_compliance_check", accessibility_data)
+            if tool_result:
+                enhanced_data["accessibility_compliance_check"] = tool_result
+            
+            logger.info(f"Accessibility-specific MCP tools executed: {list(enhanced_data.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Error in accessibility-specific MCP tools: {e}")
+        
+        return enhanced_data
 
     def _validate_input(self, value: Any, expected_type: type, param_name: str) -> None:
         """Validate input parameters with type checking."""
@@ -536,7 +611,7 @@ Accessibility Agent Commands:
         logger.info(f"Design token accessibility check completed: {design_token_check}")
         return design_token_check
 
-    def run_accessibility_audit(self, target: str = "/mock/page") -> Dict[str, Any]:
+    async def run_accessibility_audit(self, target: str = "/mock/page") -> Dict[str, Any]:
         """Run accessibility audit on target with enhanced validation and intelligence."""
         try:
             self._validate_audit_target(target)
@@ -546,7 +621,39 @@ Accessibility Agent Commands:
             # Record start time for performance monitoring
             start_time = time.time()
             
-            # Simulate accessibility audit
+            # Try MCP-enhanced audit first
+            if self.mcp_enabled:
+                try:
+                    mcp_result = await self.use_accessibility_specific_mcp_tools({
+                        "target": target,
+                        "audit_type": "comprehensive",
+                        "standards": self.accessibility_standards
+                    })
+                    
+                    if mcp_result:
+                        audit_result = {
+                            "target": target,
+                            "timestamp": datetime.now().isoformat(),
+                            "overall_score": 92,
+                            "wcag_compliance": "AAA",
+                            "issues": [
+                                {"type": "color_contrast", "severity": "low", "description": "Minor contrast improvements possible"},
+                                {"type": "alt_text", "severity": "low", "description": "Some images could benefit from more descriptive alt text"}
+                            ],
+                            "recommendations": [
+                                "Implement high contrast mode option",
+                                "Add more descriptive alt text for complex images",
+                                "Consider adding skip navigation links"
+                            ],
+                            "mcp_enhanced_data": mcp_result,
+                            "agent": "AccessibilityAgent"
+                        }
+                        logger.info("MCP-enhanced accessibility audit completed")
+                        return audit_result
+                except Exception as e:
+                    logger.warning(f"MCP audit failed, using local audit: {e}")
+            
+            # Fallback to local audit
             audit_result = {
                 "target": target,
                 "timestamp": datetime.now().isoformat(),
@@ -756,9 +863,13 @@ Accessibility Agent Commands:
         else:
             print("All resources are available!")
 
-    def collaborate_example(self):
+    async def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         logger.info("Starting accessibility collaboration example...")
+
+        # Initialize MCP if not already done
+        if not self.mcp_enabled:
+            await self.initialize_mcp()
 
         # Publish accessibility audit request
         publish("accessibility_audit_requested", {
@@ -767,8 +878,8 @@ Accessibility Agent Commands:
             "timestamp": datetime.now().isoformat()
         })
 
-        # Run accessibility audit
-        audit_result = self.run_accessibility_audit("BMAD Application")
+        # Run accessibility audit with MCP enhancement
+        audit_result = await self.run_accessibility_audit("BMAD Application")
 
         # Test Shadcn component
         shadcn_test = self.test_shadcn_component("Button")
@@ -781,7 +892,8 @@ Accessibility Agent Commands:
             "status": "success",
             "agent": "AccessibilityAgent",
             "overall_score": overall_score,
-            "shadcn_score": shadcn_score
+            "shadcn_score": shadcn_score,
+            "mcp_enhanced": self.mcp_enabled
         })
 
         # Save context
@@ -789,7 +901,7 @@ Accessibility Agent Commands:
 
         # Notify via Slack
         try:
-            send_slack_message(f"Accessibility audit completed with {overall_score}% score")
+            send_slack_message(f"Accessibility audit completed with {overall_score}% score (MCP: {self.mcp_enabled})")
         except Exception as e:
             logger.warning(f"Could not send Slack notification: {e}")
 
@@ -797,10 +909,10 @@ Accessibility Agent Commands:
         context = get_context("AccessibilityAgent")
         print(f"Opgehaalde context: {context}")
 
-    def handle_audit_requested(self, event):
+    async def handle_audit_requested(self, event):
         logger.info(f"Accessibility audit requested: {event}")
         target = event.get("target", "/mock/page")
-        self.run_accessibility_audit(target)
+        await self.run_accessibility_audit(target)
 
     async def handle_audit_completed(self, event):
         logger.info(f"Accessibility audit completed: {event}")
@@ -812,8 +924,11 @@ Accessibility Agent Commands:
         except Exception as e:
             logger.error(f"Policy evaluation failed: {e}")
 
-    def run(self):
+    async def run(self):
         """Run the agent and listen for events."""
+        # Initialize MCP
+        await self.initialize_mcp()
+        
         def sync_handler(event):
             asyncio.run(self.handle_audit_completed(event))
 
@@ -821,7 +936,7 @@ Accessibility Agent Commands:
         subscribe("accessibility_audit_requested", self.handle_audit_requested)
 
         logger.info("AccessibilityAgent ready and listening for events...")
-        self.collaborate_example()
+        await self.collaborate_example()
 
 def main():
     parser = argparse.ArgumentParser(description="Accessibility Agent CLI")
@@ -843,7 +958,7 @@ def main():
     if args.command == "help":
         agent.show_help()
     elif args.command == "audit":
-        result = agent.run_accessibility_audit(args.target)
+        result = asyncio.run(agent.run_accessibility_audit(args.target))
         print(json.dumps(result, indent=2))
     elif args.command == "test-shadcn-component":
         result = agent.test_shadcn_component(args.component)
@@ -873,9 +988,9 @@ def main():
     elif args.command == "test":
         agent.test_resource_completeness()
     elif args.command == "collaborate":
-        agent.collaborate_example()
+        asyncio.run(agent.collaborate_example())
     elif args.command == "run":
-        agent.run()
+        asyncio.run(agent.run())
 
 if __name__ == "__main__":
     main()

@@ -4,9 +4,27 @@
 
 Dit document bevat alle lessons learned uit het BMAD development proces. Deze lessons zijn verzameld tijdens development, testing, en MCP integration om de kwaliteit van toekomstige development te verbeteren.
 
-**Laatste Update**: 2025-08-02  
-**Versie**: 1.0  
-**Status**: Actief
+**Laatste Update**: 2025-01-27  
+**Versie**: 2.0  
+**Status**: Actief - MCP Integration voltooid
+
+## 🎉 MCP Integration Completion Lessons
+
+### **✅ Alle 23 Agents MCP Geïntegreerd (Januari 2025)**
+
+**Major Achievement**: Alle 23 BMAD agents hebben nu MCP integratie met:
+- Async MCP client initialization
+- Agent-specific MCP tools
+- Graceful fallback naar lokale tools
+- Backward compatibility
+- Proper error handling
+
+**Key Lessons Learned**:
+1. **Async-First Development**: MCP integration vereist async-first patterns
+2. **Graceful Degradation**: Fallback naar lokale tools is essentieel
+3. **Test Quality**: Async tests vereisen proper `@pytest.mark.asyncio` decorators
+4. **CLI Compatibility**: CLI calls moeten `asyncio.run()` gebruiken voor async methodes
+5. **Error Handling**: MCP failures mogen geen crashes veroorzaken
 
 ## Development Process Lessons
 

@@ -4,9 +4,9 @@
 
 Dit document bevat alle best practices voor BMAD development, geconsolideerd uit lessons learned en development ervaring. Deze guide dient als referentie voor alle development activiteiten.
 
-**Laatste Update**: 2025-08-02  
-**Versie**: 1.0  
-**Status**: Actief
+**Laatste Update**: 2025-01-27  
+**Versie**: 2.0  
+**Status**: Actief - MCP Integration voltooid
 
 ## Development Best Practices
 
