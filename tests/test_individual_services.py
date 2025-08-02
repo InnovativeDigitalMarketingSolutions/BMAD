@@ -10,6 +10,17 @@ import time
 import requests
 from pathlib import Path
 
+import pytest
+
+@pytest.mark.parametrize("service_name,main_file", [
+    ("agent-service", "main.py"),
+    ("api-gateway", "main.py"),
+    ("auth-service", "main.py"),
+    ("context-service", "main.py"),
+    ("integration-service", "main.py"),
+    ("notification-service", "main.py"),
+    ("workflow-service", "main.py"),
+])
 def test_service_import(service_name, main_file):
     """Test if a service can be imported."""
     print(f"🔍 Testing {service_name} import...")
@@ -33,6 +44,15 @@ def test_service_import(service_name, main_file):
         print(f"   ❌ {service_name}: Import failed - {str(e)}")
         return False
 
+@pytest.mark.parametrize("service_name,main_file,port", [
+    ("agent-service", "main.py", 8001),
+    ("api-gateway", "main.py", 8000),
+    ("auth-service", "main.py", 8002),
+    ("context-service", "main.py", 8003),
+    ("integration-service", "main.py", 8004),
+    ("notification-service", "main.py", 8005),
+    ("workflow-service", "main.py", 8006),
+])
 def test_service_startup(service_name, main_file, port):
     """Test if a service can start."""
     print(f"🚀 Testing {service_name} startup...")
@@ -78,6 +98,15 @@ def test_service_startup(service_name, main_file, port):
         print(f"   ❌ {service_name}: Startup test failed - {str(e)}")
         return False
 
+@pytest.mark.parametrize("service_name,port", [
+    ("agent-service", 8001),
+    ("api-gateway", 8000),
+    ("auth-service", 8002),
+    ("context-service", 8003),
+    ("integration-service", 8004),
+    ("notification-service", 8005),
+    ("workflow-service", 8006),
+])
 def test_health_endpoint(service_name, port):
     """Test health endpoint."""
     print(f"🏥 Testing {service_name} health endpoint...")

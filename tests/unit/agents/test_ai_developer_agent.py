@@ -31,18 +31,21 @@ class TestAiDeveloperAgent:
         assert hasattr(agent, 'experiment_configs')
         assert hasattr(agent, 'model_performance_metrics')
 
-    def test_validate_input_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_input_success(self, agent):
         """Test successful input validation."""
         agent._validate_input("test", str, "test_param")
         agent._validate_input(123, int, "test_param")
         agent._validate_input([1, 2, 3], list, "test_param")
 
-    def test_validate_input_failure(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_input_failure(self, agent):
         """Test input validation failure."""
         with pytest.raises(AiValidationError):
             agent._validate_input(123, str, "test_param")
 
-    def test_validate_model_name_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_model_name_success(self, agent):
         """Test successful model name validation."""
         agent._validate_model_name("bert_model")
         agent._validate_model_name("gpt-4-model")
@@ -69,7 +72,8 @@ class TestAiDeveloperAgent:
         with pytest.raises(AiValidationError):
             agent._validate_model_name(123)
 
-    def test_validate_prompt_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_prompt_success(self, agent):
         """Test successful prompt validation."""
         agent._validate_prompt("Test prompt")
         agent._validate_prompt("A" * 5000)  # Valid length
@@ -90,7 +94,8 @@ class TestAiDeveloperAgent:
         with pytest.raises(AiValidationError):
             agent._validate_prompt(123)
 
-    def test_validate_experiment_data_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_experiment_data_success(self, agent):
         """Test successful experiment data validation."""
         valid_data = {
             "name": "test_experiment",
@@ -124,13 +129,15 @@ class TestAiDeveloperAgent:
         with pytest.raises(AiValidationError):
             agent._validate_experiment_data("not_a_dict")
 
-    def test_record_ai_metric_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_record_ai_metric_success(self, agent):
         """Test successful AI metric recording."""
         with patch.object(agent.monitor, '_record_metric') as mock_record:
             agent._record_ai_metric("test_metric", 95.0, "%")
             mock_record.assert_called_once()
 
-    def test_record_ai_metric_failure(self, agent):
+    @pytest.mark.asyncio
+    async def test_record_ai_metric_failure(self, agent):
         """Test AI metric recording failure."""
         with patch.object(agent.monitor, '_record_metric', side_effect=Exception("Test error")):
             agent._record_ai_metric("test_metric", 95.0, "%")
@@ -198,7 +205,8 @@ class TestAiDeveloperAgent:
 
     @patch('builtins.open', new_callable=mock_open, read_data="# Experiment History\n\n- Experiment 1\n- Experiment 2")
     @patch('pathlib.Path.exists', return_value=True)
-    def test_load_experiment_history_success(self, mock_exists, mock_file, agent):
+    @pytest.mark.asyncio
+    async def test_load_experiment_history_success(self, mock_exists, mock_file, agent):
         """Test successful experiment history loading."""
         agent.experiment_history = []  # Reset history
         agent._load_experiment_history()
@@ -223,7 +231,8 @@ class TestAiDeveloperAgent:
 
     @patch('builtins.open', new_callable=mock_open, read_data="# Model History\n\n- Model 1\n- Model 2")
     @patch('pathlib.Path.exists', return_value=True)
-    def test_load_model_history_success(self, mock_exists, mock_file, agent):
+    @pytest.mark.asyncio
+    async def test_load_model_history_success(self, mock_exists, mock_file, agent):
         """Test successful model history loading."""
         agent.model_history = []  # Reset history
         agent._load_model_history()
@@ -248,7 +257,7 @@ class TestAiDeveloperAgent:
 
     def test_show_help(self, agent, capsys):
         """Test show_help method."""
-        agent.show_help()
+        await agent\.show_help\()
         captured = capsys.readouterr()
         assert "AiDeveloper Agent Commands:" in captured.out
         assert "build-pipeline" in captured.out
@@ -282,7 +291,9 @@ class TestAiDeveloperAgent:
         captured = capsys.readouterr()
         assert "No experiment history available." in captured.out
 
-    def test_show_experiment_history_with_data(self, agent, capsys):
+    @pytest.mark.asyncio
+    async @pytest.mark.asyncio
+    async def test_show_experiment_history_with_data(self, agent, capsys):
         """Test show_experiment_history with data."""
         agent.experiment_history = ["Experiment 1", "Experiment 2"]
         agent.show_experiment_history()
@@ -297,7 +308,9 @@ class TestAiDeveloperAgent:
         captured = capsys.readouterr()
         assert "No model history available." in captured.out
 
-    def test_show_model_history_with_data(self, agent, capsys):
+    @pytest.mark.asyncio
+    async @pytest.mark.asyncio
+    async def test_show_model_history_with_data(self, agent, capsys):
         """Test show_model_history with data."""
         agent.model_history = ["Model 1", "Model 2"]
         agent.show_model_history()
@@ -306,12 +319,13 @@ class TestAiDeveloperAgent:
         assert "Model 1" in captured.out
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
-    def test_build_pipeline(self, mock_monitor, agent):
+    @pytest.mark.asyncio
+    async def test_build_pipeline(self, mock_monitor, agent):
         """Test build_pipeline method."""
         mock_monitor_instance = MagicMock()
         mock_monitor.return_value = mock_monitor_instance
         
-        result = agent.build_pipeline()
+        result = await agent.build_pipeline()
         assert "pipeline_type" in result
         assert "performance_level" in result
         assert "recommendations" in result
@@ -336,12 +350,13 @@ class TestAiDeveloperAgent:
         assert "@app.post" in captured.out
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
-    def test_evaluate(self, mock_monitor, agent):
+    @pytest.mark.asyncio
+    async def test_evaluate(self, mock_monitor, agent):
         """Test evaluate method."""
         mock_monitor_instance = MagicMock()
         mock_monitor.return_value = mock_monitor_instance
         
-        result = agent.evaluate()
+        result = await agent.evaluate()
         assert "evaluation_type" in result
         assert "performance_level" in result
         assert "recommendations" in result
@@ -458,17 +473,19 @@ class TestAiDeveloperAgent:
     @patch('bmad.agents.core.communication.message_bus.publish')
     @patch('bmad.agents.core.data.supabase_context.save_context')
     @patch('bmad.agents.core.data.supabase_context.get_context')
-    def test_collaborate_example(self, mock_get_context, mock_save_context, mock_publish, agent):
+    @pytest.mark.asyncio
+    async @pytest.mark.asyncio
+    async def test_collaborate_example(self, mock_get_context, mock_save_context, mock_publish, agent):
         """Test collaborate_example method."""
         # Mock the entire collaborate_example method to prevent external API calls
         with patch.object(agent, 'collaborate_example') as mock_collaborate:
             mock_collaborate.return_value = None
             
-            # Test the method
-            agent.collaborate_example()
-            
-            # Verify the method was called
-            mock_collaborate.assert_called_once()
+                    # Test the method
+        await agent.collaborate_example()
+        
+        # Verify the method was called
+        mock_collaborate.assert_called_once()
 
     def test_handle_ai_development_requested(self, agent):
         """Test handle_ai_development_requested method."""
@@ -483,28 +500,33 @@ class TestAiDeveloperAgent:
         import asyncio
         asyncio.run(agent.handle_ai_development_completed(event))
 
-    def test_run(self, agent):
+    @pytest.mark.asyncio
+    async def test_run(self, agent):
         """Test run method."""
         # Mock the entire run method to prevent external API calls
         with patch.object(agent, 'run') as mock_run:
             mock_run.return_value = None
             
-            agent.run()
+            await agent.run()
             
             # Verify the method was called
             mock_run.assert_called_once()
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
     @patch('bmad.agents.core.communication.message_bus.publish')
-    def test_complete_ai_development_workflow(self, mock_publish, mock_monitor, agent):
+    @pytest.mark.asyncio
+    async @pytest.mark.asyncio
+    async @pytest.mark.asyncio
+    async @pytest.mark.asyncio
+    async def test_complete_ai_development_workflow(self, mock_publish, mock_monitor, agent):
         """Test complete AI development workflow."""
         mock_monitor_instance = MagicMock()
         mock_monitor.return_value = mock_monitor_instance
         
         # Test complete workflow
-        pipeline_result = agent.build_pipeline()
-        template_result = agent.prompt_template()
-        evaluation_result = agent.evaluate()
+        pipeline_result = await agent.build_pipeline()
+        template_result = await agent.prompt_template()
+        evaluation_result = await agent.evaluate()
         
         assert pipeline_result["performance_level"] in ["excellent", "good", "fair", "poor", "critical"]
         assert template_result["performance_level"] in ["excellent", "good", "fair", "poor", "critical"]
@@ -990,7 +1012,8 @@ class TestAiDeveloperAgentCLI:
     @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
     @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
     @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
-    def test_cli_test(self, mock_get_context, mock_publish, mock_save_context):
+    @pytest.mark.asyncio
+    async def test_cli_test(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.AiDeveloper.aidev import main
         with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
@@ -1002,7 +1025,8 @@ class TestAiDeveloperAgentCLI:
     @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
     @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
     @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
-    def test_cli_collaborate(self, mock_get_context, mock_publish, mock_save_context):
+    @pytest.mark.asyncio
+    async def test_cli_collaborate(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.AiDeveloper.aidev import main
         with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
@@ -1014,7 +1038,8 @@ class TestAiDeveloperAgentCLI:
     @patch('bmad.agents.Agent.AiDeveloper.aidev.save_context')
     @patch('bmad.agents.Agent.AiDeveloper.aidev.publish')
     @patch('bmad.agents.Agent.AiDeveloper.aidev.get_context', return_value={"status": "active"})
-    def test_cli_run(self, mock_get_context, mock_publish, mock_save_context):
+    @pytest.mark.asyncio
+    async def test_cli_run(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.AiDeveloper.aidev import main
         with patch('bmad.agents.Agent.AiDeveloper.aidev.AiDeveloperAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value

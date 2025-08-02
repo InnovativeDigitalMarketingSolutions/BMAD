@@ -21,10 +21,10 @@ class TestCLIIntegrations:
     """Integration tests for CLI with real external dependencies."""
     
     @pytest.fixture(autouse=True)
-    def setup_integration_tests(self):
+    def setup_integration_tests(self, pytestconfig):
         """Setup for integration tests with real dependencies."""
         # Skip if integration tests are disabled
-        if not pytest.config.getoption("--run-integration"):
+        if not pytestconfig.getoption("--run-integration"):
             pytest.skip("Integration tests disabled. Use --run-integration to enable.")
         
         # Check if required environment variables are set
