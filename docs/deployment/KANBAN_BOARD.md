@@ -6,51 +6,89 @@
 ## 📋 **Backlog** (Toekomstige Taken)
 
 ### **Priority 1 - High Priority**
-- [ ] **MCP Phase 3: Advanced Features** (Week 14-15)
+- [ ] **Production Ready Features: Security & Compliance** (Week 14-15)
+  - Rate limiting en abuse-detectie per tenant
+  - Audit logging per actie / agent-interactie
+  - Security headers + CSP (Content Security Policy) in web frontend
+  - OWASP checks integreren in CI/CD (met Trivy of OWASP ZAP)
+  - Encryptie op rust + in transit (TLS everywhere)
+  - GDPR controls (Right to be forgotten, exporteerbare data)
+
+- [ ] **Production Ready Features: Service Resilience** (Week 15-16)
+  - Circuit breaker pattern implementatie (bijv. via tenacity of custom retry middleware)
+  - Message queue retry + dead-letter queue support
+  - Backup en restore scripts voor Redis / Supabase / S3
+
+- [ ] **Production Ready Features: Observability & DevOps** (Week 16-17)
+  - OpenTelemetry tracing volledig activeren
+  - Grafana dashboards per agentgroep (Dev, QA, Orchestrator, etc.)
+  - Centralized logging pipeline (bijv. Loki + Promtail of Elastic)
+
+- [ ] **MCP Phase 3: Advanced Features** (Week 17-18)
   - Microservices MCP Servers
   - Service Discovery
   - Advanced Context Management
   - Tool Orchestration
 
-- [ ] **Advanced Analytics Dashboard** (Week 15-16)
+- [ ] **Advanced Analytics Dashboard** (Week 18-19)
   - Real-time metrics visualization
   - Performance analytics
   - Quality trend analysis
   - User behavior analytics
 
-- [ ] **Automated Testing Pipeline** (Week 16-17)
+- [ ] **Automated Testing Pipeline** (Week 19-20)
   - CI/CD integration
   - Automated test execution
   - Test result reporting
   - Quality gate automation
 
 ### **Priority 2 - Medium Priority**
-- [ ] **API Gateway Enhancement** (Week 17-18)
+- [ ] **AI/Agent Verbeteringen: Tool Orchestration (MCP Fase 3)** (Week 20-21)
+  - Dynamische chaining van tools (workflow-level, niet alleen task-level)
+  - Tool fallback op basis van feedback loop / scoring
+  - Persistent contextbundels die meerdere tools tegelijk kunnen aansturen (zoals een StoryExecutionContext)
+
+- [ ] **AI/Agent Verbeteringen: Autonome Verbetering** (Week 21-22)
+  - FeedbackAgent die automatisch slechter scorende agent-outputs herclassificeert en verbetert
+  - RetrospectiveAgent die na elke sprint verbeterpunten formuleert op basis van logs
+
+- [ ] **AI/Agent Verbeteringen: Learning Layer** (Week 22-23)
+  - Agent memory / fine-tuning op projectniveau (eigen vector DB of lang-termijn prompts)
+  - Adaptive prompt optimization obv story outcomes (bijv. meta-agent die kijkt naar conversie of deploy success)
+
+- [ ] **API Gateway Enhancement** (Week 23-24)
   - Rate limiting
   - Authentication middleware
   - Request/response transformation
   - API versioning
 
-- [ ] **Monitoring & Alerting** (Week 18-19)
+- [ ] **Monitoring & Alerting** (Week 24-25)
   - System health monitoring
   - Performance alerts
   - Error tracking
   - Resource utilization
 
-- [ ] **Security Hardening** (Week 19-20)
+- [ ] **Security Hardening** (Week 25-26)
   - Security audit
   - Vulnerability scanning
   - Access control enhancement
   - Data encryption
 
 ### **Priority 3 - Low Priority**
-- [ ] **Documentation Automation** (Week 20-21)
+- [ ] **KPI's & Metrics Setup (per tenant en per agent)** (Week 26-27)
+  - Agent throughput (tijd per story)
+  - Success ratio (story -> feature -> test -> deploy)
+  - User satisfaction score (via thumbs up/down of feedback)
+  - Cost tracking per LLM-call / tool-invocation
+  - Agent accuracy over tijd per domein
+
+- [ ] **Documentation Automation** (Week 27-28)
   - Auto-generated API docs
   - Code documentation
   - Architecture diagrams
   - User guides
 
-- [ ] **Performance Optimization** (Week 21-22)
+- [ ] **Performance Optimization** (Week 28-29)
   - Database optimization
   - Caching implementation
   - Code optimization
@@ -275,17 +313,17 @@
 ## 📊 **Project Metrics**
 
 ### **Completion Rate**
-- **Total Tasks**: 46
+- **Total Tasks**: 58
 - **Completed**: 20
 - **In Progress**: 0
 - **To Do**: 15
-- **Backlog**: 11
-- **Completion Rate**: 43.5% (20/46 tasks completed)
+- **Backlog**: 23
+- **Completion Rate**: 34.5% (20/58 tasks completed)
 
 ### **Priority Distribution**
-- **Priority 1**: 15 tasks (32.6%)
-- **Priority 2**: 21 tasks (45.7%)
-- **Priority 3**: 10 tasks (21.7%)
+- **Priority 1**: 18 tasks (31.0%)
+- **Priority 2**: 24 tasks (41.4%)
+- **Priority 3**: 16 tasks (27.6%)
 
 ### **Sprint Velocity**
 - **Week 11-12**: 6 tasks completed
