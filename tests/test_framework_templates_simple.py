@@ -8,7 +8,7 @@ import os
 from pathlib import Path
 
 # Add BMAD to path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 def test_framework_templates_simple():
     """Test framework templates functionality."""
