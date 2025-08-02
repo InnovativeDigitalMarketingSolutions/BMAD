@@ -1,7 +1,5 @@
 # Retrospective History
 
-- 2025-07-31T16:16:44.113583: Retrospective completed - Sprint 16
-- 2025-07-31T16:16:50.116878: Retrospective completed - Sprint 16
 - 2025-07-31T16:26:43.716689: Retrospective completed - Sprint 16
 - 2025-07-31T16:26:49.649954: Retrospective completed - Sprint 16
 - 2025-07-31T16:39:19.957793: Retrospective completed - Sprint 16
@@ -50,3 +48,5 @@
 - 2025-08-02T22:25:37.527529: Sprint 16 retrospective completed - Team size: 10
 - 2025-08-02T22:25:49.080049: Sprint 16 retrospective completed - Team size: 10
 - 2025-08-02T22:25:55.139100: Sprint 16 retrospective completed - Team size: 10
+- 2025-08-02T23:02:02.487755: Sprint 16 retrospective completed - Team size: 10
+- 2025-08-02T23:02:08.718122: Sprint 16 retrospective completed - Team size: 10

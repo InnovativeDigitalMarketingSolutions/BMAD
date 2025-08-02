@@ -302,19 +302,21 @@ class TestAccessibilityAgent:
             agent.check_design_tokens(123)
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
-    def test_run_accessibility_audit(self, mock_monitor, agent):
+    @pytest.mark.asyncio
+    async def test_run_accessibility_audit(self, mock_monitor, agent):
         """Test run_accessibility_audit method."""
         mock_monitor_instance = MagicMock()
         mock_monitor.return_value = mock_monitor_instance
         
-        result = agent.run_accessibility_audit("/mock/page")
+        result = await agent.run_accessibility_audit("/mock/page")
         assert "overall_score" in result
-        assert "accessibility_level" in result
-        assert "recommendations" in result
+        assert "wcag_compliance" in result
+        assert "issues" in result
 
-    def test_run_accessibility_audit_invalid_input(self, agent):
+    @pytest.mark.asyncio
+    async def test_run_accessibility_audit_invalid_input(self, agent):
         """Test run_accessibility_audit with invalid input."""
-        result = agent.run_accessibility_audit("")
+        result = await agent.run_accessibility_audit("")
         assert result["success"] == False
         assert "error" in result
 
@@ -365,22 +367,24 @@ class TestAccessibilityAgent:
     @patch('bmad.agents.core.communication.message_bus.publish')
     @patch('bmad.agents.core.data.supabase_context.save_context')
     @patch('bmad.agents.core.data.supabase_context.get_context')
-    def test_collaborate_example(self, mock_get_context, mock_save_context, mock_publish, agent):
+    @pytest.mark.asyncio
+    async def test_collaborate_example(self, mock_get_context, mock_save_context, mock_publish, agent):
         """Test collaborate_example method."""
         # Mock the entire collaborate_example method to prevent external API calls
         with patch.object(agent, 'collaborate_example') as mock_collaborate:
             mock_collaborate.return_value = None
             
             # Test the method
-            agent.collaborate_example()
+            await agent.collaborate_example()
             
             # Verify the method was called
             mock_collaborate.assert_called_once()
 
-    def test_handle_audit_requested(self, agent):
+    @pytest.mark.asyncio
+    async def test_handle_audit_requested(self, agent):
         """Test handle_audit_requested method."""
         event = {"target": "test page"}
-        agent.handle_audit_requested(event)
+        await agent.handle_audit_requested(event)
 
     @patch('bmad.agents.core.policy.advanced_policy_engine.AdvancedPolicyEngine.evaluate_policy')
     def test_handle_audit_completed(self, mock_evaluate_policy, agent):
@@ -390,29 +394,31 @@ class TestAccessibilityAgent:
         import asyncio
         asyncio.run(agent.handle_audit_completed(event))
 
-    def test_run(self, agent):
+    @pytest.mark.asyncio
+    async def test_run(self, agent):
         """Test run method."""
         # Mock the entire run method to prevent external API calls
         with patch.object(agent, 'run') as mock_run:
             mock_run.return_value = None
             
-            agent.run()
+            await agent.run()
             
             # Verify the method was called
             mock_run.assert_called_once()
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
     @patch('bmad.agents.core.communication.message_bus.publish')
-    def test_complete_accessibility_workflow(self, mock_publish, mock_monitor, agent):
+    @pytest.mark.asyncio
+    async def test_complete_accessibility_workflow(self, mock_publish, mock_monitor, agent):
         """Test complete accessibility workflow."""
         mock_monitor_instance = MagicMock()
         mock_monitor.return_value = mock_monitor_instance
-        
+    
         # Test complete workflow
         component_result = agent.test_shadcn_component("Button")
         aria_result = agent.validate_aria("test code")
-        audit_result = agent.run_accessibility_audit("/mock/page")
-        
+        audit_result = await agent.run_accessibility_audit("/mock/page")
+    
         assert component_result["accessibility_score"] > 0
         assert aria_result["overall_score"] > 0
         assert audit_result["overall_score"] > 0
