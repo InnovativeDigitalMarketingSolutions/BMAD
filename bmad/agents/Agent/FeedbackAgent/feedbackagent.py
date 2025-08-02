@@ -21,6 +21,7 @@ from bmad.agents.core.ai.llm_client import ask_openai
 from bmad.agents.core.communication.message_bus import publish, subscribe
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
+from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
 from integrations.slack.slack_notify import send_slack_message
 
 # Configure logging
@@ -29,6 +30,11 @@ logger = logging.getLogger(__name__)
 
 class FeedbackAgent:
     def __init__(self):
+        # Framework templates integration
+        self.framework_manager = get_framework_templates_manager()
+        self.feedback_agent_template = self.framework_manager.get_template('feedback_agent')
+        self.lessons_learned = []
+
         # Set agent name
         self.agent_name = "FeedbackAgent"
         self.monitor = get_performance_monitor()
@@ -56,6 +62,11 @@ class FeedbackAgent:
         self.sentiment_history = []
         self._load_feedback_history()
         self._load_sentiment_history()
+
+        # Template quality tracking
+        self.template_feedback = {}
+        self.template_quality_scores = {}
+        self._load_template_feedback()
 
     def _load_feedback_history(self):
         """Load feedback history from data file"""
@@ -105,6 +116,32 @@ class FeedbackAgent:
         except Exception as e:
             logger.error(f"Could not save sentiment history: {e}")
 
+    def _load_template_feedback(self):
+        """Load template feedback from data file"""
+        try:
+            feedback_file = self.resource_base / "data/feedbackagent/template-feedback.json"
+            if feedback_file.exists():
+                with open(feedback_file, 'r') as f:
+                    data = json.load(f)
+                    self.template_feedback = data.get('template_feedback', {})
+                    self.template_quality_scores = data.get('quality_scores', {})
+        except Exception as e:
+            logger.warning(f"Could not load template feedback: {e}")
+
+    def _save_template_feedback(self):
+        """Save template feedback to data file"""
+        try:
+            feedback_file = self.resource_base / "data/feedbackagent/template-feedback.json"
+            feedback_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(feedback_file, 'w') as f:
+                json.dump({
+                    'template_feedback': self.template_feedback,
+                    'quality_scores': self.template_quality_scores,
+                    'last_updated': datetime.utcnow().isoformat()
+                }, f, indent=2)
+        except Exception as e:
+            logger.error(f"Could not save template feedback: {e}")
+
     def show_help(self):
         """Show available commands"""
         help_text = """
@@ -122,6 +159,18 @@ Feedback Agent Commands:
   export-report [format]  - Export feedback report (format: md, csv, json)
   test                    - Test resource completeness
   collaborate             - Demonstrate collaboration with other agents
+
+Template Quality Assurance:
+  collect-template-feedback <template> <feedback> [type] [rating] - Collect feedback for framework templates
+  analyze-template-trends [template] [timeframe]                 - Analyze feedback trends for templates
+  suggest-template-improvements <template>                       - Suggest improvements for templates
+  get-template-quality-report [template]                        - Generate quality report for templates
+
+Examples:
+  collect-template-feedback "backend_development" "Excellent template with clear guidelines" "quality" 5
+  analyze-template-trends "backend_development" "30 days"
+  suggest-template-improvements "backend_development"
+  get-template-quality-report "backend_development"
         """
         print(help_text)
 
@@ -819,6 +868,347 @@ Feedback Agent Commands:
         publish("trends_analyzed", {"desc": "Trends geanalyseerd"})
         logger.info("[FeedbackAgent] Trends geanalyseerd, trends_analyzed gepubliceerd.")
 
+    def collect_template_feedback(self, template_name: str, feedback_text: str, 
+                                feedback_type: str = "general", 
+                                rating: int = 5) -> Dict[str, Any]:
+        """
+        Collect feedback for framework templates
+        
+        Args:
+            template_name: Name of the template
+            feedback_text: Feedback text
+            feedback_type: Type of feedback (general, quality, usability, content)
+            rating: Rating from 1-5
+            
+        Returns:
+            Dict with feedback collection result
+        """
+        try:
+            # Validate inputs
+            if not template_name or not feedback_text:
+                raise ValueError("Template name and feedback text are required")
+            
+            if not 1 <= rating <= 5:
+                raise ValueError("Rating must be between 1 and 5")
+            
+            # Create feedback entry
+            feedback_entry = {
+                "template_name": template_name,
+                "feedback_text": feedback_text,
+                "feedback_type": feedback_type,
+                "rating": rating,
+                "timestamp": datetime.utcnow().isoformat(),
+                "agent": self.agent_name
+            }
+            
+            # Store feedback
+            if template_name not in self.template_feedback:
+                self.template_feedback[template_name] = []
+            
+            self.template_feedback[template_name].append(feedback_entry)
+            
+            # Update quality score
+            self._update_template_quality_score(template_name)
+            
+            # Save feedback
+            self._save_template_feedback()
+            
+            # Record metric
+            self.monitor.record_metric(
+                MetricType.COUNTER,
+                "template_feedback_collected",
+                1,
+                {"template": template_name, "type": feedback_type}
+            )
+            
+            logger.info(f"Template feedback collected for {template_name}")
+            
+            return {
+                "success": True,
+                "message": f"Feedback collected for template {template_name}",
+                "feedback_id": len(self.template_feedback[template_name]),
+                "template_name": template_name,
+                "rating": rating,
+                "timestamp": feedback_entry["timestamp"]
+            }
+            
+        except Exception as e:
+            logger.error(f"Error collecting template feedback: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "template_name": template_name
+            }
+
+    def _update_template_quality_score(self, template_name: str):
+        """Update quality score for a template based on feedback"""
+        try:
+            if template_name not in self.template_feedback:
+                return
+            
+            feedback_list = self.template_feedback[template_name]
+            if not feedback_list:
+                return
+            
+            # Calculate average rating
+            total_rating = sum(f["rating"] for f in feedback_list)
+            avg_rating = total_rating / len(feedback_list)
+            
+            # Calculate quality score (0-100)
+            quality_score = (avg_rating / 5) * 100
+            
+            # Store quality score
+            self.template_quality_scores[template_name] = {
+                "score": round(quality_score, 2),
+                "feedback_count": len(feedback_list),
+                "last_updated": datetime.utcnow().isoformat(),
+                "average_rating": round(avg_rating, 2)
+            }
+            
+        except Exception as e:
+            logger.error(f"Error updating quality score for {template_name}: {e}")
+
+    def analyze_template_trends(self, template_name: str = None, 
+                              timeframe: str = "30 days") -> Dict[str, Any]:
+        """
+        Analyze feedback trends for templates
+        
+        Args:
+            template_name: Specific template to analyze (None for all)
+            timeframe: Timeframe for analysis
+            
+        Returns:
+            Dict with trend analysis results
+        """
+        try:
+            # Calculate cutoff date
+            if timeframe == "30 days":
+                cutoff_date = datetime.utcnow().timestamp() - (30 * 24 * 60 * 60)
+            elif timeframe == "7 days":
+                cutoff_date = datetime.utcnow().timestamp() - (7 * 24 * 60 * 60)
+            else:
+                cutoff_date = 0  # All time
+            
+            templates_to_analyze = [template_name] if template_name else list(self.template_feedback.keys())
+            
+            trends = {}
+            
+            for template in templates_to_analyze:
+                if template not in self.template_feedback:
+                    continue
+                
+                feedback_list = self.template_feedback[template]
+                
+                # Filter by timeframe
+                recent_feedback = [
+                    f for f in feedback_list 
+                    if datetime.fromisoformat(f["timestamp"]).timestamp() >= cutoff_date
+                ]
+                
+                if not recent_feedback:
+                    continue
+                
+                # Analyze trends
+                ratings = [f["rating"] for f in recent_feedback]
+                feedback_types = [f["feedback_type"] for f in recent_feedback]
+                
+                trends[template] = {
+                    "total_feedback": len(recent_feedback),
+                    "average_rating": round(sum(ratings) / len(ratings), 2),
+                    "rating_distribution": {
+                        "1": ratings.count(1),
+                        "2": ratings.count(2),
+                        "3": ratings.count(3),
+                        "4": ratings.count(4),
+                        "5": ratings.count(5)
+                    },
+                    "feedback_type_distribution": {
+                        "general": feedback_types.count("general"),
+                        "quality": feedback_types.count("quality"),
+                        "usability": feedback_types.count("usability"),
+                        "content": feedback_types.count("content")
+                    },
+                    "trend": "improving" if len(recent_feedback) > 5 and sum(ratings[-5:]) > sum(ratings[:5]) else "stable"
+                }
+            
+            return {
+                "success": True,
+                "timeframe": timeframe,
+                "templates_analyzed": len(trends),
+                "trends": trends
+            }
+            
+        except Exception as e:
+            logger.error(f"Error analyzing template trends: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
+
+    def suggest_template_improvements(self, template_name: str) -> Dict[str, Any]:
+        """
+        Suggest improvements for a specific template based on feedback
+        
+        Args:
+            template_name: Name of the template to analyze
+            
+        Returns:
+            Dict with improvement suggestions
+        """
+        try:
+            if template_name not in self.template_feedback:
+                return {
+                    "success": False,
+                    "error": f"No feedback found for template {template_name}"
+                }
+            
+            feedback_list = self.template_feedback[template_name]
+            if not feedback_list:
+                return {
+                    "success": False,
+                    "error": f"No feedback available for template {template_name}"
+                }
+            
+            # Analyze feedback patterns
+            low_ratings = [f for f in feedback_list if f["rating"] <= 2]
+            quality_feedback = [f for f in feedback_list if f["feedback_type"] == "quality"]
+            usability_feedback = [f for f in feedback_list if f["feedback_type"] == "usability"]
+            
+            suggestions = []
+            
+            # Quality-related suggestions
+            if quality_feedback:
+                avg_quality_rating = sum(f["rating"] for f in quality_feedback) / len(quality_feedback)
+                if avg_quality_rating < 3:
+                    suggestions.append({
+                        "category": "quality",
+                        "priority": "high",
+                        "suggestion": "Improve template quality standards and validation",
+                        "evidence": f"Average quality rating: {avg_quality_rating:.1f}/5"
+                    })
+            
+            # Usability-related suggestions
+            if usability_feedback:
+                avg_usability_rating = sum(f["rating"] for f in usability_feedback) / len(usability_feedback)
+                if avg_usability_rating < 3:
+                    suggestions.append({
+                        "category": "usability",
+                        "priority": "medium",
+                        "suggestion": "Enhance template usability and user experience",
+                        "evidence": f"Average usability rating: {avg_usability_rating:.1f}/5"
+                    })
+            
+            # General suggestions based on low ratings
+            if low_ratings:
+                common_issues = {}
+                for feedback in low_ratings:
+                    text = feedback["feedback_text"].lower()
+                    if "outdated" in text:
+                        common_issues["outdated"] = common_issues.get("outdated", 0) + 1
+                    if "unclear" in text or "confusing" in text:
+                        common_issues["unclear"] = common_issues.get("unclear", 0) + 1
+                    if "incomplete" in text:
+                        common_issues["incomplete"] = common_issues.get("incomplete", 0) + 1
+                
+                for issue, count in common_issues.items():
+                    if count >= 2:  # If mentioned by multiple users
+                        suggestions.append({
+                            "category": "content",
+                            "priority": "high" if count >= 3 else "medium",
+                            "suggestion": f"Address {issue} content issues",
+                            "evidence": f"Mentioned by {count} users"
+                        })
+            
+            # Quality score
+            quality_score = self.template_quality_scores.get(template_name, {}).get("score", 0)
+            
+            return {
+                "success": True,
+                "template_name": template_name,
+                "quality_score": quality_score,
+                "total_feedback": len(feedback_list),
+                "suggestions": suggestions,
+                "priority": "high" if quality_score < 70 else "medium" if quality_score < 85 else "low"
+            }
+            
+        except Exception as e:
+            logger.error(f"Error suggesting template improvements: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
+
+    def get_template_quality_report(self, template_name: str = None) -> Dict[str, Any]:
+        """
+        Generate quality report for templates
+        
+        Args:
+            template_name: Specific template (None for all)
+            
+        Returns:
+            Dict with quality report
+        """
+        try:
+            if template_name:
+                # Single template report
+                if template_name not in self.template_quality_scores:
+                    return {
+                        "success": False,
+                        "error": f"No quality data found for template {template_name}"
+                    }
+                
+                quality_data = self.template_quality_scores[template_name]
+                feedback_count = len(self.template_feedback.get(template_name, []))
+                
+                return {
+                    "success": True,
+                    "template_name": template_name,
+                    "quality_score": quality_data["score"],
+                    "feedback_count": feedback_count,
+                    "average_rating": quality_data["average_rating"],
+                    "last_updated": quality_data["last_updated"],
+                    "status": "excellent" if quality_data["score"] >= 90 else 
+                             "good" if quality_data["score"] >= 80 else 
+                             "fair" if quality_data["score"] >= 70 else "needs_improvement"
+                }
+            else:
+                # All templates report
+                templates = list(self.template_quality_scores.keys())
+                if not templates:
+                    return {
+                        "success": False,
+                        "error": "No template quality data available"
+                    }
+                
+                scores = [self.template_quality_scores[t]["score"] for t in templates]
+                avg_score = sum(scores) / len(scores)
+                
+                return {
+                    "success": True,
+                    "total_templates": len(templates),
+                    "average_quality_score": round(avg_score, 2),
+                    "templates": {
+                        template: {
+                            "score": data["score"],
+                            "feedback_count": data["feedback_count"],
+                            "status": "excellent" if data["score"] >= 90 else 
+                                     "good" if data["score"] >= 80 else 
+                                     "fair" if data["score"] >= 70 else "needs_improvement"
+                        }
+                        for template, data in self.template_quality_scores.items()
+                    },
+                    "overall_status": "excellent" if avg_score >= 90 else 
+                                     "good" if avg_score >= 80 else 
+                                     "fair" if avg_score >= 70 else "needs_improvement"
+                }
+                
+        except Exception as e:
+            logger.error(f"Error generating template quality report: {e}")
+            return {
+                "success": False,
+                "error": str(e)
+            }
+
     def run(self):
         """Run the agent and listen for events."""
         subscribe("feedback_received", self.on_feedback_received)
@@ -835,12 +1225,19 @@ def main():
                        choices=["help", "collect-feedback", "analyze-sentiment", "summarize-feedback",
                                "generate-insights", "track-trends", "show-feedback-history", "show-sentiment-history",
                                "show-best-practices", "show-changelog", "export-report", "test",
-                               "collaborate", "run"])
+                               "collaborate", "run", "collect-template-feedback", "analyze-template-trends",
+                               "suggest-template-improvements", "get-template-quality-report"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--feedback-text", default="The new dashboard is much more user-friendly", help="Feedback text to analyze")
     parser.add_argument("--source", default="User Survey", help="Feedback source")
     parser.add_argument("--timeframe", default="30 days", help="Timeframe for trend analysis")
     parser.add_argument("--feedback-list", nargs="+", help="List of feedback items to summarize")
+    
+    # Template quality assurance arguments
+    parser.add_argument("--template-name", help="Template name for quality assurance")
+    parser.add_argument("--template-feedback", help="Feedback text for template")
+    parser.add_argument("--feedback-type", default="general", choices=["general", "quality", "usability", "content"], help="Type of feedback")
+    parser.add_argument("--rating", type=int, default=5, choices=[1, 2, 3, 4, 5], help="Rating from 1-5")
 
     args = parser.parse_args()
 
@@ -879,6 +1276,24 @@ def main():
         agent.collaborate_example()
     elif args.command == "run":
         agent.run()
+    elif args.command == "collect-template-feedback":
+        if not args.template_name or not args.template_feedback:
+            print("Error: --template-name and --template-feedback are required")
+            return
+        result = agent.collect_template_feedback(args.template_name, args.template_feedback, args.feedback_type, args.rating)
+        print(json.dumps(result, indent=2))
+    elif args.command == "analyze-template-trends":
+        result = agent.analyze_template_trends(args.template_name, args.timeframe)
+        print(json.dumps(result, indent=2))
+    elif args.command == "suggest-template-improvements":
+        if not args.template_name:
+            print("Error: --template-name is required")
+            return
+        result = agent.suggest_template_improvements(args.template_name)
+        print(json.dumps(result, indent=2))
+    elif args.command == "get-template-quality-report":
+        result = agent.get_template_quality_report(args.template_name)
+        print(json.dumps(result, indent=2))
 
 if __name__ == "__main__":
     main()

@@ -456,14 +456,14 @@ ON CONFLICT (name) DO NOTHING;
 
 -- Insert default admin user (password: admin123)
 INSERT INTO auth_service.users (email, username, first_name, last_name, password_hash, status, email_verified) VALUES
-('admin@bmad.com', 'admin', 'System', 'Administrator', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/RK.s5u.G', 'active', true)
+('innovativemarketinglisbon@gmail.com', 'admin', 'System', 'Administrator', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewdBPj/RK.s5u.G', 'active', true)
 ON CONFLICT (email) DO NOTHING;
 
 -- Assign admin role to admin user
 INSERT INTO auth_service.user_roles (user_id, role_id)
 SELECT u.id, r.id 
 FROM auth_service.users u, auth_service.roles r 
-WHERE u.email = 'admin@bmad.com' AND r.name = 'admin'
+WHERE u.email = 'innovativemarketinglisbon@gmail.com' AND r.name = 'admin'
 ON CONFLICT DO NOTHING;
 
 -- Insert default channel configurations

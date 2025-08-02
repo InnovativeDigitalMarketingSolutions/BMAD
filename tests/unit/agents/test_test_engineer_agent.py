@@ -217,14 +217,15 @@ class TestTestEngineerAgent:
             assert "Coverage 1" in captured.out
 
     @patch('bmad.agents.Agent.TestEngineer.testengineer.time.sleep')
-    def test_run_tests(self, mock_sleep):
+    @pytest.mark.asyncio
+    async def test_run_tests(self, mock_sleep):
         """Test run_tests method."""
         with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
-            result = agent.run_tests()
+            result = await agent.run_tests()
             
             assert isinstance(result, dict)
             assert "redis_cache" in result
@@ -264,14 +265,15 @@ class TestTestEngineerAgent:
                 agent.validate_input("TestComponent", "invalid")
 
     @patch('bmad.agents.Agent.TestEngineer.testengineer.time.sleep')
-    def test_generate_tests_unit(self, mock_sleep):
+    @pytest.mark.asyncio
+    async def test_generate_tests_unit(self, mock_sleep):
         """Test generate_tests for unit tests."""
         with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
-            result = agent.generate_tests("TestComponent", "unit")
+            result = await agent.generate_tests("TestComponent", "unit")
             
             assert result["success"] is True
             assert result["component_name"] == "TestComponent"
@@ -280,28 +282,30 @@ class TestTestEngineerAgent:
             assert "test_result" in result
 
     @patch('bmad.agents.Agent.TestEngineer.testengineer.time.sleep')
-    def test_generate_tests_integration(self, mock_sleep):
+    @pytest.mark.asyncio
+    async def test_generate_tests_integration(self, mock_sleep):
         """Test generate_tests for integration tests."""
         with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
-            result = agent.generate_tests("TestComponent", "integration")
+            result = await agent.generate_tests("TestComponent", "integration")
             
             assert result["success"] is True
             assert result["component_name"] == "TestComponent"
             assert result["test_type"] == "integration"
 
     @patch('bmad.agents.Agent.TestEngineer.testengineer.time.sleep')
-    def test_generate_tests_e2e(self, mock_sleep):
+    @pytest.mark.asyncio
+    async def test_generate_tests_e2e(self, mock_sleep):
         """Test generate_tests for e2e tests."""
         with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
-            result = agent.generate_tests("TestComponent", "e2e")
+            result = await agent.generate_tests("TestComponent", "e2e")
             
             assert result["success"] is True
             assert result["component_name"] == "TestComponent"
@@ -451,17 +455,18 @@ class TestTestEngineerAgent:
             assert mock_slack.called
 
     @patch('bmad.agents.Agent.TestEngineer.testengineer.publish')
-    def test_handle_tests_requested(self, mock_publish):
+    @pytest.mark.asyncio
+    async def test_handle_tests_requested(self, mock_publish):
         """Test handle_tests_requested method."""
         with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.time.sleep'):
-            
+
             agent = TestEngineerAgent()
             event = {"test_type": "unit"}
-            agent.handle_tests_requested(event)
-            
+            await agent.handle_tests_requested(event)
+
             assert mock_publish.called
 
     @patch('bmad.agents.Agent.TestEngineer.testengineer.ask_openai')
@@ -506,29 +511,31 @@ class TestTestEngineerAgent:
             assert "Error generating tests" in result
 
     @patch('bmad.agents.Agent.TestEngineer.testengineer.subscribe')
-    def test_run_method(self, mock_subscribe):
+    @pytest.mark.asyncio
+    async def test_run_method(self, mock_subscribe):
         """Test run method."""
         with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'), \
-             patch('bmad.agents.Agent.TestEngineer.testengineer.time.sleep') as mock_sleep:
-            
+             patch('bmad.agents.Agent.TestEngineer.testengineer.asyncio.sleep') as mock_sleep:
+
             mock_sleep.side_effect = KeyboardInterrupt()
-            
+
             agent = TestEngineerAgent()
-            agent.run()
-            
+            await agent.run()
+
             assert mock_subscribe.call_count == 2
 
-    def test_run_agent_class_method(self):
+    @pytest.mark.asyncio
+    async def test_run_agent_class_method(self):
         """Test run_agent class method."""
         with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'), \
              patch.object(TestEngineerAgent, 'run') as mock_run:
-            
-            TestEngineerAgent.run_agent()
-            
+
+            await TestEngineerAgent.run_agent()
+
             assert mock_run.called
 
 
@@ -539,17 +546,18 @@ class TestTestEngineerIntegration:
     @patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine')
     @patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library')
     @patch('bmad.agents.Agent.TestEngineer.testengineer.time.sleep')
-    def test_complete_test_generation_workflow(self, mock_sleep, mock_sprite, mock_policy, mock_monitor):
+    @pytest.mark.asyncio
+    async def test_complete_test_generation_workflow(self, mock_sleep, mock_sprite, mock_policy, mock_monitor):
         """Test complete test generation workflow."""
         agent = TestEngineerAgent()
-        
+
         # Test input validation - the agent logs the error but doesn't re-raise it
-        result = agent.generate_tests("", "unit")
+        result = await agent.generate_tests("", "unit")
         assert result["success"] is False
         assert "Component name must be a non-empty string" in result["error"]
         
         # Test valid test generation
-        result = agent.generate_tests("TestComponent", "unit")
+        result = await agent.generate_tests("TestComponent", "unit")
         assert result["success"] is True
         assert result["component_name"] == "TestComponent"
         

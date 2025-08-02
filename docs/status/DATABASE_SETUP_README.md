@@ -91,7 +91,7 @@ docker-compose up --build -d
 ## 🔐 Default Credentials
 
 ### Admin User
-- **Email:** admin@bmad.com
+- **Email:** innovativemarketinglisbon@gmail.com
 - **Password:** admin123
 - **Role:** admin
 

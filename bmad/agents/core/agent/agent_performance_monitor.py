@@ -15,7 +15,8 @@ from datetime import timedelta
 from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
 
-import psutil
+# Remove top-level import of psutil
+# import psutil
 
 # Import BMAD modules
 
@@ -95,10 +96,16 @@ class PerformanceMonitor:
         self.success_counts: Dict[str, int] = defaultdict(int)
 
         # Resource monitoring
-        self.process = psutil.Process()
-        self.last_cpu_time = self.process.cpu_times()
-        self.last_disk_io = psutil.disk_io_counters()
-        self.last_network_io = psutil.net_io_counters()
+        try:
+            import psutil
+            self.process = psutil.Process()
+            self.last_cpu_time = self.process.cpu_times()
+            self.last_disk_io = psutil.disk_io_counters()
+        except ImportError:
+            self.process = None
+            self.last_cpu_time = None
+            self.last_disk_io = None
+            logger.warning("psutil not available: performance monitoring limited.")
 
         # Alert callbacks
         self.alert_callbacks: List[Callable[[PerformanceAlert], None]] = []
