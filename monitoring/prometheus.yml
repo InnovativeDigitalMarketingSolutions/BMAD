@@ -1,0 +1,68 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # BMAD API Gateway
+  - job_name: 'bmad-api-gateway'
+    static_configs:
+      - targets: ['api-gateway:8000']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # BMAD Auth Service
+  - job_name: 'bmad-auth-service'
+    static_configs:
+      - targets: ['auth-service:8001']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # BMAD Notification Service
+  - job_name: 'bmad-notification-service'
+    static_configs:
+      - targets: ['notification-service:8002']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # BMAD Agent Service
+  - job_name: 'bmad-agent-service'
+    static_configs:
+      - targets: ['agent-service:8003']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # BMAD Workflow Service
+  - job_name: 'bmad-workflow-service'
+    static_configs:
+      - targets: ['workflow-service:8004']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # BMAD Context Service
+  - job_name: 'bmad-context-service'
+    static_configs:
+      - targets: ['context-service:8005']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # BMAD Integration Service
+  - job_name: 'bmad-integration-service'
+    static_configs:
+      - targets: ['integration-service:8006']
+    metrics_path: '/metrics'
+    scrape_interval: 10s
+
+  # Redis
+  - job_name: 'redis'
+    static_configs:
+      - targets: ['redis:6379']
+    scrape_interval: 30s 

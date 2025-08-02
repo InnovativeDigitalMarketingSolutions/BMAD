@@ -4,6 +4,23 @@
 
 Dit document beschrijft de verplichte test workflow voor alle nieuwe functionaliteit en uitbreidingen in het BMAD systeem. Het doel is om ervoor te zorgen dat alle code kwalitatief is geïmplementeerd en goed getest wordt.
 
+**Voor test strategie en filosofie, zie**: `TESTING_STRATEGY.md`
+
+## Test Pyramid Implementatie
+
+Volg de test pyramid strategie zoals beschreven in `TESTING_STRATEGY.md`:
+
+```
+    🔺 E2E Tests (weinig, volledige workflows)
+   🔺🔺 Integration Tests (gemiddeld, echte dependencies)
+🔺🔺🔺 Unit Tests (veel, gemockt)
+```
+
+### Test Distribution
+- **Unit Tests**: 70% van alle tests (snel, gemockt)
+- **Integration Tests**: 20% van alle tests (echte dependencies)
+- **E2E Tests**: 10% van alle tests (volledige workflows)
+
 ## Test Workflow Checklist
 
 ### Voor het implementeren van nieuwe functionaliteit:
@@ -11,6 +28,7 @@ Dit document beschrijft de verplichte test workflow voor alle nieuwe functionali
 - [ ] **Analyse**: Root cause analysis uitvoeren voor bugs
 - [ ] **Planning**: Test strategie bepalen (unit, integration, e2e)
 - [ ] **Review**: Bestaande guide files raadplegen voor best practices
+- [ ] **Strategy Review**: Bekijk `TESTING_STRATEGY.md` voor test type keuze
 
 ### Tijdens implementatie:
 
@@ -18,6 +36,7 @@ Dit document beschrijft de verplichte test workflow voor alle nieuwe functionali
 - [ ] **Integration Tests**: Schrijven voor API endpoints
 - [ ] **Mocking**: Gebruik AsyncMock voor async functies
 - [ ] **Validation**: Test edge cases en error scenarios
+- [ ] **Pragmatic Mocking**: Volg mocking strategie uit `TESTING_STRATEGY.md`
 
 ### Na implementatie:
 
@@ -25,6 +44,7 @@ Dit document beschrijft de verplichte test workflow voor alle nieuwe functionali
 - [ ] **Coverage Check**: Test coverage controleren
 - [ ] **Documentation**: Tests documenteren
 - [ ] **Review**: Code review inclusief tests
+- [ ] **Strategy Validation**: Controleer of test strategie correct is toegepast
 
 ## Test Structure
 
@@ -138,6 +158,34 @@ class Test{ServiceName}API:
 
 ### 3. Mocking Best Practices
 
+#### Pragmatic Mocking (Voor Zware Externe Dependencies)
+```python
+# Mock zware externe dependencies zoals in CLI tests
+import sys
+from unittest.mock import MagicMock
+
+# Mock externe modules
+sys.modules['opentelemetry'] = MagicMock()
+sys.modules['opentelemetry.trace'] = MagicMock()
+sys.modules['opentelemetry.sdk'] = MagicMock()
+sys.modules['supabase'] = MagicMock()
+sys.modules['langgraph'] = MagicMock()
+sys.modules['openai'] = MagicMock()
+sys.modules['psutil'] = MagicMock()
+
+# Voorbeeld uit CLI tests
+class TestIntegratedWorkflowCLI:
+    def setup_method(self):
+        """Set up test environment."""
+        # Create mock orchestrator
+        self.mock_orchestrator = MagicMock()
+        
+        # Patch the orchestrator before creating CLI
+        with patch('cli.integrated_workflow_cli.IntegratedWorkflowOrchestrator', return_value=self.mock_orchestrator):
+            self.cli = IntegratedWorkflowCLI()
+```
+
+#### Standard Mocking (Voor Interne Dependencies)
 ```python
 # Voor async functies
 @pytest.mark.asyncio
@@ -160,6 +208,13 @@ def test_sync_method(self):
         result = test_method()
         assert result == "success"
 ```
+
+#### Mocking Guidelines
+- **Pragmatic Mocking**: Voor zware externe dependencies (opentelemetry, supabase, etc.)
+- **Standard Mocking**: Voor interne dependencies en business logic
+- **AsyncMock**: Voor async functies en methoden
+- **MagicMock**: Voor sync functies en objecten
+- **patch.object**: Voor specifieke methoden van bestaande objecten
 
 ## Test Categories
 
@@ -186,11 +241,11 @@ def test_sync_method(self):
 ### 1. Voor elke nieuwe feature:
 
 ```bash
-# 1. Schrijf unit tests
+# 1. Schrijf unit tests (pragmatic mocking voor externe dependencies)
 pytest tests/unit/test_new_feature.py -v
 
-# 2. Schrijf integration tests
-pytest tests/integration/test_new_feature_integration.py -v
+# 2. Schrijf integration tests (echte dependencies)
+pytest tests/integration/test_new_feature_integration.py -v --run-integration
 
 # 3. Run alle tests
 pytest tests/ -v
@@ -207,13 +262,79 @@ cd microservices/{service-name}
 pytest tests/unit/ -v
 
 # 2. Integration tests voor API
-pytest tests/integration/ -v
+pytest tests/integration/ -v --run-integration
 
 # 3. Performance tests
 pytest tests/performance/ -v
 
 # 4. Full test suite
 pytest tests/ -v --cov=src
+```
+
+### 3. Integration Testing Workflow
+
+```bash
+# Development: Alleen unit tests (snel)
+pytest tests/unit/ -v
+
+# Staging: Unit + integration tests
+pytest tests/ -v --run-integration
+
+# Production: Alle tests
+pytest tests/ -v --run-integration --run-e2e
+```
+
+### 4. Integration Test Setup
+
+```python
+# tests/integration/test_integrations.py
+import pytest
+import os
+
+class TestIntegrations:
+    @pytest.fixture(autouse=True)
+    def setup_integration_tests(self):
+        """Setup for integration tests with real dependencies."""
+        # Skip if integration tests are disabled
+        if not pytest.config.getoption("--run-integration"):
+            pytest.skip("Integration tests disabled. Use --run-integration to enable.")
+
+        # Check if required environment variables are set
+        required_vars = [
+            "SUPABASE_URL",
+            "SUPABASE_KEY", 
+            "OPENROUTER_API_KEY",
+            "OPENAI_API_KEY"
+        ]
+
+        missing_vars = [var for var in required_vars if not os.getenv(var)]
+        if missing_vars:
+            pytest.skip(f"Missing required environment variables: {missing_vars}")
+
+    @pytest.mark.integration
+    @pytest.mark.asyncio
+    async def test_supabase_integration(self):
+        """Test real Supabase database integration."""
+        # Echte database operaties
+        result = await cli.create_tenant("test", "test.com", "basic")
+        assert result is not None
+```
+
+### 5. Pytest Configuration
+
+```ini
+# pytest.ini
+[tool:pytest]
+markers =
+    unit: Unit tests (default)
+    integration: Integration tests with real dependencies
+    e2e: End-to-end tests
+    slow: Slow running tests
+
+addopts = 
+    -v
+    --strict-markers
+    --disable-warnings
 ```
 
 ## Quality Gates
@@ -332,4 +453,11 @@ Deze test workflow zorgt ervoor dat:
 - Documentatie up-to-date blijft
 - Best practices consistent worden toegepast
 
-**Belangrijk**: Tests zijn geen optie, maar een verplicht onderdeel van elke implementatie! 
+**Belangrijk**: Tests zijn geen optie, maar een verplicht onderdeel van elke implementatie!
+
+## Referenties
+
+- [TESTING_STRATEGY.md](./TESTING_STRATEGY.md) - Test strategie en filosofie
+- [CLI_TESTING_COMPLETE_REPORT.md](../reports/CLI_TESTING_COMPLETE_REPORT.md) - CLI testing success case
+- [CLI_TEST_FAILURES_ANALYSIS.md](../reports/CLI_TEST_FAILURES_ANALYSIS.md) - Test failure analysis
+- [BMAD_MASTER_PLANNING.md](../deployment/BMAD_MASTER_PLANNING.md) - Master planning met test strategie 

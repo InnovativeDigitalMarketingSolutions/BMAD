@@ -9,6 +9,7 @@ import os
 import logging
 from contextlib import asynccontextmanager
 from typing import Dict, Any
+from datetime import datetime
 
 from fastapi import FastAPI, HTTPException, Depends, Request, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -301,8 +302,8 @@ async def login_user(
 
 @app.post("/auth/logout")
 async def logout_user(
-    current_user: Dict[str, Any] = Depends(get_current_user),
-    request: Request
+    request: Request,
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """Logout user."""
     try:
@@ -432,8 +433,8 @@ async def reset_password(
 @app.post("/auth/change-password")
 async def change_password(
     password_data: PasswordChange,
-    current_user: Dict[str, Any] = Depends(get_current_user),
-    request: Request
+    request: Request,
+    current_user: Dict[str, Any] = Depends(get_current_user)
 ):
     """Change password."""
     try:
@@ -633,4 +634,4 @@ async def general_exception_handler(request: Request, exc: Exception):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000) 
+    uvicorn.run(app, host="0.0.0.0", port=8001) 
