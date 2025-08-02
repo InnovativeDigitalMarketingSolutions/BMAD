@@ -31,18 +31,21 @@ class TestAccessibilityAgent:
         assert hasattr(agent, 'common_issues')
         assert hasattr(agent, 'improvement_recommendations')
 
-    def test_validate_input_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_input_success(self, agent):
         """Test successful input validation."""
         agent._validate_input("test", str, "test_param")
         agent._validate_input(123, int, "test_param")
         agent._validate_input([1, 2, 3], list, "test_param")
 
-    def test_validate_input_failure(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_input_failure(self, agent):
         """Test input validation failure."""
         with pytest.raises(AccessibilityValidationError):
             agent._validate_input(123, str, "test_param")
 
-    def test_validate_component_name_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_component_name_success(self, agent):
         """Test successful component name validation."""
         agent._validate_component_name("Button")
         agent._validate_component_name("UserProfile")
@@ -63,7 +66,8 @@ class TestAccessibilityAgent:
         with pytest.raises(AccessibilityValidationError):
             agent._validate_component_name(123)
 
-    def test_validate_audit_target_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_audit_target_success(self, agent):
         """Test successful audit target validation."""
         agent._validate_audit_target("/mock/page")
         agent._validate_audit_target("https://example.com")
@@ -84,7 +88,8 @@ class TestAccessibilityAgent:
         with pytest.raises(AccessibilityValidationError):
             agent._validate_audit_target(123)
 
-    def test_validate_format_type_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_format_type_success(self, agent):
         """Test successful format type validation."""
         agent._validate_format_type("md")
         agent._validate_format_type("csv")
@@ -100,13 +105,15 @@ class TestAccessibilityAgent:
         with pytest.raises(AccessibilityValidationError):
             agent._validate_format_type(123)
 
-    def test_record_accessibility_metric_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_record_accessibility_metric_success(self, agent):
         """Test successful accessibility metric recording."""
         with patch.object(agent.monitor, '_record_metric') as mock_record:
             agent._record_accessibility_metric("test_metric", 95.0, "%")
             mock_record.assert_called_once()
 
-    def test_record_accessibility_metric_failure(self, agent):
+    @pytest.mark.asyncio
+    async def test_record_accessibility_metric_failure(self, agent):
         """Test accessibility metric recording failure."""
         with patch.object(agent.monitor, '_record_metric', side_effect=Exception("Test error")):
             agent._record_accessibility_metric("test_metric", 95.0, "%")
@@ -172,9 +179,10 @@ class TestAccessibilityAgent:
         recommendations = agent._generate_accessibility_recommendations(audit_results)
         assert "Add screen reader specific attributes" in recommendations
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Audit History\n\n- Audit 1\n- Audit 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Audit Historynn- Audit 1n- Audit 2")
     @patch('pathlib.Path.exists', return_value=True)
-    def test_load_audit_history_success(self, mock_exists, mock_file, agent):
+    @pytest.mark.asyncio
+    async def test_load_audit_history_success(self, mock_exists, mock_file, agent):
         """Test successful audit history loading."""
         agent.audit_history = []  # Reset history
         agent._load_audit_history()
@@ -205,7 +213,7 @@ class TestAccessibilityAgent:
         assert "audit" in captured.out
         assert "test-shadcn-component" in captured.out
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Best Practices\n\nTest content")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Best PracticesnnTest content")
     @patch('pathlib.Path.exists', return_value=True)
     def test_show_resource_best_practices(self, mock_exists, mock_file, agent, capsys):
         """Test show_resource method for best-practices."""
@@ -233,7 +241,8 @@ class TestAccessibilityAgent:
         captured = capsys.readouterr()
         assert "No audit history available." in captured.out
 
-    def test_show_audit_history_with_data(self, agent, capsys):
+    @pytest.mark.asyncio
+    async def test_show_audit_history_with_data(self, agent, capsys):
         """Test show_audit_history with data."""
         agent.audit_history = ["Audit 1", "Audit 2"]
         agent.show_audit_history()
@@ -251,7 +260,8 @@ class TestAccessibilityAgent:
         assert "component" in result
         assert "accessibility_score" in result
 
-    def test_test_shadcn_component_invalid_input(self, agent):
+    @pytest.mark.asyncio
+    async def test_test_shadcn_component_invalid_input(self, agent):
         """Test test_shadcn_component with invalid input."""
         with pytest.raises(AccessibilityValidationError):
             agent.test_shadcn_component("")
@@ -266,7 +276,8 @@ class TestAccessibilityAgent:
         assert "overall_score" in result
         assert "aria_issues" in result
 
-    def test_validate_aria_invalid_input(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_aria_invalid_input(self, agent):
         """Test validate_aria with invalid input."""
         with pytest.raises(AccessibilityValidationError):
             agent.validate_aria(123)
@@ -281,7 +292,8 @@ class TestAccessibilityAgent:
         assert "overall_score" in result
         assert "screen_reader_issues" in result
 
-    def test_test_screen_reader_invalid_input(self, agent):
+    @pytest.mark.asyncio
+    async def test_test_screen_reader_invalid_input(self, agent):
         """Test test_screen_reader with invalid input."""
         with pytest.raises(AccessibilityValidationError):
             agent.test_screen_reader("")
@@ -296,7 +308,8 @@ class TestAccessibilityAgent:
         assert "overall_score" in result
         assert "design_token_issues" in result
 
-    def test_check_design_tokens_invalid_input(self, agent):
+    @pytest.mark.asyncio
+    async def test_check_design_tokens_invalid_input(self, agent):
         """Test check_design_tokens with invalid input."""
         with pytest.raises(AccessibilityValidationError):
             agent.check_design_tokens(123)
@@ -346,7 +359,8 @@ class TestAccessibilityAgent:
         with pytest.raises(AccessibilityValidationError):
             agent.export_audit("invalid")
 
-    def test_export_audit_invalid_input(self, agent):
+    @pytest.mark.asyncio
+    async def test_export_audit_invalid_input(self, agent):
         """Test export_audit with invalid input."""
         with pytest.raises(AccessibilityValidationError):
             agent.export_audit(123)
@@ -415,8 +429,8 @@ class TestAccessibilityAgent:
         mock_monitor.return_value = mock_monitor_instance
     
         # Test complete workflow
-        component_result = agent.test_shadcn_component("Button")
-        aria_result = agent.validate_aria("test code")
+        component_result = await agent.test_shadcn_component("Button")
+        aria_result = await agent.validate_aria("test code")
         audit_result = await agent.run_accessibility_audit("/mock/page")
     
         assert component_result["accessibility_score"] > 0

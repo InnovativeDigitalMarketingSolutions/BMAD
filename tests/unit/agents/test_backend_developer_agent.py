@@ -19,11 +19,11 @@ class TestBackendDeveloperAgent:
     @pytest.fixture
     def agent(self):
         """Create a BackendDeveloperAgent instance for testing."""
-        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_performance_monitor'), \
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_advanced_policy_engine'), \
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_sprite_library'), \
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BMADTracer'), \
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.PrefectWorkflowOrchestrator'), \
+        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_performance_monitor'), 
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_advanced_policy_engine'), 
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_sprite_library'), 
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BMADTracer'), 
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.PrefectWorkflowOrchestrator'), 
              patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_framework_templates_manager') as mock_framework_manager:
             # Mock the framework manager to return a mock with get_template method
             mock_manager_instance = Mock()
@@ -39,20 +39,23 @@ class TestBackendDeveloperAgent:
         assert isinstance(agent.deployment_history, list)
         assert isinstance(agent.performance_metrics, dict)
 
-    def test_validate_input_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_input_success(self, agent):
         """Test input validation with valid input."""
         agent._validate_input("test", str, "test_param")
         agent._validate_input(123, int, "test_param")
         agent._validate_input([], list, "test_param")
 
-    def test_validate_input_failure(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_input_failure(self, agent):
         """Test input validation with invalid input."""
         with pytest.raises(BackendValidationError):
             agent._validate_input(123, str, "test_param")
         with pytest.raises(BackendValidationError):
             agent._validate_input("test", int, "test_param")
 
-    def test_validate_endpoint_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_endpoint_success(self, agent):
         """Test endpoint validation with valid endpoints."""
         agent._validate_endpoint("/api/v1/users")
         agent._validate_endpoint("/api/v1/products/123")
@@ -71,7 +74,8 @@ class TestBackendDeveloperAgent:
         with pytest.raises(BackendValidationError):
             agent._validate_endpoint("a" * 201)  # Too long
 
-    def test_validate_api_data_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_api_data_success(self, agent):
         """Test API data validation with valid data."""
         valid_data = {"endpoint": "/test", "method": "GET", "status": "created"}
         agent._validate_api_data(valid_data)
@@ -82,7 +86,8 @@ class TestBackendDeveloperAgent:
         with pytest.raises(BackendValidationError):
             agent._validate_api_data(invalid_data)
 
-    def test_validate_export_format_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_export_format_success(self, agent):
         """Test export format validation with valid formats."""
         for format_type in ["md", "json", "yaml", "html"]:
             agent._validate_export_format(format_type)
@@ -94,12 +99,13 @@ class TestBackendDeveloperAgent:
 
     @patch('builtins.open', create=True)
     @patch('pathlib.Path.exists')
-    def test_load_api_history_success(self, mock_exists, mock_open, agent):
+    @pytest.mark.asyncio
+    async def test_load_api_history_success(self, mock_exists, mock_open, agent):
         """Test successful API history loading."""
         # Clear existing history first
         agent.api_history = []
         mock_exists.return_value = True
-        mock_open.return_value.__enter__.return_value.read.return_value = "# API History\n\n- GET /api/v1/users\n- POST /api/v1/products"
+        mock_open.return_value.__enter__.return_value.read.return_value = "# API Historynn- GET /api/v1/usersn- POST /api/v1/products"
         
         agent._load_api_history()
         assert len(agent.api_history) == 2
@@ -137,7 +143,8 @@ class TestBackendDeveloperAgent:
 
     @patch('builtins.open', create=True)
     @patch('pathlib.Path.mkdir')
-    def test_save_api_history_success(self, mock_mkdir, mock_open, agent):
+    @pytest.mark.asyncio
+    async def test_save_api_history_success(self, mock_mkdir, mock_open, agent):
         """Test successful API history saving."""
         agent.api_history = ["GET /api/v1/users", "POST /api/v1/products"]
         
@@ -155,11 +162,12 @@ class TestBackendDeveloperAgent:
 
     def test_show_help(self, agent, capsys):
         """Test help display."""
-        agent.show_help()
+        await agent.show_help()
         captured = capsys.readouterr()
         assert "BackendDeveloper Agent Commands:" in captured.out
 
-    def test_show_resource_success(self, agent, capsys):
+    @pytest.mark.asyncio
+    async def test_show_resource_success(self, agent, capsys):
         """Test resource display with valid resource type."""
         with patch('builtins.open', create=True) as mock_open:
             mock_open.return_value.__enter__.return_value.read.return_value = "Best practices content"
@@ -186,7 +194,8 @@ class TestBackendDeveloperAgent:
         captured = capsys.readouterr()
         assert "No API history available" in captured.out
 
-    def test_show_api_history_with_data(self, agent, capsys):
+    @pytest.mark.asyncio
+    async def test_show_api_history_with_data(self, agent, capsys):
         """Test API history display with data."""
         agent.api_history = ["GET /api/v1/users", "POST /api/v1/products"]
         agent.show_api_history()
@@ -201,7 +210,8 @@ class TestBackendDeveloperAgent:
         captured = capsys.readouterr()
         assert "No performance history available" in captured.out
 
-    def test_show_performance_with_data(self, agent, capsys):
+    @pytest.mark.asyncio
+    async def test_show_performance_with_data(self, agent, capsys):
         """Test performance display with data."""
         agent.performance_history = ["Response time: 150ms", "Throughput: 1000 req/s"]
         agent.show_performance()
@@ -216,7 +226,8 @@ class TestBackendDeveloperAgent:
         captured = capsys.readouterr()
         assert "No deployment history available" in captured.out
 
-    def test_show_deployment_history_with_data(self, agent, capsys):
+    @pytest.mark.asyncio
+    async def test_show_deployment_history_with_data(self, agent, capsys):
         """Test deployment history display with data."""
         agent.deployment_history = ["Deployed /api/v1/users", "Deployed /api/v1/products"]
         agent.show_deployment_history()
@@ -249,7 +260,8 @@ class TestBackendDeveloperAgent:
             await agent.build_api("api/v1/users")
 
     @patch('time.sleep')
-    def test_deploy_api_success(self, mock_sleep, agent):
+    @pytest.mark.asyncio
+    async def test_deploy_api_success(self, mock_sleep, agent):
         """Test successful API deployment."""
         initial_count = len(agent.deployment_history)
         result = agent.deploy_api("/api/v1/users")
@@ -272,7 +284,8 @@ class TestBackendDeveloperAgent:
         assert "Validation error" in captured.out
 
     @patch('builtins.open', create=True)
-    def test_export_markdown_success(self, mock_open, agent):
+    @pytest.mark.asyncio
+    async def test_export_markdown_success(self, mock_open, agent):
         """Test successful Markdown export."""
         api_data = {"method": "GET", "endpoint": "/api/v1/users", "status": "created", "response_time": "150ms", "throughput": "1000 req/s"}
         
@@ -280,7 +293,8 @@ class TestBackendDeveloperAgent:
         mock_open.assert_called()
 
     @patch('builtins.open', create=True)
-    def test_export_json_success(self, mock_open, agent):
+    @pytest.mark.asyncio
+    async def test_export_json_success(self, mock_open, agent):
         """Test successful JSON export."""
         api_data = {"method": "GET", "endpoint": "/api/v1/users", "status": "created"}
         
@@ -288,7 +302,8 @@ class TestBackendDeveloperAgent:
         mock_open.assert_called()
 
     @patch('builtins.open', create=True)
-    def test_export_yaml_success(self, mock_open, agent):
+    @pytest.mark.asyncio
+    async def test_export_yaml_success(self, mock_open, agent):
         """Test successful YAML export."""
         api_data = {"method": "GET", "endpoint": "/api/v1/users", "status": "created"}
         
@@ -296,7 +311,8 @@ class TestBackendDeveloperAgent:
         mock_open.assert_called()
 
     @patch('builtins.open', create=True)
-    def test_export_html_success(self, mock_open, agent):
+    @pytest.mark.asyncio
+    async def test_export_html_success(self, mock_open, agent):
         """Test successful HTML export."""
         api_data = {"method": "GET", "endpoint": "/api/v1/users", "status": "created", "response_time": "150ms", "throughput": "1000 req/s"}
         
@@ -316,18 +332,20 @@ class TestBackendDeveloperAgent:
             assert result is False
 
     @patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.publish')
-    def test_collaborate_example_success(self, mock_publish, agent):
+    @pytest.mark.asyncio
+    async def test_collaborate_example_success(self, mock_publish, agent):
         """Test successful collaboration example."""
-        with patch.object(agent, 'build_api', new_callable=AsyncMock) as mock_build, \
+        with patch.object(agent, 'build_api', new_callable=AsyncMock) as mock_build, 
              patch.object(agent, 'deploy_api') as mock_deploy:
-            agent.collaborate_example()
+            await agent.collaborate_example()
             
             mock_publish.assert_called()
             # Note: build_api is now async, but collaborate_example calls it synchronously
             # This is handled by the asyncio.run() call in the method
             mock_deploy.assert_called()
 
-    def test_handle_api_change_requested_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_handle_api_change_requested_success(self, agent):
         """Test successful API change request handling."""
         event = {"endpoint": "/api/v1/users"}
         
@@ -341,14 +359,15 @@ class TestBackendDeveloperAgent:
         """Test successful API change completion handling."""
         event = {"endpoint": "/api/v1/users", "status": "created"}
         
-        with patch.object(agent.tracer, 'record_event') as mock_trace, \
+        with patch.object(agent.tracer, 'record_event') as mock_trace, 
              patch.object(agent.policy_engine, 'evaluate_policy', new_callable=AsyncMock) as mock_policy:
             await agent.handle_api_change_completed(event)
             
             mock_trace.assert_called_with("api_change_completed", event)
             mock_policy.assert_called()
 
-    def test_handle_api_deployment_requested_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_handle_api_deployment_requested_success(self, agent):
         """Test successful API deployment request handling."""
         event = {"endpoint": "/api/v1/users"}
         
@@ -361,7 +380,7 @@ class TestBackendDeveloperAgent:
         """Test successful API deployment completion handling."""
         event = {"endpoint": "/api/v1/users", "status": "deployed"}
         
-        with patch.object(agent.tracer, 'record_event') as mock_trace, \
+        with patch.object(agent.tracer, 'record_event') as mock_trace, 
              patch.object(agent.policy_engine, 'evaluate_policy', new_callable=AsyncMock) as mock_policy:
             await agent.handle_api_deployment_completed(event)
             
@@ -375,11 +394,11 @@ class TestBackendDeveloperAgentCLI:
     @pytest.fixture
     def agent(self):
         """Create a BackendDeveloperAgent instance for CLI testing."""
-        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_performance_monitor'), \
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_advanced_policy_engine'), \
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_sprite_library'), \
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BMADTracer'), \
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.PrefectWorkflowOrchestrator'), \
+        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_performance_monitor'), 
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_advanced_policy_engine'), 
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_sprite_library'), 
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BMADTracer'), 
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.PrefectWorkflowOrchestrator'), 
              patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_framework_templates_manager') as mock_framework_manager:
             # Mock the framework manager to return a mock with get_template method
             mock_manager_instance = Mock()
@@ -530,11 +549,11 @@ class TestBackendDeveloperAgentIntegration:
     @pytest.fixture
     def agent(self):
         """Create a BackendDeveloperAgent instance for integration testing."""
-        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_performance_monitor'), \
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_advanced_policy_engine'), \
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_sprite_library'), \
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BMADTracer'), \
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.PrefectWorkflowOrchestrator'), \
+        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_performance_monitor'), 
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_advanced_policy_engine'), 
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_sprite_library'), 
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BMADTracer'), 
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.PrefectWorkflowOrchestrator'), 
              patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_framework_templates_manager') as mock_framework_manager:
             # Mock the framework manager to return a mock with get_template method
             mock_manager_instance = Mock()
@@ -542,6 +561,7 @@ class TestBackendDeveloperAgentIntegration:
             mock_framework_manager.return_value = mock_manager_instance
             return BackendDeveloperAgent()
 
+    @pytest.mark.asyncio
     @pytest.mark.asyncio
     async def test_complete_api_workflow(self, agent):
         """Test complete API workflow from build to deploy."""
@@ -551,7 +571,7 @@ class TestBackendDeveloperAgentIntegration:
         assert build_result["endpoint"] == "/api/v1/users"
         
         # Deploy API
-        deploy_result = agent.deploy_api("/api/v1/users")
+        deploy_result = await agent.deploy_api("/api/v1/users")
         assert deploy_result["status"] == "deployed"
         assert deploy_result["endpoint"] == "/api/v1/users"
         
@@ -569,7 +589,8 @@ class TestBackendDeveloperAgentIntegration:
             result = agent.test_resource_completeness()
             assert result is True
 
-    def test_agent_error_handling_integration(self, agent, capsys):
+    @pytest.mark.asyncio
+    async def test_agent_error_handling_integration(self, agent, capsys):
         """Test agent error handling in integration scenarios."""
         # Test invalid endpoint
         with pytest.raises(BackendValidationError):
@@ -593,7 +614,8 @@ class TestBackendDeveloperAgentIntegration:
             agent.deploy_api("/api/v1/users")
             mock_record.assert_called()
 
-    def test_agent_event_handling_integration(self, agent):
+    @pytest.mark.asyncio
+    async def test_agent_event_handling_integration(self, agent):
         """Test agent event handling integration."""
         event = {"endpoint": "/api/v1/users", "status": "created"}
         

@@ -31,9 +31,10 @@ class TestFrontendDeveloperAgent:
         assert isinstance(agent.template_paths, dict)
         assert isinstance(agent.data_paths, dict)
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Component History\n\n- Component 1\n- Component 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Component Historynn- Component 1n- Component 2")
     @patch('pathlib.Path.exists', return_value=True)
-    def test_load_component_history_success(self, mock_exists, mock_file):
+    @pytest.mark.asyncio
+    async def test_load_component_history_success(self, mock_exists, mock_file):
         """Test successful loading of component history."""
         agent = FrontendDeveloperAgent()
         # Clear history that was loaded during initialization
@@ -53,9 +54,10 @@ class TestFrontendDeveloperAgent:
         
         assert len(agent.component_history) == 0
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Performance History\n\n- Performance 1\n- Performance 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Performance Historynn- Performance 1n- Performance 2")
     @patch('pathlib.Path.exists', return_value=True)
-    def test_load_performance_history_success(self, mock_exists, mock_file):
+    @pytest.mark.asyncio
+    async def test_load_performance_history_success(self, mock_exists, mock_file):
         """Test successful loading of performance history."""
         agent = FrontendDeveloperAgent()
         # Clear history that was loaded during initialization
@@ -104,7 +106,7 @@ class TestFrontendDeveloperAgent:
     def test_show_help(self, capsys):
         """Test show_help method."""
         agent = FrontendDeveloperAgent()
-        agent.show_help()
+        await agent.show_help()
         
         captured = capsys.readouterr()
         assert "FrontendDeveloper Agent Commands:" in captured.out
@@ -139,7 +141,8 @@ class TestFrontendDeveloperAgent:
         captured = capsys.readouterr()
         assert "No component history available" in captured.out
 
-    def test_show_component_history_with_data(self, capsys):
+    @pytest.mark.asyncio
+    async def test_show_component_history_with_data(self, capsys):
         """Test show_component_history with data."""
         agent = FrontendDeveloperAgent()
         agent.component_history = ["Component 1", "Component 2", "Component 3"]
@@ -158,7 +161,8 @@ class TestFrontendDeveloperAgent:
         captured = capsys.readouterr()
         assert "No performance history available" in captured.out
 
-    def test_show_performance_with_data(self, capsys):
+    @pytest.mark.asyncio
+    async def test_show_performance_with_data(self, capsys):
         """Test show_performance with data."""
         agent = FrontendDeveloperAgent()
         agent.performance_history = ["Performance 1", "Performance 2", "Performance 3"]
@@ -196,7 +200,7 @@ class TestFrontendDeveloperAgent:
         agent = FrontendDeveloperAgent()
         # Initialize services to avoid monitor error
         agent._ensure_services_initialized()
-        result = agent.build_shadcn_component("TestButton")
+        result = await agent.build_shadcn_component("TestButton")
         
         assert isinstance(result, dict)
         assert result["component"] == "TestButton"
@@ -302,12 +306,13 @@ class TestFrontendDeveloperAgent:
         assert "resources_loaded" in status
 
     @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.time.sleep')
-    def test_collaborate_example(self, mock_sleep, capsys):
+    @pytest.mark.asyncio
+    async def test_collaborate_example(self, mock_sleep, capsys):
         """Test collaborate_example method."""
         agent = FrontendDeveloperAgent()
         # Initialize services to avoid monitor error
         agent._ensure_services_initialized()
-        agent.collaborate_example()
+        await agent.collaborate_example()
         
         captured = capsys.readouterr()
         assert "Collaboration example completed successfully." in captured.out
@@ -324,7 +329,8 @@ class TestFrontendDeveloperAgent:
         assert len(agent.component_history) > 0
 
     @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.ask_openai')
-    def test_code_review_success(self, mock_llm):
+    @pytest.mark.asyncio
+    async def test_code_review_success(self, mock_llm):
         """Test code_review with success."""
         mock_llm.return_value = "Good code review"
         
@@ -353,7 +359,8 @@ class TestFrontendDeveloperAgent:
             agent.code_review(None)
 
     @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.ask_openai')
-    def test_bug_root_cause_success(self, mock_llm):
+    @pytest.mark.asyncio
+    async def test_bug_root_cause_success(self, mock_llm):
         """Test bug_root_cause with success."""
         mock_llm.return_value = "Bug analysis result"
         
@@ -382,7 +389,8 @@ class TestFrontendDeveloperAgent:
             agent.bug_root_cause(None)
 
     @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.FigmaClient')
-    def test_parse_figma_components_success(self, mock_figma_client):
+    @pytest.mark.asyncio
+    async def test_parse_figma_components_success(self, mock_figma_client):
         """Test parse_figma_components with success."""
         mock_client = MagicMock()
         mock_figma_client.return_value = mock_client
@@ -421,7 +429,8 @@ class TestFrontendDeveloperAgent:
         assert "Figma API error" in result["error"]
 
     @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.ask_openai')
-    def test_generate_nextjs_component_success(self, mock_llm):
+    @pytest.mark.asyncio
+    async def test_generate_nextjs_component_success(self, mock_llm):
         """Test generate_nextjs_component with success."""
         mock_llm.return_value = "export const TestComponent = () => { return <div>Test</div>; };"
         
@@ -445,7 +454,8 @@ class TestFrontendDeveloperAgent:
 
     @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.FigmaClient')
     @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.ask_openai')
-    def test_generate_components_from_figma_success(self, mock_llm, mock_figma_client):
+    @pytest.mark.asyncio
+    async def test_generate_components_from_figma_success(self, mock_llm, mock_figma_client):
         """Test generate_components_from_figma with success."""
         mock_client = MagicMock()
         mock_figma_client.return_value = mock_client
@@ -489,7 +499,7 @@ class TestFrontendDeveloperAgent:
         agent = FrontendDeveloperAgent()
         # Initialize services to avoid monitor error
         agent._ensure_services_initialized()
-        agent.run()
+        await agent.run()
         
         # Just check that it doesn't raise an error
         assert True
@@ -509,7 +519,9 @@ class TestFrontendDeveloperIntegration:
     @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_advanced_policy_engine')
     @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_sprite_library')
     @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.time.sleep')
-    def test_complete_component_build_workflow(self, mock_sleep, mock_sprite, mock_policy, mock_monitor):
+    @pytest.mark.asyncio
+    @pytest.mark.asyncio
+    async def test_complete_component_build_workflow(self, mock_sleep, mock_sprite, mock_policy, mock_monitor):
         """Test complete component build workflow."""
         agent = FrontendDeveloperAgent()
         # Initialize services to avoid monitor error
@@ -525,7 +537,7 @@ class TestFrontendDeveloperIntegration:
         assert result["type"] == "React/Next.js"
         
         # Test accessibility check
-        accessibility_result = agent.run_accessibility_check("TestComponent")
+        accessibility_result = await agent.run_accessibility_check("TestComponent")
         assert accessibility_result["component"] == "TestComponent"
         assert "score" in accessibility_result
         

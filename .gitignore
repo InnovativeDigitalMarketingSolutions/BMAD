@@ -248,4 +248,29 @@ bmad/resources/data/*/*-history.md
 *-history.md
 
 # Policy files (auto-updated during testing)
-policies/*.json 
+policies/*.json
+
+# Temporary test files and scripts
+fix_async_tests.py
+temp_*.py
+test_*.py.bak
+*_temp.py
+
+# MCP integration temporary files
+mcp_*.json
+mcp_*.log
+*.mcp_cache
+
+# Async test debugging files
+async_test_*.log
+test_debug_*.json
+
+# Performance monitoring files
+performance_*.json
+performance_*.log
+metrics_*.json
+
+# CI/CD temporary files
+ci_*.log
+cd_*.log
+deploy_*.log 

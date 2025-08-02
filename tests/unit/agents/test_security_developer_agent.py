@@ -32,18 +32,21 @@ class TestSecurityDeveloperAgent:
         assert isinstance(agent.security_thresholds, dict)
         assert isinstance(agent.active_threats, list)
 
-    def test_validate_input_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_input_success(self, agent):
         """Test successful input validation."""
         agent._validate_input("test", str, "test_param")
         agent._validate_input(123, int, "test_param")
         agent._validate_input({"key": "value"}, dict, "test_param")
 
-    def test_validate_input_failure(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_input_failure(self, agent):
         """Test input validation failure."""
         with pytest.raises(SecurityValidationError, match="Invalid type for test_param"):
             agent._validate_input(123, str, "test_param")
 
-    def test_validate_security_target_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_security_target_success(self, agent):
         """Test successful security target validation."""
         agent._validate_security_target("application")
         agent._validate_security_target("api")
@@ -59,7 +62,8 @@ class TestSecurityDeveloperAgent:
         with pytest.raises(SecurityValidationError, match="Invalid type for target"):
             agent._validate_security_target(123)
 
-    def test_validate_vulnerability_data_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_vulnerability_data_success(self, agent):
         """Test successful vulnerability data validation."""
         valid_vuln = {
             "severity": "high",
@@ -134,7 +138,8 @@ class TestSecurityDeveloperAgent:
         assert "Emergency security patch deployment recommended" in recommendations
         assert "Consider temporary service suspension" in recommendations
 
-    def test_record_security_metric_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_record_security_metric_success(self, agent):
         """Test successful security metric recording."""
         # Mock the entire method to prevent external API calls
         with patch.object(agent, '_record_security_metric') as mock_record:
@@ -146,15 +151,17 @@ class TestSecurityDeveloperAgent:
             # Verify the method was called
             mock_record.assert_called_once()
 
-    def test_record_security_metric_failure(self, agent):
+    @pytest.mark.asyncio
+    async def test_record_security_metric_failure(self, agent):
         """Test security metric recording failure."""
         with patch.object(agent.monitor, '_record_metric', side_effect=Exception("Test error")):
             agent._record_security_metric("test_metric", 85.5)
             # Should not raise exception, just log error
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Scan History\n\n- Scan 1\n- Scan 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Scan Historynn- Scan 1n- Scan 2")
     @patch('pathlib.Path.exists', return_value=True)
-    def test_load_scan_history_success(self, mock_exists, mock_file, agent):
+    @pytest.mark.asyncio
+    async def test_load_scan_history_success(self, mock_exists, mock_file, agent):
         """Test successful scan history loading."""
         agent.scan_history = []  # Reset history
         agent._load_scan_history()
@@ -177,9 +184,10 @@ class TestSecurityDeveloperAgent:
         agent._save_scan_history()
         mock_file.assert_called()
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Incident History\n\n- Incident 1\n- Incident 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Incident Historynn- Incident 1n- Incident 2")
     @patch('pathlib.Path.exists', return_value=True)
-    def test_load_incident_history_success(self, mock_exists, mock_file, agent):
+    @pytest.mark.asyncio
+    async def test_load_incident_history_success(self, mock_exists, mock_file, agent):
         """Test successful incident history loading."""
         agent.incident_history = []  # Reset history
         agent._load_incident_history()
@@ -204,7 +212,7 @@ class TestSecurityDeveloperAgent:
 
     def test_show_help(self, agent, capsys):
         """Test show_help method."""
-        agent.show_help()
+        await agent.show_help()
         captured = capsys.readouterr()
         assert "SecurityDeveloper Agent Commands:" in captured.out
         assert "security-scan" in captured.out
@@ -212,7 +220,7 @@ class TestSecurityDeveloperAgent:
         assert "threat-assessment" in captured.out
         assert "security-recommendations" in captured.out
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Best Practices\n\nTest content")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Best PracticesnnTest content")
     @patch('pathlib.Path.exists', return_value=True)
     def test_show_resource_best_practices(self, mock_exists, mock_file, agent, capsys):
         """Test show_resource method for best-practices."""
@@ -233,7 +241,8 @@ class TestSecurityDeveloperAgent:
         captured = capsys.readouterr()
         assert "Unknown resource type: invalid-type" in captured.out
 
-    def test_show_resource_validation_error(self, agent):
+    @pytest.mark.asyncio
+    async def test_show_resource_validation_error(self, agent):
         """Test show_resource method with invalid input type."""
         # The show_resource method doesn't actually validate input type in the current implementation
         # This test should be updated to test actual validation behavior
@@ -246,7 +255,8 @@ class TestSecurityDeveloperAgent:
         captured = capsys.readouterr()
         assert "No scan history available." in captured.out
 
-    def test_show_scan_history_with_data(self, agent, capsys):
+    @pytest.mark.asyncio
+    async def test_show_scan_history_with_data(self, agent, capsys):
         """Test show_scan_history method with data."""
         agent.scan_history = ["Scan 1", "Scan 2", "Scan 3"]
         agent.show_scan_history()
@@ -261,7 +271,8 @@ class TestSecurityDeveloperAgent:
         captured = capsys.readouterr()
         assert "No incident history available." in captured.out
 
-    def test_show_incident_history_with_data(self, agent, capsys):
+    @pytest.mark.asyncio
+    async def test_show_incident_history_with_data(self, agent, capsys):
         """Test show_incident_history method with data."""
         agent.incident_history = ["Incident 1", "Incident 2", "Incident 3"]
         agent.show_incident_history()
@@ -270,26 +281,29 @@ class TestSecurityDeveloperAgent:
         assert "Incident 1" in captured.out
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
-    def test_run_security_scan_success(self, mock_monitor, agent):
+    @pytest.mark.asyncio
+    async def test_run_security_scan_success(self, mock_monitor, agent):
         """Test successful security scan."""
-        result = agent.run_security_scan("application")
+        result = await agent.run_security_scan("application")
         assert result["target"] == "application"
         assert result["security_score"] == 75  # Updated score based on new calculation
         assert "vulnerabilities" in result
         assert "recommendations" in result
 
-    def test_run_security_scan_validation_error(self, agent):
+    @pytest.mark.asyncio
+    async def test_run_security_scan_validation_error(self, agent):
         """Test security scan with validation error."""
         with pytest.raises(SecurityValidationError):
-            agent.run_security_scan("")  # Empty target
+            await agent.run_security_scan("")  # Empty target
 
     def test_run_security_scan_invalid_type(self, agent):
         """Test security scan with invalid type."""
         with pytest.raises(SecurityValidationError):
-            agent.run_security_scan(123)  # Invalid type
+            await agent.run_security_scan(123)  # Invalid type
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
-    def test_vulnerability_assessment_success(self, mock_monitor, agent):
+    @pytest.mark.asyncio
+    async def test_vulnerability_assessment_success(self, mock_monitor, agent):
         """Test successful vulnerability assessment."""
         result = agent.vulnerability_assessment("API")
         assert result["component"] == "API"
@@ -309,7 +323,8 @@ class TestSecurityDeveloperAgent:
             agent.vulnerability_assessment(123)
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
-    def test_compliance_check_success(self, mock_monitor, agent):
+    @pytest.mark.asyncio
+    async def test_compliance_check_success(self, mock_monitor, agent):
         """Test successful compliance check."""
         result = agent.compliance_check("OWASP")
         assert result["framework"] == "OWASP"
@@ -328,7 +343,8 @@ class TestSecurityDeveloperAgent:
         with pytest.raises(SecurityValidationError):
             agent.compliance_check(123)
 
-    def test_threat_assessment_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_threat_assessment_success(self, agent):
         """Test successful threat assessment."""
         result = agent.threat_assessment()
         assert result["overall_threat_level"] == "high"  # Updated based on new calculation
@@ -411,14 +427,15 @@ class TestSecurityDeveloperAgent:
     @patch('bmad.agents.core.communication.message_bus.publish')
     @patch('bmad.agents.core.data.supabase_context.save_context')
     @patch('bmad.agents.core.data.supabase_context.get_context')
-    def test_collaborate_example(self, mock_get_context, mock_save_context, mock_publish, agent):
+    @pytest.mark.asyncio
+    async def test_collaborate_example(self, mock_get_context, mock_save_context, mock_publish, agent):
         """Test collaborate_example method."""
         # Mock the entire collaborate_example method to prevent external API calls
         with patch.object(agent, 'collaborate_example') as mock_collaborate:
             mock_collaborate.return_value = None
             
             # Test the method
-            agent.collaborate_example()
+            await agent.collaborate_example()
             
             # Verify the method was called
             mock_collaborate.assert_called_once()
@@ -442,7 +459,7 @@ class TestSecurityDeveloperAgent:
         with patch.object(agent, 'run') as mock_run:
             mock_run.return_value = None
             
-            agent.run()
+            await agent.run()
             
             # Verify the method was called
             mock_run.assert_called_once()
@@ -516,13 +533,15 @@ class TestSecurityDeveloperAgent:
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
     @patch('bmad.agents.core.communication.message_bus.publish')
-    def test_complete_security_workflow(self, mock_publish, mock_monitor, agent):
+    @pytest.mark.asyncio
+    @pytest.mark.asyncio
+    async def test_complete_security_workflow(self, mock_publish, mock_monitor, agent):
         """Test complete security workflow."""
         # Test the complete workflow
-        scan_result = agent.run_security_scan("application")
-        assessment_result = agent.vulnerability_assessment("API")
-        compliance_result = agent.compliance_check("OWASP")
-        threat_result = agent.threat_assessment()
+        scan_result = await agent.run_security_scan("application")
+        assessment_result = await agent.vulnerability_assessment("API")
+        compliance_result = await agent.compliance_check("OWASP")
+        threat_result = await agent.threat_assessment()
         recommendations = agent.generate_security_recommendations()
 
         assert scan_result["target"] == "application"
@@ -545,7 +564,8 @@ class TestSecurityDeveloperAgent:
         """Test that SecurityValidationError inherits from SecurityError."""
         assert issubclass(SecurityValidationError, SecurityError)
 
-    def test_validate_compliance_framework_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_validate_compliance_framework_success(self, agent):
         """Test successful compliance framework validation."""
         agent._validate_compliance_framework("OWASP")
         agent._validate_compliance_framework("NIST")
@@ -605,7 +625,8 @@ class TestSecurityDeveloperAgent:
         assert agent.security_metrics["compliance_score"] == 85.0
         assert agent.security_metrics["threat_level"] == "medium"
 
-    def test_start_real_time_monitoring_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_start_real_time_monitoring_success(self, agent):
         """Test successful real-time monitoring start."""
         result = agent.start_real_time_monitoring()
         
@@ -614,7 +635,8 @@ class TestSecurityDeveloperAgent:
         assert "start_time" in result
         assert "monitoring_config" in result
 
-    def test_stop_real_time_monitoring_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_stop_real_time_monitoring_success(self, agent):
         """Test successful real-time monitoring stop."""
         # Start monitoring first
         agent.start_real_time_monitoring()
@@ -625,7 +647,8 @@ class TestSecurityDeveloperAgent:
         assert agent.real_time_monitoring is False
         assert "stop_time" in result
 
-    def test_trigger_incident_response_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_trigger_incident_response_success(self, agent):
         """Test successful incident response triggering."""
         result = agent.trigger_incident_response("data_breach", "high")
         
@@ -645,7 +668,8 @@ class TestSecurityDeveloperAgent:
         with pytest.raises(SecurityValidationError, match="Invalid type for severity"):
             agent.trigger_incident_response("data_breach", 123)
 
-    def test_generate_security_analytics_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_generate_security_analytics_success(self, agent):
         """Test successful security analytics generation."""
         result = agent.generate_security_analytics("30d")
         
@@ -661,7 +685,8 @@ class TestSecurityDeveloperAgent:
         with pytest.raises(SecurityValidationError, match="Invalid type for time_period"):
             agent.generate_security_analytics(123)
 
-    def test_perform_penetration_test_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_perform_penetration_test_success(self, agent):
         """Test successful penetration test execution."""
         result = agent.perform_penetration_test("web_application", "web")
         
@@ -682,7 +707,8 @@ class TestSecurityDeveloperAgent:
         with pytest.raises(SecurityValidationError, match="Invalid type for scope"):
             agent.perform_penetration_test("web_application", 123)
 
-    def test_update_vulnerability_database_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_update_vulnerability_database_success(self, agent):
         """Test successful vulnerability database update."""
         vuln_data = {
             "id": "CVE-2024-TEST",
@@ -697,7 +723,8 @@ class TestSecurityDeveloperAgent:
         assert "vulnerability_id" in result
         assert vuln_data["id"] in agent.vulnerability_database
 
-    def test_update_vulnerability_database_invalid_data(self, agent):
+    @pytest.mark.asyncio
+    async def test_update_vulnerability_database_invalid_data(self, agent):
         """Test vulnerability database update with invalid data."""
         invalid_vuln = {
             "severity": "invalid",
@@ -708,7 +735,8 @@ class TestSecurityDeveloperAgent:
         with pytest.raises(SecurityValidationError, match="Missing required field: cwe"):
             agent.update_vulnerability_database(invalid_vuln)
 
-    def test_get_security_dashboard_data_success(self, agent):
+    @pytest.mark.asyncio
+    async def test_get_security_dashboard_data_success(self, agent):
         """Test successful security dashboard data generation."""
         result = agent.get_security_dashboard_data()
         
@@ -781,7 +809,7 @@ class TestSecurityDeveloperAgent:
 
     def test_enhanced_security_scan_with_cvss(self, agent):
         """Test enhanced security scan with CVSS scoring."""
-        result = agent.run_security_scan("application")
+        result = await agent.run_security_scan("application")
         
         assert "vulnerabilities" in result
         assert len(result["vulnerabilities"]) > 0
@@ -827,28 +855,29 @@ class TestSecurityDeveloperAgent:
             assert "impact" in vector
             assert "mitigation" in vector
 
-    def test_security_workflow_integration(self, agent):
+    @pytest.mark.asyncio
+    async def test_security_workflow_integration(self, agent):
         """Test integration of all security features in a complete workflow."""
         # Start monitoring
-        monitoring_result = agent.start_real_time_monitoring()
+        monitoring_result = await agent.start_real_time_monitoring()
         assert monitoring_result["status"] == "active"
         
         # Run security scan
-        scan_result = agent.run_security_scan("web_application")
+        scan_result = await agent.run_security_scan("web_application")
         assert scan_result["security_score"] > 0
         
         # Perform penetration test
-        pentest_result = agent.perform_penetration_test("web_application", "web")
+        pentest_result = await agent.perform_penetration_test("web_application", "web")
         assert pentest_result["overall_risk_score"] > 0
         
         # Generate analytics
-        analytics_result = agent.generate_security_analytics("7d")
+        analytics_result = await agent.generate_security_analytics("7d")
         assert "security_metrics" in analytics_result
         
         # Get dashboard data
-        dashboard_result = agent.get_security_dashboard_data()
+        dashboard_result = await agent.get_security_dashboard_data()
         assert "overview" in dashboard_result
         
         # Stop monitoring
-        stop_result = agent.stop_real_time_monitoring()
+        stop_result = await agent.stop_real_time_monitoring()
         assert stop_result["status"] == "inactive" 

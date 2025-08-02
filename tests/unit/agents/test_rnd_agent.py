@@ -25,9 +25,10 @@ class TestRnDAgent:
         assert hasattr(agent, 'template_paths')
         assert hasattr(agent, 'data_paths')
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Experiment History\n\n- Test Experiment 1\n- Test Experiment 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Experiment Historynn- Test Experiment 1n- Test Experiment 2")
     @patch('pathlib.Path.exists', return_value=True)
-    def test_load_experiment_history_success(self, mock_exists, mock_file, agent):
+    @pytest.mark.asyncio
+    async def test_load_experiment_history_success(self, mock_exists, mock_file, agent):
         """Test successful experiment history loading."""
         agent.experiment_history = []  # Reset history
         agent._load_experiment_history()
@@ -50,9 +51,10 @@ class TestRnDAgent:
         agent._save_experiment_history()
         mock_file.assert_called()
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Research History\n\n- Test Research 1\n- Test Research 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Research Historynn- Test Research 1n- Test Research 2")
     @patch('pathlib.Path.exists', return_value=True)
-    def test_load_research_history_success(self, mock_exists, mock_file, agent):
+    @pytest.mark.asyncio
+    async def test_load_research_history_success(self, mock_exists, mock_file, agent):
         """Test successful research history loading."""
         agent.research_history = []  # Reset history
         agent._load_research_history()
@@ -77,13 +79,13 @@ class TestRnDAgent:
 
     def test_show_help(self, agent, capsys):
         """Test show_help method."""
-        agent.show_help()
+        await agent.show_help()
         captured = capsys.readouterr()
         assert "RnD Agent Commands:" in captured.out
         assert "conduct-research" in captured.out
         assert "design-experiment" in captured.out
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Best Practices\n\nTest content")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Best PracticesnnTest content")
     @patch('pathlib.Path.exists', return_value=True)
     def test_show_resource_best_practices(self, mock_exists, mock_file, agent, capsys):
         """Test show_resource method for best-practices."""
@@ -111,7 +113,8 @@ class TestRnDAgent:
         captured = capsys.readouterr()
         assert "No experiment history available." in captured.out
 
-    def test_show_experiment_history_with_data(self, agent, capsys):
+    @pytest.mark.asyncio
+    async def test_show_experiment_history_with_data(self, agent, capsys):
         """Test show_experiment_history with data."""
         agent.experiment_history = ["Test Experiment 1", "Test Experiment 2"]
         agent.show_experiment_history()
@@ -126,7 +129,8 @@ class TestRnDAgent:
         captured = capsys.readouterr()
         assert "No research history available." in captured.out
 
-    def test_show_research_history_with_data(self, agent, capsys):
+    @pytest.mark.asyncio
+    async def test_show_research_history_with_data(self, agent, capsys):
         """Test show_research_history with data."""
         agent.research_history = ["Test Research 1", "Test Research 2"]
         agent.show_research_history()
@@ -135,12 +139,13 @@ class TestRnDAgent:
         assert "Test Research 1" in captured.out
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
-    def test_conduct_research(self, mock_monitor, agent):
+    @pytest.mark.asyncio
+    async def test_conduct_research(self, mock_monitor, agent):
         """Test conduct_research method."""
         mock_monitor_instance = MagicMock()
         mock_monitor.return_value = mock_monitor_instance
         
-        result = agent.conduct_research("AI Testing", "Technology Research")
+        result = await agent.conduct_research("AI Testing", "Technology Research")
         
         assert result["status"] == "completed"
         assert result["topic"] == "AI Testing"
@@ -299,7 +304,8 @@ class TestRnDAgent:
     @patch('bmad.agents.core.communication.message_bus.publish')
     @patch('bmad.agents.core.data.supabase_context.save_context')
     @patch('bmad.agents.core.data.supabase_context.get_context')
-    def test_collaborate_example(self, mock_get_context, mock_save_context, mock_publish, agent):
+    @pytest.mark.asyncio
+    async def test_collaborate_example(self, mock_get_context, mock_save_context, mock_publish, agent):
         """Test collaborate_example method."""
         mock_get_context.return_value = {"rnd_projects": ["TestProject"]}
         mock_save_context.return_value = None
@@ -307,7 +313,7 @@ class TestRnDAgent:
         # Mock the entire collaborate_example method to avoid Supabase API calls
         with patch.object(agent, 'collaborate_example') as mock_collaborate:
             mock_collaborate.return_value = None
-            agent.collaborate_example()
+            await agent.collaborate_example()
         
         # Verify the method was called
         mock_collaborate.assert_called_once()
@@ -323,33 +329,38 @@ class TestRnDAgent:
         # Mock the entire run method to avoid Supabase API calls
         with patch.object(agent, 'run') as mock_run:
             mock_run.return_value = None
-            agent.run()
+            await agent.run()
         
         # Verify the method was called
         mock_run.assert_called_once()
 
     # Error handling tests
-    def test_conduct_research_invalid_input(self, agent):
+    @pytest.mark.asyncio
+    async def test_conduct_research_invalid_input(self, agent):
         """Test conduct_research with invalid input."""
         with pytest.raises(TypeError):
-            agent.conduct_research(123, "Technology Research")
+            await agent.conduct_research(123, "Technology Research")
 
-    def test_design_experiment_invalid_input(self, agent):
+    @pytest.mark.asyncio
+    async def test_design_experiment_invalid_input(self, agent):
         """Test design_experiment with invalid input."""
         with pytest.raises(TypeError):
             agent.design_experiment(123, "hypothesis")
 
-    def test_run_experiment_invalid_input(self, agent):
+    @pytest.mark.asyncio
+    async def test_run_experiment_invalid_input(self, agent):
         """Test run_experiment with invalid input."""
         with pytest.raises(TypeError):
             agent.run_experiment(123, "experiment_name")
 
-    def test_generate_innovation_invalid_input(self, agent):
+    @pytest.mark.asyncio
+    async def test_generate_innovation_invalid_input(self, agent):
         """Test generate_innovation with invalid input."""
         with pytest.raises(TypeError):
             agent.generate_innovation(123, "focus_area")
 
-    def test_prototype_solution_invalid_input(self, agent):
+    @pytest.mark.asyncio
+    async def test_prototype_solution_invalid_input(self, agent):
         """Test prototype_solution with invalid input."""
         with pytest.raises(TypeError):
             agent.prototype_solution(123, "solution_type")
@@ -357,33 +368,35 @@ class TestRnDAgent:
     # Integration workflow test
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
     @patch('bmad.agents.core.communication.message_bus.publish')
-    def test_complete_rnd_workflow(self, mock_publish, mock_monitor, agent):
+    @pytest.mark.asyncio
+    @pytest.mark.asyncio
+    async def test_complete_rnd_workflow(self, mock_publish, mock_monitor, agent):
         """Test complete R&D workflow from research to prototype."""
         mock_monitor_instance = MagicMock()
         mock_monitor.return_value = mock_monitor_instance
         
         # Conduct research
-        research_result = agent.conduct_research("AI Automation", "Technology Research")
+        research_result = await agent.conduct_research("AI Automation", "Technology Research")
         assert research_result["status"] == "completed"
         
         # Design experiment
-        experiment_design = agent.design_experiment("AI Pilot", "AI will improve efficiency")
+        experiment_design = await agent.design_experiment("AI Pilot", "AI will improve efficiency")
         assert experiment_design["status"] == "designed"
         
         # Run experiment
-        experiment_result = agent.run_experiment("exp_123", "AI Pilot")
+        experiment_result = await agent.run_experiment("exp_123", "AI Pilot")
         assert experiment_result["status"] == "completed"
         
         # Evaluate results
-        evaluation_result = agent.evaluate_results(experiment_result)
+        evaluation_result = await agent.evaluate_results(experiment_result)
         assert evaluation_result["status"] == "evaluated"
         
         # Generate innovation
-        innovation_result = agent.generate_innovation("AI Innovation", "Process Optimization")
+        innovation_result = await agent.generate_innovation("AI Innovation", "Process Optimization")
         assert innovation_result["status"] == "generated"
         
         # Create prototype
-        prototype_result = agent.prototype_solution("AI Prototype", "Process Automation")
+        prototype_result = await agent.prototype_solution("AI Prototype", "Process Automation")
         assert prototype_result["status"] == "prototyped"
         
         # Verify that all methods were called successfully
@@ -514,12 +527,12 @@ class TestRnDAgent:
     def test_conduct_research_empty_topic(self, agent):
         """Test conduct_research with empty topic."""
         with pytest.raises(ValueError, match="research_topic cannot be empty"):
-            agent.conduct_research("", "Technology Research")
+            await agent.conduct_research("", "Technology Research")
 
     def test_conduct_research_empty_type(self, agent):
         """Test conduct_research with empty type."""
         with pytest.raises(ValueError, match="research_type cannot be empty"):
-            agent.conduct_research("AI Automation", "")
+            await agent.conduct_research("AI Automation", "")
 
     def test_design_experiment_empty_name(self, agent):
         """Test design_experiment with empty name."""
@@ -640,7 +653,8 @@ class TestRnDAgentCLI:
     @patch('bmad.agents.Agent.RnD.rnd.save_context')
     @patch('bmad.agents.Agent.RnD.rnd.publish')
     @patch('bmad.agents.Agent.RnD.rnd.get_context', return_value={"status": "active"})
-    def test_cli_conduct_research(self, mock_get_context, mock_publish, mock_save_context):
+    @pytest.mark.asyncio
+    async def test_cli_conduct_research(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.RnD.rnd import main
         with patch('bmad.agents.Agent.RnD.rnd.RnDAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
@@ -772,7 +786,8 @@ class TestRnDAgentCLI:
     @patch('bmad.agents.Agent.RnD.rnd.save_context')
     @patch('bmad.agents.Agent.RnD.rnd.publish')
     @patch('bmad.agents.Agent.RnD.rnd.get_context', return_value={"status": "active"})
-    def test_cli_test(self, mock_get_context, mock_publish, mock_save_context):
+    @pytest.mark.asyncio
+    async def test_cli_test(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.RnD.rnd import main
         with patch('bmad.agents.Agent.RnD.rnd.RnDAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
@@ -784,7 +799,8 @@ class TestRnDAgentCLI:
     @patch('bmad.agents.Agent.RnD.rnd.save_context')
     @patch('bmad.agents.Agent.RnD.rnd.publish')
     @patch('bmad.agents.Agent.RnD.rnd.get_context', return_value={"status": "active"})
-    def test_cli_collaborate(self, mock_get_context, mock_publish, mock_save_context):
+    @pytest.mark.asyncio
+    async def test_cli_collaborate(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.RnD.rnd import main
         with patch('bmad.agents.Agent.RnD.rnd.RnDAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
@@ -796,7 +812,8 @@ class TestRnDAgentCLI:
     @patch('bmad.agents.Agent.RnD.rnd.save_context')
     @patch('bmad.agents.Agent.RnD.rnd.publish')
     @patch('bmad.agents.Agent.RnD.rnd.get_context', return_value={"status": "active"})
-    def test_cli_run(self, mock_get_context, mock_publish, mock_save_context):
+    @pytest.mark.asyncio
+    async def test_cli_run(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.RnD.rnd import main
         with patch('bmad.agents.Agent.RnD.rnd.RnDAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
