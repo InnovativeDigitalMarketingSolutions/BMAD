@@ -1,0 +1,181 @@
+version: '3.8'
+
+services:
+  # Redis for caching and session storage
+  redis:
+    image: redis:7-alpine
+    container_name: bmad-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    restart: unless-stopped
+    networks:
+      - bmad-network
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./microservices/api-gateway
+      dockerfile: Dockerfile
+    container_name: bmad-api-gateway
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379
+    env_file:
+      - ./microservices/api-gateway/.env
+    depends_on:
+      - redis
+      - auth-service
+      - notification-service
+      - agent-service
+      - workflow-service
+      - context-service
+      - integration-service
+    restart: unless-stopped
+    networks:
+      - bmad-network
+
+  # Authentication Service
+  auth-service:
+    build:
+      context: ./microservices/auth-service
+      dockerfile: Dockerfile
+    container_name: bmad-auth-service
+    ports:
+      - "8001:8001"
+    env_file:
+      - ./microservices/auth-service/.env
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - bmad-network
+
+  # Notification Service
+  notification-service:
+    build:
+      context: ./microservices/notification-service
+      dockerfile: Dockerfile
+    container_name: bmad-notification-service
+    ports:
+      - "8002:8002"
+    env_file:
+      - ./microservices/notification-service/.env
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - bmad-network
+
+  # Agent Service
+  agent-service:
+    build:
+      context: ./microservices/agent-service
+      dockerfile: Dockerfile
+    container_name: bmad-agent-service
+    ports:
+      - "8003:8003"
+    env_file:
+      - ./microservices/agent-service/.env
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - bmad-network
+
+  # Workflow Service
+  workflow-service:
+    build:
+      context: ./microservices/workflow-service
+      dockerfile: Dockerfile
+    container_name: bmad-workflow-service
+    ports:
+      - "8004:8004"
+    env_file:
+      - ./microservices/workflow-service/.env
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - bmad-network
+
+  # Context Service
+  context-service:
+    build:
+      context: ./microservices/context-service
+      dockerfile: Dockerfile
+    container_name: bmad-context-service
+    ports:
+      - "8005:8005"
+    env_file:
+      - ./microservices/context-service/.env
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - bmad-network
+
+  # Integration Service
+  integration-service:
+    build:
+      context: ./microservices/integration-service
+      dockerfile: Dockerfile
+    container_name: bmad-integration-service
+    ports:
+      - "8006:8006"
+    env_file:
+      - ./microservices/integration-service/.env
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - bmad-network
+
+  # Monitoring and Logging
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: bmad-prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    restart: unless-stopped
+    networks:
+      - bmad-network
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: bmad-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    depends_on:
+      - prometheus
+    restart: unless-stopped
+    networks:
+      - bmad-network
+
+volumes:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  bmad-network:
+    driver: bridge 
