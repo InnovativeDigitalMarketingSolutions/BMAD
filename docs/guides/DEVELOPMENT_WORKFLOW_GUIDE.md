@@ -4,7 +4,8 @@
 
 Dit document beschrijft de verplichte development workflow voor alle nieuwe functionaliteit en uitbreidingen in het BMAD systeem. Het doel is om ervoor te zorgen dat alle code kwalitatief is geïmplementeerd en goed ontwikkeld wordt.
 
-**Voor development strategie en filosofie, zie**: `DEVELOPMENT_STRATEGY.md`
+**Voor development strategie en filosofie, zie**: `DEVELOPMENT_STRATEGY.md`  
+**Voor quality assurance, zie**: `QUALITY_GUIDE.md`
 
 ## Development Pyramid Implementatie
 

@@ -2,7 +2,7 @@
 
 Thank you for considering contributing to this project! This document outlines the process for contributing and some guidelines to follow.
 
-🆕 **New to GitHub or pull requests?** Check out our [beginner-friendly Pull Request Guide](docs/how-to-contribute-with-pull-requests.md) first!
+🆕 **New to GitHub or pull requests?** This guide contains all the information you need!
 
 📋 **Before contributing**, please read our [Guiding Principles](docs/GUIDING-PRINCIPLES.md) to understand the BMad Method's core philosophy and architectural decisions.
 

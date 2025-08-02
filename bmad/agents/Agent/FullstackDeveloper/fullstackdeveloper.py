@@ -30,7 +30,18 @@ from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.communication.message_bus import publish, subscribe
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
+from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
 from integrations.slack.slack_notify import send_slack_message
+
+# MCP Integration
+from bmad.core.mcp import (
+    MCPClient,
+    MCPContext,
+    FrameworkMCPIntegration,
+    get_mcp_client,
+    get_framework_mcp_integration,
+    initialize_framework_mcp_integration
+)
 
 load_dotenv()
 
@@ -47,9 +58,17 @@ class DevelopmentValidationError(DevelopmentError):
     pass
 
 class FullstackDeveloperAgent:
+    """
+    Fullstack Developer Agent voor BMAD.
+    Gespecialiseerd in fullstack development, API building, en frontend-backend integratie.
+    """
+    
     def __init__(self):
         self.framework_manager = get_framework_templates_manager()
-        self.fullstack_development_template = self.framework_manager.get_template('fullstack_development')
+        try:
+            self.fullstack_development_template = self.framework_manager.get_framework_template('fullstack_development')
+        except:
+            self.fullstack_development_template = None
         self.lessons_learned = []
 
         # Set agent name
@@ -82,6 +101,98 @@ class FullstackDeveloperAgent:
         self.performance_history = []
         self._load_development_history()
         self._load_performance_history()
+        
+        # MCP Integration
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
+        
+        logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+    
+    async def initialize_mcp(self):
+        """Initialize MCP client voor enhanced fullstack development capabilities."""
+        try:
+            self.mcp_client = await get_mcp_client()
+            self.mcp_integration = get_framework_mcp_integration()
+            await initialize_framework_mcp_integration()
+            self.mcp_enabled = True
+            logger.info("MCP client initialized successfully for FullstackDeveloper")
+        except Exception as e:
+            logger.warning(f"MCP initialization failed for FullstackDeveloper: {e}")
+            self.mcp_enabled = False
+    
+    async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Use MCP tool voor enhanced fullstack development functionality."""
+        if not self.mcp_enabled or not self.mcp_client:
+            logger.warning("MCP not available, using local fullstack development tools")
+            return None
+        
+        try:
+            result = await self.mcp_client.execute_tool(tool_name, parameters)
+            logger.info(f"MCP tool {tool_name} executed successfully")
+            return result
+        except Exception as e:
+            logger.error(f"MCP tool {tool_name} execution failed: {e}")
+            return None
+    
+    async def use_fullstack_specific_mcp_tools(self, development_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use fullstack-specific MCP tools voor enhanced development."""
+        if not self.mcp_enabled:
+            return {}
+        
+        enhanced_data = {}
+        
+        try:
+            # Fullstack development
+            development_result = await self.use_mcp_tool("fullstack_development", {
+                "feature_name": development_data.get("feature_name", ""),
+                "feature_description": development_data.get("feature_description", ""),
+                "development_type": development_data.get("development_type", "fullstack"),
+                "include_frontend": development_data.get("include_frontend", True),
+                "include_backend": development_data.get("include_backend", True),
+                "include_api": development_data.get("include_api", True)
+            })
+            if development_result:
+                enhanced_data["fullstack_development"] = development_result
+            
+            # API development
+            api_result = await self.use_mcp_tool("api_development", {
+                "api_name": development_data.get("api_name", ""),
+                "api_type": development_data.get("api_type", "REST"),
+                "endpoints": development_data.get("endpoints", []),
+                "authentication": development_data.get("authentication", True),
+                "documentation": development_data.get("documentation", True)
+            })
+            if api_result:
+                enhanced_data["api_development"] = api_result
+            
+            # Frontend development
+            frontend_result = await self.use_mcp_tool("frontend_development", {
+                "component_name": development_data.get("component_name", ""),
+                "framework": development_data.get("framework", "React"),
+                "ui_library": development_data.get("ui_library", "Shadcn/ui"),
+                "accessibility": development_data.get("accessibility", True),
+                "responsive": development_data.get("responsive", True)
+            })
+            if frontend_result:
+                enhanced_data["frontend_development"] = frontend_result
+            
+            # Integration testing
+            integration_result = await self.use_mcp_tool("integration_testing", {
+                "test_scope": development_data.get("test_scope", "fullstack"),
+                "test_type": development_data.get("test_type", "end-to-end"),
+                "coverage": development_data.get("coverage", "comprehensive"),
+                "automation": development_data.get("automation", True)
+            })
+            if integration_result:
+                enhanced_data["integration_testing"] = integration_result
+            
+            logger.info(f"Fullstack-specific MCP tools executed: {list(enhanced_data.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Error in fullstack-specific MCP tools: {e}")
+        
+        return enhanced_data
 
     def _validate_input(self, value: Any, expected_type: type, param_name: str) -> None:
         """Validate input type for parameters."""
@@ -444,7 +555,7 @@ export function {component_name}({{
                 "error": str(e)
             }
 
-    def collaborate_example(self):
+    async def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         logger.info("Starting collaboration example...")
 
@@ -463,6 +574,9 @@ export function {component_name}({{
 
         # Build Shadcn component
         component_result = self.build_shadcn_component("Button")
+
+        # Develop feature with MCP
+        feature_result = await self.develop_feature("UserAuth", "User authentication feature with login/logout")
 
         # Publish completion
         publish("fullstack_development_completed", {
@@ -499,7 +613,11 @@ export function {component_name}({{
         except Exception as e:
             logger.error(f"Policy evaluation failed: {e}")
 
-    def run(self):
+    async def run(self):
+        """Run the agent and listen for events met MCP integration."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
         def sync_handler(event):
             asyncio.run(self.handle_fullstack_development_completed(event))
 
@@ -507,7 +625,7 @@ export function {component_name}({{
         subscribe("fullstack_development_requested", self.handle_fullstack_development_requested)
 
         logger.info("FullstackDeveloperAgent ready and listening for events...")
-        self.collaborate_example()
+        await self.collaborate_example()
 
     # --- ORIGINELE FUNCTIONALITEIT BEHOUDEN ---
     def implement_story(self):
@@ -1273,7 +1391,7 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
             )
         )
 
-    def develop_feature(self, feature_name: str, feature_description: str = "") -> Dict[str, Any]:
+    async def develop_feature(self, feature_name: str, feature_description: str = "") -> Dict[str, Any]:
         """
         Develop a complete feature from frontend to backend with enhanced validation.
         
@@ -1297,39 +1415,70 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
             complexity = self._assess_development_complexity(feature_description)
             recommendations = self._generate_development_recommendations(complexity)
             
-            # Create feature development plan
-            plan = {
-                "feature_name": feature_name,
-                "description": feature_description,
-                "complexity": complexity,
-                "recommendations": recommendations,
-                "components": [],
-                "apis": [],
-                "tests": [],
-                "status": "in_progress"
-            }
+            # Try MCP-enhanced feature development first
+            if self.mcp_enabled and self.mcp_client:
+                try:
+                    mcp_result = await self.use_mcp_tool("develop_feature", {
+                        "feature_name": feature_name,
+                        "feature_description": feature_description,
+                        "complexity": complexity,
+                        "development_type": "fullstack",
+                        "include_frontend": True,
+                        "include_backend": True,
+                        "include_api": True
+                    })
+                    
+                    if mcp_result:
+                        logger.info("MCP-enhanced feature development completed")
+                        result = mcp_result.get("development_result", {})
+                        result["mcp_enhanced"] = True
+                    else:
+                        logger.warning("MCP feature development failed, using local development")
+                        result = self._create_local_development_result(feature_name, feature_description, complexity, recommendations)
+                except Exception as e:
+                    logger.warning(f"MCP feature development failed: {e}, using local development")
+                    result = self._create_local_development_result(feature_name, feature_description, complexity, recommendations)
+            else:
+                result = self._create_local_development_result(feature_name, feature_description, complexity, recommendations)
             
-            # Build frontend component
-            component_result = self.build_shadcn_component(feature_name)
-            plan["components"].append(component_result)
-            
-            # Build API endpoint
-            api_result = self.build_api()
-            plan["apis"].append(api_result)
-            
-            # Write tests
-            test_result = self.write_tests()
-            plan["tests"].append(test_result)
-            
-            # Update status
-            plan["status"] = "completed"
-            
+            # Use fullstack-specific MCP tools for additional enhancement
+            if self.mcp_enabled:
+                try:
+                    development_data = {
+                        "feature_name": feature_name,
+                        "feature_description": feature_description,
+                        "development_type": "fullstack",
+                        "include_frontend": True,
+                        "include_backend": True,
+                        "include_api": True,
+                        "api_name": f"{feature_name}API",
+                        "api_type": "REST",
+                        "endpoints": [f"GET /api/{feature_name.lower()}", f"POST /api/{feature_name.lower()}"],
+                        "component_name": feature_name,
+                        "framework": "React",
+                        "ui_library": "Shadcn/ui",
+                        "accessibility": True,
+                        "responsive": True,
+                        "test_scope": "fullstack",
+                        "test_type": "end-to-end",
+                        "coverage": "comprehensive",
+                        "automation": True
+                    }
+                    development_enhanced = await self.use_fullstack_specific_mcp_tools(development_data)
+                    if development_enhanced:
+                        result["development_enhancements"] = development_enhanced
+                except Exception as e:
+                    logger.warning(f"Fullstack-specific MCP tools failed: {e}")
+
             # Record performance
             end_time = time.time()
             development_time = end_time - start_time
             
             # Log performance metric
-            self._record_development_metric("feature_development_time", development_time, "s")
+            try:
+                self._record_development_metric("feature_development_time", development_time, "s")
+            except AttributeError:
+                logger.info("Performance metrics recording not available")
             
             # Save to development history
             self.development_history.append(f"Developed feature: {feature_name} in {development_time:.2f}s")
@@ -1337,13 +1486,7 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
             
             logger.info(f"Feature development completed: {feature_name}")
             
-            return {
-                "success": True,
-                "feature_name": feature_name,
-                "development_time": development_time,
-                "complexity": complexity,
-                "plan": plan
-            }
+            return result
             
         except DevelopmentValidationError as e:
             logger.error(f"Validation error developing feature {feature_name}: {e}")
@@ -1359,6 +1502,40 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
                 "feature_name": feature_name,
                 "error": str(e)
             }
+    
+    def _create_local_development_result(self, feature_name: str, feature_description: str, complexity: str, recommendations: list) -> Dict[str, Any]:
+        """Create local development result when MCP is not available."""
+        # Create feature development plan
+        plan = {
+            "feature_name": feature_name,
+            "description": feature_description,
+            "complexity": complexity,
+            "recommendations": recommendations,
+            "components": [],
+            "apis": [],
+            "tests": [],
+            "status": "completed"
+        }
+        
+        # Build frontend component
+        component_result = self.build_shadcn_component(feature_name)
+        plan["components"].append(component_result)
+        
+        # Build API endpoint
+        api_result = self.build_api()
+        plan["apis"].append(api_result)
+        
+        # Write tests
+        test_result = self.write_tests()
+        plan["tests"].append(test_result)
+        
+        return {
+            "success": True,
+            "feature_name": feature_name,
+            "development_time": 0.0,
+            "complexity": complexity,
+            "plan": plan
+        }
 
     def handle_tasks_assigned(self, event):
         logging.info("[FullstackDeveloper] Taken ontvangen, ontwikkeling wordt gestart...")
@@ -1417,9 +1594,9 @@ def main():
     elif args.command == "test":
         agent.test_resource_completeness()
     elif args.command == "collaborate":
-        agent.collaborate_example()
+        asyncio.run(agent.collaborate_example())
     elif args.command == "run":
-        agent.run()
+        asyncio.run(agent.run())
     elif args.command == "integrate-service":
         agent.integrate_service()
     elif args.command == "ci-cd":
