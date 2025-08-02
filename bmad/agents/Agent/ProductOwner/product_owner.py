@@ -20,12 +20,18 @@ from bmad.agents.core.ai.llm_client import ask_openai_with_confidence
 from bmad.agents.core.communication.message_bus import publish, subscribe
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.projects.project_manager import project_manager
+from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
+
 
 load_dotenv()
 
 
 class ProductOwnerAgent:
     def __init__(self):
+        self.framework_manager = get_framework_templates_manager()
+        self.product_owner_template = self.framework_manager.get_template('product_owner')
+        self.lessons_learned = []
+
         self.agent_name = "ProductOwnerAgent"
         self.story_history = []
         self.vision_history = []

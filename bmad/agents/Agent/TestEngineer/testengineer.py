@@ -29,6 +29,10 @@ logger = logging.getLogger(__name__)
 
 class TestEngineerAgent:
     def __init__(self):
+        self.framework_manager = get_framework_templates_manager()
+        self.testing_engineer_template = self.framework_manager.get_template('testing_engineer')
+        self.lessons_learned = []
+
         self.agent_name = "TestEngineerAgent"
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
@@ -287,6 +291,8 @@ def test_{component_name.lower()}_integration():
 import pytest
 from selenium import webdriver
 from {component_name} import {component_name}
+from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
+
 
 def test_{component_name.lower()}_e2e():
     driver = webdriver.Chrome()

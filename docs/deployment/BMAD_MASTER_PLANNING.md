@@ -509,6 +509,37 @@ show-framework-template [name]  # Specifieke framework template
 **Timeline**: Week 10-11  
 **Status**: 📋 **PLANNED** - Management templates complete, specialized templates next
 
+#### 1.7 MCP (Model Context Protocol) Integration (Planned)
+**Timeline**: Week 11-14  
+**Status**: 📋 **PLANNED** - High priority enhancement voor agent capabilities
+
+**Implementation Plan**:
+- **Phase 1 (Week 11-12)**: MCP Foundation
+  - MCP client implementation in BMAD core
+  - Basic tool registry en discovery
+  - Framework templates MCP integration
+  - Simple context management
+
+- **Phase 2 (Week 12-13)**: Agent Enhancement
+  - MCP client in alle agents
+  - Inter-agent MCP communication
+  - External tool MCP adapters
+  - Security en authentication
+
+- **Phase 3 (Week 13-14)**: Advanced Features
+  - Microservices MCP servers
+  - Service discovery en registration
+  - Advanced context management
+  - Complex tool orchestration
+
+**Expected Benefits**:
+- **20-60% Efficiency Improvement**: Snellere agent-tool communicatie
+- **15-35% Quality Improvement**: Real-time quality checks
+- **30-70% Automation Increase**: Automated tool orchestration
+- **Enhanced Agent Capabilities**: Betere tool integration en context awareness
+
+**Documentation**: See `docs/analysis/MCP_INTEGRATION_ANALYSIS.md` for complete analysis.
+
 **Analysis Results**:
 - **Totaal Agents**: 23 agents
 - **Hoogste Prioriteit**: 8 agents (Development + Testing)
@@ -1200,6 +1231,7 @@ pytest tests/ -v --run-integration --run-e2e
 4. [x] **Framework Templates voor Testing Agents** (Priority 1) ✅ **COMPLETE**
 5. [x] **Framework Templates voor AI Agents** (Priority 1) ✅ **COMPLETE**
 6. [x] **Framework Templates voor Management Agents** (Priority 1) ✅ **COMPLETE**
+7. [ ] **MCP (Model Context Protocol) Integration** (Priority 1) - Week 11-14
 6. [ ] **Integration Testing Framework** (Priority 1) - Week 6-7
 7. [x] **Notification Service Implementation** (Priority 1) ✅ **COMPLETE**
 8. [ ] **Docker Containerization** (Priority 2) - Week 7

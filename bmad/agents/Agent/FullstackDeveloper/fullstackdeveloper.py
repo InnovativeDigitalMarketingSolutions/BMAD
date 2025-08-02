@@ -48,6 +48,10 @@ class DevelopmentValidationError(DevelopmentError):
 
 class FullstackDeveloperAgent:
     def __init__(self):
+        self.framework_manager = get_framework_templates_manager()
+        self.fullstack_development_template = self.framework_manager.get_template('fullstack_development')
+        self.lessons_learned = []
+
         # Set agent name
         self.agent_name = "FullstackDeveloper"
         
@@ -880,6 +884,8 @@ export function APITester(): JSX.Element {
         print("""
 // components/MetricsChart.tsx
 import React from 'react';
+from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
+
 
 interface Metrics {
   workflows: {

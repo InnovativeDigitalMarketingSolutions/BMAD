@@ -21,6 +21,8 @@ from bmad.agents.core.communication.message_bus import publish, subscribe
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.slack.slack_notify import send_slack_message
+from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
@@ -36,6 +38,10 @@ class QualityValidationError(QualityError):
 
 class QualityGuardianAgent:
     def __init__(self):
+        self.framework_manager = get_framework_templates_manager()
+        self.quality_guardian_template = self.framework_manager.get_template('quality_guardian')
+        self.lessons_learned = []
+
         # Set agent name
         self.agent_name = "QualityGuardian"
         

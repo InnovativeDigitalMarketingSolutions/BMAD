@@ -23,6 +23,8 @@ from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_e
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 from integrations.prefect.prefect_workflow import PrefectWorkflowOrchestrator
 from integrations.slack.slack_notify import send_slack_message
+from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
@@ -38,6 +40,10 @@ class BackendValidationError(BackendError):
 
 class BackendDeveloperAgent:
     def __init__(self):
+        self.framework_manager = get_framework_templates_manager()
+        self.backend_development_template = self.framework_manager.get_template('backend_development')
+        self.lessons_learned = []
+
         # Set agent name
         self.agent_name = "BackendDeveloper"
         # Initialize core services

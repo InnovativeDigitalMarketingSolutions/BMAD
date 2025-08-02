@@ -23,6 +23,8 @@ from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_e
 from bmad.agents.core.communication.message_bus import publish, subscribe
 from integrations.figma.figma_client import FigmaClient
 from integrations.slack.slack_notify import send_slack_message
+from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
@@ -35,6 +37,10 @@ class FrontendDeveloperAgent:
     """
     
     def __init__(self):
+        self.framework_manager = get_framework_templates_manager()
+        self.frontend_development_template = self.framework_manager.get_template('frontend_development')
+        self.lessons_learned = []
+
         """Initialize FrontendDeveloper agent met lazy loading."""
         self.agent_name = "FrontendDeveloper"
         self.component_history = []
