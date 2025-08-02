@@ -26,6 +26,10 @@ Volg de development pyramid strategie zoals beschreven in `DEVELOPMENT_STRATEGY.
 ### Voor het implementeren van nieuwe functionaliteit:
 
 - [ ] **Agent Inventory Check**: Raadpleeg `bmad/agents/Agent/agents-overview.md` voor complete agent lijst (23 agents)
+- [ ] **Project Planning Check**: Raadpleeg project planning files voor context en requirements:
+  - `docs/deployment/KANBAN_BOARD.md` - Huidige taken en status
+  - `docs/deployment/BMAD_MASTER_PLANNING.md` - Uitgebreide backlog en roadmap
+  - `docs/deployment/IMPLEMENTATION_DETAILS.md` - Gedetailleerde implementatie uitleg
 - [ ] **Analyse**: Root cause analysis uitvoeren voor bugs
 - [ ] **Planning**: Development strategie bepalen (unit, integration, production)
 - [ ] **Review**: Bestaande guide files raadplegen voor best practices
@@ -96,18 +100,30 @@ cli/
 └── ...
 ```
 
-## 📋 **Agent Inventory Management**
+## 📋 **Project Planning & Agent Inventory Management**
 
-### **Mandatory Agent Overview Check**
-**VOOR ELKE NIEUWE IMPLEMENTATIE** moet je eerst de agent overview raadplegen:
+### **Mandatory Project Planning Check**
+**VOOR ELKE NIEUWE IMPLEMENTATIE** moet je eerst de project planning files raadplegen:
 
 ```bash
-# Check agent overview file
+# Check project planning files
+cat docs/deployment/KANBAN_BOARD.md
+cat docs/deployment/BMAD_MASTER_PLANNING.md
+cat docs/deployment/IMPLEMENTATION_DETAILS.md
 cat bmad/agents/Agent/agents-overview.md
 ```
 
-### **Agent Inventory Checklist**
-- [ ] **Total Count**: Controleer dat alle 23 agents zijn meegenomen
+### **Project Planning Files Overview**
+- **KANBAN_BOARD.md**: Huidige taken, status, en sprint planning
+- **BMAD_MASTER_PLANNING.md**: Uitgebreide backlog, roadmap, en implementatie strategie
+- **IMPLEMENTATION_DETAILS.md**: Gedetailleerde technische implementatie uitleg
+- **agents-overview.md**: Complete agent inventory en status
+
+### **Project Planning Checklist**
+- [ ] **Kanban Status**: Controleer huidige taken en sprint planning
+- [ ] **Backlog Items**: Verificeer relevante backlog items in master planning
+- [ ] **Implementation Context**: Raadpleeg implementatie details voor technische context
+- [ ] **Agent Inventory**: Controleer dat alle 23 agents zijn meegenomen
 - [ ] **MCP Status**: Verificeer MCP integration status van alle agents
 - [ ] **Dependencies**: Identificeer agent dependencies en integratie punten
 - [ ] **Categories**: Begrijp agent categorieën (Development, Design, Quality, etc.)
