@@ -22,6 +22,8 @@ from bmad.agents.core.ai.llm_client import ask_openai
 from bmad.agents.core.communication.message_bus import publish, subscribe
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.slack.slack_notify import send_slack_message
+from bmad.core.mcp import get_mcp_client, get_framework_mcp_integration, initialize_framework_mcp_integration
+from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
@@ -30,8 +32,13 @@ logger = logging.getLogger(__name__)
 class TestEngineerAgent:
     def __init__(self):
         self.framework_manager = get_framework_templates_manager()
-        self.testing_engineer_template = self.framework_manager.get_template('testing_engineer')
+        self.testing_engineer_template = self.framework_manager.get_framework_template('testing_engineer')
         self.lessons_learned = []
+        
+        # Initialize MCP integration
+        self.mcp_client = None
+        self.mcp_integration = None
+        self.mcp_enabled = False
 
         self.agent_name = "TestEngineerAgent"
         self.monitor = get_performance_monitor()
@@ -97,6 +104,32 @@ class TestEngineerAgent:
         except Exception as e:
             logger.warning(f"Could not load coverage history: {e}")
 
+    async def initialize_mcp(self):
+        """Initialize MCP client voor enhanced testing capabilities."""
+        try:
+            self.mcp_client = await get_mcp_client()
+            self.mcp_integration = get_framework_mcp_integration()
+            await initialize_framework_mcp_integration()
+            self.mcp_enabled = True
+            logger.info("MCP client initialized successfully for TestEngineer")
+        except Exception as e:
+            logger.warning(f"MCP initialization failed for TestEngineer: {e}")
+            self.mcp_enabled = False
+
+    async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Use MCP tool voor enhanced testing functionality."""
+        if not self.mcp_enabled or not self.mcp_client:
+            logger.warning("MCP not available, using local testing tools")
+            return None
+        
+        try:
+            result = await self.mcp_client.execute_tool(tool_name, parameters)
+            logger.info(f"MCP tool {tool_name} executed successfully")
+            return result
+        except Exception as e:
+            logger.error(f"MCP tool {tool_name} execution failed: {e}")
+            return None
+
     def _save_coverage_history(self):
         try:
             self.data_paths["coverage-history"].parent.mkdir(parents=True, exist_ok=True)
@@ -158,24 +191,53 @@ TestEngineer Agent Commands:
         for i, cov in enumerate(self.coverage_history[-10:], 1):
             print(f"{i}. {cov}")
 
-    def run_tests(self) -> Dict[str, Any]:
+    async def run_tests(self) -> Dict[str, Any]:
+        """Run comprehensive test suite met MCP enhancement."""
         logger.info("Running all tests...")
+        
+        # Try MCP-enhanced testing first
+        if self.mcp_enabled and self.mcp_client:
+            try:
+                mcp_result = await self.use_mcp_tool("run_test_suite", {
+                    "test_type": "comprehensive",
+                    "include_coverage": True,
+                    "parallel_execution": True
+                })
+                
+                if mcp_result:
+                    logger.info("MCP-enhanced test execution completed")
+                    result = mcp_result
+                    result["mcp_enhanced"] = True
+                else:
+                    logger.warning("MCP test execution failed, falling back to local execution")
+                    result = self._run_local_tests()
+            except Exception as e:
+                logger.warning(f"MCP test execution failed: {e}, using local execution")
+                result = self._run_local_tests()
+        else:
+            # Fallback naar lokale test execution
+            result = self._run_local_tests()
+        
+        # Voeg aan historie toe
+        test_entry = f"{datetime.now().isoformat()}: {sum('✅' in v for v in result.values())}/{len(result)} tests succesvol"
+        self.test_history.append(test_entry)
+        self._save_test_history()
+        
+        # Log performance metric
+        self.monitor._record_metric("TestEngineer", MetricType.SUCCESS_RATE, sum("✅" in v for v in result.values())/len(result)*100, "%")
+        logger.info(f"Test results: {result}")
+        return result
+
+    def _run_local_tests(self) -> Dict[str, Any]:
+        """Run local test suite als fallback."""
         # Simuleer testuitvoering
         time.sleep(1)
-        result = {
+        return {
             "redis_cache": "✅ Basic operations werken",
             "monitoring": "⚠️ Async issues gedetecteerd",
             "connection_pool": "⚠️ Initialization problemen",
             "llm_caching": "✅ Decorator werkt"
         }
-        # Voeg aan historie toe
-        test_entry = f"{datetime.now().isoformat()}: {sum('✅' in v for v in result.values())}/{len(result)} tests succesvol"
-        self.test_history.append(test_entry)
-        self._save_test_history()
-        # Log performance metric
-        self.monitor._record_metric("TestEngineer", MetricType.SUCCESS_RATE, sum("✅" in v for v in result.values())/len(result)*100, "%")
-        logger.info(f"Test results: {result}")
-        return result
 
     def validate_input(self, component_name: str, test_type: str):
         """Validate input parameters for test generation."""
@@ -184,9 +246,9 @@ TestEngineer Agent Commands:
         if test_type not in ["unit", "integration", "e2e"]:
             raise ValueError("Test type must be unit, integration, or e2e")
 
-    def generate_tests(self, component_name: str = "TestComponent", test_type: str = "unit") -> Dict[str, Any]:
+    async def generate_tests(self, component_name: str = "TestComponent", test_type: str = "unit") -> Dict[str, Any]:
         """
-        Generate tests for a component or feature.
+        Generate tests for a component or feature met MCP enhancement.
         
         Args:
             component_name: Name of the component to test
@@ -203,24 +265,32 @@ TestEngineer Agent Commands:
             # Record start time for performance monitoring
             start_time = time.time()
             
-            # Generate test content based on type
-            if test_type == "unit":
-                test_content = self._generate_unit_test(component_name)
-            elif test_type == "integration":
-                test_content = self._generate_integration_test(component_name)
-            elif test_type == "e2e":
-                test_content = self._generate_e2e_test(component_name)
+            # Try MCP-enhanced test generation first
+            if self.mcp_enabled and self.mcp_client:
+                try:
+                    mcp_result = await self.use_mcp_tool("generate_tests", {
+                        "component_name": component_name,
+                        "test_type": test_type,
+                        "include_coverage": True,
+                        "best_practices": True
+                    })
+                    
+                    if mcp_result:
+                        logger.info("MCP-enhanced test generation completed")
+                        test_result = mcp_result
+                        test_result["mcp_enhanced"] = True
+                    else:
+                        logger.warning("MCP test generation failed, falling back to local generation")
+                        test_content = self._generate_test_content(component_name, test_type)
+                        test_result = self._create_test_result(component_name, test_type, test_content)
+                except Exception as e:
+                    logger.warning(f"MCP test generation failed: {e}, using local generation")
+                    test_content = self._generate_test_content(component_name, test_type)
+                    test_result = self._create_test_result(component_name, test_type, test_content)
             else:
-                raise ValueError(f"Unsupported test type: {test_type}")
-            
-            # Create test result
-            test_result = {
-                "component_name": component_name,
-                "test_type": test_type,
-                "test_content": test_content,
-                "generated_at": datetime.now().isoformat(),
-                "status": "generated"
-            }
+                # Fallback naar lokale test generation
+                test_content = self._generate_test_content(component_name, test_type)
+                test_result = self._create_test_result(component_name, test_type, test_content)
             
             # Record performance
             end_time = time.time()
@@ -257,6 +327,27 @@ TestEngineer Agent Commands:
                 "error": str(e)
             }
     
+    def _generate_test_content(self, component_name: str, test_type: str) -> str:
+        """Generate test content based on type."""
+        if test_type == "unit":
+            return self._generate_unit_test(component_name)
+        elif test_type == "integration":
+            return self._generate_integration_test(component_name)
+        elif test_type == "e2e":
+            return self._generate_e2e_test(component_name)
+        else:
+            raise ValueError(f"Unsupported test type: {test_type}")
+
+    def _create_test_result(self, component_name: str, test_type: str, test_content: str) -> Dict[str, Any]:
+        """Create test result dictionary."""
+        return {
+            "component_name": component_name,
+            "test_type": test_type,
+            "test_content": test_content,
+            "generated_at": datetime.now().isoformat(),
+            "status": "generated"
+        }
+
     def _generate_unit_test(self, component_name: str) -> str:
         """Generate unit test content."""
         return f"""
@@ -392,9 +483,9 @@ def test_{component_name.lower()}_e2e():
             logger.error(f"Collaboration example failed: {e}")
             print(f"❌ Error in collaboration: {e}")
 
-    def handle_tests_requested(self, event):
+    async def handle_tests_requested(self, event):
         logger.info("[TestEngineer] Tests gestart...")
-        self.run_tests()
+        await self.run_tests()
         publish("tests_completed", {"desc": "Tests voltooid"})
         logger.info("[TestEngineer] Tests afgerond, tests_completed gepubliceerd.")
 
@@ -418,12 +509,19 @@ def test_{component_name.lower()}_e2e():
             logger.info(f"[TestEngineer][LLM Tests Error]: {error_result}")
             return error_result
 
-    def run(self):
-        """Main event loop for the agent."""
+    async def run(self):
+        """Main event loop for the agent met MCP integration."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
         def sync_handler(event):
             asyncio.run(self.handle_test_generation_requested(event))
+        
+        async def async_handler(event):
+            await self.handle_tests_requested(event)
+        
         subscribe("test_generation_requested", sync_handler)
-        subscribe("tests_requested", self.handle_tests_requested)
+        subscribe("tests_requested", lambda event: asyncio.run(async_handler(event)))
         logger.info("TestEngineerAgent ready and listening for events...")
         print("🎯 TestEngineer Agent is running...")
         print("Listening for events: test_generation_requested, tests_requested")
@@ -431,15 +529,15 @@ def test_{component_name.lower()}_e2e():
         
         try:
             while True:
-                time.sleep(1)
+                await asyncio.sleep(1)
         except KeyboardInterrupt:
             print("\n🛑 TestEngineer Agent stopped.")
     
     @classmethod
-    def run_agent(cls):
-        """Class method to run the TestEngineer agent."""
+    async def run_agent(cls):
+        """Class method to run the TestEngineer agent met MCP integration."""
         agent = cls()
-        agent.run()
+        await agent.run()
 
 def main():
     parser = argparse.ArgumentParser(description="TestEngineer Agent CLI")
@@ -453,7 +551,7 @@ def main():
     if args.command == "help":
         agent.show_help()
     elif args.command == "run-tests":
-        agent.run_tests()
+        asyncio.run(agent.run_tests())
     elif args.command == "show-coverage":
         agent.show_coverage()
     elif args.command == "show-test-history":
@@ -469,7 +567,7 @@ def main():
     elif args.command == "collaborate":
         agent.collaborate_example()
     elif args.command == "run":
-        agent.run()
+        asyncio.run(agent.run())
 
 if __name__ == "__main__":
     main()
