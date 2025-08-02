@@ -182,29 +182,34 @@ manager = ThreadedManager(disable_background_threads=True)
 
 ## Mocking Strategieën
 
-### 1. Pragmatische Mocking (Aanbevolen voor Complexe API Calls)
-**WANNEER**: Externe API calls (Supabase, OpenAI, Slack) die moeilijk te mocken zijn
-**METHODE**: Mock de hele methode met `patch.object(agent, 'method_name')`
+### 1. Dependency Injection & Patching (Aanbevolen voor Alle Tests)
+**WANNEER**: Alle tests die dependencies hebben (CLI, agents, integrations)
+**METHODE**: Patch dependencies vóór initialisatie van het te testen object
 
 ```python
-def test_collaborate_example(self, agent):
-    """Test collaborate_example method."""
-    with patch.object(agent, 'collaborate_example') as mock_collaborate:
-        mock_collaborate.return_value = None
-        
-        agent.collaborate_example()
-        mock_collaborate.assert_called_once()
+# VOOR: Fout patroon - eerst object maken, dan dependency overschrijven
+def setup_method(self):
+    self.cli = IntegratedWorkflowCLI()  # Maakt echte orchestrator
+    self.mock_orchestrator = MagicMock()
+    self.cli.orchestrator = self.mock_orchestrator  # Te laat!
+
+# NA: Correct patroon - patch vóór initialisatie
+def setup_method(self):
+    self.mock_orchestrator = MagicMock()
+    with patch('cli.integrated_workflow_cli.IntegratedWorkflowOrchestrator', return_value=self.mock_orchestrator):
+        self.cli = IntegratedWorkflowCLI()  # Gebruikt mock orchestrator
 ```
 
 **VOORDELEN**:
-- Voorkomt API key issues
-- Snelle test execution
-- Test method invocation
-- Geen externe dependencies
+- Alle interne references wijzen naar de mock
+- Geen echte dependencies worden geladen
+- Tests zijn snel en betrouwbaar
+- Consistent met dependency injection principes
 
-**NADELEN**:
-- Test niet de interne logica
-- Kan bugs in de methode missen
+**PATTERN**:
+- Gebruik `@patch` decorators voor test methods
+- Gebruik `with patch(...)` contextmanagers voor setup
+- Gebruik `AsyncMock` voor async methods
 
 ### 2. Precise Mocking (Aanbevolen voor Interne Logic)
 **WANNEER**: Interne method calls die getest moeten worden
@@ -238,7 +243,7 @@ def test_internal_logic(self, mock_save, mock_publish, agent):
 
 ### 4. Third-Party Integration Mocking
 **PROBLEEM**: Complexe third-party dependencies (psycopg2, Auth0, Stripe, boto3, google.cloud) zijn moeilijk te mocken
-**OPLOSSING**: Pragmatische mocking van hele methoden
+**OPLOSSING**: Patch dependencies vóór initialisatie van de client
 
 ```python
 # VOOR: Complexe boto3/Stripe mocking
@@ -247,19 +252,20 @@ def test_internal_logic(self, mock_save, mock_publish, agent):
 def test_complex_mocking(self, mock_stripe, mock_boto3):
     # Complex setup...
 
-# NA: Pragmatische mocking
-with patch.object(StorageClient, 'upload_file') as mock_upload:
-    mock_upload.return_value = UploadResult(success=True, ...)
-    result = client.upload_file("test.txt")
-    self.assertTrue(result.success)
+# NA: Dependency injection patching
+with patch('integrations.storage.storage_client.boto3') as mock_boto3:
+    with patch('integrations.storage.storage_client.stripe') as mock_stripe:
+        client = StorageClient(config)  # Gebruikt mocks
+        result = client.upload_file("test.txt")
+        self.assertTrue(result.success)
 ```
 
 **VOORDELEN**:
 - Voorkomt dependency issues
 - Snelle test execution
-- Test method invocation
+- Test volledige functionaliteit
 - Geen externe dependencies
-- Consistent met guide principes
+- Consistent met dependency injection principes
 
 ### 5. Storage Integration Mocking (LESSONS LEARNED 2025-08-01)
 **PROBLEEM**: boto3 en google.cloud storage zijn niet beschikbaar in test environment
@@ -903,3 +909,23 @@ def test_cli_run(self, mock_get_context, mock_publish, mock_save_context, mock_p
 - **Pattern**: `*-improvement-report.md`, `*-analysis-report.md`, `*-test-report.md`
 - **Cleanup**: Regelmatige cleanup van temporary files
 - **Documentation**: Update guides met lessons learned 
+
+### 5a. Dependency Injection & Patching in Tests
+- **Altijd dependencies patchen vóór initialisatie van het te testen object.**
+- Gebruik `@patch` decorators of contextmanagers (`with patch(...)`) voor dependency injection.
+- Gebruik `AsyncMock` voor async methods.
+- Dit voorkomt dat interne references naar de echte dependency wijzen.
+- **Voorbeeld (CLI):**
+```python
+with patch('cli.integrated_workflow_cli.IntegratedWorkflowOrchestrator', return_value=mock_orchestrator):
+    cli = IntegratedWorkflowCLI()
+```
+- **Voorbeeld (manager):**
+```python
+@patch('cli.enterprise_cli.tenant_manager')
+def test_create_tenant_success(self, mock_tenant_manager):
+    ...
+```
+- **Fout patroon:**
+  Eerst een object aanmaken en daarna pas een dependency overschrijven (zoals eerst `cli = ...` en dan `cli.orchestrator = ...`).
+  Dit werkt niet als het object bij initialisatie al references naar de dependency opslaat. 

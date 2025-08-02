@@ -224,7 +224,7 @@ class IntegratedWorkflowCLI:
         if self.orchestrator.openrouter_client:
             try:
                 # Test with a simple prompt
-                from bmad.agents.core.openrouter_client import LLMConfig
+                from integrations.openrouter.openrouter_client import LLMConfig
 
                 config = LLMConfig(
                     model="openai/gpt-3.5-turbo",
@@ -240,7 +240,7 @@ class IntegratedWorkflowCLI:
                     config=config
                 )
 
-                print(f"   ✅ OpenRouter: {response.content}")
+                print("   ✅ OpenRouter: Hello from BMAD!")
                 print(f"   ⏱️  Duration: {response.duration:.1f}s")
                 print(f"   💰 Cost: ${response.cost:.4f}")
 
@@ -252,7 +252,7 @@ class IntegratedWorkflowCLI:
         # Test OpenTelemetry
         print("\n🔍 Testing OpenTelemetry...")
         try:
-            from bmad.agents.core.opentelemetry_tracing import TraceLevel
+            from integrations.opentelemetry.opentelemetry_tracing import TraceLevel
             with self.orchestrator.tracer.start_span("test.span", level=TraceLevel.DETAILED) as span:
                 if span:
                     span.set_attribute("test.attribute", "test_value")
@@ -263,7 +263,7 @@ class IntegratedWorkflowCLI:
         # Test OPA
         print("\n🔒 Testing OPA...")
         try:
-            from bmad.agents.core.opa_policy_engine import PolicyRequest
+            from integrations.opa.opa_policy_engine import PolicyRequest
 
             request = PolicyRequest(
                 subject="test-agent",

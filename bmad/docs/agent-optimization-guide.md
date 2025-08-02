@@ -30,6 +30,7 @@ This document provides a comprehensive guide to the recent agent optimizations a
 - [ ] **Resource Testing**: Resource completeness testing
 - [ ] **Collaboration Examples**: Inter-agent collaboration demonstrations
 - [ ] **Error Handling**: Comprehensive error handling and logging
+- [ ] **Dependency Injection & Patching**: Patch dependencies vóór initialisatie van het te testen object (zie guides voor voorbeelden)
 
 ## Optimized Agent Roster
 
