@@ -169,8 +169,57 @@ class DependencyManager:
             
         except ImportError as e:
             dep_info.error_message = str(e)
-            logger.warning(f"Optional dependency {module_name} not available: {e}")
+            logger.warning(f"[DEPENDENCY WARNING] {module_name} not available: {dep_info.purpose} disabled")
             return None
+    
+    def get_dependency_warnings(self) -> List[str]:
+        """
+        Get list of dependency warnings for missing optional dependencies.
+        
+        Returns:
+            List[str]: List of warning messages for missing dependencies
+        """
+        warnings = []
+        for module_name, dep_info in self._dependency_info.items():
+            if not dep_info.required and not dep_info.loaded:
+                warnings.append(f"[DEPENDENCY WARNING] {module_name} not available: {dep_info.purpose} disabled")
+        return warnings
+    
+    def get_missing_dependencies(self) -> List[str]:
+        """
+        Get list of missing optional dependencies.
+        
+        Returns:
+            List[str]: Names of missing optional dependencies
+        """
+        return [name for name, info in self._dependency_info.items() 
+                if not info.required and not info.loaded]
+    
+    def get_degraded_features(self) -> List[str]:
+        """
+        Get list of features that are degraded due to missing dependencies.
+        
+        Returns:
+            List[str]: List of degraded feature purposes
+        """
+        return [info.purpose for name, info in self._dependency_info.items() 
+                if not info.required and not info.loaded]
+    
+    def get_dependency_recommendations(self) -> List[str]:
+        """
+        Get installation recommendations for missing dependencies.
+        
+        Returns:
+            List[str]: List of pip install commands for missing dependencies
+        """
+        recommendations = []
+        for module_name, dep_info in self._dependency_info.items():
+            if not dep_info.required and not dep_info.loaded:
+                if dep_info.version:
+                    recommendations.append(f"pip install {module_name}{dep_info.version}")
+                else:
+                    recommendations.append(f"pip install {module_name}")
+        return recommendations
     
     def is_module_available(self, module_name: str) -> bool:
         """

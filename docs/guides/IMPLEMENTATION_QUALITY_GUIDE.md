@@ -409,3 +409,115 @@ else:
 - Agents blijven werken zonder optionele dependencies.
 - CI/CD pipelines falen niet op ontbrekende modules.
 - Productiekwaliteit en uitbreidbaarheid nemen toe. 
+
+## 🔍 Dependency Visibility & Feedback Strategy
+
+**Doel:** Zorg ervoor dat ontwikkelaars en gebruikers altijd weten wanneer optionele dependencies ontbreken en functionaliteit gedegradeerd is, zonder dat agents stil falen.
+
+### **Core Principles**
+
+1. **Always Visible**: Ontbrekende dependencies moeten altijd zichtbaar zijn via logging, status API's en CLI output
+2. **Graceful Degradation**: Agents blijven werken maar tonen duidelijk welke features gedegradeerd zijn
+3. **Actionable Feedback**: Geef concrete informatie over wat ontbreekt en hoe het op te lossen
+4. **Consistent Pattern**: Gebruik dezelfde feedback pattern in alle agents en modules
+
+### **Implementation Strategy**
+
+#### **1. Dependency Manager Enhancement**
+- Log warnings bij ontbrekende dependencies
+- Track dependency status per agent/module
+- Provide health reports met missing dependencies
+
+#### **2. Agent Status API**
+- `get_status()` methode toont dependency status
+- `get_health_report()` methode voor gedetailleerde health info
+- Include `missing_dependencies` en `degraded_features` arrays
+
+#### **3. CLI Feedback**
+- Startup warnings voor ontbrekende dependencies
+- `check-dependencies` commando voor dependency audit
+- Status output toont dependency issues
+
+#### **4. Logging Standards**
+- Use consistent warning format: `[DEPENDENCY WARNING] {dependency} not available: {feature} disabled`
+- Log at agent initialization and feature usage
+- Include actionable information (install command, alternative)
+
+#### **5. Monitoring Integration**
+- Add dependency status metrics to monitoring
+- Alert on critical missing dependencies
+- Track dependency availability over time
+
+### **Standard Implementation Pattern**
+
+```python
+class DependencyAwareAgent:
+    def __init__(self):
+        self.dependency_manager = get_dependency_manager()
+        self._check_dependencies()
+    
+    def _check_dependencies(self):
+        """Check and log dependency status."""
+        missing = []
+        degraded = []
+        
+        for dep_name, feature in self.required_dependencies.items():
+            if not self.dependency_manager.is_module_available(dep_name):
+                missing.append(dep_name)
+                degraded.append(feature)
+                logger.warning(f"[DEPENDENCY WARNING] {dep_name} not available: {feature} disabled")
+        
+        self.missing_dependencies = missing
+        self.degraded_features = degraded
+    
+    def get_status(self) -> Dict[str, Any]:
+        """Get agent status including dependency information."""
+        return {
+            "agent_name": self.agent_name,
+            "missing_dependencies": self.missing_dependencies,
+            "degraded_features": self.degraded_features,
+            "dependency_health": len(self.missing_dependencies) == 0
+        }
+    
+    def check_dependencies(self) -> Dict[str, Any]:
+        """Detailed dependency health check."""
+        return {
+            "agent": self.agent_name,
+            "dependencies": self.dependency_manager.get_dependency_health_report(),
+            "missing": self.missing_dependencies,
+            "degraded": self.degraded_features,
+            "recommendations": self._get_dependency_recommendations()
+        }
+```
+
+### **CLI Integration Pattern**
+
+```python
+def main():
+    agent = SomeAgent()
+    
+    # Show dependency status on startup
+    if agent.missing_dependencies:
+        print(f"[DEPENDENCY WARNING] {len(agent.missing_dependencies)} dependencies missing")
+        for dep in agent.missing_dependencies:
+            print(f"  - {dep}: {agent.degraded_features[agent.missing_dependencies.index(dep)]}")
+    
+    # Add dependency check command
+    if args.command == "check-dependencies":
+        status = agent.check_dependencies()
+        print(json.dumps(status, indent=2))
+```
+
+### **Testing Strategy**
+
+1. **Unit Tests**: Test dependency detection and status reporting
+2. **Integration Tests**: Test graceful degradation without dependencies
+3. **CI/CD Tests**: Validate warnings are logged when dependencies missing
+4. **User Acceptance**: Test CLI output is clear and actionable
+
+### **Success Metrics**
+
+- **100% Visibility**: All missing dependencies are logged and reported
+- **Zero Silent Failures**: No features fail silently due to missing dependencies
+- **Clear Action Items**: Users know exactly what to install to enable features
+- **Consistent Experience**: Same feedback pattern across all agents 

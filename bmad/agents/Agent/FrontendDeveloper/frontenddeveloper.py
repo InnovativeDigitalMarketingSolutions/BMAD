@@ -526,7 +526,7 @@ FrontendDeveloper Agent Commands:
 
     def get_status(self) -> Dict[str, Any]:
         """Get the current status of the FrontendDeveloper agent."""
-        return {
+        base_status = {
             "agent_name": self.agent_name,
             "component_history_count": len(self.component_history),
             "performance_history_count": len(self.performance_history),
@@ -536,6 +536,28 @@ FrontendDeveloper Agent Commands:
             "resources_loaded": self._resources_loaded,
             "status": "active"
         }
+        
+        # Add dependency status if using MCP mixin
+        if hasattr(self, 'get_dependency_status'):
+            base_status["dependency_status"] = self.get_dependency_status()
+        
+        return base_status
+    
+    def check_dependencies(self) -> Dict[str, Any]:
+        """Check dependency status and provide recommendations."""
+        if hasattr(self, 'get_dependency_status'):
+            return self.get_dependency_status()
+        else:
+            # Fallback for agents without MCP mixin
+            return {
+                "agent_name": self.agent_name,
+                "missing_dependencies": [],
+                "degraded_features": [],
+                "dependency_warnings": [],
+                "recommendations": [],
+                "dependency_health": True,
+                "note": "Dependency checking not available for this agent"
+            }
 
     def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
@@ -733,7 +755,7 @@ def main():
     parser.add_argument("command", nargs="?", default="help",
                        choices=["help", "build-component", "build-shadcn-component", "run-accessibility-check", "show-component-history",
                                "show-performance", "show-best-practices", "show-changelog", "export-component",
-                               "test", "collaborate", "run", "initialize-mcp", "use-mcp-tool", "get-mcp-status", "use-frontend-mcp-tools"])
+                               "test", "collaborate", "run", "initialize-mcp", "use-mcp-tool", "get-mcp-status", "use-frontend-mcp-tools", "check-dependencies"])
     parser.add_argument("--name", default="Button", help="Component name")
     parser.add_argument("--format", choices=["md", "json"], default="md", help="Export format")
     parser.add_argument("--tool-name", help="MCP tool name")
@@ -743,6 +765,15 @@ def main():
     args = parser.parse_args()
 
     agent = FrontendDeveloperAgent()
+    
+    # Show dependency warnings on startup
+    if hasattr(agent, 'get_dependency_status'):
+        dep_status = agent.get_dependency_status()
+        if dep_status.get('missing_dependencies'):
+            print(f"[DEPENDENCY WARNING] {len(dep_status['missing_dependencies'])} dependencies missing")
+            for dep in dep_status['missing_dependencies']:
+                print(f"  - {dep}: {dep_status['degraded_features'][dep_status['missing_dependencies'].index(dep)]}")
+            print("Use 'check-dependencies' command for detailed information and recommendations.")
 
     if args.command == "help":
         agent.show_help()
@@ -788,6 +819,9 @@ def main():
         component_data = json.loads(args.component_data)
         result = asyncio.run(agent.use_frontend_specific_mcp_tools(component_data))
         print(f"Frontend MCP tools result: {result}")
+    elif args.command == "check-dependencies":
+        status = agent.check_dependencies()
+        print(json.dumps(status, indent=2, default=str))
 
 if __name__ == "__main__":
     main()

@@ -59,6 +59,9 @@ class MCPAgentMixin:
         # Dependency management
         self.dependency_manager = DependencyManager()
         
+        # Check and log dependency status
+        self._check_dependencies()
+        
         # Performance tracking
         self.mcp_performance_metrics = {
             "initialization_time": 0,
@@ -71,6 +74,32 @@ class MCPAgentMixin:
         # Auto-initialize if configured
         if self.mcp_config.auto_initialize and self.mcp_config.mcp_enabled:
             asyncio.create_task(self.initialize_mcp())
+    
+    def _check_dependencies(self):
+        """Check and log dependency status for the agent."""
+        warnings = self.dependency_manager.get_dependency_warnings()
+        for warning in warnings:
+            logger.warning(f"{self.mcp_config.agent_name}: {warning}")
+        
+        if warnings:
+            logger.info(f"{self.mcp_config.agent_name}: {len(warnings)} dependencies missing, some features may be degraded")
+    
+    def get_dependency_status(self) -> Dict[str, Any]:
+        """
+        Get detailed dependency status for the agent.
+        
+        Returns:
+            Dict: Dependency status information
+        """
+        return {
+            "agent_name": self.mcp_config.agent_name,
+            "missing_dependencies": self.dependency_manager.get_missing_dependencies(),
+            "degraded_features": self.dependency_manager.get_degraded_features(),
+            "dependency_warnings": self.dependency_manager.get_dependency_warnings(),
+            "recommendations": self.dependency_manager.get_dependency_recommendations(),
+            "dependency_health": len(self.dependency_manager.get_missing_dependencies()) == 0,
+            "health_report": self.dependency_manager.get_dependency_health_report()
+        }
     
     async def initialize_mcp(self, config: Optional[Dict[str, Any]] = None) -> bool:
         """
