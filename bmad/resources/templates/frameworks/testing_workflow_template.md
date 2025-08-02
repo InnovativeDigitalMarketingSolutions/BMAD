@@ -1,25 +1,11 @@
-# Test Workflow Guide
+# Testing Workflow Template
 
-## Overview
+## 🎯 **Agent Testing Workflow**
 
-Dit document beschrijft de verplichte test workflow voor alle nieuwe functionaliteit en uitbreidingen in het BMAD systeem. Het doel is om ervoor te zorgen dat alle code kwalitatief is geïmplementeerd en goed getest wordt.
+**⚠️ LEVENDE DOCUMENT - Agents mogen en moeten verbeteringen aanbrengen!**
 
-**Voor test strategie en filosofie, zie**: `TESTING_STRATEGY.md`
-
-## Test Pyramid Implementatie
-
-Volg de test pyramid strategie zoals beschreven in `TESTING_STRATEGY.md`:
-
-```
-    🔺 E2E Tests (weinig, volledige workflows)
-   🔺🔺 Integration Tests (gemiddeld, echte dependencies)
-🔺🔺🔺 Unit Tests (veel, gemockt)
-```
-
-### Test Distribution
-- **Unit Tests**: 70% van alle tests (snel, gemockt)
-- **Integration Tests**: 20% van alle tests (echte dependencies)
-- **E2E Tests**: 10% van alle tests (volledige workflows)
+### Overzicht
+Dit template beschrijft de test workflow die alle agents moeten volgen voor consistente, hoogwaardige software testing.
 
 ## Test Workflow Checklist
 
@@ -28,7 +14,7 @@ Volg de test pyramid strategie zoals beschreven in `TESTING_STRATEGY.md`:
 - [ ] **Analyse**: Root cause analysis uitvoeren voor bugs
 - [ ] **Planning**: Test strategie bepalen (unit, integration, e2e)
 - [ ] **Review**: Bestaande guide files raadplegen voor best practices
-- [ ] **Strategy Review**: Bekijk `TESTING_STRATEGY.md` voor test type keuze
+- [ ] **Strategy Review**: Bekijk testing strategy template voor test type keuze
 
 ### Tijdens implementatie:
 
@@ -36,7 +22,7 @@ Volg de test pyramid strategie zoals beschreven in `TESTING_STRATEGY.md`:
 - [ ] **Integration Tests**: Schrijven voor API endpoints
 - [ ] **Mocking**: Gebruik AsyncMock voor async functies
 - [ ] **Validation**: Test edge cases en error scenarios
-- [ ] **Pragmatic Mocking**: Volg mocking strategie uit `TESTING_STRATEGY.md`
+- [ ] **Pragmatic Mocking**: Volg mocking strategie uit testing strategy template
 
 ### Na implementatie:
 
@@ -444,20 +430,48 @@ async def test_create_workflow(self, workflow_manager):
     assert workflow.name == "Test Workflow"
 ```
 
-## Conclusion
+## Agent-Specific Testing Guidelines
 
-Deze test workflow zorgt ervoor dat:
-- Alle nieuwe functionaliteit goed getest wordt
-- Code kwaliteit hoog blijft
-- Bugs vroeg gedetecteerd worden
-- Documentatie up-to-date blijft
-- Best practices consistent worden toegepast
+### Voor AI Agents
+- Mock LLM API calls in unit tests
+- Test AI output validation en safety checks
+- Implementeer integration tests met echte LLM APIs
+- Test fallback mechanismen voor API failures
 
-**Belangrijk**: Tests zijn geen optie, maar een verplicht onderdeel van elke implementatie!
+### Voor Development Agents
+- Volg de test pyramid strategie
+- Implementeer comprehensive unit tests
+- Gebruik pragmatic mocking voor externe dependencies
+- Valideer code quality met test coverage
 
-## Referenties
+### Voor Testing Agents
+- Implementeer test frameworks en utilities
+- Zorg voor comprehensive test coverage
+- Valideer test quality en performance
+- Implementeer test monitoring en reporting
 
-- [TESTING_STRATEGY.md](./TESTING_STRATEGY.md) - Test strategie en filosofie
-- [CLI_TESTING_COMPLETE_REPORT.md](../reports/CLI_TESTING_COMPLETE_REPORT.md) - CLI testing success case
-- [CLI_TEST_FAILURES_ANALYSIS.md](../reports/CLI_TEST_FAILURES_ANALYSIS.md) - Test failure analysis
-- [BMAD_MASTER_PLANNING.md](../deployment/BMAD_MASTER_PLANNING.md) - Master planning met test strategie 
+## Agent Verbeteringen
+
+**⚠️ AGENTS: Dit is een levend document!**
+
+### Verbeteringen die agents mogen/moeten aanbrengen:
+1. **Nieuwe Test Patterns**: Voeg nieuwe test patterns toe
+2. **Mocking Strategieën**: Verbeter mocking strategieën en technieken
+3. **Integration Test Categories**: Voeg nieuwe integration test types toe
+4. **Test Tools**: Voeg nieuwe test tools en frameworks toe
+5. **Agent-Specific Guidelines**: Voeg guidelines toe voor specifieke agent types
+6. **Troubleshooting**: Verbeter troubleshooting en debug tips
+7. **Documentation**: Verbeter test documentatie en uitleg
+
+### Hoe verbeteringen aanbrengen:
+1. **Analyseer**: Identificeer gebieden voor verbetering
+2. **Implementeer**: Test verbeteringen in praktijk
+3. **Valideer**: Zorg dat verbeteringen test kwaliteit verhogen
+4. **Documenteer**: Update dit template met verbeteringen
+5. **Deel**: Deel verbeteringen met andere agents
+
+---
+
+**Status**: 🔄 **Levend Document** - Agents mogen en moeten verbeteringen aanbrengen  
+**Laatste Update**: 2 augustus 2025  
+**Volgende Review**: Continue door agents 

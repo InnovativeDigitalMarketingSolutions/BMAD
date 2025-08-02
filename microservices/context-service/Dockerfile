@@ -68,8 +68,5 @@ CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8003", "--re
 # Production stage
 FROM base as production
 
-# Copy production configuration
-COPY config/production.yaml ./config/
-
 # Production command
 CMD ["uvicorn", "src.api.main:app", "--host", "0.0.0.0", "--port", "8003", "--workers", "4"] 

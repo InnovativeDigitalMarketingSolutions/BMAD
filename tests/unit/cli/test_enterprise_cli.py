@@ -13,6 +13,31 @@ import pytest
 from unittest.mock import patch, MagicMock
 from click.testing import CliRunner
 from datetime import datetime
+import sys
+
+# Mock zware externe dependencies
+sys.modules['opentelemetry'] = MagicMock()
+sys.modules['opentelemetry.trace'] = MagicMock()
+sys.modules['opentelemetry.sdk'] = MagicMock()
+sys.modules['opentelemetry.sdk.trace'] = MagicMock()
+sys.modules['opentelemetry.sdk.trace.export'] = MagicMock()
+sys.modules['opentelemetry.sdk.resources'] = MagicMock()
+sys.modules['opentelemetry.exporter'] = MagicMock()
+sys.modules['opentelemetry.exporter.jaeger'] = MagicMock()
+sys.modules['opentelemetry.exporter.jaeger.thrift'] = MagicMock()
+sys.modules['opentelemetry.exporter.otlp'] = MagicMock()
+sys.modules['opentelemetry.exporter.otlp.proto'] = MagicMock()
+sys.modules['opentelemetry.exporter.otlp.proto.http'] = MagicMock()
+sys.modules['opentelemetry.exporter.otlp.proto.http.trace_exporter'] = MagicMock()
+sys.modules['opentelemetry.instrumentation'] = MagicMock()
+sys.modules['opentelemetry.instrumentation.requests'] = MagicMock()
+sys.modules['supabase'] = MagicMock()
+sys.modules['openai'] = MagicMock()
+sys.modules['langgraph'] = MagicMock()
+sys.modules['langgraph.graph'] = MagicMock()
+sys.modules['langgraph.checkpoint'] = MagicMock()
+sys.modules['langgraph.checkpoint.memory'] = MagicMock()
+sys.modules['psutil'] = MagicMock()
 
 # Import the CLI module
 import cli.enterprise_cli as enterprise_cli
