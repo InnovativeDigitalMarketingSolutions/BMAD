@@ -47,9 +47,58 @@ Volg de development pyramid strategie zoals beschreven in `DEVELOPMENT_STRATEGY.
 
 - [ ] **Quality Validation**: Alle quality checks uitvoeren
 - [ ] **Coverage Check**: Code coverage controleren
+- [ ] **Test Execution**: Uitvoeren van unit, integration en e2e tests
+- [ ] **Test Reporting**: Allure test reports genereren en analyseren
 - [ ] **Documentation**: Code documenteren
 - [ ] **Review**: Code review inclusief quality checks
 - [ ] **Strategy Validation**: Controleer of development strategie correct is toegepast
+
+## Test Reporting & Quality Assurance
+
+### Allure Test Reporting
+Voor complete test inzichten en kwaliteitscontrole moet Allure worden gebruikt:
+
+#### **Allure Setup & Usage**
+```bash
+# Install Allure (indien nog niet geïnstalleerd)
+pip install allure-pytest
+
+# Run tests met Allure reporting
+pytest --alluredir=./allure-results
+
+# Generate en open Allure report
+allure serve ./allure-results
+
+# Generate static report
+allure generate ./allure-results --clean
+```
+
+#### **Test Reporting Workflow**
+1. **Test Execution**: Run alle tests met `pytest --alluredir=./allure-results`
+2. **Report Generation**: Generate Allure report voor analyse
+3. **Quality Analysis**: Analyseer test results, coverage en failures
+4. **Issue Tracking**: Documenteer en fix test failures
+5. **Coverage Validation**: Controleer coverage targets (>90-95% voor critical, >70% voor general)
+
+#### **Allure Report Features**
+- **Test Results Overview**: Pass/fail statistics
+- **Test Execution Timeline**: Performance analysis
+- **Coverage Reports**: Code coverage per module
+- **Failure Analysis**: Detailed failure information
+- **Trend Analysis**: Historical test performance
+
+#### **Quality Gates**
+- **Pre-commit**: Alle tests moeten slagen
+- **Pre-merge**: Coverage thresholds moeten gehaald worden
+- **Pre-deploy**: Volledige test suite moet slagen
+- **Post-deploy**: Smoke tests moeten slagen
+
+### Test Quality Metrics
+- **Test Success Rate**: 100% (alle tests moeten slagen)
+- **Critical Components Coverage**: >90-95% (MCP core, agent integration, enterprise)
+- **General Components Coverage**: >70% (overige modules en utilities)
+- **Test Execution Time**: <5 minuten voor complete test suite
+- **Test Reliability**: 100% (geen flaky tests)
 
 ## Development Structure
 
