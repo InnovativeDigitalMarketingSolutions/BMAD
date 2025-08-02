@@ -36,6 +36,10 @@ Volg de development pyramid strategie zoals beschreven in `DEVELOPMENT_STRATEGY.
 - [ ] **Planning**: Development strategie bepalen (unit, integration, production)
 - [ ] **Review**: Bestaande guide files raadplegen voor best practices
 - [ ] **Strategy Review**: Bekijk `DEVELOPMENT_STRATEGY.md` voor development type keuze
+- [ ] **MCP Integration Planning**: Voor MCP integratie, raadpleeg:
+  - `docs/guides/MCP_INTEGRATION_GUIDE.md` - MCP integration patterns
+  - `docs/guides/MCP_TROUBLESHOOTING_GUIDE.md` - Common issues en solutions
+  - `docs/guides/LESSONS_LEARNED_GUIDE.md` - Lessons from previous MCP integrations
 
 ### Tijdens implementatie:
 
@@ -44,6 +48,13 @@ Volg de development pyramid strategie zoals beschreven in `DEVELOPMENT_STRATEGY.
 - [ ] **Quality Checks**: Gebruik linting en code quality tools
 - [ ] **Validation**: Test edge cases en error scenarios
 - [ ] **Code Quality**: Volg quality standards uit `DEVELOPMENT_STRATEGY.md`
+- [ ] **MCP Integration**: Voor MCP integratie:
+  - [ ] **MCP Setup**: Voeg MCP imports en attributes toe aan `__init__`
+  - [ ] **Async Methods**: Maak relevante methodes async met `async def`
+  - [ ] **MCP Tools**: Implementeer agent-specifieke MCP tools
+  - [ ] **Fallback Logic**: Zorg voor graceful fallback naar lokale tools
+  - [ ] **CLI Updates**: Update CLI calls voor async methodes met `asyncio.run()`
+  - [ ] **Test Updates**: Update tests met `@pytest.mark.asyncio` en `AsyncMock`
 
 ### Na implementatie:
 
@@ -55,6 +66,13 @@ Volg de development pyramid strategie zoals beschreven in `DEVELOPMENT_STRATEGY.
 - [ ] **Documentation Updates**: Regelmatige documentatie updates uitvoeren
 - [ ] **Review**: Code review inclusief quality checks
 - [ ] **Strategy Validation**: Controleer of development strategie correct is toegepast
+- [ ] **MCP Validation**: Voor MCP integratie:
+  - [ ] **MCP Functionality**: Test MCP tools en fallback behavior
+  - [ ] **Async Compatibility**: Verificeer alle async methodes werken correct
+  - [ ] **CLI Functionality**: Test CLI commands met async methodes
+  - [ ] **Test Coverage**: Zorg voor 100% test success rate
+  - [ ] **Performance Check**: Verificeer geen performance regressions
+  - [ ] **Documentation Update**: Update MCP guides met nieuwe patterns
 
 ## Test Reporting & Quality Assurance
 

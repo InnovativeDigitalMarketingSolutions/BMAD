@@ -97,13 +97,96 @@ async def test_async_agent():
     # Test initialization
     await agent.initialize_mcp()
     assert agent.mcp_enabled in [True, False]  # Both are valid
-    
-    # Test async execution
-    result = await agent.execute_task("test_task")
-    assert result is not None
 ```
 
-**Waarom**: Voorkomt `async def functions are not natively supported` errors.
+#### **Async Test Pattern voor MCP Integration**
+**Lesson**: MCP integration tests vereisen specifieke async patterns en proper mocking.
+
+**Best Practice**:
+```python
+# ✅ Async Test met MCP Integration
+@pytest.mark.asyncio
+async def test_develop_strategy_success(self, mock_sleep, agent):
+    """Test successful strategy development."""
+    initial_count = len(agent.strategy_history)
+    result = await agent.develop_strategy("Digital Transformation Strategy")
+    
+    assert result["strategy_name"] == "Digital Transformation Strategy"
+    assert result["status"] == "developed"
+    assert len(agent.strategy_history) == initial_count + 1
+
+# ✅ CLI Test met AsyncMock
+def test_cli_develop_strategy_command(self, capsys):
+    """Test CLI develop-strategy command."""
+    with patch('bmad.agents.Agent.StrategiePartner.strategiepartner.StrategiePartnerAgent') as mock_agent_class:
+        mock_agent = Mock()
+        from unittest.mock import AsyncMock
+        mock_develop_strategy = AsyncMock()
+        mock_develop_strategy.return_value = {"strategy_name": "Test Strategy", "status": "developed"}
+        mock_agent.develop_strategy = mock_develop_strategy
+        mock_agent_class.return_value = mock_agent
+
+        main()
+```
+
+**Waarom**: Zorgt voor correcte async test execution en proper mocking van async methodes.
+
+#### **Logger Import Fix voor Integration Tests**
+**Lesson**: Integration tests kunnen logger import problemen hebben die opgelost moeten worden.
+
+**Best Practice**:
+```python
+# ✅ Test File Setup met Logger
+import pytest
+from unittest.mock import Mock, patch
+import logging
+
+from bmad.agents.Agent.StrategiePartner.strategiepartner import (
+    StrategiePartnerAgent, StrategyError, StrategyValidationError
+)
+
+# Configure logging for tests
+logger = logging.getLogger(__name__)
+```
+
+**Waarom**: Voorkomt `NameError: name 'logger' is not defined` in integration tests.
+
+#### **Async Wrapper Method Pattern**
+**Lesson**: Async wrapper methodes moeten correct omgaan met reeds async methodes.
+
+**Best Practice**:
+```python
+# ❌ VERKEERD: Async wrapper voor reeds async methode
+async def _async_develop_strategy(self, strategy_name: str):
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, self.develop_strategy, strategy_name)
+
+# ✅ CORRECT: Directe async call voor reeds async methode
+async def _async_develop_strategy(self, strategy_name: str):
+    return await self.develop_strategy(strategy_name)
+```
+
+**Waarom**: `run_in_executor()` is alleen voor sync methodes. Voor async methodes gebruik je direct `await`.
+
+#### **CLI Async Method Handling**
+**Lesson**: CLI methodes die async methodes aanroepen moeten correct async worden afgehandeld.
+
+**Best Practice**:
+```python
+# ✅ CLI met Async Method Calls
+def main():
+    # ... argument parsing ...
+    
+    if args.command == "develop-strategy":
+        result = asyncio.run(agent.develop_strategy(args.strategy_name))
+        print(f"Strategy developed successfully: {result}")
+    elif args.command == "collaborate":
+        asyncio.run(agent.collaborate_example())
+    elif args.command == "run":
+        agent = asyncio.run(StrategiePartnerAgent.run_agent())
+```
+
+**Waarom**: Zorgt voor correcte async execution in CLI context.
 
 #### **Test Quality Focus**
 **Lesson**: Fix underlying issues, niet alleen test failures.
