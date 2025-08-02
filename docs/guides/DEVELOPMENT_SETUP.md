@@ -32,7 +32,19 @@ export DEV_MODE=true
 echo "DEV_MODE=true" >> .env
 ```
 
-#### **2. Start Development Server**
+#### **2. Database Setup (Optional - for Microservices)**
+```bash
+# Setup Supabase database connection
+python setup_database_connection.py
+
+# Verify database setup
+python verify_database_tables.py
+
+# Start all services (optional)
+./start_bmad.sh
+```
+
+#### **3. Start Development Server**
 ```bash
 # Start the BMAD API server
 python bmad/api.py

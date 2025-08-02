@@ -100,6 +100,18 @@ cp .env.example .env
 # Edit .env with your credentials
 ```
 
+#### 2. Database Setup (Optional - for Microservices)
+```bash
+# Setup Supabase database connection
+python setup_database_connection.py
+
+# Verify database setup
+python verify_database_tables.py
+
+# Start all services (optional)
+./start_bmad.sh
+```
+
 #### 2. Project Management
 ```bash
 # Create a new project
