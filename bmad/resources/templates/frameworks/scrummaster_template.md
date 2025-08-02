@@ -4,6 +4,44 @@
 
 Dit framework template biedt een complete gids voor scrum mastery binnen het BMAD systeem, inclusief scrum process facilitation, team coaching, sprint management, en comprehensive scrum workflows.
 
+## 📋 Project Management Integration
+
+### **Kanban-based Agile Management**
+Scrummasters gebruiken de BMAD Kanban structuur voor effectieve agile process management en team facilitation.
+
+#### **🎯 Agile Management Workflow**
+1. **📋 Sprint Planning**: Plan sprints met taken uit `docs/deployment/KANBAN_BOARD.md`
+2. **🔄 Daily Standups**: Monitor "In Progress" taken en impediments
+3. **🚧 Sprint Execution**: Facilitate team tijdens development
+4. **✅ Sprint Review**: Review "Done" taken en sprint retrospective
+
+#### **📁 Agile Management Structure**
+```
+agile_management/
+├── docs/deployment/
+│   ├── KANBAN_BOARD.md             # Sprint backlog en taken
+│   ├── IMPLEMENTATION_DETAILS.md   # Sprint planning en retrospectives
+│   └── README.md                   # Agile process overview
+├── sprint_planning/               # Sprint planning documents
+├── daily_standups/               # Daily standup notes
+└── retrospectives/               # Sprint retrospectives
+```
+
+#### **🔧 Scrummaster Commands**
+```bash
+# Facilitate sprint planning
+python -m bmad.agents.Agent.Scrummaster.scrummaster --facilitate-sprint-planning --sprint "Sprint 13"
+
+# Generate daily standup report
+python -m bmad.agents.Agent.Scrummaster.scrummaster --generate-standup-report --date "2025-01-27"
+
+# Conduct sprint retrospective
+python -m bmad.agents.Agent.Scrummaster.scrummaster --conduct-retrospective --sprint "Sprint 12"
+
+# Track team velocity
+python -m bmad.agents.Agent.Scrummaster.scrummaster --track-velocity --sprints "5"
+```
+
 ## 🏗️ Scrum Process Architecture Patterns
 
 ### Scrum Framework Implementation

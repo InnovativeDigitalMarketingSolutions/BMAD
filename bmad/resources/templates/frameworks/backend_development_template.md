@@ -4,6 +4,41 @@
 
 Dit framework template biedt een complete gids voor backend development binnen het BMAD systeem, inclusief best practices, architectuur patterns, en development workflows.
 
+## 📋 Project Management Integration
+
+### **Kanban-based Development Workflow**
+Backend development volgt de BMAD Kanban structuur voor optimale project management en Cursor AI compatibiliteit.
+
+#### **🎯 Development Workflow**
+1. **📋 Backlog Review**: Check `docs/deployment/KANBAN_BOARD.md` voor backend taken
+2. **🔄 Sprint Planning**: Selecteer taken uit "To Do" voor huidige sprint
+3. **🚧 Development**: Implementeer features met status "In Progress"
+4. **✅ Completion**: Markeer taken als "Done" met implementatie details
+
+#### **📁 Project Structure Integration**
+```
+backend_development/
+├── docs/deployment/
+│   ├── KANBAN_BOARD.md             # Backend development taken
+│   ├── IMPLEMENTATION_DETAILS.md   # Backend implementatie details
+│   └── README.md                   # Backend project overview
+├── src/                            # Backend source code
+├── tests/                          # Backend tests
+└── deployment/                     # Backend deployment configs
+```
+
+#### **🔧 Development Commands**
+```bash
+# Check current backend tasks
+python -m bmad.agents.Agent.BackendDeveloper.backenddeveloper --check-kanban
+
+# Update task status
+python -m bmad.agents.Agent.BackendDeveloper.backenddeveloper --update-task-status "API Gateway Implementation" "In Progress"
+
+# Generate implementation report
+python -m bmad.agents.Agent.BackendDeveloper.backenddeveloper --generate-report --format "md"
+```
+
 ## 🏗️ Backend Architecture Patterns
 
 ### Microservices Architecture

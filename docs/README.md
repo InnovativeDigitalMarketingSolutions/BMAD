@@ -2,9 +2,48 @@
 
 ## 📚 Overview
 
-Deze directory bevat alle documentatie voor het BMAD systeem, georganiseerd in logische categorieën voor eenvoudige navigatie.
+Deze directory bevat alle documentatie voor het BMAD systeem, georganiseerd in logische categorieën voor eenvoudige navigatie. **Alle documentatie is nu geconsolideerd in één centrale locatie.**
 
 ## 📁 Documentation Structure
+
+### **🏗️ Architecture**
+Core architectuur en systeem design:
+
+- **[Core Architecture](architecture/core-architecture.md)** - BMAD core architectuur en systeem design
+
+### **📋 Deployment & Planning**
+Project management en implementatie planning:
+
+- **[Kanban Board](deployment/KANBAN_BOARD.md)** - Hoofd project management board
+- **[Implementation Details](deployment/IMPLEMENTATION_DETAILS.md)** - Technische implementatie details
+- **[Master Planning](deployment/BMAD_MASTER_PLANNING.md)** - Geconsolideerde master planning
+- **[Microservices Implementation](deployment/MICROSERVICES_IMPLEMENTATION_PLAN.md)** - Microservices implementatie plan
+- **[Microservices Status](deployment/MICROSERVICES_IMPLEMENTATION_STATUS.md)** - Microservices implementatie status
+
+### **📖 Guides**
+Handleidingen, best practices en development guides:
+
+- **[Agent Optimization Guide](guides/agent-optimization-guide.md)** - Agent optimalisatie en enhancement
+- **[Backend Optimization](guides/BACKEND_OPTIMIZATION_README.md)** - Backend optimalisatie
+- **[Contributing](guides/CONTRIBUTING.md)** - Bijdragen aan het project
+- **[Development Overview](guides/DEVELOPMENT_OVERVIEW.md)** - Development overzicht
+- **[Development Quality Guide](guides/DEVELOPMENT_QUALITY_GUIDE.md)** - Development quality assurance
+- **[Development Setup](guides/DEVELOPMENT_SETUP.md)** - Development setup
+- **[Development Strategy](guides/DEVELOPMENT_STRATEGY.md)** - Development strategie
+- **[Development Workflow Guide](guides/DEVELOPMENT_WORKFLOW_GUIDE.md)** - Development workflow
+- **[Environment Setup](guides/ENVIRONMENT_SETUP.md)** - Omgeving configuratie
+- **[Expansion Packs](guides/expansion-packs.md)** - Expansion packs documentatie
+- **[Guiding Principles](guides/GUIDING-PRINCIPLES.md)** - BMAD guiding principles
+- **[Implementation Quality Guide](guides/IMPLEMENTATION_QUALITY_GUIDE.md)** - Implementation quality assurance
+- **[Integration Requirements](guides/INTEGRATION_REQUIREMENTS.md)** - Integration requirements
+- **[How to Contribute](guides/how-to-contribute-with-pull-requests.md)** - Contributing met pull requests
+- **[Project Management](guides/project-management.md)** - Project management guide
+- **[Test Quality Guide](guides/TEST_QUALITY_GUIDE.md)** - Test quality assurance
+- **[Test Workflow Guide](guides/TEST_WORKFLOW_GUIDE.md)** - Test workflow
+- **[Testing Overview](guides/TESTING_OVERVIEW.md)** - Testing overzicht
+- **[Testing Strategy](guides/TESTING_STRATEGY.md)** - Testing strategie
+- **[Versioning and Releases](guides/versioning-and-releases.md)** - Versioning en releases
+- **[Versions](guides/versions.md)** - Version history
 
 ### **🔗 Integrations**
 Documentatie voor alle geïntegreerde systemen en tools:
@@ -27,25 +66,32 @@ Status en implementatie overzichten:
 - **[Production Status](status/PRODUCTION_STATUS.md)** - Productie status
 - **[Implementation Status](status/IMPLEMENTATION_STATUS.md)** - Implementatie overzicht
 
-### **📖 Guides**
-Handleidingen en setup instructies:
+### **📈 Reports**
+Implementatie rapporten en analyses:
 
-- **[Environment Setup](guides/ENVIRONMENT_SETUP.md)** - Omgeving configuratie
-- **[Contributing](guides/CONTRIBUTING.md)** - Bijdragen aan het project
-- **[Backend Optimization](guides/BACKEND_OPTIMIZATION_README.md)** - Backend optimalisatie
+- **[Agent Template Integration Analysis](reports/AGENT_TEMPLATE_INTEGRATION_ANALYSIS.md)** - Agent template integratie analyse
+- **[BMAD System Analysis Report](reports/BMAD_SYSTEM_ANALYSIS_REPORT.md)** - Volledige systeem analyse
+- **[Framework Templates Reports](reports/)** - Framework templates implementatie rapporten
+- **[MCP Implementation Reports](reports/)** - MCP implementatie rapporten
+- **[Agent Improvement Reports](reports/agent-improvements/)** - Agent optimalisatie rapporten
 
 ### **📈 Results**
 Test resultaten en planning documenten:
 
-- **[Master Planning](deployment/BMAD_MASTER_PLANNING.md)** - Geconsolideerde master planning
-- **[System Analysis Report](reports/BMAD_SYSTEM_ANALYSIS_REPORT.md)** - Volledige systeem analyse
+- **[Test Results](results/README.md)** - Test resultaten overzicht
 
 ## 🚀 Quick Navigation
 
 ### **Voor Ontwikkelaars**
 1. Start met [Environment Setup](guides/ENVIRONMENT_SETUP.md)
-2. Lees [Contributing Guidelines](guides/CONTRIBUTING.md)
-3. Bekijk [Implementation Status](status/IMPLEMENTATION_STATUS.md)
+2. Lees [Agent Optimization Guide](guides/agent-optimization-guide.md)
+3. Bekijk [Core Architecture](architecture/core-architecture.md)
+4. Check [Implementation Status](status/IMPLEMENTATION_STATUS.md)
+
+### **Voor Project Management**
+1. Check [Kanban Board](deployment/KANBAN_BOARD.md) voor huidige taken
+2. Lees [Implementation Details](deployment/IMPLEMENTATION_DETAILS.md) voor technische context
+3. Bekijk [Project Management Guide](guides/project-management.md)
 
 ### **Voor Integraties**
 1. Bekijk [Repository Integrations](integrations/REPOSITORY_INTEGRATIONS_README.md)
@@ -55,7 +101,7 @@ Test resultaten en planning documenten:
 ### **Voor Monitoring**
 1. Lees [Performance Monitor](integrations/PERFORMANCE_MONITOR_INTEGRATION_README.md)
 2. Bekijk [Advanced Policy Engine](integrations/ADVANCED_POLICY_ENGINE_README.md)
-3. Check [Master Planning](deployment/BMAD_MASTER_PLANNING.md)
+3. Check [Implementation Quality Guide](guides/IMPLEMENTATION_QUALITY_GUIDE.md)
 
 ## 📝 Documentatie Conventies
 
@@ -91,4 +137,4 @@ Voor vragen over documentatie:
 
 ---
 
-**BMAD Documentation** - Georganiseerde documentatie voor het BMAD systeem 📚 
+**BMAD Documentation** - Geconsolideerde documentatie voor het BMAD systeem 📚 

@@ -4,6 +4,44 @@
 
 Dit framework template biedt een complete gids voor product ownership binnen het BMAD systeem, inclusief backlog management, story refinement, sprint planning, en comprehensive product management workflows.
 
+## 📋 Project Management Integration
+
+### **Kanban-based Product Management**
+Product Owners gebruiken de BMAD Kanban structuur voor effectief product management en stakeholder communicatie.
+
+#### **🎯 Product Management Workflow**
+1. **📋 Backlog Management**: Beheer product backlog in `docs/deployment/KANBAN_BOARD.md`
+2. **🔄 Sprint Planning**: Prioriteer taken voor komende sprints
+3. **🚧 Development Oversight**: Monitor "In Progress" taken en productie
+4. **✅ Release Management**: Valideer "Done" taken voor release
+
+#### **📁 Product Management Structure**
+```
+product_management/
+├── docs/deployment/
+│   ├── KANBAN_BOARD.md             # Product backlog en taken
+│   ├── IMPLEMENTATION_DETAILS.md   # Product requirements en specs
+│   └── README.md                   # Product overview
+├── requirements/                   # Product requirements
+├── user_stories/                  # User stories en acceptance criteria
+└── stakeholder_communication/     # Stakeholder updates
+```
+
+#### **🔧 Product Owner Commands**
+```bash
+# Review product backlog
+python -m bmad.agents.Agent.ProductOwner.productowner --review-backlog
+
+# Prioritize tasks for next sprint
+python -m bmad.agents.Agent.ProductOwner.productowner --prioritize-tasks --sprint "Sprint 13"
+
+# Generate stakeholder report
+python -m bmad.agents.Agent.ProductOwner.productowner --generate-stakeholder-report --format "md"
+
+# Update product roadmap
+python -m bmad.agents.Agent.ProductOwner.productowner --update-roadmap --quarter "Q1 2025"
+```
+
 ## 🏗️ Product Management Architecture Patterns
 
 ### Product Management Framework

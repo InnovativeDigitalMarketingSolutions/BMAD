@@ -8,6 +8,50 @@
 
 Deze guide waarborgt dat alle nieuwe functionaliteiten en integraties volledig en productieklaar worden geïmplementeerd in het BMAD systeem. Het bevat lessons learned, best practices, en kwaliteitscontroles.
 
+## 📋 Project Management Structure
+
+### **Kanban-based Project Management**
+BMAD gebruikt een **Kanban-achtige structuur** voor betere project management en Cursor AI compatibiliteit.
+
+#### **📁 File Structure**
+```
+docs/deployment/
+├── README.md                    # Project management overview
+├── KANBAN_BOARD.md             # Kanban board met alle taken
+├── IMPLEMENTATION_DETAILS.md   # Gedetailleerde implementatie informatie
+└── BMAD_MASTER_PLANNING.md     # Originele master planning (legacy)
+```
+
+#### **🎯 Hoe te Gebruiken**
+1. **KANBAN_BOARD.md** - Hoofd project management
+   - 📋 Backlog: Toekomstige taken (georganiseerd per prioriteit)
+   - 🔄 To Do: Geplande taken voor komende sprints
+   - 🚧 In Progress: Huidige taken die worden uitgevoerd
+   - ✅ Done: Voltooide taken met details
+
+2. **IMPLEMENTATION_DETAILS.md** - Technische details
+   - Implementatie status van alle features
+   - File locaties en code details
+   - Data structuren en storage informatie
+   - Performance metrics en test resultaten
+
+3. **BMAD_MASTER_PLANNING.md** - Legacy planning
+   - Originele master planning (voor referentie)
+   - Gedetailleerde implementatie plannen
+
+#### **🚀 Workflow voor Cursor AI**
+1. **Check KANBAN_BOARD.md** voor huidige taken
+2. **Check IMPLEMENTATION_DETAILS.md** voor technische context
+3. **Update status** in Kanban board na voltooiing
+4. **Documenteer implementatie** in Implementation Details
+
+#### **📊 Status Tracking**
+- **Task Status**: 📋 Backlog → 🔄 To Do → 🚧 In Progress → ✅ Done
+- **Priority Levels**: Priority 1 (High) → Priority 2 (Medium) → Priority 3 (Low)
+- **Sprint Planning**: Weekly sprints met 3-4 tasks per sprint
+
+Deze guide waarborgt dat alle nieuwe functionaliteiten en integraties volledig en productieklaar worden geïmplementeerd in het BMAD systeem. Het bevat lessons learned, best practices, en kwaliteitscontroles.
+
 ## 📋 Implementatie Checklist
 
 ### **1. Volledige Implementatie Vereisten**
