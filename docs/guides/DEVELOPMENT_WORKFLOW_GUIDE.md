@@ -25,6 +25,7 @@ Volg de development pyramid strategie zoals beschreven in `DEVELOPMENT_STRATEGY.
 
 ### Voor het implementeren van nieuwe functionaliteit:
 
+- [ ] **Work Item Refinement**: Gebruik `docs/guides/WORK_ITEM_TEMPLATE.md` voor kwalitatieve work items
 - [ ] **Agent Inventory Check**: Raadpleeg `bmad/agents/Agent/agents-overview.md` voor complete agent lijst (23 agents)
 - [ ] **Project Planning Check**: Raadpleeg project planning files voor context en requirements:
   - `docs/deployment/KANBAN_BOARD.md` - Huidige taken en status
