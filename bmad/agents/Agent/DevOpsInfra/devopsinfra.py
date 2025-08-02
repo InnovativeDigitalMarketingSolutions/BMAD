@@ -22,13 +22,36 @@ from bmad.agents.core.communication.message_bus import publish, subscribe
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.slack.slack_notify import send_slack_message
+from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
+
+# MCP Integration
+from bmad.core.mcp import (
+    MCPClient,
+    MCPContext,
+    FrameworkMCPIntegration,
+    get_mcp_client,
+    get_framework_mcp_integration,
+    initialize_framework_mcp_integration
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
 class DevOpsInfraAgent:
+    """
+    DevOps Infrastructure Agent voor BMAD.
+    Gespecialiseerd in infrastructure management, CI/CD pipelines, en deployment automation.
+    """
+    
     def __init__(self):
+        self.framework_manager = get_framework_templates_manager()
+        try:
+            self.devops_template = self.framework_manager.get_framework_template('devops')
+        except:
+            self.devops_template = None
+        self.lessons_learned = []
+
         # Set agent name
         self.agent_name = "DevOpsInfra"
         self.monitor = get_performance_monitor()
@@ -56,6 +79,81 @@ class DevOpsInfraAgent:
         self.incident_history = []
         self._load_infrastructure_history()
         self._load_incident_history()
+        
+        # MCP Integration
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
+        
+        logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+    
+    async def initialize_mcp(self):
+        """Initialize MCP client voor enhanced DevOps capabilities."""
+        try:
+            self.mcp_client = await get_mcp_client()
+            self.mcp_integration = get_framework_mcp_integration()
+            await initialize_framework_mcp_integration()
+            self.mcp_enabled = True
+            logger.info("MCP client initialized successfully for DevOpsInfra")
+        except Exception as e:
+            logger.warning(f"MCP initialization failed for DevOpsInfra: {e}")
+            self.mcp_enabled = False
+    
+    async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """Use MCP tool voor enhanced DevOps functionality."""
+        if not self.mcp_enabled or not self.mcp_client:
+            logger.warning("MCP not available, using local DevOps tools")
+            return None
+        
+        try:
+            result = await self.mcp_client.execute_tool(tool_name, parameters)
+            logger.info(f"MCP tool {tool_name} executed successfully")
+            return result
+        except Exception as e:
+            logger.error(f"MCP tool {tool_name} execution failed: {e}")
+            return None
+    
+    async def use_devops_specific_mcp_tools(self, devops_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use DevOps-specific MCP tools voor infrastructure enhancement."""
+        if not self.mcp_enabled:
+            return {}
+        
+        enhanced_data = {}
+        
+        try:
+            # Infrastructure analysis
+            if "infrastructure_analysis" in self.mcp_config.custom_tools:
+                analysis_result = await self.use_mcp_tool("infrastructure_analysis", {
+                    "infrastructure": devops_data.get("infrastructure", ""),
+                    "pipeline": devops_data.get("pipeline", ""),
+                    "analysis_type": "performance"
+                })
+                if analysis_result:
+                    enhanced_data["infrastructure_analysis"] = analysis_result
+            
+            # Deployment optimization
+            if "deployment_optimization" in self.mcp_config.custom_tools:
+                optimization_result = await self.use_mcp_tool("deployment_optimization", {
+                    "deployment_config": devops_data.get("deployment_config", {}),
+                    "performance_metrics": devops_data.get("performance_metrics", {})
+                })
+                if optimization_result:
+                    enhanced_data["deployment_optimization"] = optimization_result
+            
+            # Monitoring enhancement
+            monitoring_result = await self.use_mcp_tool("monitoring_enhancement", {
+                "monitoring_config": devops_data.get("monitoring_config", {}),
+                "alert_rules": devops_data.get("alert_rules", [])
+            })
+            if monitoring_result:
+                enhanced_data["monitoring_enhancement"] = monitoring_result
+            
+            logger.info(f"DevOps-specific MCP tools executed: {list(enhanced_data.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Error in DevOps-specific MCP tools: {e}")
+        
+        return enhanced_data
 
     def _load_infrastructure_history(self):
         """Load infrastructure history from data file"""
@@ -347,6 +445,64 @@ DevOps Infrastructure Agent Commands:
             print(f"  📋 {step}")
             time.sleep(0.5)  # Simulate processing time
 
+        # Try MCP-enhanced infrastructure deployment first
+        if self.mcp_enabled and self.mcp_client:
+            try:
+                mcp_result = await self.use_mcp_tool("deploy_infrastructure", {
+                    "infrastructure_type": infrastructure_type,
+                    "deployment_steps": deployment_steps,
+                    "include_monitoring": True,
+                    "include_optimization": True
+                })
+                
+                if mcp_result:
+                    logger.info("MCP-enhanced infrastructure deployment completed")
+                    deployment_result = mcp_result.get("deployment_result", {})
+                    deployment_result["mcp_enhanced"] = True
+                else:
+                    logger.warning("MCP infrastructure deployment failed, using local deployment")
+                    deployment_result = {
+                        "status": "success",
+                        "infrastructure_type": infrastructure_type,
+                        "deployment_steps": deployment_steps,
+                        "timestamp": datetime.now().isoformat(),
+                        "agent": "DevOpsInfraAgent"
+                    }
+            except Exception as e:
+                logger.warning(f"MCP infrastructure deployment failed: {e}, using local deployment")
+                deployment_result = {
+                    "status": "success",
+                    "infrastructure_type": infrastructure_type,
+                    "deployment_steps": deployment_steps,
+                    "timestamp": datetime.now().isoformat(),
+                    "agent": "DevOpsInfraAgent"
+                }
+        else:
+            deployment_result = {
+                "status": "success",
+                "infrastructure_type": infrastructure_type,
+                "deployment_steps": deployment_steps,
+                "timestamp": datetime.now().isoformat(),
+                "agent": "DevOpsInfraAgent"
+            }
+        
+        # Use DevOps-specific MCP tools for additional enhancement
+        if self.mcp_enabled:
+            try:
+                devops_data = {
+                    "infrastructure": infrastructure_type,
+                    "pipeline": "deployment_pipeline",
+                    "deployment_config": deployment_result,
+                    "performance_metrics": {"deployment_time": "2.5s", "success_rate": "95%"},
+                    "monitoring_config": {"health_checks": True, "alerting": True},
+                    "alert_rules": ["high_cpu", "high_memory", "service_down"]
+                }
+                devops_enhanced = await self.use_devops_specific_mcp_tools(devops_data)
+                if devops_enhanced:
+                    deployment_result["devops_enhancements"] = devops_enhanced
+            except Exception as e:
+                logger.warning(f"DevOps-specific MCP tools failed: {e}")
+        
         # Record in history
         deployment_record = f"{infrastructure_type} infrastructure deployed at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
         self.infrastructure_history.append(deployment_record)
@@ -600,8 +756,11 @@ DevOps Infrastructure Agent Commands:
         publish("deployment_completed", {"desc": "Deployment afgerond"})
         logger.info("[DevOpsInfra] Deployment afgerond, deployment_completed gepubliceerd.")
 
-    def run(self):
-        """Run the agent and listen for events."""
+    async def run(self):
+        """Run the agent and listen for events met MCP integration."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
         def sync_handler(event):
             asyncio.run(self.on_pipeline_advice_requested(event))
 
@@ -612,7 +771,21 @@ DevOps Infrastructure Agent Commands:
         subscribe("deployment_executed", self.handle_deployment_executed)
 
         logger.info("DevOpsInfraAgent ready and listening for events...")
-        asyncio.run(self.collaborate_example())
+        await self.collaborate_example()
+        
+        try:
+            # Keep the agent running
+            while True:
+                await asyncio.sleep(1)
+        except KeyboardInterrupt:
+            logger.info("DevOpsInfra agent stopped.")
+    
+    @classmethod
+    async def run_agent(cls):
+        """Class method to run the DevOpsInfra agent met MCP integration."""
+        agent = cls()
+        await agent.initialize_mcp()
+        print("DevOpsInfra agent started with MCP integration")
 
 def main():
     parser = argparse.ArgumentParser(description="DevOps Infrastructure Agent CLI")
@@ -640,7 +813,7 @@ def main():
         result = agent.incident_response(args.incident_desc)
         print(json.dumps(result, indent=2))
     elif args.command == "deploy-infrastructure":
-        result = agent.deploy_infrastructure(args.infrastructure_type)
+        result = asyncio.run(agent.deploy_infrastructure(args.infrastructure_type))
         print(json.dumps(result, indent=2))
     elif args.command == "monitor-infrastructure":
         result = agent.monitor_infrastructure(args.infrastructure_id)
@@ -660,7 +833,7 @@ def main():
     elif args.command == "collaborate":
         agent.collaborate_example()
     elif args.command == "run":
-        agent.run()
+        asyncio.run(agent.run())
 
 if __name__ == "__main__":
     main()
