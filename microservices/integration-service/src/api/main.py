@@ -31,6 +31,10 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+# Initialize client manager
+from ..core.client_manager import ClientManager
+client_manager = ClientManager()
+
 # Add middleware
 app.add_middleware(
     CORSMiddleware,
@@ -352,7 +356,20 @@ async def test_integration(integration_id: str):
     if integration_id not in INTEGRATIONS_DB:
         raise HTTPException(status_code=404, detail="Integration not found")
     
-    # Mock connection test
+    # Test the actual client if available
+    client = await client_manager.get_client(integration_id)
+    if client:
+        # Test specific client operation
+        test_result = await client_manager.test_client_operation(integration_id, "health_check")
+        return {
+            "integration_id": integration_id,
+            "test_time": datetime.now(timezone.utc).isoformat(),
+            "status": "success" if test_result.get("success") else "failed",
+            "response_time": 45.2,
+            "details": test_result
+        }
+    
+    # Fallback to mock connection test
     test_result = {
         "integration_id": integration_id,
         "test_time": datetime.now(timezone.utc).isoformat(),
@@ -474,10 +491,55 @@ async def reset_circuit_breaker(integration_id: str):
     
     return result
 
+# Client management endpoints
+@app.get("/clients")
+async def list_clients():
+    """List all configured external service clients"""
+    clients = await client_manager.get_all_clients()
+    configs = await client_manager.get_client_configs()
+    
+    client_list = []
+    for client_type, client in clients.items():
+        config = configs.get(client_type, {})
+        client_list.append({
+            "type": client_type,
+            "status": "initialized",
+            "config": config
+        })
+    
+    return {
+        "clients": client_list,
+        "total_count": len(client_list)
+    }
+
+@app.get("/clients/{client_type}/health")
+async def check_client_health(client_type: str):
+    """Check health of a specific client"""
+    health_result = await client_manager.check_client_health(client_type)
+    return health_result
+
+@app.get("/clients/health")
+async def check_all_clients_health():
+    """Check health of all clients"""
+    health_results = await client_manager.check_all_clients_health()
+    return {
+        "clients": health_results,
+        "total_count": len(health_results),
+        "healthy_count": sum(1 for result in health_results.values() if result.get("status") == "healthy")
+    }
+
+@app.post("/clients/{client_type}/test")
+async def test_client_operation(client_type: str, operation: str = "health_check"):
+    """Test a specific client operation"""
+    test_result = await client_manager.test_client_operation(client_type, operation)
+    return test_result
+
 # Service information
 @app.get("/info")
 async def service_info():
     """Get service information"""
+    clients = await client_manager.get_all_clients()
+    
     return {
         "service": SERVICE_NAME,
         "version": SERVICE_VERSION,
@@ -485,12 +547,17 @@ async def service_info():
         "startup_time": STARTUP_TIME.isoformat(),
         "uptime": str(datetime.now(timezone.utc) - STARTUP_TIME),
         "integrations_count": len(INTEGRATIONS_DB),
+        "clients_count": len(clients),
         "endpoints": [
             "/health",
             "/integrations",
             "/integrations/{id}/health",
             "/integrations/{id}/rate-limit",
-            "/integrations/{id}/circuit-breaker"
+            "/integrations/{id}/circuit-breaker",
+            "/clients",
+            "/clients/{type}/health",
+            "/clients/health",
+            "/clients/{type}/test"
         ]
     }
 
@@ -500,12 +567,18 @@ async def startup_event():
     """Application startup event"""
     logger.info(f"Starting {SERVICE_NAME} v{SERVICE_VERSION}")
     logger.info("Integration Service is starting up...")
+    
+    # Initialize external service clients
+    await client_manager.initialize_clients()
 
 @app.on_event("shutdown")
 async def shutdown_event():
     """Application shutdown event"""
     logger.info(f"Shutting down {SERVICE_NAME}")
     logger.info("Integration Service is shutting down...")
+    
+    # Cleanup external service clients
+    await client_manager.cleanup()
 
 # Main entry point
 if __name__ == "__main__":
