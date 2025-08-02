@@ -57,9 +57,12 @@ class TestIntegratedWorkflowCLI:
 
     def setup_method(self):
         """Set up test environment."""
-        # We'll create the mock orchestrator and CLI within each test method
-        # This ensures proper dependency injection patching
-        pass
+        # Create mock orchestrator
+        self.mock_orchestrator = MagicMock()
+        
+        # Patch the orchestrator before creating CLI
+        with patch('cli.integrated_workflow_cli.IntegratedWorkflowOrchestrator', return_value=self.mock_orchestrator):
+            self.cli = IntegratedWorkflowCLI()
 
     @patch('cli.integrated_workflow_cli.IntegratedWorkflowOrchestrator')
     def test_cli_initialization(self, mock_orchestrator_class):
@@ -245,111 +248,103 @@ class TestIntegratedWorkflowCLI:
     @patch('builtins.print')
     async def test_test_integrations_success(self, mock_print):
         """Test successful integration testing."""
-        # Create mock orchestrator
-        mock_orchestrator = MagicMock()
+        # Mock orchestrator methods for individual integration tests
+        self.mock_orchestrator.get_system_performance_summary.return_value = {
+            "cpu_usage": 45.2,
+            "memory_usage": 67.8
+        }
         
-        # Patch the orchestrator BEFORE creating the CLI (dependency injection)
-        with patch('cli.integrated_workflow_cli.IntegratedWorkflowOrchestrator', return_value=mock_orchestrator):
-            # Create a new CLI instance that uses the mocked orchestrator
-            cli = IntegratedWorkflowCLI()
-            
-            # Mock orchestrator methods for individual integration tests
-            mock_orchestrator.get_system_performance_summary.return_value = {
-                "cpu_usage": 45.2,
-                "memory_usage": 67.8
-            }
-            
-            mock_orchestrator.get_component_sprites.return_value = {
-                "AgentStatus": {"name": "AgentStatus", "type": "component"}
-            }
-            
-            # Mock component test result
-            mock_component_result = {
-                "status": "passed",
-                "performance_metrics": {"duration": 0.0}
-            }
-            mock_orchestrator.run_component_tests = AsyncMock(return_value=mock_component_result)
-            
-            # Mock OpenRouter client
-            mock_openrouter_client = MagicMock()
-            mock_response = MagicMock()
-            mock_response.content = "Hello from BMAD!"
-            mock_response.cost = 0.001
-            mock_response.duration = 0.5
-            mock_openrouter_client.generate_response = AsyncMock(return_value=mock_response)
-            mock_orchestrator.openrouter_client = mock_openrouter_client
-            
-            # Mock other integrations
-            mock_tracer = MagicMock()
-            mock_span = MagicMock()
-            mock_span.set_attribute = MagicMock()
-            mock_tracer.start_span.return_value.__enter__ = MagicMock(return_value=mock_span)
-            mock_tracer.start_span.return_value.__exit__ = MagicMock(return_value=None)
-            mock_orchestrator.tracer = mock_tracer
-            
-            # Mock OPA Policy Engine with proper async mock
-            mock_policy_engine = MagicMock()
-            mock_policy_result = MagicMock()
-            mock_policy_result.allowed = True
-            mock_policy_engine.evaluate_policy = AsyncMock(return_value=mock_policy_result)
-            mock_orchestrator.policy_engine = mock_policy_engine
-            
-            # Mock Advanced Policy Engine with proper async mock
-            mock_advanced_policy_engine = MagicMock()
-            mock_advanced_result = MagicMock()
-            mock_advanced_result.allowed = True
-            mock_advanced_policy_engine.evaluate_policy = AsyncMock(return_value=mock_advanced_result)
-            mock_orchestrator.advanced_policy_engine = mock_advanced_policy_engine
-            
-            # Mock LangGraph Orchestrator with proper async mock
-            mock_langgraph_orchestrator = MagicMock()
-            mock_workflow_result = MagicMock()
-            mock_workflow_result.duration = 0.5
-            mock_workflow_result.status = "completed"
-            mock_langgraph_orchestrator.execute_workflow = AsyncMock(return_value=mock_workflow_result)
-            mock_orchestrator.langgraph_orchestrator = mock_langgraph_orchestrator
-            
-            # Mock Prefect Orchestrator with proper async mock
-            mock_prefect_orchestrator = MagicMock()
-            mock_flow_result = MagicMock()
-            mock_flow_result.duration = 0.5
-            mock_flow_result.status = "completed"
-            mock_prefect_orchestrator.execute_flow = AsyncMock(return_value=mock_flow_result)
-            mock_orchestrator.prefect_orchestrator = mock_prefect_orchestrator
-            
-            await cli.test_integrations()
-            
-            # Verify output matches actual implementation
-            mock_print.assert_any_call("🧪 Testing Repository Integrations")
-            mock_print.assert_any_call("=" * 50)
-            mock_print.assert_any_call("📊 Testing Performance Monitor...")
-            mock_print.assert_any_call("   ✅ Performance Monitor: System monitoring active")
-            mock_print.assert_any_call("   💻 CPU Usage: 45.2")
-            mock_print.assert_any_call("   🧠 Memory Usage: 67.8")
-            mock_print.assert_any_call("🧪 Testing Test Sprites...")
-            mock_print.assert_any_call("   ✅ Test Sprites: 1 sprites available")
-            mock_print.assert_any_call("   ✅ Component Test: passed")
-            mock_print.assert_any_call("   ⏱️  Duration: 0.00s")
-            mock_print.assert_any_call("🔗 Testing OpenRouter...")
-            mock_print.assert_any_call("   ✅ OpenRouter: Hello from BMAD!")
-            mock_print.assert_any_call("   💰 Cost: $0.0010")
-            mock_print.assert_any_call("   ⏱️  Duration: 0.5s")
-            mock_print.assert_any_call("🔍 Testing OpenTelemetry...")
-            mock_print.assert_any_call("   ✅ OpenTelemetry: Tracing working")
-            mock_print.assert_any_call("🔒 Testing OPA...")
-            mock_print.assert_any_call("   ✅ OPA: Policy evaluation working")
-            mock_print.assert_any_call("   🔒 Result: True")
-            mock_print.assert_any_call("🔐 Testing Advanced Policy Engine...")
-            mock_print.assert_any_call("   ✅ Advanced Policy Engine: Working")
-            mock_print.assert_any_call("   🔐 Result: True")
-            mock_print.assert_any_call("🔄 Testing LangGraph...")
-            mock_print.assert_any_call("   ✅ LangGraph: Workflow execution working")
-            mock_print.assert_any_call("   🔄 Result: completed")
-            mock_print.assert_any_call("   ⏱️  Duration: 0.5s")
-            mock_print.assert_any_call("🚀 Testing Prefect...")
-            mock_print.assert_any_call("   ✅ Prefect: Flow execution working")
-            mock_print.assert_any_call("   🚀 Result: completed")
-            mock_print.assert_any_call("✅ Integration testing completed!")
+        self.mock_orchestrator.get_component_sprites.return_value = {
+            "AgentStatus": {"name": "AgentStatus", "type": "component"}
+        }
+        
+        # Mock component test result
+        mock_component_result = {
+            "status": "passed",
+            "performance_metrics": {"duration": 0.0}
+        }
+        self.mock_orchestrator.run_component_tests = AsyncMock(return_value=mock_component_result)
+        
+        # Mock OpenRouter client
+        mock_openrouter_client = MagicMock()
+        mock_response = MagicMock()
+        mock_response.content = "Hello from BMAD!"
+        mock_response.cost = 0.001
+        mock_response.duration = 0.5
+        mock_openrouter_client.generate_response = AsyncMock(return_value=mock_response)
+        self.mock_orchestrator.openrouter_client = mock_openrouter_client
+        
+        # Mock other integrations
+        mock_tracer = MagicMock()
+        mock_span = MagicMock()
+        mock_span.set_attribute = MagicMock()
+        mock_tracer.start_span.return_value.__enter__ = MagicMock(return_value=mock_span)
+        mock_tracer.start_span.return_value.__exit__ = MagicMock(return_value=None)
+        self.mock_orchestrator.tracer = mock_tracer
+        
+        # Mock OPA Policy Engine with proper async mock
+        mock_policy_engine = MagicMock()
+        mock_policy_result = MagicMock()
+        mock_policy_result.allowed = True
+        mock_policy_engine.evaluate_policy = AsyncMock(return_value=mock_policy_result)
+        self.mock_orchestrator.policy_engine = mock_policy_engine
+        
+        # Mock Advanced Policy Engine with proper async mock
+        mock_advanced_policy_engine = MagicMock()
+        mock_advanced_result = MagicMock()
+        mock_advanced_result.allowed = True
+        mock_advanced_policy_engine.evaluate_policy = AsyncMock(return_value=mock_advanced_result)
+        self.mock_orchestrator.advanced_policy_engine = mock_advanced_policy_engine
+        
+        # Mock LangGraph Orchestrator with proper async mock
+        mock_langgraph_orchestrator = MagicMock()
+        mock_workflow_result = MagicMock()
+        mock_workflow_result.duration = 0.5
+        mock_workflow_result.status = "completed"
+        mock_langgraph_orchestrator.execute_workflow = AsyncMock(return_value=mock_workflow_result)
+        self.mock_orchestrator.langgraph_orchestrator = mock_langgraph_orchestrator
+        
+        # Mock Prefect Orchestrator with proper async mock
+        mock_prefect_orchestrator = MagicMock()
+        mock_flow_result = MagicMock()
+        mock_flow_result.duration = 0.5
+        mock_flow_result.status = "completed"
+        mock_prefect_orchestrator.execute_flow = AsyncMock(return_value=mock_flow_result)
+        self.mock_orchestrator.prefect_orchestrator = mock_prefect_orchestrator
+        
+        await self.cli.test_integrations()
+        
+        # Verify output matches actual implementation
+        mock_print.assert_any_call("🧪 Testing Repository Integrations")
+        mock_print.assert_any_call("=" * 50)
+        mock_print.assert_any_call("📊 Testing Performance Monitor...")
+        mock_print.assert_any_call("   ✅ Performance Monitor: System monitoring active")
+        mock_print.assert_any_call("   💻 CPU Usage: 45.2")
+        mock_print.assert_any_call("   🧠 Memory Usage: 67.8")
+        mock_print.assert_any_call("🧪 Testing Test Sprites...")
+        mock_print.assert_any_call("   ✅ Test Sprites: 1 sprites available")
+        mock_print.assert_any_call("   ✅ Component Test: passed")
+        mock_print.assert_any_call("   ⏱️  Duration: 0.00s")
+        mock_print.assert_any_call("🔗 Testing OpenRouter...")
+        mock_print.assert_any_call("   ✅ OpenRouter: Hello from BMAD!")
+        mock_print.assert_any_call("   💰 Cost: $0.0010")
+        mock_print.assert_any_call("   ⏱️  Duration: 0.5s")
+        mock_print.assert_any_call("\n🔍 Testing OpenTelemetry...")
+        mock_print.assert_any_call("   ✅ OpenTelemetry: Tracing working")
+        mock_print.assert_any_call("\n🔒 Testing OPA...")
+        mock_print.assert_any_call("   ✅ OPA: Policy evaluation working")
+        mock_print.assert_any_call("   🔒 Result: True")
+        mock_print.assert_any_call("\n🔐 Testing Advanced Policy Engine...")
+        mock_print.assert_any_call("   ✅ Advanced Policy Engine: Working")
+        mock_print.assert_any_call("   🔐 Result: True")
+        mock_print.assert_any_call("\n🔄 Testing LangGraph...")
+        mock_print.assert_any_call("   ✅ LangGraph: Workflow execution working")
+        mock_print.assert_any_call("   🔄 Result: completed")
+        mock_print.assert_any_call("\n🚀 Testing Prefect...")
+        mock_print.assert_any_call("   ✅ Prefect: Flow execution working")
+        mock_print.assert_any_call("   🚀 Result: completed")
+        mock_print.assert_any_call("\n" + "=" * 50)
+        mock_print.assert_any_call("✅ Integration testing completed!")
 
     @pytest.mark.asyncio
     @patch('builtins.print')
@@ -382,10 +377,26 @@ class TestIntegratedWorkflowCLI:
         
         # Mock other integrations
         self.mock_orchestrator.tracer = MagicMock()
-        self.mock_orchestrator.policy_engine = MagicMock()
-        self.mock_orchestrator.advanced_policy_engine = MagicMock()
-        self.mock_orchestrator.langgraph_orchestrator = MagicMock()
-        self.mock_orchestrator.prefect_orchestrator = MagicMock()
+        
+        # Mock OPA Policy Engine with failure
+        mock_policy_engine = MagicMock()
+        mock_policy_engine.evaluate_policy = AsyncMock(side_effect=Exception("Policy evaluation failed"))
+        self.mock_orchestrator.policy_engine = mock_policy_engine
+        
+        # Mock Advanced Policy Engine with failure
+        mock_advanced_policy_engine = MagicMock()
+        mock_advanced_policy_engine.evaluate_policy = AsyncMock(side_effect=Exception("Advanced policy failed"))
+        self.mock_orchestrator.advanced_policy_engine = mock_advanced_policy_engine
+        
+        # Mock LangGraph Orchestrator with failure
+        mock_langgraph_orchestrator = MagicMock()
+        mock_langgraph_orchestrator.execute_workflow = AsyncMock(side_effect=Exception("LangGraph failed"))
+        self.mock_orchestrator.langgraph_orchestrator = mock_langgraph_orchestrator
+        
+        # Mock Prefect Orchestrator with failure
+        mock_prefect_orchestrator = MagicMock()
+        mock_prefect_orchestrator.execute_flow = AsyncMock(side_effect=Exception("Prefect failed"))
+        self.mock_orchestrator.prefect_orchestrator = mock_prefect_orchestrator
         
         await self.cli.test_integrations()
         
@@ -402,21 +413,17 @@ class TestIntegratedWorkflowCLI:
         mock_print.assert_any_call("   ⏱️  Duration: 0.00s")
         mock_print.assert_any_call("🔗 Testing OpenRouter...")
         mock_print.assert_any_call("   ❌ OpenRouter: Connection timeout")
-        mock_print.assert_any_call("🔍 Testing OpenTelemetry...")
+        mock_print.assert_any_call("\n🔍 Testing OpenTelemetry...")
         mock_print.assert_any_call("   ✅ OpenTelemetry: Tracing working")
-        mock_print.assert_any_call("🔒 Testing OPA...")
-        mock_print.assert_any_call("   ✅ OPA: Policy evaluation working")
-        mock_print.assert_any_call("   🔒 Result: True")
-        mock_print.assert_any_call("🔐 Testing Advanced Policy Engine...")
-        mock_print.assert_any_call("   ✅ Advanced Policy Engine: Working")
-        mock_print.assert_any_call("   🔐 Result: True")
-        mock_print.assert_any_call("🔄 Testing LangGraph...")
-        mock_print.assert_any_call("   ✅ LangGraph: Workflow execution working")
-        mock_print.assert_any_call("   🔄 Result: completed")
-        mock_print.assert_any_call("   ⏱️  Duration: 0.5s")
-        mock_print.assert_any_call("🚀 Testing Prefect...")
-        mock_print.assert_any_call("   ✅ Prefect: Flow execution working")
-        mock_print.assert_any_call("   🚀 Result: completed")
+        mock_print.assert_any_call("\n🔒 Testing OPA...")
+        mock_print.assert_any_call("   ❌ OPA: Policy evaluation failed")
+        mock_print.assert_any_call("\n🔐 Testing Advanced Policy Engine...")
+        mock_print.assert_any_call("   ❌ Advanced Policy Engine: Advanced policy failed")
+        mock_print.assert_any_call("\n🔄 Testing LangGraph...")
+        mock_print.assert_any_call("   ❌ LangGraph: LangGraph failed")
+        mock_print.assert_any_call("\n🚀 Testing Prefect...")
+        mock_print.assert_any_call("   ❌ Prefect: Prefect failed")
+        mock_print.assert_any_call("\n" + "=" * 50)
         mock_print.assert_any_call("✅ Integration testing completed!")
 
     @pytest.mark.asyncio
