@@ -26,7 +26,7 @@ class TestRetrospectiveAgent:
         assert hasattr(agent, 'template_paths')
         assert hasattr(agent, 'data_paths')
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Retrospective History\n\n- Sprint 15 Retrospectiven- Sprint 14 Retrospective")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Retrospective History\n\n- Sprint 15 Retrospective\n- Sprint 14 Retrospective")
     @patch('pathlib.Path.exists', return_value=True)
     @pytest.mark.asyncio
     async def test_load_retro_history_success(self, mock_exists, mock_file, agent):
@@ -52,7 +52,7 @@ class TestRetrospectiveAgent:
         agent._save_retro_history()
         mock_file.assert_called()
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Action History\n\n- Action 1: Improve communicatio\n\n- Action 2: Update documentation")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Action History\n\n- Action 1: Improve communication\n\n- Action 2: Update documentation")
     @patch('pathlib.Path.exists', return_value=True)
     @pytest.mark.asyncio
     async def test_load_action_history_success(self, mock_exists, mock_file, agent):
@@ -80,7 +80,7 @@ class TestRetrospectiveAgent:
 
     def test_show_help(self, agent, capsys):
         """Test show_help method."""
-        await agent.show_help()
+        agent.show_help()
         captured = capsys.readouterr()
         assert "Retrospective Agent Commands:" in captured.out
         assert "conduct-retrospective" in captured.out
@@ -263,13 +263,16 @@ class TestRetrospectiveAgent:
         mock_get_context.return_value = {"retrospective_projects": ["Project1"]}
         mock_save_context.return_value = None
         
-        # Mock the entire collaborate_example method to avoid Supabase API calls
+        # Mock the entire collaborate_example method to prevent external API calls
         with patch.object(agent, 'collaborate_example') as mock_collaborate:
-            mock_collaborate.return_value = None
-            await agent.collaborate_example()
-        
-        # Verify the method was called
-        mock_collaborate.assert_called_once()
+            mock_collaborate.return_value = "Collaboration completed"
+            
+            # Test the method
+            result = agent.collaborate_example()
+            
+            # Verify the method was called
+            mock_collaborate.assert_called_once()
+            assert result == "Collaboration completed"
 
     @patch('bmad.agents.core.communication.message_bus.publish')
     @patch('bmad.agents.core.data.supabase_context.save_context')
@@ -340,7 +343,7 @@ class TestRetrospectiveAgent:
         # Mock the entire run method to avoid Supabase API calls
         with patch.object(agent, 'run') as mock_run:
             mock_run.return_value = None
-            await agent.run()
+            agent.run()
         
         # Verify the method was called
         mock_run.assert_called_once()
@@ -385,15 +388,15 @@ class TestRetrospectiveAgent:
         assert retro_result["status"] == "completed"
 
         # Analyze feedback
-        feedback_result = await agent.analyze_feedback(["Good communication", "Need better documentation"])
+        feedback_result = agent.analyze_feedback(["Good communication", "Need better documentation"])
         assert "feedback_analysis" in feedback_result
 
         # Create action plan
-        action_plan_result = await agent.create_action_plan(retro_result)
+        action_plan_result = agent.create_action_plan(retro_result)
         assert "action_plan" in action_plan_result
 
         # Track improvements
-        improvement_result = await agent.track_improvements("Sprint 16")
+        improvement_result = agent.track_improvements("Sprint 16")
         assert "improvement_metrics" in improvement_result
         
         # Verify that all methods were called successfully
@@ -493,7 +496,7 @@ class TestRetrospectiveAgent:
         """Test show_resource method with empty resource type."""
         agent.show_resource("")  # Empty string
         captured = capsys.readouterr()
-        assert "Error: resource_type ca\n\not be empty" in captured.out
+        assert "Error: resource_type cannot be empty" in captured.out
 
     @patch('builtins.open', side_effect=FileNotFoundError("File not found"))
     @patch('pathlib.Path.exists', return_value=True)
@@ -522,7 +525,7 @@ class TestRetrospectiveAgent:
     @pytest.mark.asyncio
     async def test_conduct_retrospective_empty_sprint_name(self, agent):
         """Test conduct_retrospective with empty sprint name."""
-        with pytest.raises(ValueError, match="sprint_name ca\n\not be empty"):
+        with pytest.raises(ValueError, match="sprint_name cannot be empty"):
             await agent.conduct_retrospective("", 8)
 
     @pytest.mark.asyncio
@@ -540,22 +543,22 @@ class TestRetrospectiveAgent:
     @pytest.mark.asyncio
     async def test_conduct_retrospective_invalid_team_size_too_large(self, agent):
         """Test conduct_retrospective with team size too large."""
-        with pytest.raises(ValueError, match="team_size ca\n\not exceed 50"):
+        with pytest.raises(ValueError, match="team_size cannot exceed 50"):
             await agent.conduct_retrospective("Sprint 15", 100)
 
     def test_analyze_feedback_invalid_feedback_type(self, agent):
         """Test analyze_feedback with invalid feedback type."""
-        with pytest.raises(TypeError, match="feedback_list[0] must be a string"):
+        with pytest.raises(TypeError, match=r"feedback_list\[0\] must be a string"):
             agent.analyze_feedback([123, "valid feedback"])
 
     def test_analyze_feedback_empty_feedback_item(self, agent):
         """Test analyze_feedback with empty feedback item."""
-        with pytest.raises(ValueError, match="feedback_list[0] ca\n\not be empty"):
+        with pytest.raises(ValueError, match=r"feedback_list\[0\] cannot be empty"):
             agent.analyze_feedback(["", "valid feedback"])
 
     def test_track_improvements_empty_sprint_name(self, agent):
         """Test track_improvements with empty sprint name."""
-        with pytest.raises(ValueError, match="sprint_name ca\n\not be empty"):
+        with pytest.raises(ValueError, match="sprint_name cannot be empty"):
             agent.track_improvements("")
 
     def test_export_report_invalid_format_type(self, agent):
