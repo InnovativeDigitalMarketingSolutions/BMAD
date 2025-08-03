@@ -24,6 +24,12 @@ from bmad.core.mcp import (
     MCPClient, MCPContext, FrameworkMCPIntegration,
     get_mcp_client, get_framework_mcp_integration, initialize_framework_mcp_integration
 )
+
+# Enhanced MCP Phase 2 imports
+from bmad.core.mcp.enhanced_mcp_integration import (
+    EnhancedMCPIntegration,
+    create_enhanced_mcp_integration
+)
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 from integrations.slack.slack_notify import send_slack_message
 
@@ -48,6 +54,17 @@ class StrategiePartnerAgent:
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
+        
+        # MCP Integration
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
+        
+        # Enhanced MCP Phase 2 attributes
+        self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_enabled = False
+        
+        # Tracing Integration
         self.tracer = BMADTracer(config=type("Config", (), {
             "service_name": "StrategiePartnerAgent",
             "service_version": "1.0.0",
@@ -55,11 +72,7 @@ class StrategiePartnerAgent:
             "sample_rate": 1.0,
             "exporters": []
         })())
-
-        # MCP Integration
-        self.mcp_client: Optional[MCPClient] = None
-        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
-        self.mcp_enabled = False
+        self.tracing_enabled = False
 
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
@@ -109,16 +122,43 @@ class StrategiePartnerAgent:
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
 
     async def initialize_mcp(self):
-        """Initialize MCP client and integration."""
+        """Initialize MCP client voor enhanced strategy capabilities."""
         try:
-            self.mcp_client = get_mcp_client()  # Remove await - this is a sync function
+            self.mcp_client = get_mcp_client()
             self.mcp_integration = get_framework_mcp_integration()
             await initialize_framework_mcp_integration()
             self.mcp_enabled = True
-            logger.info("MCP client initialized successfully")
+            logger.info("MCP client initialized successfully for StrategiePartner")
         except Exception as e:
-            logger.warning(f"MCP initialization failed: {e}")
+            logger.warning(f"MCP initialization failed for StrategiePartner: {e}")
             self.mcp_enabled = False
+
+    async def initialize_enhanced_mcp(self):
+        """Initialize enhanced MCP capabilities for Phase 2."""
+        try:
+            self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+            # Check if initialize method exists before calling it
+            if hasattr(self.enhanced_mcp, 'initialize'):
+                await self.enhanced_mcp.initialize()
+            self.enhanced_mcp_enabled = True
+            logger.info("Enhanced MCP initialized successfully")
+        except Exception as e:
+            logger.warning(f"Enhanced MCP initialization failed: {e}")
+            self.enhanced_mcp_enabled = False
+    
+    async def initialize_tracing(self):
+        """Initialize tracing capabilities."""
+        try:
+            if self.tracer and hasattr(self.tracer, 'initialize'):
+                await self.tracer.initialize()
+                self.tracing_enabled = True
+                logger.info("Tracing initialized successfully")
+            else:
+                logger.warning("Tracer not available or missing initialize method")
+                self.tracing_enabled = False
+        except Exception as e:
+            logger.warning(f"Tracing initialization failed: {e}")
+            self.tracing_enabled = False
 
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -186,6 +226,120 @@ class StrategiePartnerAgent:
             enhanced_data["risk_assessment"] = risk_result
         
         return enhanced_data
+
+    async def use_enhanced_mcp_tools(self, strategy_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use enhanced MCP tools voor Phase 2 capabilities."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available, using standard MCP tools")
+            return await self.use_strategy_specific_mcp_tools(strategy_data)
+        
+        enhanced_data = {}
+        
+        try:
+            # Core enhancement tools
+            core_result = await self.enhanced_mcp.use_enhanced_mcp_tool("core_enhancement", {
+                "agent_type": self.agent_name,
+                "enhancement_level": "advanced",
+                "capabilities": strategy_data.get("capabilities", []),
+                "performance_metrics": strategy_data.get("performance_metrics", {})
+            })
+            enhanced_data["core_enhancement"] = core_result
+            
+            # Strategy-specific enhanced tools
+            strategy_enhanced_result = await self.use_strategy_specific_enhanced_tools(strategy_data)
+            enhanced_data.update(strategy_enhanced_result)
+            
+            # Tracing integration
+            if self.tracing_enabled:
+                trace_result = await self.trace_strategy_operation(strategy_data)
+                enhanced_data["tracing"] = trace_result
+            
+            logger.info(f"Enhanced MCP tools used successfully: {len(enhanced_data)} tools")
+            
+        except Exception as e:
+            logger.error(f"Enhanced MCP tools failed: {e}")
+            enhanced_data["error"] = str(e)
+        
+        return enhanced_data
+    
+    async def use_strategy_specific_enhanced_tools(self, strategy_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use strategy-specific enhanced MCP tools."""
+        enhanced_tools = {}
+        
+        try:
+            # Enhanced strategy development
+            if "strategy_development" in strategy_data:
+                strategy_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_strategy_development", {
+                    "strategy_data": strategy_data["strategy_development"],
+                    "market_analysis": strategy_data.get("market_analysis", {}),
+                    "competitive_analysis": strategy_data.get("competitive_analysis", {})
+                })
+                enhanced_tools["enhanced_strategy_development"] = strategy_result
+            
+            # Enhanced market analysis
+            if "market_analysis" in strategy_data:
+                market_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_market_analysis", {
+                    "market_data": strategy_data["market_analysis"],
+                    "sector": strategy_data.get("sector", "Technology"),
+                    "analysis_depth": strategy_data.get("analysis_depth", "comprehensive")
+                })
+                enhanced_tools["enhanced_market_analysis"] = market_result
+            
+            # Enhanced team collaboration
+            if "team_collaboration" in strategy_data:
+                collaboration_result = await self.enhanced_mcp.communicate_with_agents(
+                    ["ProductOwner", "Architect", "QualityGuardian", "Scrummaster"],
+                    {
+                        "type": "strategy_review",
+                        "content": strategy_data["team_collaboration"]
+                    }
+                )
+                enhanced_tools["enhanced_team_collaboration"] = collaboration_result
+            
+            # Enhanced risk assessment
+            if "risk_assessment" in strategy_data:
+                risk_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_risk_assessment", {
+                    "risk_data": strategy_data["risk_assessment"],
+                    "risk_factors": strategy_data.get("risk_factors", []),
+                    "assessment_methodology": strategy_data.get("assessment_methodology", "comprehensive")
+                })
+                enhanced_tools["enhanced_risk_assessment"] = risk_result
+            
+            logger.info(f"Strategy-specific enhanced tools executed: {list(enhanced_tools.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Error in strategy-specific enhanced tools: {e}")
+        
+        return enhanced_tools
+    
+    async def trace_strategy_operation(self, operation_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace strategy operations."""
+        if not self.tracing_enabled or not self.tracer:
+            return {"tracing": "disabled"}
+        
+        try:
+            trace_data = {
+                "operation_type": "strategy_operation",
+                "agent": self.agent_name,
+                "timestamp": datetime.now().isoformat(),
+                "operation_data": operation_data,
+                "performance_metrics": {
+                    "strategy_complexity": len(operation_data.get("strategies", [])),
+                    "market_analysis_depth": len(operation_data.get("market_analysis", [])),
+                    "collaboration_agents": len(operation_data.get("team_collaboration", {}).get("agents", []))
+                }
+            }
+            
+            # Add trace to tracer
+            if hasattr(self.tracer, 'add_trace'):
+                await self.tracer.add_trace("strategy_operation", trace_data)
+            
+            logger.info(f"Strategy operation traced: {trace_data['operation_type']}")
+            return trace_data
+            
+        except Exception as e:
+            logger.error(f"Tracing failed: {e}")
+            return {"tracing": "error", "error": str(e)}
 
     def _validate_input(self, value: Any, expected_type: type, param_name: str) -> None:
         """Validate input parameters with type checking."""
@@ -393,6 +547,18 @@ StrategiePartner Agent Commands:
   test                    - Test resource completeness
   collaborate             - Demonstrate collaboration with other agents
   run                     - Start the agent in event listening mode
+  initialize-mcp           - Initialize MCP integration
+  use-mcp-tool [tool_name] [parameters] - Use MCP tool for enhanced functionality
+  get-mcp-status           - Get MCP status
+  use-strategy-mcp-tools [strategy_data] - Use strategy-specific MCP tools
+  check-dependencies       - Check dependencies for enhanced collaboration
+  enhanced-collaborate     - Enhanced collaboration with other agents
+  enhanced-security        - Enhanced security validation
+  enhanced-performance     - Enhanced performance optimization
+  trace-operation [operation_data] - Trace strategy operation
+  trace-performance [performance_metrics] - Trace performance analysis
+  trace-error [error_data] - Trace error analysis
+  tracing-summary          - Show tracing summary
         """
         print(help_text)
 
@@ -466,7 +632,7 @@ StrategiePartner Agent Commands:
                 "mitigation_strategies": ["Agile approach", "Continuous monitoring"]
             }
             
-            enhanced_data = await self.use_strategy_specific_mcp_tools(strategy_data)
+            enhanced_data = await self.use_enhanced_mcp_tools(strategy_data)
 
             # Simulate strategy development process
             time.sleep(1)
@@ -1499,8 +1665,18 @@ StrategiePartner Agent Commands:
 
     async def run(self):
         """Start the agent in event listening mode."""
-        # Initialize MCP
+        # Initialize MCP integration
         await self.initialize_mcp()
+        
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing capabilities
+        await self.initialize_tracing()
+        
+        print("🎯 StrategiePartner Agent is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
         
         subscribe("alignment_check_completed", self.handle_alignment_check_completed)
         subscribe("strategy_development_requested", self.handle_strategy_development_requested)
@@ -1526,7 +1702,10 @@ def main():
                                "assess-risks", "stakeholder-analysis", "create-roadmap", "calculate-roi",
                                "business-model-canvas", "validate-idea", "refine-idea", "create-epic-from-idea",
                                "show-strategy-history", "show-market-data", "show-competitive-data", 
-                               "show-risk-register", "show-strategy-guide", "test", "collaborate", "run"])
+                               "show-risk-register", "show-strategy-guide", "test", "collaborate", "run",
+                               "initialize-mcp", "use-mcp-tool", "get-mcp-status", "use-strategy-mcp-tools", 
+                               "check-dependencies", "enhanced-collaborate", "enhanced-security", "enhanced-performance",
+                               "trace-operation", "trace-performance", "trace-error", "tracing-summary"])
     parser.add_argument("--strategy-name", default="Digital Transformation Strategy", help="Strategy name")
     parser.add_argument("--sector", default="Technology", help="Market sector")
     parser.add_argument("--competitor", default="Main Competitor", help="Competitor name")
@@ -1597,7 +1776,55 @@ def main():
             asyncio.run(agent.collaborate_example())
         elif args.command == "run":
             agent = asyncio.run(StrategiePartnerAgent.run_agent())
-            
+        # Enhanced MCP Phase 2 Commands
+        elif args.command in ["enhanced-collaborate", "enhanced-security", "enhanced-performance", 
+                             "trace-operation", "trace-performance", "trace-error", "tracing-summary"]:
+            # Enhanced MCP commands
+            if args.command == "enhanced-collaborate":
+                result = asyncio.run(agent.enhanced_mcp.communicate_with_agents(
+                    ["ProductOwner", "Architect", "QualityGuardian", "Scrummaster"], 
+                    {"type": "strategy_review", "content": {"review_type": "strategy_development"}}
+                ))
+                print(json.dumps(result, indent=2))
+            elif args.command == "enhanced-security":
+                result = asyncio.run(agent.enhanced_mcp.enhanced_security_validation({
+                    "strategy_data": {"strategies": ["Digital Transformation", "Market Expansion"]},
+                    "security_requirements": ["data_protection", "compliance", "risk_mitigation"]
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "enhanced-performance":
+                result = asyncio.run(agent.enhanced_mcp.enhanced_performance_optimization({
+                    "strategy_data": {"strategies": ["Digital Transformation", "Market Expansion"]},
+                    "performance_metrics": {"roi": 25.5, "time_to_market": 6.2}
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "trace-operation":
+                result = asyncio.run(agent.trace_strategy_operation({
+                    "operation_type": "strategy_development",
+                    "strategies": ["Digital Transformation", "Market Expansion"],
+                    "market_analysis": ["Technology", "Healthcare"]
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "trace-performance":
+                result = asyncio.run(agent.trace_strategy_operation({
+                    "operation_type": "performance_analysis",
+                    "performance_metrics": {"roi": 25.5, "time_to_market": 6.2}
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "trace-error":
+                result = asyncio.run(agent.trace_strategy_operation({
+                    "operation_type": "error_analysis",
+                    "error_data": {"error_type": "strategy_validation", "error_message": "Market analysis incomplete"}
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "tracing-summary":
+                print("Tracing Summary for StrategiePartner Agent:")
+                print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+                print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+                print(f"Agent: {agent.agent_name}")
+        else:
+            print(f"Unknown command: {args.command}")
+            agent.show_help()
     except StrategyValidationError as e:
         print(f"Validation error: {e}")
         sys.exit(1)

@@ -35,7 +35,23 @@ commands:
   - show-market-data: Toon marktdata
   - show-competitive-data: Toon competitive data
   - show-risk-register: Toon risk register
+  - show-strategy-guide: Show strategy guide
   - test: Test resource completeness
+  - collaborate: Demonstrate collaboration
+  - run: Run agent met MCP integration
+  - initialize-mcp: Initialize MCP client
+  - use-mcp-tool: Use MCP tool met parameters
+  - get-mcp-status: Get MCP integration status
+  - use-strategy-mcp-tools: Use strategy-specific MCP tools
+  - check-dependencies: Check agent dependencies
+  # MCP Phase 2 Enhanced Commands
+  - enhanced-collaborate: Enhanced inter-agent communicatie
+  - enhanced-security: Enhanced security validatie
+  - enhanced-performance: Enhanced performance optimalisatie
+  - trace-operation: Trace strategy operations
+  - trace-performance: Get performance metrics
+  - trace-error: Trace error scenarios
+  - tracing-summary: Get tracing summary
 
 dependencies:
   templates:
