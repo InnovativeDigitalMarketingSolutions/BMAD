@@ -398,8 +398,28 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
             "status": "success"
         })
 
-    def design_system(self):
+    async def design_system(self):
         """Maak een component diagram en API koppeling."""
+        if self.mcp_enabled and self.mcp_client:
+            # Try MCP first
+            result = await self.use_mcp_tool("design_system", {
+                "component_hierarchy": True,
+                "api_integration": True,
+                "state_management": True,
+                "data_flow": True
+            })
+            if result:
+                print("🏗️ BMAD Component Diagram & API Koppeling (MCP Enhanced):")
+                print("=" * 60)
+                print(result.get("design", result))
+                print("=" * 60)
+                return result
+        
+        # Fallback naar lokale implementatie
+        return await asyncio.to_thread(self._design_system_sync)
+
+    def _design_system_sync(self):
+        """Sync fallback voor design_system."""
         prompt = """
         Maak een gedetailleerd component diagram voor de BMAD frontend met:
         
@@ -434,9 +454,41 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
         print("=" * 60)
         print(result)
         print("=" * 60)
+        return {"design": result, "status": "completed"}
 
-    def tech_stack(self):
+    async def tech_stack(self):
         """Evalueer de frontend tech stack."""
+        if self.mcp_enabled and self.mcp_client:
+            # Try MCP first
+            result = await self.use_mcp_tool("tech_stack_evaluation", {
+                "requirements": [
+                    "real-time updates",
+                    "rich UI with charts",
+                    "API testing interface",
+                    "responsive design",
+                    "type safety",
+                    "developer experience",
+                    "performance and scalability"
+                ],
+                "options": [
+                    "React + TypeScript + Vite + TanStack Query + Tailwind CSS",
+                    "Vue 3 + TypeScript + Vite + Pinia + Tailwind CSS",
+                    "SvelteKit + TypeScript + Tailwind CSS",
+                    "Next.js + TypeScript + Tailwind CSS"
+                ]
+            })
+            if result:
+                print("🏗️ Frontend Tech Stack Evaluatie (MCP Enhanced):")
+                print("=" * 60)
+                print(result.get("evaluation", result))
+                print("=" * 60)
+                return result
+        
+        # Fallback naar lokale implementatie
+        return await asyncio.to_thread(self._tech_stack_sync)
+
+    def _tech_stack_sync(self):
+        """Sync fallback voor tech_stack."""
         prompt = """
         Evalueer en beveel een moderne frontend tech stack aan voor de BMAD dashboard:
         
@@ -463,6 +515,7 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
         print("=" * 60)
         print(result)
         print("=" * 60)
+        return {"evaluation": result, "status": "completed"}
 
     def start_conversation(self):
         """Start een interactieve conversatie met de Architect agent."""
