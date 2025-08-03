@@ -13,8 +13,8 @@ class TestTestEngineerAgent:
 
     def test_agent_initialization(self):
         """Test agent initialization and attributes."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -29,13 +29,12 @@ class TestTestEngineerAgent:
             assert isinstance(agent.test_history, list)
             assert isinstance(agent.coverage_history, list)
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Test Historynn- Test 1n- Test 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Test History\n\n- Test 1\n- Test 2")
     @patch('pathlib.Path.exists', return_value=True)
-    @pytest.mark.asyncio
-    async def test_load_test_history_success(self, mock_exists, mock_file):
+    def test_load_test_history_success(self, mock_exists, mock_file):
         """Test successful loading of test history."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -50,8 +49,8 @@ class TestTestEngineerAgent:
     @patch('pathlib.Path.exists', return_value=False)
     def test_load_test_history_file_not_found(self, mock_exists):
         """Test loading test history when file doesn't exist."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -59,13 +58,12 @@ class TestTestEngineerAgent:
             
             assert len(agent.test_history) == 0
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Coverage Historynn- Coverage 1n- Coverage 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Coverage History\n\n- Coverage 1\n- Coverage 2")
     @patch('pathlib.Path.exists', return_value=True)
-    @pytest.mark.asyncio
-    async def test_load_coverage_history_success(self, mock_exists, mock_file):
+    def test_load_coverage_history_success(self, mock_exists, mock_file):
         """Test successful loading of coverage history."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -80,8 +78,8 @@ class TestTestEngineerAgent:
     @patch('pathlib.Path.exists', return_value=False)
     def test_load_coverage_history_file_not_found(self, mock_exists):
         """Test loading coverage history when file doesn't exist."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -93,8 +91,8 @@ class TestTestEngineerAgent:
     @patch('pathlib.Path.mkdir')
     def test_save_test_history(self, mock_mkdir, mock_file):
         """Test saving test history."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -110,8 +108,8 @@ class TestTestEngineerAgent:
     @patch('pathlib.Path.mkdir')
     def test_save_coverage_history(self, mock_mkdir, mock_file):
         """Test saving coverage history."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -125,8 +123,8 @@ class TestTestEngineerAgent:
 
     def test_show_help(self, capsys):
         """Test show_help method."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -141,8 +139,8 @@ class TestTestEngineerAgent:
     @patch('pathlib.Path.exists', return_value=True)
     def test_show_resource_best_practices(self, mock_exists, mock_file, capsys):
         """Test show_resource with best practices."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -154,8 +152,8 @@ class TestTestEngineerAgent:
     @patch('pathlib.Path.exists', return_value=False)
     def test_show_resource_not_found(self, mock_exists, capsys):
         """Test show_resource when file doesn't exist."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -166,8 +164,8 @@ class TestTestEngineerAgent:
 
     def test_show_test_history_empty(self, capsys):
         """Test show_test_history when history is empty."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -180,8 +178,8 @@ class TestTestEngineerAgent:
     @pytest.mark.asyncio
     async def test_show_test_history_with_data(self, capsys):
         """Test show_test_history with data."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -194,8 +192,8 @@ class TestTestEngineerAgent:
 
     def test_show_coverage_empty(self, capsys):
         """Test show_coverage when history is empty."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -208,8 +206,8 @@ class TestTestEngineerAgent:
     @pytest.mark.asyncio
     async def test_show_coverage_with_data(self, capsys):
         """Test show_coverage with data."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -224,8 +222,8 @@ class TestTestEngineerAgent:
     @pytest.mark.asyncio
     async def test_run_tests(self, mock_sleep):
         """Test run_tests method."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -240,8 +238,8 @@ class TestTestEngineerAgent:
 
     def test_validate_input_valid(self):
         """Test validate_input with valid parameters."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -250,8 +248,8 @@ class TestTestEngineerAgent:
 
     def test_validate_input_invalid_component_name(self):
         """Test validate_input with invalid component name."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -260,8 +258,8 @@ class TestTestEngineerAgent:
 
     def test_validate_input_invalid_test_type(self):
         """Test validate_input with invalid test type."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -272,8 +270,8 @@ class TestTestEngineerAgent:
     @pytest.mark.asyncio
     async def test_generate_tests_unit(self, mock_sleep):
         """Test generate_tests for unit tests."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -289,8 +287,8 @@ class TestTestEngineerAgent:
     @pytest.mark.asyncio
     async def test_generate_tests_integration(self, mock_sleep):
         """Test generate_tests for integration tests."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -304,8 +302,8 @@ class TestTestEngineerAgent:
     @pytest.mark.asyncio
     async def test_generate_tests_e2e(self, mock_sleep):
         """Test generate_tests for e2e tests."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -317,8 +315,8 @@ class TestTestEngineerAgent:
 
     def test_generate_unit_test(self):
         """Test _generate_unit_test method."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -330,8 +328,8 @@ class TestTestEngineerAgent:
 
     def test_generate_integration_test(self):
         """Test _generate_integration_test method."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -343,8 +341,8 @@ class TestTestEngineerAgent:
 
     def test_generate_e2e_test(self):
         """Test _generate_e2e_test method."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -359,8 +357,8 @@ class TestTestEngineerAgent:
     @patch('pathlib.Path.exists', return_value=True)
     def test_export_report_md(self, mock_exists, mock_file, capsys):
         """Test export_report with markdown format."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -373,8 +371,8 @@ class TestTestEngineerAgent:
     @patch('builtins.open', new_callable=mock_open)
     def test_export_report_json(self, mock_file, capsys):
         """Test export_report with JSON format."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -386,8 +384,8 @@ class TestTestEngineerAgent:
 
     def test_export_report_invalid_format(self):
         """Test export_report with invalid format."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -399,8 +397,8 @@ class TestTestEngineerAgent:
     @patch('pathlib.Path.exists', return_value=True)
     def test_test_resource_completeness_all_available(self, mock_exists, capsys):
         """Test test_resource_completeness when all resources are available."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -412,8 +410,8 @@ class TestTestEngineerAgent:
     @patch('pathlib.Path.exists', return_value=False)
     def test_test_resource_completeness_missing_resources(self, mock_exists, capsys):
         """Test test_resource_completeness when resources are missing."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -424,8 +422,8 @@ class TestTestEngineerAgent:
 
     def test_get_status(self):
         """Test get_status method."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -447,8 +445,8 @@ class TestTestEngineerAgent:
     @pytest.mark.asyncio
     async def test_collaborate_example(self, mock_sleep, mock_slack, mock_publish, capsys):
         """Test collaborate_example method."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -463,9 +461,9 @@ class TestTestEngineerAgent:
     @pytest.mark.asyncio
     async def test_handle_tests_requested(self, mock_publish):
         """Test handle_tests_requested method."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.time.sleep'):
 
             agent = TestEngineerAgent()
@@ -481,8 +479,8 @@ class TestTestEngineerAgent:
         """Test handle_test_generation_requested with success."""
         mock_llm.return_value = "Generated test code"
         
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -491,19 +489,20 @@ class TestTestEngineerAgent:
                 "context": "Simple addition function"
             }
             
-            result = asyncio.run(agent.handle_test_generation_requested(event))
+            result = await agent.handle_test_generation_requested(event)
             
             assert result == "Generated test code"
             assert mock_llm.called
             assert mock_slack.called
 
     @patch('bmad.agents.Agent.TestEngineer.testengineer.ask_openai')
-    def test_handle_test_generation_requested_error(self, mock_llm):
+    @pytest.mark.asyncio
+    async def test_handle_test_generation_requested_error(self, mock_llm):
         """Test handle_test_generation_requested with error."""
         mock_llm.side_effect = Exception("LLM error")
         
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
@@ -512,7 +511,7 @@ class TestTestEngineerAgent:
                 "context": "Simple addition function"
             }
             
-            result = asyncio.run(agent.handle_test_generation_requested(event))
+            result = await agent.handle_test_generation_requested(event)
             
             assert "Error generating tests" in result
 
@@ -520,9 +519,9 @@ class TestTestEngineerAgent:
     @pytest.mark.asyncio
     async def test_run_method(self, mock_subscribe):
         """Test run method."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'),
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.asyncio.sleep') as mock_sleep:
 
             mock_sleep.side_effect = KeyboardInterrupt()
@@ -535,9 +534,9 @@ class TestTestEngineerAgent:
     @pytest.mark.asyncio
     async def test_run_agent_class_method(self):
         """Test run_agent class method."""
-        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'),
-             patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'), 
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'), \
              patch.object(TestEngineerAgent, 'run') as mock_run:
 
             await TestEngineerAgent.run_agent()

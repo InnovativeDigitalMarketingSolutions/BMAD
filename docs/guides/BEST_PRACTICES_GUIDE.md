@@ -5,8 +5,13 @@
 Dit document bevat alle best practices voor BMAD development, geconsolideerd uit lessons learned en development ervaring. Deze guide dient als referentie voor alle development activiteiten.
 
 **Laatste Update**: 2025-01-27  
-**Versie**: 2.2  
-**Status**: Actief - MCP Integration voltooid, AiDeveloper Agent 100% Success Rate
+**Versie**: 2.5  
+**Status**: Actief - Major Progress: 9/22 Agents Fixed (506 tests passing)
+
+**📋 Voor gedetailleerde backlog items en implementatie details, zie:**
+- `docs/deployment/BMAD_MASTER_PLANNING.md` - Complete master planning met alle backlog items
+- `docs/deployment/IMPLEMENTATION_DETAILS.md` - Gedetailleerde implementatie uitleg
+- `docs/deployment/KANBAN_BOARD.md` - Huidige sprint taken en status
 
 ## Development Best Practices
 
@@ -84,6 +89,146 @@ class AsyncAgent:
 - ✅ Graceful degradation
 
 ### 3. Test Quality Best Practices
+
+#### **Systematic Test Fix Patterns** 🔧
+**Best Practice**: Proven patterns voor het systematisch fixen van syntax errors en test issues.
+
+```python
+# Pattern 1: Async Test Fixes
+@pytest.mark.asyncio
+async def test_method(self, agent):
+    result = await agent.method()
+    assert result is not None
+
+# Pattern 2: With Statement Syntax Fixes
+with patch('module.function'), \
+     patch('module.function2'), \
+     patch('module.function3'):
+    # test code
+
+# Pattern 3: Mock Data Escape Sequences
+read_data="# History\\n\\n- Item 1\\n- Item 2"
+
+# Pattern 4: AsyncMock Integration
+from unittest.mock import AsyncMock
+with patch.object(agent, 'method', new_callable=AsyncMock) as mock_method:
+    mock_method.return_value = {"status": "success"}
+    result = await agent.method()
+
+# Pattern 5: Test State Management
+def test_file_operation(self):
+    # Reset state first
+    self.agent.history = []
+    with patch('pathlib.Path.exists', return_value=False):
+        self.agent._load_history()
+        assert len(self.agent.history) == 0
+```
+
+**Success Metrics**:
+- **9/22 agents** now at 100% success rate
+- **506 tests** passing out of ~800 total tests
+- **Proven patterns** for syntax error fixes
+
+#### **FrontendDeveloper Agent Best Practices** 🔧
+**Best Practice**: Advanced patterns voor complexe agent testing met infinite loops en async class methods.
+
+```python
+# Pattern 1: Infinite Loop Mocking
+@pytest.mark.asyncio
+async def test_run_method_with_infinite_loop(self, agent):
+    """Test methods met infinite loops door mocking."""
+    with patch.object(agent, 'initialize_mcp') as mock_init, \
+         patch.object(agent, 'collaborate_example') as mock_collab, \
+         patch('asyncio.sleep') as mock_sleep:
+        
+        # Mock sleep om infinite loop te stoppen
+        mock_sleep.side_effect = KeyboardInterrupt()
+        
+        await agent.run()
+        
+        # Verify methods werden aangeroepen
+        mock_init.assert_called_once()
+        mock_collab.assert_called_once()
+
+# Pattern 2: Async Class Method Testing
+@pytest.mark.asyncio
+async def test_async_class_method(self):
+    """Test async class methods met proper async handling."""
+    with patch.object(FrontendDeveloperAgent, 'run') as mock_run:
+        await FrontendDeveloperAgent.run_agent()
+        assert mock_run.called
+
+# Pattern 3: Services Initialization in Tests
+def test_method_requiring_services(self, agent):
+    """Test methodes die services nodig hebben."""
+    # Initialize services om monitor errors te voorkomen
+    agent._ensure_services_initialized()
+    result = agent.collaborate_example()
+    assert result is not None
+
+# Pattern 4: Mock Data with Proper Newlines
+@patch('builtins.open', new_callable=mock_open, 
+       read_data="# Component History\n\n- Component 1\n- Component 2")
+def test_load_history_with_proper_newlines(self, mock_file):
+    """Test file loading met correcte newline handling."""
+    agent = FrontendDeveloperAgent()
+    agent.component_history = []
+    agent._load_component_history()
+    assert len(agent.component_history) == 2
+```
+
+**Key Technical Patterns**:
+1. **Infinite Loop Handling**: Mock `asyncio.sleep` met `KeyboardInterrupt`
+2. **Async Class Methods**: Proper `@pytest.mark.asyncio` en `await`
+3. **Services Initialization**: `_ensure_services_initialized()` in tests
+4. **Mock Data Parsing**: Proper newlines in plaats van escape sequences
+5. **Performance Test Avoidance**: Skip performance tests tijdens systematic fixes
+
+**Success Metrics**:
+- **FrontendDeveloper**: 44/44 tests passing (100% success rate)
+- **Total Progress**: 9/22 agents now at 100% success rate
+- **Overall Tests**: 506 tests passing out of ~800 total tests
+
+**Waarom**: Voorkomt test vastlopen, zorgt voor correcte async/sync handling, en verbetert test performance.
+
+#### **Documentation Structure & Workflow Best Practices** 📋
+**Best Practice**: Duidelijke scheiding tussen planning (kanban board) en gedetailleerde documentatie.
+
+**Documentation Structure**:
+```markdown
+# Kanban Board (Planning Focus)
+- Korte beschrijving van taken
+- Sprint status en progress
+- Verwijzingen naar gedetailleerde documenten
+- Clean & focused overview
+
+# Master Planning (Detailed Backlog)
+- Complete backlog items
+- Implementatie details
+- Technical specifications
+- Historical information
+
+# Guides (Development Reference)
+- Lessons learned
+- Best practices
+- Code patterns
+- Development insights
+```
+
+**Workflow Best Practice**:
+1. **Kanban Board**: Alleen essentiële planning informatie
+2. **Cross-References**: Altijd verwijzen naar gedetailleerde documenten
+3. **Documentation Separation**: Geen duplicatie van informatie
+4. **Maintainability**: Eenvoudig bijwerken van specifieke secties
+
+**Benefits**:
+- ✅ Overzichtelijke planning
+- ✅ Geen informatie duplicatie
+- ✅ Onderhoudbare documentatie
+- ✅ Duidelijke informatie structuur
+- ✅ Eenvoudige navigatie
+
+**Waarom**: Voorkomt verwarring, zorgt voor overzichtelijke planning, en maakt documentatie onderhoudbaar.
 
 #### **Async Test Patterns**
 **Best Practice**: Proper async test patterns met pytest-asyncio.
@@ -956,11 +1101,36 @@ def method_name(self, param: str) -> Dict[str, Any]:
     return self._process(param)
 ```
 
+### **Event Loop Handling**
+- **Problem**: `asyncio.run()` cannot be called from a running event loop
+- **Solution**: Use `await` instead of `asyncio.run()` in async tests
+- **Best Practice**: Always use `await` for async method calls in async test contexts
+
+### **Syntax Error Prevention**
+- **Problem**: Trailing commas in `with` statements cause syntax errors
+- **Solution**: Use line continuation (`\`) without trailing commas
+- **Best Practice**: Always check for trailing commas in multi-line `with` statements
+
+### **Mock Data Validation**
+- **Problem**: Incorrect escape sequences in mock data cause parsing failures
+- **Solution**: Use correct escape sequences (`\n` instead of `nn`)
+- **Best Practice**: Verify mock data matches expected format exactly
+
+### **Code Preservation During Fixes** 🚨
+- **Problem**: Attempting to rewrite entire files during fixes can remove valuable code
+- **Solution**: Apply minimal targeted fixes only, preserve existing functionality
+- **Best Practice**: 
+  - Never remove working code during fixes
+  - Apply only necessary changes to resolve specific issues
+  - Test continuously during development, not just at the end
+  - Use version control to track changes and enable rollbacks
+
 ## Version History
 
 - **v1.0 (2025-08-02)**: Initial version met geconsolideerde best practices
 - **v1.1 (Planned)**: Additional patterns en optimizations
 - **v1.2 (Planned)**: Advanced performance en security patterns
+- **v2.4 (2025-01-27)**: Code preservation best practices en systematic fix patterns
 
 ## Contributing
 

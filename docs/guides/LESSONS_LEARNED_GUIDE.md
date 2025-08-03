@@ -5,8 +5,13 @@
 Dit document bevat alle lessons learned uit het BMAD development proces. Deze lessons zijn verzameld tijdens development, testing, en MCP integration om de kwaliteit van toekomstige development te verbeteren.
 
 **Laatste Update**: 2025-01-27  
-**Versie**: 2.2  
-**Status**: Actief - MCP Integration voltooid, AiDeveloper Agent 100% Success Rate
+**Versie**: 2.5  
+**Status**: Actief - Major Progress: 9/22 Agents Fixed (506 tests passing)
+
+**📋 Voor gedetailleerde backlog items en implementatie details, zie:**
+- `docs/deployment/BMAD_MASTER_PLANNING.md` - Complete master planning met alle backlog items
+- `docs/deployment/IMPLEMENTATION_DETAILS.md` - Gedetailleerde implementatie uitleg
+- `docs/deployment/KANBAN_BOARD.md` - Huidige sprint taken en status
 
 ## 🎉 MCP Integration Completion Lessons
 
@@ -27,6 +32,144 @@ Dit document bevat alle lessons learned uit het BMAD development proces. Deze le
 5. **Error Handling**: MCP failures mogen geen crashes veroorzaken
 6. **Test Fix Automation**: Systematische aanpak voor het fixen van syntax errors in test files
 7. **Quality Over Speed**: Kwalitatieve oplossingen boven snelle hacks
+
+### **FrontendDeveloper Agent Success Story (Januari 2025)**
+
+**Major Achievement**: Van syntax errors naar 100% success rate (44/44 tests) door systematische fixes.
+
+**Key Lessons Learned**:
+1. **Infinite Loop Mocking**: `while True: await asyncio.sleep(1)` patterns moeten gemockt worden
+2. **Async Class Method Testing**: Class methods met `@classmethod async def` vereisen speciale test handling
+3. **Services Initialization**: Lazy loading services moeten geïnitialiseerd worden in tests
+4. **Mock Data Parsing**: Mock data moet exact matchen wat de methode verwacht
+5. **Performance Test Avoidance**: Performance tests kunnen tests laten vastlopen
+
+**Success Metrics**:
+- **FrontendDeveloper**: 44/44 tests passing (100% success rate)
+- **Total Progress**: 9/22 agents now at 100% success rate
+- **Overall Tests**: 506 tests passing out of ~800 total tests
+
+**Key Technical Fixes**:
+1. **Infinite Loop Fix**: Mock `asyncio.sleep` met `KeyboardInterrupt` side effect
+2. **Async/Sync Pattern Matching**: Correct `@pytest.mark.asyncio` decorators
+3. **Mock Data Escape Sequences**: Proper newlines in mock data strings
+4. **Services Initialization**: `_ensure_services_initialized()` in tests
+5. **Class Method Testing**: Proper async handling voor `@classmethod async def`
+
+**Best Practices voor Infinite Loop Testing**:
+```python
+# ❌ VERKEERD: Infinite loop laat test vastlopen
+async def test_run_method(self):
+    await agent.run()  # ❌ Vastlopen in while True loop
+
+# ✅ CORRECT: Mock infinite loop
+async def test_run_method(self):
+    with patch('asyncio.sleep') as mock_sleep:
+        mock_sleep.side_effect = KeyboardInterrupt()
+        await agent.run()  # ✅ Test stopt na eerste sleep
+```
+
+**Best Practices voor Async Class Methods**:
+```python
+# ❌ VERKEERD: Sync call naar async class method
+def test_run_agent_class_method(self):
+    FrontendDeveloperAgent.run_agent()  # ❌ RuntimeWarning
+
+# ✅ CORRECT: Async call naar async class method
+@pytest.mark.asyncio
+async def test_run_agent_class_method(self):
+    await FrontendDeveloperAgent.run_agent()  # ✅ Correct async call
+```
+
+**Waarom**: Voorkomt test vastlopen, zorgt voor correcte async/sync handling, en verbetert test performance.
+
+### **Documentation Structure & Workflow Lessons (Januari 2025)**
+
+**Major Achievement**: Opgeschoonde kanban board structuur met duidelijke documentatie workflow.
+
+**Key Lessons Learned**:
+1. **Kanban Board Focus**: Alleen planning en sprint status, geen gedetailleerde uitleg
+2. **Cross-References**: Verwijzingen naar gedetailleerde documenten voor meer informatie
+3. **Documentation Separation**: Gedetailleerde informatie in specifieke documenten
+4. **Workflow Clarity**: Duidelijke structuur voor waar welke informatie te vinden is
+
+**Documentation Structure Best Practice**:
+- **Kanban Board**: Huidige sprint taken en status (clean & focused)
+- **Master Planning**: Gedetailleerde backlog items en implementatie details
+- **Implementation Details**: Demo process en technical details
+- **Lessons Learned**: Development insights en success stories
+- **Best Practices**: Development guidelines en patterns
+
+**Workflow Best Practice**:
+1. **Kanban Board**: Korte beschrijving van taken met verwijzingen naar gedetailleerde documenten
+2. **Master Planning**: Complete backlog items met implementatie details
+3. **Guides**: Lessons learned en best practices voor development
+4. **Cross-References**: Altijd verwijzen naar de juiste documenten voor meer informatie
+
+**Waarom**: Voorkomt informatie duplicatie, zorgt voor overzichtelijke planning, en maakt documentatie onderhoudbaar.
+
+### **TestEngineer Agent Success Story (Januari 2025)**
+
+**Major Achievement**: Van syntax errors naar 100% success rate (38/38 tests) door systematische fixes.
+
+### **DataEngineer & DevOpsInfra Agents Success Story (Januari 2025)**
+
+**Major Achievement**: Van syntax errors naar 100% success rate (76/76 + 37/37 tests) door systematische fixes.
+
+**Key Lessons Learned**:
+1. **Systematic Approach Works**: Proven patterns can be applied across multiple agents
+2. **Async/Sync Pattern Matching**: Tests must match the actual method signatures
+3. **With Statement Syntax**: Line continuations work better than trailing commas
+4. **Mock Data Escape Sequences**: Proper escape sequences are essential
+5. **Test State Management**: Reset state before testing file operations
+
+**Success Metrics**:
+- **DataEngineer**: 76/76 tests passing (100% success rate)
+- **DevOpsInfra**: 37/37 tests passing (100% success rate)
+- **Total Progress**: 6/22 agents now at 100% success rate
+- **Overall Tests**: 367 tests passing out of ~800 total tests
+
+**Key Lessons Learned**:
+1. **Syntax Error Patterns**: Trailing commas in `with` statements veroorzaken syntax errors
+2. **Mock Data Escape Sequences**: `nn` moet `\n` zijn in mock data strings
+3. **Event Loop Conflicts**: `asyncio.run()` kan niet worden aangeroepen in bestaande event loops
+4. **Sync vs Async Test Detection**: Tests moeten correct sync/async worden gemarkeerd
+5. **Mock Data Parsing**: Mock data moet exact matchen wat de methode verwacht
+
+**Best Practices voor Syntax Error Fixes**:
+```python
+# ❌ VERKEERD: Trailing comma in with statement
+with patch('module.function'), \
+     patch('module.function2'),  # ❌ Trailing comma
+
+# ✅ CORRECT: Line continuation zonder trailing comma
+with patch('module.function'), \
+     patch('module.function2'):  # ✅ Geen trailing comma
+```
+
+**Best Practices voor Mock Data**:
+```python
+# ❌ VERKEERD: Verkeerde escape sequences
+read_data="# Test Historynn- Test 1n- Test 2"
+
+# ✅ CORRECT: Juiste escape sequences
+read_data="# Test History\n\n- Test 1\n- Test 2"
+```
+
+**Best Practices voor Event Loop Handling**:
+```python
+# ❌ VERKEERD: asyncio.run() in async test
+@pytest.mark.asyncio
+async def test_method():
+    result = asyncio.run(agent.method())  # ❌ Event loop conflict
+
+# ✅ CORRECT: await in async test
+@pytest.mark.asyncio
+async def test_method():
+    result = await agent.method()  # ✅ Correct async call
+```
+
+**Waarom**: Voorkomt syntax errors, zorgt voor correcte mock data parsing, en voorkomt event loop conflicts.
 
 ## Development Process Lessons
 
@@ -581,6 +724,38 @@ class AsyncAgent:
 
 **Waarom**: Zorgt voor up-to-date en bruikbare documentatie.
 
+### **Code Preservation During Fixes** 🚨
+**Lesson**: NO CODE REMOVAL - Only extend, improve, or replace with better versions.
+
+**Critical Issue**: DocumentationAgent test file had 239 lines removed during "fix" attempt
+- **Problem**: Attempted to rewrite entire file instead of targeted fixes
+- **Impact**: Lost valuable test code and functionality
+- **Solution**: Restored original file, applied minimal targeted fixes only
+
+**Best Practice**:
+- **Minimal Changes**: Apply only necessary fixes, don't rewrite entire files
+- **Preserve Functionality**: Never remove working code during fixes
+- **Targeted Approach**: Fix specific issues, not entire codebases
+- **Test Continuously**: Run tests during development, not just at the end
+
+**Waarom**: Behoud van functionaliteit en voorkomt verlies van waardevolle code.
+
+### **MCP Implementation Process Analysis** 🔍
+**Lesson**: Syntax errors en test issues werden pas na MCP implementatie ontdekt.
+
+**Root Cause Analysis**:
+- **Development Gap**: Tests werden niet automatisch gerund tijdens MCP development
+- **Validation Gap**: Geen CI/CD pipeline voor automatische test validatie
+- **Process Gap**: Development workflow had geen test checkpoints
+
+**Best Practice**:
+- **Continuous Testing**: Run tests during development, not just at the end
+- **Automated Validation**: Implement CI/CD pipeline voor automatische test checks
+- **Development Checkpoints**: Test validation at each development milestone
+- **Pre-commit Hooks**: Automatic test runs before commits
+
+**Waarom**: Voorkomt accumulatie van issues en zorgt voor vroegtijdige detectie van problemen.
+
 ## Quick Reference
 
 ### **Development Checklist**
@@ -626,6 +801,7 @@ except Exception as e:
 - **v1.0 (2025-08-02)**: Initial version met bestaande lessons learned
 - **v1.1 (Planned)**: Lessons learned van MCP integration proces
 - **v1.2 (Planned)**: Consolidated best practices en patterns
+- **v2.4 (2025-01-27)**: Code preservation lessons en MCP implementation analysis
 
 ## Contributing
 
