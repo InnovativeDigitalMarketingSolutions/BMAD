@@ -336,6 +336,34 @@ async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]):
 
 **Waarom**: Zorgt voor betrouwbaarheid en graceful degradation.
 
+### **Async/Synchronous MCP Integration (Januari 2025)**
+
+**Lesson:** MCP integratie vereist dat alle methodes die MCP kunnen aanroepen async zijn, ook als de lokale fallback sync is. Sync fallback moet via `await asyncio.to_thread(...)` worden aangeroepen.
+
+**Waarom:**
+- Voorkomt TypeErrors zoals `object dict can't be used in 'await' expression`.
+- Zorgt voor uniforme, testbare agent interfaces.
+- Maakt het mogelijk om MCP en lokale tools naadloos te combineren.
+
+**Pattern:**
+```python
+async def deploy_api(self, ...):
+    if self.mcp_enabled and self.mcp_client:
+        return await self.mcp_client.execute_tool(...)
+    else:
+        return await asyncio.to_thread(self._deploy_api_sync, ...)
+
+def _deploy_api_sync(self, ...):
+    # Lokale implementatie
+    ...
+```
+
+**Test Best Practice:** Gebruik altijd `AsyncMock` voor async methodes in tests.
+
+**Toepassen op:**
+- Architect, BackendDeveloper, en alle andere agents met MCP integratie.
+- Alle nieuwe agentmethodes die MCP kunnen aanroepen.
+
 ### 4. Error Handling Lessons
 
 #### **Performance Metrics Recording**
