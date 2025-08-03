@@ -23,6 +23,32 @@ commands:
   - show-design-history: Toon design historie
   - changelog: Toon changelog van design
   - test: Test resource completeness
+  - build-shadcn-component: Build Shadcn/UI component
+  - create-component-spec: Create component specification
+  - create-mobile-ux: Create mobile UX design
+  - design-mobile-component: Design mobile component
+  - create-mobile-flow: Create mobile user flow
+  - design-feedback: Analyze design feedback
+  - document-component: Document UI component
+  - analyze-figma: Analyze Figma design
+  - show-feedback-history: Show feedback history
+  - show-best-practices: Show best practices
+  - export-report: Export design report
+  - collaborate: Demonstrate collaboration
+  - run: Run agent met MCP integration
+  - initialize-mcp: Initialize MCP client
+  - use-mcp-tool: Use MCP tool met parameters
+  - get-mcp-status: Get MCP integration status
+  - use-uxui-mcp-tools: Use UX/UI-specific MCP tools
+  - check-dependencies: Check agent dependencies
+  # MCP Phase 2 Enhanced Commands
+  - enhanced-collaborate: Enhanced inter-agent communicatie
+  - enhanced-security: Enhanced security validatie
+  - enhanced-performance: Enhanced performance optimalisatie
+  - trace-operation: Trace UX/UI operations
+  - trace-performance: Get performance metrics
+  - trace-error: Trace error scenarios
+  - tracing-summary: Get tracing summary
 
 dependencies:
   templates:

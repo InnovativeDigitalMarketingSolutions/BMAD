@@ -673,6 +673,14 @@ async def agent_method(self, param):
 
 #### **3. Post-Implementation Validation**
 - [ ] **Test Execution**: Run alle agent tests
+- [ ] **Enhanced MCP Test Creation**: Schrijf nieuwe tests voor Enhanced MCP functionaliteiten
+  - [ ] Test `initialize_enhanced_mcp()` method
+  - [ ] Test `initialize_tracing()` method
+  - [ ] Test `use_enhanced_mcp_tools()` method
+  - [ ] Test agent-specific enhanced tools methods
+  - [ ] Test `trace_agent_operation()` method
+  - [ ] Test enhanced MCP CLI commands
+  - [ ] Test fallback behavior wanneer enhanced MCP niet beschikbaar
 - [ ] **Documentation Update**: Update agent YAML met enhanced MCP commands
 - [ ] **Kanban Update**: Update kanban board met voortgang
 - [ ] **Master Planning Update**: Update master planning met nieuwe status
