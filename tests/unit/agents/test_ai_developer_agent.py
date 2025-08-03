@@ -261,7 +261,7 @@ class TestAiDeveloperAgent:
         assert "build-pipeline" in captured.out
         assert "prompt-template" in captured.out
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Best PracticesnnTest content")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Best Practices\n\nTest content")
     @patch('pathlib.Path.exists', return_value=True)
     def test_show_resource_best_practices(self, mock_exists, mock_file, agent, capsys):
         """Test show_resource method for best-practices."""
@@ -634,7 +634,7 @@ class TestAiDeveloperAgent:
 
     def test_show_resource_empty_type(self, agent, capsys):
         """Test show_resource method with empty type."""
-        with pytest.raises(AiValidationError, match="Resource type cannot be empty"):
+        with pytest.raises(AiValidationError, match="Resource type ca\n\not be empty"):
             agent.show_resource("")
 
     @patch('builtins.open', side_effect=FileNotFoundError("File not found"))

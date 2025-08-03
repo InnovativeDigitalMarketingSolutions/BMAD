@@ -54,7 +54,7 @@ class TestOrchestratorAgent:
     async def test_load_workflow_history_success(self, mock_makedirs, mock_exists, agent):
         """Test successful loading of workflow history."""
         mock_exists.return_value = True
-        mock_content = "# Workflow Historynn- 2025-07-31T08:14:22.179170: Workflow started - automated_deploymentn- 2025-07-31T08:15:30.123456: Workflow completed - feature_delivery"
+        mock_content = "# Workflow History\n\n- 2025-07-31T08:14:22.179170: Workflow started - automated_deployment\n- 2025-07-31T08:15:30.123456: Workflow completed - feature_delivery"
         
         with patch('builtins.open', mock_open(read_data=mock_content)):
             agent.workflow_history = []  # Clear existing history
@@ -106,7 +106,7 @@ class TestOrchestratorAgent:
     async def test_load_orchestration_history_success(self, mock_makedirs, mock_exists, agent):
         """Test successful loading of orchestration history."""
         mock_exists.return_value = True
-        mock_content = "# Orchestration Historynn- 2025-07-31T08:14:22.179170: Task assignment orchestrationn- 2025-07-31T08:15:30.123456: Resource allocation orchestration"
+        mock_content = "# Orchestration History\n\n- 2025-07-31T08:14:22.179170: Task assignment orchestration\n- 2025-07-31T08:15:30.123456: Resource allocation orchestration"
         
         with patch('builtins.open', mock_open(read_data=mock_content)):
             agent.orchestration_history = []  # Clear existing history
@@ -168,7 +168,7 @@ class TestOrchestratorAgent:
     def test_show_resource_best_practices(self, mock_exists, agent, capsys):
         """Test show_resource with best practices."""
         mock_exists.return_value = True
-        mock_content = "# Orchestration Best Practicesnn1. Always validate inputsn2. Monitor workflows continuouslyn3. Handle escalations promptly"
+        mock_content = "# Orchestration Best Practices\n\n1. Always validate inputsn2. Monitor workflows continuouslyn3. Handle escalations promptly"
         
         with patch('builtins.open', mock_open(read_data=mock_content)):
             agent.show_resource("best-practices")
@@ -261,7 +261,7 @@ class TestOrchestratorAgent:
         assert result["status"] == "completed"
         assert "agent_assignments" in result
         assert "coordination_plan" in result
-        assert "communication_channels" in result
+        assert "communication_cha\n\nels" in result
         assert "success_criteria" in result
         assert "risk_mitigation" in result
         assert "performance_metrics" in result
@@ -732,8 +732,8 @@ class TestOrchestratorCLI:
 
     def setup_method(self):
         """Setup method voor alle tests in deze class."""
-        with patch('bmad.agents.Agent.Orchestrator.orchestrator.get_performance_monitor'),
-             patch('bmad.agents.Agent.Orchestrator.orchestrator.get_advanced_policy_engine'),
+        with patch('bmad.agents.Agent.Orchestrator.orchestrator.get_performance_monitor'), \
+             patch('bmad.agents.Agent.Orchestrator.orchestrator.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.Orchestrator.orchestrator.get_sprite_library'):
             self.agent = OrchestratorAgent()
 

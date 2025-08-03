@@ -179,10 +179,9 @@ class TestAccessibilityAgent:
         recommendations = agent._generate_accessibility_recommendations(audit_results)
         assert "Add screen reader specific attributes" in recommendations
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Audit Historynn- Audit 1n- Audit 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Audit History\n\n- Audit 1\n- Audit 2")
     @patch('pathlib.Path.exists', return_value=True)
-    @pytest.mark.asyncio
-    async def test_load_audit_history_success(self, mock_exists, mock_file, agent):
+    def test_load_audit_history_success(self, mock_exists, mock_file, agent):
         """Test successful audit history loading."""
         agent.audit_history = []  # Reset history
         agent._load_audit_history()
@@ -213,7 +212,7 @@ class TestAccessibilityAgent:
         assert "audit" in captured.out
         assert "test-shadcn-component" in captured.out
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Best PracticesnnTest content")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Best Practices\n\nTest content")
     @patch('pathlib.Path.exists', return_value=True)
     def test_show_resource_best_practices(self, mock_exists, mock_file, agent, capsys):
         """Test show_resource method for best-practices."""
@@ -429,9 +428,9 @@ class TestAccessibilityAgent:
         mock_monitor.return_value = mock_monitor_instance
     
         # Test complete workflow
-        component_result = await agent.test_shadcn_component("Button")
-        aria_result = await agent.validate_aria("test code")
-        audit_result = await agent.run_accessibility_audit("/mock/page")
+        component_result = agent.test_shadcn_component("Button")  # Sync method
+        aria_result = agent.validate_aria("test code")  # Sync method
+        audit_result = await agent.run_accessibility_audit("/mock/page")  # Async method
     
         assert component_result["accessibility_score"] > 0
         assert aria_result["overall_score"] > 0

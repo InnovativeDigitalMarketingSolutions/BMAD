@@ -104,7 +104,7 @@ class TestDevOpsInfraAgentPipelineAdvice:
             assert "build_optimization" in result["analysis_results"]
             assert "test_coverage" in result["analysis_results"]
             assert "deployment_strategy" in result["analysis_results"]
-            assert "security_scanning" in result["analysis_results"]
+            assert "security_sca\n\ning" in result["analysis_results"]
 
 
 class TestDevOpsInfraAgentIncidentResponse:

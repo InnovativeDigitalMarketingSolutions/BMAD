@@ -5,8 +5,8 @@
 Dit document bevat alle best practices voor BMAD development, geconsolideerd uit lessons learned en development ervaring. Deze guide dient als referentie voor alle development activiteiten.
 
 **Laatste Update**: 2025-01-27  
-**Versie**: 2.5  
-**Status**: Actief - Major Progress: 10/22 Agents Fixed (560 tests passing)
+**Versie**: 2.6  
+**Status**: Actief - Major Progress: 15/23 Agents Fixed (898 tests passing)
 
 **📋 Voor gedetailleerde backlog items en implementatie details, zie:**
 - `docs/deployment/BMAD_MASTER_PLANNING.md` - Complete master planning met alle backlog items
@@ -89,6 +89,61 @@ class AsyncAgent:
 - ✅ Graceful degradation
 
 ### 3. Test Quality Best Practices
+
+#### **Complex File Handling Strategy** 🔧
+**Best Practice**: Efficiënte aanpak voor test files met 40+ syntax errors.
+
+**Complexity Assessment**:
+```bash
+# 1. Syntax Error Detection
+python -c "import ast; ast.parse(open('test_file.py').read())" 2>&1 | grep -c "SyntaxError"
+
+# 2. Trailing Comma Detection
+grep -n "with patch.*," test_file.py | wc -l
+
+# 3. Mock Data Issues Detection
+grep -n "nn" test_file.py | wc -l
+
+# 4. File Size Assessment
+wc -l test_file.py
+```
+
+**Complexity Thresholds**:
+- **Low Complexity**: < 10 syntax errors, < 500 lines
+- **Medium Complexity**: 10-30 syntax errors, 500-1000 lines
+- **High Complexity**: 30+ syntax errors, 1000+ lines
+
+**Recommended Strategies**:
+
+**Low Complexity Files**:
+```python
+# Direct fix approach - één error tegelijk
+with patch('pathlib.Path.exists', return_value=True), \
+     patch('builtins.open', mock_open(read_data=mock_data)):
+```
+
+**Medium Complexity Files**:
+```python
+# Bulk fix approach - alle trailing commas in één keer
+# Use sed command for bulk fixes
+sed -i '' 's/with patch(\([^)]*\)),/with patch(\1), \\/g' test_file.py
+```
+
+**High Complexity Files**:
+```python
+# Strategic approach - file segmentation of priority-based fixing
+# 1. Identify critical test classes
+# 2. Fix high-priority tests first
+# 3. Consider file splitting into smaller modules
+# 4. Use automated tools for bulk fixes
+```
+
+**Best Practices voor Complex Files**:
+1. **Automated Detection**: Script om alle syntax errors te detecteren
+2. **Bulk Fix Strategy**: Fix alle trailing commas in één keer
+3. **Mock Data Standardization**: Consistent escape sequence handling
+4. **File Segmentation**: Break complex files in kleinere test modules
+5. **Priority Assessment**: Focus op files met meeste impact
 
 #### **Systematic Test Fix Patterns** 🔧
 **Best Practice**: Proven patterns voor het systematisch fixen van syntax errors en test issues.

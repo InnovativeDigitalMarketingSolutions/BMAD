@@ -154,7 +154,7 @@ class TestFullstackDeveloperAgent:
         assert len(recommendations) >= 6
         assert "Keep implementation simple and focused" in recommendations
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Development Historynn- Test entry 1n- Test entry 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Development History\n\n- Test entry 1\n- Test entry 2")
     @patch('pathlib.Path.exists', return_value=True)
     @pytest.mark.asyncio
     async def test_load_development_history_success(self, mock_exists, mock_file, agent):
@@ -188,7 +188,7 @@ class TestFullstackDeveloperAgent:
         agent._save_development_history()
         # Should not raise exception, just log error
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Performance Historynn- Test entry 1n- Test entry 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Performance History\n\n- Test entry 1\n- Test entry 2")
     @patch('pathlib.Path.exists', return_value=True)
     @pytest.mark.asyncio
     async def test_load_performance_history_success(self, mock_exists, mock_file, agent):
@@ -215,13 +215,13 @@ class TestFullstackDeveloperAgent:
 
     def test_show_help(self, agent, capsys):
         """Test show_help method."""
-        await agent.show_help()
+        agent.show_help()
         captured = capsys.readouterr()
         assert "FullstackDeveloper Agent Commands:" in captured.out
 
     def test_show_resource_best_practices(self, agent, capsys):
         """Test show_resource method for best practices."""
-        with patch('builtins.open', new_callable=mock_open, read_data="# Best PracticesnnTest content"):
+        with patch('builtins.open', new_callable=mock_open, read_data="# Best Practices\n\nTest content"):
             with patch('pathlib.Path.exists', return_value=True):
                 agent.show_resource("best-practices")
                 captured = capsys.readouterr()
@@ -300,10 +300,9 @@ class TestFullstackDeveloperAgent:
         assert "Testing resource completeness" in captured.out
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
-    @pytest.mark.asyncio
-    async def test_build_shadcn_component_success(self, mock_monitor, agent):
+    def test_build_shadcn_component_success(self, mock_monitor, agent):
         """Test successful Shadcn component building."""
-        result = await agent.build_shadcn_component("Button")
+        result = agent.build_shadcn_component("Button")
         assert result["success"] is True
         assert result["component_name"] == "Button"
         assert "component_code" in result
@@ -311,19 +310,19 @@ class TestFullstackDeveloperAgent:
 
     def test_build_shadcn_component_empty_name(self, agent):
         """Test Shadcn component building with empty name."""
-        result = await agent.build_shadcn_component("")
+        result = agent.build_shadcn_component("")
         assert result["success"] is False
         assert "error" in result
 
     def test_build_shadcn_component_lowercase(self, agent):
         """Test Shadcn component building with lowercase name."""
-        result = await agent.build_shadcn_component("button")
+        result = agent.build_shadcn_component("button")
         assert result["success"] is False
         assert "error" in result
 
     def test_build_shadcn_component_invalid_type(self, agent):
         """Test Shadcn component building with invalid type."""
-        result = await agent.build_shadcn_component(123)
+        result = agent.build_shadcn_component(123)
         assert result["success"] is False
         assert "error" in result
 
@@ -365,7 +364,8 @@ class TestFullstackDeveloperAgent:
         asyncio.run(agent.handle_fullstack_development_completed(event))
 
     @patch('bmad.agents.Agent.FullstackDeveloper.fullstackdeveloper.subscribe')
-    def test_run(self, mock_subscribe, agent):
+    @pytest.mark.asyncio
+    async def test_run(self, mock_subscribe, agent):
         """Test run method."""
         # Mock the subscribe method to avoid actual event subscription
         mock_subscribe.return_value = None
@@ -417,36 +417,42 @@ class TestFullstackDeveloperAgent:
         assert "complexity" in result
         assert "plan" in result
 
-    def test_develop_feature_empty_name(self, agent):
+    @pytest.mark.asyncio
+    async def test_develop_feature_empty_name(self, agent):
         """Test feature development with empty name."""
         result = await agent.develop_feature("", "Description")
         assert result["success"] is False
         assert "error" in result
 
-    def test_develop_feature_invalid_name_type(self, agent):
+    @pytest.mark.asyncio
+    async def test_develop_feature_invalid_name_type(self, agent):
         """Test feature development with invalid name type."""
         result = await agent.develop_feature(123, "Description")
         assert result["success"] is False
         assert "error" in result
 
-    def test_develop_feature_invalid_description_type(self, agent):
+    @pytest.mark.asyncio
+    async def test_develop_feature_invalid_description_type(self, agent):
         """Test feature development with invalid description type."""
         result = await agent.develop_feature("TestFeature", 123)
         assert result["success"] is False
         assert "error" in result
 
-    def test_develop_feature_high_complexity(self, agent):
+    @pytest.mark.asyncio
+    async def test_develop_feature_high_complexity(self, agent):
         """Test feature development with high complexity description."""
         result = await agent.develop_feature("TestFeature", "This is a complex enterprise scalable system")
         assert result["success"] is True
         assert result["complexity"] == "high"
 
-    def test_develop_feature_medium_complexity(self, agent):
+    @pytest.mark.asyncio
+    async def test_develop_feature_medium_complexity(self, agent):
         """Test feature development with medium complexity description."""
         result = await agent.develop_feature("TestFeature", "This is a standard basic feature")
         assert result["complexity"] == "medium"
 
-    def test_develop_feature_low_complexity(self, agent):
+    @pytest.mark.asyncio
+    async def test_develop_feature_low_complexity(self, agent):
         """Test feature development with low complexity description."""
         result = await agent.develop_feature("TestFeature", "")
         assert result["complexity"] == "low"

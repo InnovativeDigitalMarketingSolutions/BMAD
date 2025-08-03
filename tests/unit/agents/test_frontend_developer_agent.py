@@ -365,7 +365,7 @@ class TestFrontendDeveloperAgent:
         mock_llm.return_value = "Bug analysis result"
         
         agent = FrontendDeveloperAgent()
-        result = agent.bug_root_cause("Error: Cannot read property of undefined")
+        result = agent.bug_root_cause("Error: Ca\n\not read property of undefined")
         
         assert result == "Bug analysis result"
         assert mock_llm.called
@@ -376,7 +376,7 @@ class TestFrontendDeveloperAgent:
         mock_llm.side_effect = Exception("LLM error")
         
         agent = FrontendDeveloperAgent()
-        result = agent.bug_root_cause("Error: Cannot read property of undefined")
+        result = agent.bug_root_cause("Error: Ca\n\not read property of undefined")
         
         assert "Error analyzing bug root cause" in result
 
