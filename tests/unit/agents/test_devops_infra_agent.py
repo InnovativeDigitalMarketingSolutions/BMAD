@@ -156,8 +156,17 @@ class TestDevOpsInfraAgentInfrastructureDeployment:
             self.mock_monitor = mock_monitor.return_value
 
     def test_deploy_infrastructure(self):
-        """Test deploy_infrastructure functionality."""
-        with patch('time.sleep'):
+        """Test deploy_infrastructure functionality with enhanced MCP and tracing."""
+        with patch('time.sleep'), \
+             patch.object(self.agent, 'initialize_enhanced_mcp'), \
+             patch.object(self.agent, 'initialize_tracing'), \
+             patch.object(self.agent, 'use_enhanced_mcp_tools', return_value=None), \
+             patch.object(self.agent, 'use_mcp_tool', return_value=None), \
+             patch.object(self.agent, 'use_devops_specific_mcp_tools', return_value=None), \
+             patch.object(self.agent, 'trace_infrastructure_deployment', return_value={}), \
+             patch.object(self.agent, 'enhanced_security_validation', return_value=None), \
+             patch.object(self.agent, 'enhanced_performance_optimization', return_value=None):
+            
             import asyncio
             result = asyncio.run(self.agent.deploy_infrastructure("kubernetes"))
             
@@ -166,19 +175,93 @@ class TestDevOpsInfraAgentInfrastructureDeployment:
             assert "status" in result
             assert result["status"] == "success"
             assert "deployment_steps" in result
+            assert "deployment_config" in result
             assert "history_record" in result
             assert "timestamp" in result
+            assert "enhanced_capabilities" in result
+            assert "deployment_method" in result
+            assert result["deployment_method"] == "local"
 
     def test_deploy_infrastructure_default_type(self):
         """Test deploy_infrastructure with default type."""
-        with patch('time.sleep'):
+        with patch('time.sleep'), \
+             patch.object(self.agent, 'initialize_enhanced_mcp'), \
+             patch.object(self.agent, 'initialize_tracing'), \
+             patch.object(self.agent, 'use_enhanced_mcp_tools', return_value=None), \
+             patch.object(self.agent, 'use_mcp_tool', return_value=None), \
+             patch.object(self.agent, 'use_devops_specific_mcp_tools', return_value=None), \
+             patch.object(self.agent, 'trace_infrastructure_deployment', return_value={}), \
+             patch.object(self.agent, 'enhanced_security_validation', return_value=None), \
+             patch.object(self.agent, 'enhanced_performance_optimization', return_value=None):
+            
             import asyncio
             result = asyncio.run(self.agent.deploy_infrastructure())
             
             assert result["infrastructure_type"] == "kubernetes"
             assert result["status"] == "success"
             assert "deployment_steps" in result
+            assert "deployment_config" in result
             assert len(result["deployment_steps"]) > 0
+            assert "enhanced_capabilities" in result
+
+    def test_deploy_infrastructure_with_enhanced_mcp(self):
+        """Test deploy_infrastructure with enhanced MCP enabled."""
+        enhanced_result = {
+            "infrastructure_deployment": {
+                "status": "success",
+                "enhanced_mcp_used": True,
+                "deployment_time": "3.2s"
+            }
+        }
+        
+        with patch('time.sleep'), \
+             patch.object(self.agent, 'initialize_enhanced_mcp'), \
+             patch.object(self.agent, 'initialize_tracing'), \
+             patch.object(self.agent, 'use_enhanced_mcp_tools', return_value=enhanced_result), \
+             patch.object(self.agent, 'use_devops_specific_mcp_tools', return_value={}), \
+             patch.object(self.agent, 'trace_infrastructure_deployment', return_value={}), \
+             patch.object(self.agent, 'enhanced_security_validation', return_value={"status": "passed"}), \
+             patch.object(self.agent, 'enhanced_performance_optimization', return_value={"optimization": "completed"}):
+            
+            self.agent.enhanced_mcp_enabled = True
+            self.agent.tracing_enabled = True
+            
+            import asyncio
+            result = asyncio.run(self.agent.deploy_infrastructure("docker"))
+            
+            assert result["infrastructure_type"] == "docker"
+            assert result["status"] == "success"
+            assert "enhanced_capabilities" in result
+            assert result["enhanced_capabilities"]["enhanced_mcp_used"] == True
+            assert result["enhanced_capabilities"]["tracing_enabled"] == True
+
+    def test_deploy_infrastructure_with_tracing(self):
+        """Test deploy_infrastructure with tracing enabled."""
+        trace_data = {
+            "trace_id": "trace_123",
+            "deployment_traced": True,
+            "performance_metrics": {"deployment_time": "2.1s"}
+        }
+        
+        with patch('time.sleep'), \
+             patch.object(self.agent, 'initialize_enhanced_mcp'), \
+             patch.object(self.agent, 'initialize_tracing'), \
+             patch.object(self.agent, 'use_enhanced_mcp_tools', return_value=None), \
+             patch.object(self.agent, 'use_mcp_tool', return_value=None), \
+             patch.object(self.agent, 'use_devops_specific_mcp_tools', return_value={}), \
+             patch.object(self.agent, 'trace_infrastructure_deployment', return_value=trace_data), \
+             patch.object(self.agent, 'enhanced_security_validation', return_value=None), \
+             patch.object(self.agent, 'enhanced_performance_optimization', return_value=None):
+            
+            self.agent.tracing_enabled = True
+            
+            import asyncio
+            result = asyncio.run(self.agent.deploy_infrastructure("terraform"))
+            
+            assert result["infrastructure_type"] == "terraform"
+            assert result["status"] == "success"
+            assert "tracing_data" in result
+            assert result["tracing_data"]["trace_id"] == "trace_123"
 
 
 class TestDevOpsInfraAgentInfrastructureMonitoring:
