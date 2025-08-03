@@ -19,11 +19,11 @@ class TestBackendDeveloperAgent:
     @pytest.fixture
     def agent(self):
         """Create a BackendDeveloperAgent instance for testing."""
-        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_performance_monitor'),
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_advanced_policy_engine'),
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_sprite_library'),
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BMADTracer'),
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.PrefectWorkflowOrchestrator'),
+        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_performance_monitor'), \
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_advanced_policy_engine'), \
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_sprite_library'), \
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BMADTracer'), \
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.PrefectWorkflowOrchestrator'), \
              patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_framework_templates_manager') as mock_framework_manager:
             # Mock the framework manager to return a mock with get_template method
             mock_manager_instance = Mock()
@@ -335,7 +335,7 @@ class TestBackendDeveloperAgent:
     @pytest.mark.asyncio
     async def test_collaborate_example_success(self, mock_publish, agent):
         """Test successful collaboration example."""
-        with patch.object(agent, 'build_api', new_callable=AsyncMock) as mock_build, 
+        with patch.object(agent, 'build_api', new_callable=AsyncMock) as mock_build, \
              patch.object(agent, 'deploy_api') as mock_deploy:
             agent.collaborate_example()
             
@@ -359,7 +359,7 @@ class TestBackendDeveloperAgent:
         """Test successful API change completion handling."""
         event = {"endpoint": "/api/v1/users", "status": "created"}
         
-        with patch.object(agent.tracer, 'record_event') as mock_trace, 
+        with patch.object(agent.tracer, 'record_event') as mock_trace, \
              patch.object(agent.policy_engine, 'evaluate_policy', new_callable=AsyncMock) as mock_policy:
             await agent.handle_api_change_completed(event)
             
@@ -380,7 +380,7 @@ class TestBackendDeveloperAgent:
         """Test successful API deployment completion handling."""
         event = {"endpoint": "/api/v1/users", "status": "deployed"}
         
-        with patch.object(agent.tracer, 'record_event') as mock_trace, 
+        with patch.object(agent.tracer, 'record_event') as mock_trace, \
              patch.object(agent.policy_engine, 'evaluate_policy', new_callable=AsyncMock) as mock_policy:
             await agent.handle_api_deployment_completed(event)
             
@@ -394,11 +394,11 @@ class TestBackendDeveloperAgentCLI:
     @pytest.fixture
     def agent(self):
         """Create a BackendDeveloperAgent instance for CLI testing."""
-        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_performance_monitor'),
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_advanced_policy_engine'),
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_sprite_library'),
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BMADTracer'),
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.PrefectWorkflowOrchestrator'),
+        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_performance_monitor'), \
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_advanced_policy_engine'), \
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_sprite_library'), \
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BMADTracer'), \
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.PrefectWorkflowOrchestrator'), \
              patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_framework_templates_manager') as mock_framework_manager:
             # Mock the framework manager to return a mock with get_template method
             mock_manager_instance = Mock()
@@ -549,11 +549,11 @@ class TestBackendDeveloperAgentIntegration:
     @pytest.fixture
     def agent(self):
         """Create a BackendDeveloperAgent instance for integration testing."""
-        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_performance_monitor'),
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_advanced_policy_engine'),
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_sprite_library'),
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BMADTracer'),
-             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.PrefectWorkflowOrchestrator'),
+        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_performance_monitor'), \
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_advanced_policy_engine'), \
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_sprite_library'), \
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BMADTracer'), \
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.PrefectWorkflowOrchestrator'), \
              patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_framework_templates_manager') as mock_framework_manager:
             # Mock the framework manager to return a mock with get_template method
             mock_manager_instance = Mock()
