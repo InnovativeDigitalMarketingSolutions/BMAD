@@ -74,6 +74,17 @@
 
 ## 🎯 **NEXT PHASE - Priority 1** 🚀
 
+### **FrameworkTemplatesManager Implementation** 🔧 🔥 **NEW HIGH PRIORITY**
+- **Status**: TO DO - FrameworkTemplatesManager implementatie en fix
+- **Scope**: Implementeer en fix FrameworkTemplatesManager voor agent resource management
+- **Timeline**: Week 12-13
+- **Deliverables**: Werkende FrameworkTemplatesManager, resource management fix
+- **Success Criteria**: Alle agents kunnen resources correct laden en gebruiken
+- **Progress**: 
+  - ⏳ FrameworkTemplatesManager implementatie
+  - ⏳ Resource loading fix
+  - ⏳ Agent resource management update
+
 ### **MCP Phase 2: Agent Enhancement** 🔧 🔥 **IN PROGRESS**
 - **Status**: IN PROGRESS - FullstackDeveloper enhanced + tracing (3/23 complete)
   - **Scope**: Verbeter agent functionaliteit en performance
