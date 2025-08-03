@@ -757,10 +757,13 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
             self.list_resources()
         elif command == "test":
             self.test()
+        elif command == "collaborate_example":
+            self.collaborate_example()
         elif command == "collaborate":
             self.collaborate_example()
         else:
             print(f"Unknown command: {command}")
+            logging.error(f"Onbekend commando: {command}")
             self.show_help()
     
     @classmethod

@@ -33,6 +33,13 @@ from bmad.core.mcp import (
     initialize_framework_mcp_integration
 )
 
+# Enhanced MCP Phase 2 imports
+from bmad.core.mcp.enhanced_mcp_integration import (
+    EnhancedMCPIntegration,
+    create_enhanced_mcp_integration
+)
+from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -74,6 +81,24 @@ class UXUIDesignerAgent:
         self.mcp_client: Optional[MCPClient] = None
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
         self.mcp_enabled = False
+        
+        # Enhanced MCP Phase 2 attributes
+        self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_enabled = False
+        
+        # Tracing Integration
+        self.tracer: Optional[BMADTracer] = None
+        self.tracing_enabled = False
+        
+        # Initialize tracer
+        self.tracer = BMADTracer(config=type("Config", (), {
+            "service_name": "UXUIDesignerAgent",
+            "service_version": "1.0.0",
+            "environment": "development",
+            "sample_rate": 1.0,
+            "exporters": []
+        })())
+        
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
 
     async def initialize_mcp(self):
@@ -87,6 +112,33 @@ class UXUIDesignerAgent:
         except Exception as e:
             logger.warning(f"MCP initialization failed for UXUIDesigner: {e}")
             self.mcp_enabled = False
+
+    async def initialize_enhanced_mcp(self):
+        """Initialize enhanced MCP capabilities for Phase 2."""
+        try:
+            self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+            # Check if initialize method exists before calling it
+            if hasattr(self.enhanced_mcp, 'initialize'):
+                await self.enhanced_mcp.initialize()
+            self.enhanced_mcp_enabled = True
+            logger.info("Enhanced MCP initialized successfully")
+        except Exception as e:
+            logger.warning(f"Enhanced MCP initialization failed: {e}")
+            self.enhanced_mcp_enabled = False
+    
+    async def initialize_tracing(self):
+        """Initialize tracing capabilities."""
+        try:
+            if self.tracer and hasattr(self.tracer, 'initialize'):
+                await self.tracer.initialize()
+                self.tracing_enabled = True
+                logger.info("Tracing initialized successfully")
+            else:
+                logger.warning("Tracer not available or missing initialize method")
+                self.tracing_enabled = False
+        except Exception as e:
+            logger.warning(f"Tracing initialization failed: {e}")
+            self.tracing_enabled = False
 
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -152,6 +204,120 @@ class UXUIDesignerAgent:
         except Exception as e:
             logger.error(f"Error in UX/UI-specific MCP tools: {e}")
         return enhanced_data
+
+    async def use_enhanced_mcp_tools(self, design_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use enhanced MCP tools voor Phase 2 capabilities."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available, using standard MCP tools")
+            return await self.use_uxui_specific_mcp_tools(design_data)
+        
+        enhanced_data = {}
+        
+        try:
+            # Core enhancement tools
+            core_result = await self.enhanced_mcp.use_enhanced_mcp_tool("core_enhancement", {
+                "agent_type": self.agent_name,
+                "enhancement_level": "advanced",
+                "capabilities": design_data.get("capabilities", []),
+                "performance_metrics": design_data.get("performance_metrics", {})
+            })
+            enhanced_data["core_enhancement"] = core_result
+            
+            # UX/UI-specific enhanced tools
+            uxui_enhanced_result = await self.use_uxui_specific_enhanced_tools(design_data)
+            enhanced_data.update(uxui_enhanced_result)
+            
+            # Tracing integration
+            if self.tracing_enabled:
+                trace_result = await self.trace_uxui_operation(design_data)
+                enhanced_data["tracing"] = trace_result
+            
+            logger.info(f"Enhanced MCP tools used successfully: {len(enhanced_data)} tools")
+            
+        except Exception as e:
+            logger.error(f"Enhanced MCP tools failed: {e}")
+            enhanced_data["error"] = str(e)
+        
+        return enhanced_data
+    
+    async def use_uxui_specific_enhanced_tools(self, design_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use UX/UI-specific enhanced MCP tools."""
+        enhanced_tools = {}
+        
+        try:
+            # Enhanced design system
+            if "design_system" in design_data:
+                design_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_design_system", {
+                    "design_data": design_data["design_system"],
+                    "requirements": design_data.get("requirements", {}),
+                    "constraints": design_data.get("constraints", {})
+                })
+                enhanced_tools["enhanced_design_system"] = design_result
+            
+            # Enhanced component design
+            if "component_design" in design_data:
+                component_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_component_design", {
+                    "component_data": design_data["component_design"],
+                    "accessibility_requirements": design_data.get("accessibility_requirements", {}),
+                    "performance_requirements": design_data.get("performance_requirements", {})
+                })
+                enhanced_tools["enhanced_component_design"] = component_result
+            
+            # Enhanced team collaboration
+            if "team_collaboration" in design_data:
+                collaboration_result = await self.enhanced_mcp.communicate_with_agents(
+                    ["ProductOwner", "FrontendDeveloper", "AccessibilityAgent", "QualityGuardian"],
+                    {
+                        "type": "design_review",
+                        "content": design_data["team_collaboration"]
+                    }
+                )
+                enhanced_tools["enhanced_team_collaboration"] = collaboration_result
+            
+            # Enhanced accessibility validation
+            if "accessibility_validation" in design_data:
+                accessibility_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_accessibility_validation", {
+                    "design_data": design_data["accessibility_validation"],
+                    "standards": design_data.get("accessibility_standards", ["WCAG2.1", "WCAG2.2"]),
+                    "validation_level": design_data.get("validation_level", "comprehensive")
+                })
+                enhanced_tools["enhanced_accessibility_validation"] = accessibility_result
+            
+            logger.info(f"UX/UI-specific enhanced tools executed: {list(enhanced_tools.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Error in UX/UI-specific enhanced tools: {e}")
+        
+        return enhanced_tools
+    
+    async def trace_uxui_operation(self, operation_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace UX/UI design operations."""
+        if not self.tracing_enabled or not self.tracer:
+            return {"tracing": "disabled"}
+        
+        try:
+            trace_data = {
+                "operation_type": "uxui_design",
+                "agent": self.agent_name,
+                "timestamp": datetime.now().isoformat(),
+                "operation_data": operation_data,
+                "performance_metrics": {
+                    "design_complexity": len(operation_data.get("components", [])),
+                    "accessibility_checks": len(operation_data.get("accessibility_requirements", [])),
+                    "collaboration_agents": len(operation_data.get("team_collaboration", {}).get("agents", []))
+                }
+            }
+            
+            # Add trace to tracer
+            if hasattr(self.tracer, 'add_trace'):
+                await self.tracer.add_trace("uxui_design_operation", trace_data)
+            
+            logger.info(f"UX/UI operation traced: {trace_data['operation_type']}")
+            return trace_data
+            
+        except Exception as e:
+            logger.error(f"Tracing failed: {e}")
+            return {"tracing": "error", "error": str(e)}
 
     async def create_mobile_ux_design(self, platform: str = "iOS", app_type: str = "native") -> Dict[str, Any]:
         """Create comprehensive mobile UX design for specified platform with input validation."""
@@ -858,7 +1024,19 @@ UXUIDesigner Agent Commands:
             logger.error(f"Policy evaluation failed: {e}")
 
     async def run(self):
+        # Initialize MCP integration
         await self.initialize_mcp()
+        
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing capabilities
+        await self.initialize_tracing()
+        
+        print("🎨 UX/UI Designer Agent is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        
         def sync_handler(event):
             asyncio.run(self.handle_design_completed(event))
 
@@ -1146,7 +1324,10 @@ def main():
                                "create-mobile-ux", "design-mobile-component", "create-mobile-flow",
                                "design-feedback", "document-component", "analyze-figma",
                                "show-design-history", "show-feedback-history", "show-best-practices",
-                               "show-changelog", "export-report", "test", "collaborate", "run"])
+                               "show-changelog", "export-report", "test", "collaborate", "run",
+                               "initialize-mcp", "use-mcp-tool", "get-mcp-status", "use-uxui-mcp-tools", 
+                               "check-dependencies", "enhanced-collaborate", "enhanced-security", "enhanced-performance",
+                               "trace-operation", "trace-performance", "trace-error", "tracing-summary"])
     parser.add_argument("--component-name", default="Button", help="Component name")
     parser.add_argument("--platform", choices=["iOS", "Android", "React Native", "Flutter"], default="iOS", help="Mobile platform")
     parser.add_argument("--app-type", choices=["native", "hybrid", "pwa"], default="native", help="App type")
@@ -1157,6 +1338,7 @@ def main():
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     args = parser.parse_args()
     agent = UXUIDesignerAgent()
+    
     if args.command == "help":
         agent.show_help()
     elif args.command == "build-shadcn-component":
@@ -1218,6 +1400,55 @@ def main():
         print(json.dumps(result, indent=2))
     elif args.command == "run":
         asyncio.run(agent.run())
+    # Enhanced MCP Phase 2 Commands
+    elif args.command in ["enhanced-collaborate", "enhanced-security", "enhanced-performance", 
+                         "trace-operation", "trace-performance", "trace-error", "tracing-summary"]:
+        # Enhanced MCP commands
+        if args.command == "enhanced-collaborate":
+            result = asyncio.run(agent.enhanced_mcp.communicate_with_agents(
+                ["ProductOwner", "FrontendDeveloper", "AccessibilityAgent", "QualityGuardian"], 
+                {"type": "design_review", "content": {"review_type": "uxui_design"}}
+            ))
+            print(json.dumps(result, indent=2))
+        elif args.command == "enhanced-security":
+            result = asyncio.run(agent.enhanced_mcp.enhanced_security_validation({
+                "design_data": {"components": ["Button", "Form", "Navigation"]},
+                "security_requirements": ["input_validation", "xss_prevention", "csrf_protection"]
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "enhanced-performance":
+            result = asyncio.run(agent.enhanced_mcp.enhanced_performance_optimization({
+                "design_data": {"components": ["Button", "Form", "Navigation"]},
+                "performance_metrics": {"load_time": 2.5, "render_time": 1.2}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-operation":
+            result = asyncio.run(agent.trace_uxui_operation({
+                "operation_type": "component_design",
+                "components": ["Button", "Form", "Navigation"],
+                "accessibility_requirements": ["WCAG2.1", "WCAG2.2"]
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-performance":
+            result = asyncio.run(agent.trace_uxui_operation({
+                "operation_type": "performance_analysis",
+                "performance_metrics": {"load_time": 2.5, "render_time": 1.2}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-error":
+            result = asyncio.run(agent.trace_uxui_operation({
+                "operation_type": "error_analysis",
+                "error_data": {"error_type": "design_validation", "error_message": "Accessibility check failed"}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "tracing-summary":
+            print("Tracing Summary for UXUIDesigner Agent:")
+            print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+            print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+            print(f"Agent: {agent.agent_name}")
+    else:
+        print(f"Unknown command: {args.command}")
+        agent.show_help()
 
 if __name__ == "__main__":
     main()
