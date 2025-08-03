@@ -1,16 +1,5 @@
 # Deployment History
 
-- 2025-07-31T18:02:31.123075: /api/v1/users - Status: deployed - Environment: production
-- 2025-07-31T18:36:05.958563: /api/v1/users - Status: deployed - Environment: production
-- 2025-07-31T18:36:09.492643: /api/v1/users - Status: deployed - Environment: production
-- 2025-07-31T18:36:12.520697: /api/v1/users - Status: deployed - Environment: production
-- 2025-08-01T11:17:23.534580: /api/v1/users - Status: deployed - Environment: production
-- 2025-08-01T11:17:27.091254: /api/v1/users - Status: deployed - Environment: production
-- 2025-08-01T11:17:30.112816: /api/v1/users - Status: deployed - Environment: production
-- 2025-08-01T15:55:12.824136: /api/v1/users - Status: deployed - Environment: production
-- 2025-08-01T15:55:15.880216: /api/v1/users - Status: deployed - Environment: production
-- 2025-08-01T15:55:18.894931: /api/v1/users - Status: deployed - Environment: production
-- 2025-08-01T16:16:41.799340: /api/v1/users - Status: deployed - Environment: production
 - 2025-08-01T16:16:44.890095: /api/v1/users - Status: deployed - Environment: production
 - 2025-08-01T16:16:47.911831: /api/v1/users - Status: deployed - Environment: production
 - 2025-08-01T18:39:56.224076: /api/v1/users - Status: deployed - Environment: production
@@ -50,3 +39,14 @@
 - 2025-08-02T23:18:21.298951: /api/v1/users - Status: deployed - Environment: production
 - 2025-08-02T23:18:25.352249: /api/v1/users - Status: deployed - Environment: production
 - 2025-08-02T23:18:29.403949: /api/v1/users - Status: deployed - Environment: production
+- 2025-08-03T09:20:33.163385: /api/v1/users - Status: deployed - Environment: production
+- 2025-08-03T09:20:37.237992: /api/v1/users - Status: deployed - Environment: production
+- 2025-08-03T09:20:41.266565: /api/v1/users - Status: deployed - Environment: production
+- 2025-08-03T09:22:11.374577: /api/v1/users - Status: deployed - Environment: production
+- 2025-08-03T09:22:55.793442: /api/v1/users - Status: deployed - Environment: production
+- 2025-08-03T09:57:59.421336: /api/v1/users - Status: deployed - Environment: production
+- 2025-08-03T09:58:03.483685: /api/v1/users - Status: deployed - Environment: production
+- 2025-08-03T09:58:07.515332: /api/v1/users - Status: deployed - Environment: production
+- 2025-08-03T10:38:34.683459: /api/v1/users - Status: deployed - Environment: production
+- 2025-08-03T10:38:38.824478: /api/v1/users - Status: deployed - Environment: production
+- 2025-08-03T10:38:42.855984: /api/v1/users - Status: deployed - Environment: production

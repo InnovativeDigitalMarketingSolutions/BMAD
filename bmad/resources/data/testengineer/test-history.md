@@ -1,28 +1,5 @@
 # Test History
 
-- 2025-08-01T22:09:32.840932: 2/4 tests succesvol
-- Generated unit tests for TestComponent in 0.00s
-- Generated integration tests for TestComponent in 0.00s
-- Generated e2e tests for TestComponent in 0.00s
-- 2025-08-01T22:09:32.866634: 2/4 tests succesvol
-- 2025-08-01T22:09:32.868789: 2/4 tests succesvol
-- Generated unit tests for TestComponent in 0.00s
-- 2025-08-02T08:03:26.730680: 2/4 tests succesvol
-- 2025-08-02T08:03:28.403429: 2/4 tests succesvol
-- 2025-08-02T08:11:43.080477: 2/4 tests succesvol
-- Generated unit tests for TestComponent in 0.00s
-- Generated integration tests for TestComponent in 0.00s
-- Generated e2e tests for TestComponent in 0.00s
-- 2025-08-02T08:11:43.107394: 2/4 tests succesvol
-- 2025-08-02T08:11:43.109131: 2/4 tests succesvol
-- Generated unit tests for TestComponent in 0.00s
-- 2025-08-02T18:28:41.500242: 2/4 tests succesvol
-- 2025-08-02T18:29:02.831382: 2/4 tests succesvol
-- Generated unit tests for TestComponent in 0.00s
-- Generated integration tests for TestComponent in 0.00s
-- Generated e2e tests for TestComponent in 0.00s
-- Generated unit tests for TestComponent in 0.00s
-- 2025-08-02T18:29:20.955354: 2/4 tests succesvol
 - Generated unit tests for TestComponent in 0.00s
 - Generated integration tests for TestComponent in 0.00s
 - Generated e2e tests for TestComponent in 0.00s
@@ -49,4 +26,27 @@
 - Generated integration tests for TestComponent in 0.00s
 - Generated e2e tests for TestComponent in 0.00s
 - 2025-08-02T23:20:39.172835: 2/4 tests succesvol
+- Generated unit tests for TestComponent in 0.00s
+- 2025-08-02T23:52:40.683298: 2/4 tests succesvol
+- 2025-08-02T23:52:42.355335: 2/4 tests succesvol
+- 2025-08-02T23:57:09.857619: 2/4 tests succesvol
+- 2025-08-02T23:58:56.175037: 2/4 tests succesvol
+- 2025-08-02T23:58:57.864557: 2/4 tests succesvol
+- 2025-08-03T09:59:54.957121: 2/4 tests succesvol
+- Generated unit tests for TestComponent in 0.00s
+- Generated integration tests for TestComponent in 0.00s
+- Generated e2e tests for TestComponent in 0.00s
+- 2025-08-03T09:59:55.022171: 2/4 tests succesvol
+- Generated unit tests for TestComponent in 0.00s
+- 2025-08-03T10:02:47.706755: 2/4 tests succesvol
+- Generated unit tests for TestComponent in 0.00s
+- Generated integration tests for TestComponent in 0.00s
+- Generated e2e tests for TestComponent in 0.00s
+- 2025-08-03T10:02:47.734170: 2/4 tests succesvol
+- Generated unit tests for TestComponent in 0.00s
+- 2025-08-03T10:38:34.405976: 2/4 tests succesvol
+- Generated unit tests for TestComponent in 0.00s
+- Generated integration tests for TestComponent in 0.00s
+- Generated e2e tests for TestComponent in 0.00s
+- 2025-08-03T10:38:34.438436: 2/4 tests succesvol
 - Generated unit tests for TestComponent in 0.00s

@@ -1010,11 +1010,21 @@ def method_name(self, param: str) -> Dict[str, Any]:
 - **Solution**: Use correct escape sequences (`\n` instead of `nn`)
 - **Best Practice**: Verify mock data matches expected format exactly
 
+### **Code Preservation During Fixes** 🚨
+- **Problem**: Attempting to rewrite entire files during fixes can remove valuable code
+- **Solution**: Apply minimal targeted fixes only, preserve existing functionality
+- **Best Practice**: 
+  - Never remove working code during fixes
+  - Apply only necessary changes to resolve specific issues
+  - Test continuously during development, not just at the end
+  - Use version control to track changes and enable rollbacks
+
 ## Version History
 
 - **v1.0 (2025-08-02)**: Initial version met geconsolideerde best practices
 - **v1.1 (Planned)**: Additional patterns en optimizations
 - **v1.2 (Planned)**: Advanced performance en security patterns
+- **v2.4 (2025-01-27)**: Code preservation best practices en systematic fix patterns
 
 ## Contributing
 

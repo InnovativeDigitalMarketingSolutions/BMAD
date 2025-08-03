@@ -644,6 +644,38 @@ class AsyncAgent:
 
 **Waarom**: Zorgt voor up-to-date en bruikbare documentatie.
 
+### **Code Preservation During Fixes** 🚨
+**Lesson**: NO CODE REMOVAL - Only extend, improve, or replace with better versions.
+
+**Critical Issue**: DocumentationAgent test file had 239 lines removed during "fix" attempt
+- **Problem**: Attempted to rewrite entire file instead of targeted fixes
+- **Impact**: Lost valuable test code and functionality
+- **Solution**: Restored original file, applied minimal targeted fixes only
+
+**Best Practice**:
+- **Minimal Changes**: Apply only necessary fixes, don't rewrite entire files
+- **Preserve Functionality**: Never remove working code during fixes
+- **Targeted Approach**: Fix specific issues, not entire codebases
+- **Test Continuously**: Run tests during development, not just at the end
+
+**Waarom**: Behoud van functionaliteit en voorkomt verlies van waardevolle code.
+
+### **MCP Implementation Process Analysis** 🔍
+**Lesson**: Syntax errors en test issues werden pas na MCP implementatie ontdekt.
+
+**Root Cause Analysis**:
+- **Development Gap**: Tests werden niet automatisch gerund tijdens MCP development
+- **Validation Gap**: Geen CI/CD pipeline voor automatische test validatie
+- **Process Gap**: Development workflow had geen test checkpoints
+
+**Best Practice**:
+- **Continuous Testing**: Run tests during development, not just at the end
+- **Automated Validation**: Implement CI/CD pipeline voor automatische test checks
+- **Development Checkpoints**: Test validation at each development milestone
+- **Pre-commit Hooks**: Automatic test runs before commits
+
+**Waarom**: Voorkomt accumulatie van issues en zorgt voor vroegtijdige detectie van problemen.
+
 ## Quick Reference
 
 ### **Development Checklist**
@@ -689,6 +721,7 @@ except Exception as e:
 - **v1.0 (2025-08-02)**: Initial version met bestaande lessons learned
 - **v1.1 (Planned)**: Lessons learned van MCP integration proces
 - **v1.2 (Planned)**: Consolidated best practices en patterns
+- **v2.4 (2025-01-27)**: Code preservation lessons en MCP implementation analysis
 
 ## Contributing
 
