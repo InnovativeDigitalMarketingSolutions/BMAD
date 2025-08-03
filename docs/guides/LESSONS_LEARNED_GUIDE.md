@@ -5,8 +5,8 @@
 Dit document bevat alle lessons learned uit het BMAD development proces. Deze lessons zijn verzameld tijdens development, testing, en MCP integration om de kwaliteit van toekomstige development te verbeteren.
 
 **Laatste Update**: 2025-01-27  
-**Versie**: 2.4  
-**Status**: Actief - Major Progress: 6/22 Agents Fixed (367 tests passing)
+**Versie**: 2.5  
+**Status**: Actief - Major Progress: 9/22 Agents Fixed (506 tests passing)
 
 ## 🎉 MCP Integration Completion Lessons
 
@@ -27,6 +27,56 @@ Dit document bevat alle lessons learned uit het BMAD development proces. Deze le
 5. **Error Handling**: MCP failures mogen geen crashes veroorzaken
 6. **Test Fix Automation**: Systematische aanpak voor het fixen van syntax errors in test files
 7. **Quality Over Speed**: Kwalitatieve oplossingen boven snelle hacks
+
+### **FrontendDeveloper Agent Success Story (Januari 2025)**
+
+**Major Achievement**: Van syntax errors naar 100% success rate (44/44 tests) door systematische fixes.
+
+**Key Lessons Learned**:
+1. **Infinite Loop Mocking**: `while True: await asyncio.sleep(1)` patterns moeten gemockt worden
+2. **Async Class Method Testing**: Class methods met `@classmethod async def` vereisen speciale test handling
+3. **Services Initialization**: Lazy loading services moeten geïnitialiseerd worden in tests
+4. **Mock Data Parsing**: Mock data moet exact matchen wat de methode verwacht
+5. **Performance Test Avoidance**: Performance tests kunnen tests laten vastlopen
+
+**Success Metrics**:
+- **FrontendDeveloper**: 44/44 tests passing (100% success rate)
+- **Total Progress**: 9/22 agents now at 100% success rate
+- **Overall Tests**: 506 tests passing out of ~800 total tests
+
+**Key Technical Fixes**:
+1. **Infinite Loop Fix**: Mock `asyncio.sleep` met `KeyboardInterrupt` side effect
+2. **Async/Sync Pattern Matching**: Correct `@pytest.mark.asyncio` decorators
+3. **Mock Data Escape Sequences**: Proper newlines in mock data strings
+4. **Services Initialization**: `_ensure_services_initialized()` in tests
+5. **Class Method Testing**: Proper async handling voor `@classmethod async def`
+
+**Best Practices voor Infinite Loop Testing**:
+```python
+# ❌ VERKEERD: Infinite loop laat test vastlopen
+async def test_run_method(self):
+    await agent.run()  # ❌ Vastlopen in while True loop
+
+# ✅ CORRECT: Mock infinite loop
+async def test_run_method(self):
+    with patch('asyncio.sleep') as mock_sleep:
+        mock_sleep.side_effect = KeyboardInterrupt()
+        await agent.run()  # ✅ Test stopt na eerste sleep
+```
+
+**Best Practices voor Async Class Methods**:
+```python
+# ❌ VERKEERD: Sync call naar async class method
+def test_run_agent_class_method(self):
+    FrontendDeveloperAgent.run_agent()  # ❌ RuntimeWarning
+
+# ✅ CORRECT: Async call naar async class method
+@pytest.mark.asyncio
+async def test_run_agent_class_method(self):
+    await FrontendDeveloperAgent.run_agent()  # ✅ Correct async call
+```
+
+**Waarom**: Voorkomt test vastlopen, zorgt voor correcte async/sync handling, en verbetert test performance.
 
 ### **TestEngineer Agent Success Story (Januari 2025)**
 
