@@ -343,3 +343,150 @@ class TestBackendDeveloperEnhancedMCP:
             mock_init_mcp.assert_called_once()
             mock_init_enhanced.assert_called_once()
             assert mock_subscribe.call_count == 4  # 4 event subscriptions 
+
+    @pytest.mark.asyncio
+    async def test_run_with_enhanced_mcp_initialization(self, agent):
+        """Test run method with enhanced MCP initialization."""
+        with patch.object(agent, 'initialize_mcp') as mock_init_mcp, \
+             patch.object(agent, 'initialize_enhanced_mcp') as mock_init_enhanced, \
+             patch.object(agent, 'initialize_tracing') as mock_init_tracing, \
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.subscribe') as mock_subscribe:
+            
+            # Mock the infinite loop to exit early
+            with patch('asyncio.sleep', side_effect=KeyboardInterrupt):
+                try:
+                    await agent.run()
+                except KeyboardInterrupt:
+                    pass
+            
+            mock_init_mcp.assert_called_once()
+            mock_init_enhanced.assert_called_once()
+            mock_init_tracing.assert_called_once()
+            mock_subscribe.assert_called()
+
+    @pytest.mark.asyncio
+    async def test_initialize_tracing_success(self, agent):
+        """Test successful tracing initialization."""
+        agent.tracer = MagicMock()
+        agent.tracer.initialize = AsyncMock(return_value=True)
+        agent.tracer.setup_backend_tracing = AsyncMock()
+        
+        await agent.initialize_tracing()
+        
+        assert agent.tracing_enabled is True
+        agent.tracer.initialize.assert_called_once()
+        agent.tracer.setup_backend_tracing.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_initialize_tracing_failure(self, agent):
+        """Test tracing initialization failure."""
+        agent.tracer = MagicMock()
+        agent.tracer.initialize = AsyncMock(return_value=False)
+        
+        await agent.initialize_tracing()
+        
+        assert agent.tracing_enabled is False
+
+    @pytest.mark.asyncio
+    async def test_trace_api_development_success(self, agent):
+        """Test successful API development tracing."""
+        agent.tracing_enabled = True
+        agent.tracer = MagicMock()
+        agent.tracer.trace_api_development = AsyncMock(return_value={"trace_id": "123", "status": "success"})
+        
+        result = await agent.trace_api_development({
+            "endpoint": "/api/v1/users",
+            "method": "GET",
+            "framework": "fastapi"
+        })
+        
+        assert result["trace_id"] == "123"
+        assert result["status"] == "success"
+        agent.tracer.trace_api_development.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_trace_database_operation_success(self, agent):
+        """Test successful database operation tracing."""
+        agent.tracing_enabled = True
+        agent.tracer = MagicMock()
+        agent.tracer.trace_database_operation = AsyncMock(return_value={"db_trace_id": "456", "status": "success"})
+        
+        result = await agent.trace_database_operation({
+            "type": "query",
+            "table": "users",
+            "complexity": "simple"
+        })
+        
+        assert result["db_trace_id"] == "456"
+        assert result["status"] == "success"
+        agent.tracer.trace_database_operation.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_trace_api_deployment_success(self, agent):
+        """Test successful API deployment tracing."""
+        agent.tracing_enabled = True
+        agent.tracer = MagicMock()
+        agent.tracer.trace_api_deployment = AsyncMock(return_value={"deployment_trace_id": "789", "status": "success"})
+        
+        result = await agent.trace_api_deployment({
+            "endpoint": "/api/v1/users",
+            "environment": "production",
+            "type": "manual"
+        })
+        
+        assert result["deployment_trace_id"] == "789"
+        assert result["status"] == "success"
+        agent.tracer.trace_api_deployment.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_trace_backend_error_success(self, agent):
+        """Test successful backend error tracing."""
+        agent.tracing_enabled = True
+        agent.tracer = MagicMock()
+        agent.tracer.trace_backend_error = AsyncMock(return_value={"error_trace_id": "999", "status": "success"})
+        
+        result = await agent.trace_backend_error({
+            "type": "validation_error",
+            "message": "Invalid input",
+            "endpoint": "/api/v1/users"
+        })
+        
+        assert result["error_trace_id"] == "999"
+        assert result["status"] == "success"
+        agent.tracer.trace_backend_error.assert_called_once()
+
+    def test_get_tracing_summary_success(self, agent):
+        """Test successful tracing summary retrieval."""
+        agent.tracing_enabled = True
+        agent.tracer = MagicMock()
+        agent.tracer.get_tracing_summary.return_value = {"total_traces": 15, "status": "active"}
+        
+        result = agent.get_tracing_summary()
+        
+        assert result["total_traces"] == 15
+        assert result["status"] == "active"
+        agent.tracer.get_tracing_summary.assert_called_once()
+
+    def test_get_tracing_summary_fallback(self, agent):
+        """Test tracing summary fallback when tracing is disabled."""
+        agent.tracing_enabled = False
+        
+        result = agent.get_tracing_summary()
+        
+        assert result == {}
+
+    @pytest.mark.asyncio
+    async def test_build_api_with_tracing(self, agent):
+        """Test build_api with tracing integration."""
+        agent.tracing_enabled = True
+        agent.tracer = MagicMock()
+        agent.tracer.trace_api_development = AsyncMock(return_value={"trace_id": "123"})
+        
+        with patch.object(agent, 'use_enhanced_mcp_tools') as mock_enhanced:
+            mock_enhanced.return_value = {"enhanced_mcp_result": "success"}
+            
+            result = await agent.build_api("/api/v1/users")
+            
+            assert "tracing_data" in result
+            assert result["tracing_enabled"] is True
+            agent.tracer.trace_api_development.assert_called_once() 

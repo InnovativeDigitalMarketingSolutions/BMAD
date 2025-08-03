@@ -30,6 +30,12 @@ commands:
   - enhanced-performance: Enhanced performance optimalisatie
   - enhanced-tools: Enhanced externe tool integratie
   - enhanced-summary: Overzicht enhanced prestaties & communicatie
+  # Tracing Commands
+  - trace-api: Trace API development process
+  - trace-database: Trace database operations
+  - trace-deployment: Trace API deployment process
+  - trace-error: Trace backend errors en exceptions
+  - tracing-summary: Get tracing summary en analytics
 
 dependencies:
   templates:
@@ -39,7 +45,10 @@ dependencies:
     - resources/templates/backenddeveloper/api-export-template.json
     - resources/templates/backenddeveloper/performance-report-template.md
     - resources/templates/backenddeveloper/database-template.md
+    - resources/templates/backenddeveloper/security-template.md
+    - resources/templates/backenddeveloper/deployment-template.md
   data:
     - resources/data/backenddeveloper/backend-changelog.md
     - resources/data/backenddeveloper/api-history.md
     - resources/data/backenddeveloper/performance-history.md
+    - resources/data/backenddeveloper/deployment-history.md
