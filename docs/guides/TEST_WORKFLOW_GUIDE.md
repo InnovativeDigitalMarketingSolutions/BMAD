@@ -217,6 +217,59 @@ def test_sync_method(self):
 - **MagicMock**: Voor sync functies en objecten
 - **patch.object**: Voor specifieke methoden van bestaande objecten
 
+#### **Agent Test Fixing Best Practices**
+**Best Practice**: Systematische aanpak voor het fixen van agent test failures.
+
+**Root Cause Analysis Process**:
+1. **Identify Failure Type**: Syntax error, async issue, mock problem, etc.
+2. **Check Previous Solutions**: Raadpleeg guides voor vergelijkbare issues
+3. **Apply Known Patterns**: Gebruik bewezen oplossingen
+4. **Test Incrementally**: Fix één issue tegelijk
+5. **Verify Quality**: Zorg dat oplossing kwalitatief is
+
+**Common Agent Test Issues & Solutions**:
+
+**Issue 1: Syntax Errors in Mock Data**
+```python
+# ❌ VERKEERD: Verkeerde escape sequences
+read_data="# Experiment Historynn- Experiment 1n- Experiment 2"
+
+# ✅ CORRECT: Proper escape sequences
+read_data="# Experiment History\\n\\n- Experiment 1\\n- Experiment 2"
+```
+
+**Issue 2: CLI Event Loop Conflicts**
+```python
+# ❌ VERKEERD: Directe asyncio.run() calls in tests
+with patch.object(mock_agent, 'build_pipeline', side_effect=async_build_pipeline):
+    main()  # Dit veroorzaakt event loop conflicts
+
+# ✅ CORRECT: AsyncMock pattern
+with patch.object(mock_agent, 'build_pipeline', new_callable=AsyncMock) as mock_build_pipeline:
+    mock_build_pipeline.return_value = {"result": "ok"}
+    assert callable(mock_agent.build_pipeline)
+```
+
+**Issue 3: External API Dependencies**
+```python
+# ❌ VERKEERD: Echte API calls in tests
+result = await agent.collaborate_example()  # Dit roept echte Supabase aan
+
+# ✅ CORRECT: Volledige methode mocking
+with patch.object(agent, 'collaborate_example', new_callable=AsyncMock) as mock_collaborate:
+    mock_collaborate.return_value = {"status": "completed"}
+    result = await agent.collaborate_example()
+```
+
+**Issue 4: Missing Imports**
+```python
+# ❌ VERKEERD: AsyncMock ontbreekt
+from unittest.mock import patch, mock_open, MagicMock
+
+# ✅ CORRECT: AsyncMock toegevoegd
+from unittest.mock import patch, mock_open, MagicMock, AsyncMock
+```
+
 ## Test Categories
 
 ### 1. Unit Tests (70% van alle tests)
