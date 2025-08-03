@@ -1,111 +1,136 @@
 # MobileDeveloper Agent
 
 ## Overview
-The MobileDeveloper Agent is a specialized agent for mobile application development, supporting multiple platforms including React Native, Flutter, iOS, and Android. It provides comprehensive mobile development capabilities from app creation to deployment.
+De MobileDeveloper Agent is gespecialiseerd in cross-platform mobile development, React Native, Flutter, iOS en Android development. Deze agent biedt uitgebreide functionaliteit voor app development, component building, performance optimization, testing en deployment.
 
-## Features
+## Core Features
+- **Cross-Platform Development**: React Native, Flutter, iOS, Android
+- **App Creation**: Complete mobile app development workflow
+- **Component Building**: Platform-specific UI components
+- **Performance Optimization**: Memory, battery, network optimization
+- **Testing**: Unit, integration, and end-to-end testing
+- **Deployment**: App Store, Google Play, TestFlight deployment
+- **Performance Analysis**: Comprehensive performance monitoring
 
-### Core Functionality
-- **Multi-platform Development**: Support for React Native, Flutter, iOS, and Android
-- **App Creation**: Generate mobile applications with different types (business, social, gaming, etc.)
-- **Component Building**: Create reusable UI components for mobile apps
-- **Performance Optimization**: Analyze and optimize mobile app performance
-- **Testing**: Comprehensive mobile app testing capabilities
-- **Deployment**: Deploy apps to various platforms (App Store, Google Play, etc.)
+## MCP Integration
 
-### Advanced Features
-- **Performance Analysis**: Real-time performance monitoring and analysis
-- **Cross-platform Development**: Unified development across multiple platforms
-- **Template Management**: Access to platform-specific templates
-- **Export Capabilities**: Export reports in multiple formats (Markdown, CSV, JSON)
-- **Resource Management**: Comprehensive resource and template management
+### Standard MCP
+- **MCP Client**: Basic MCP client integration
+- **Framework Integration**: FrameworkMCPIntegration support
+- **Tool Usage**: Standard MCP tool utilization
 
-## Commands
+### Mobile-Specific MCP Tools
+- **Platform Tools**: React Native, Flutter, iOS, Android specific tools
+- **Development Tools**: App creation, component building tools
+- **Performance Tools**: Optimization and analysis tools
+- **Deployment Tools**: App Store and Play Store deployment tools
 
-### Basic Commands
-- `help` - Show help information
-- `create-app [app_name] [platform] [app_type]` - Create a new mobile app
-- `build-component [component_name] [platform] [component_type]` - Build a mobile component
-- `optimize-performance [app_name] [optimization_type]` - Optimize app performance
-- `test-app [app_name] [test_type]` - Test mobile app
-- `deploy-app [app_name] [deployment_target]` - Deploy app to target platform
+### Enhanced MCP Phase 2
+- **Enhanced MCP Integration**: Advanced MCP capabilities
+- **Inter-Agent Communication**: Communication with other agents
+- **External Tool Integration**: Integration with external development tools
+- **Security Enhancement**: Advanced security validation
+- **Performance Optimization**: Enhanced performance optimization
 
-### Analysis Commands
-- `analyze-performance [app_name] [analysis_type]` - Analyze app performance
-- `show-app-history` - Show app development history
-- `show-performance-history` - Show performance history
-- `list-platforms` - List supported platforms
-- `show-templates` - Show available templates
+### Tracing Integration
+- **App Development Tracing**: Trace app development process
+- **Mobile Performance Tracing**: Trace performance optimization
+- **Mobile Deployment Tracing**: Trace deployment process
+- **Mobile Error Tracing**: Trace errors and exceptions
 
-### Export Commands
-- `export-report [format_type]` - Export reports in various formats
-- `export-app [app_name]` - Export app configuration
+## Enhanced CLI Commands
 
-### Resource Commands
-- `show-resource [resource_type]` - Show resource content
-- `test` - Test resource completeness
-- `collaborate` - Demonstrate collaboration with other agents
+### Enhanced MCP Phase 2 Commands
+```bash
+# Enhanced inter-agent communication
+python mobiledeveloper.py enhanced-collaborate --agents FrontendDeveloper BackendDeveloper --message "Sync mobile requirements"
 
-## Supported Platforms
-- **React Native**: Cross-platform development with JavaScript/TypeScript
-- **Flutter**: Cross-platform development with Dart
-- **iOS**: Native iOS development with Swift
-- **Android**: Native Android development with Kotlin
+# Enhanced security validation
+python mobiledeveloper.py enhanced-security --platform ios --app-type business
 
-## App Types
-- **Business**: Enterprise and business applications
-- **Social**: Social media and communication apps
-- **Gaming**: Mobile games and entertainment apps
-- **Utility**: Utility and productivity apps
-- **E-commerce**: Shopping and marketplace apps
+# Enhanced performance optimization
+python mobiledeveloper.py enhanced-performance --optimization-type general --platform react-native
 
-## Component Types
-- **UI**: User interface components
-- **Navigation**: Navigation and routing components
-- **Data**: Data handling and storage components
-- **API**: API integration components
-- **Custom**: Custom specialized components
+# Enhanced external tool integration
+python mobiledeveloper.py enhanced-tools --tool-config '{"tool":"firebase","config":{"project":"myapp"}}'
 
-## Performance Optimization Types
-- **General**: General performance improvements
-- **Memory**: Memory usage optimization
-- **Battery**: Battery life optimization
-- **Network**: Network performance optimization
-- **UI**: User interface performance optimization
+# Enhanced performance & communication summary
+python mobiledeveloper.py enhanced-summary
+```
 
-## Test Types
-- **Unit**: Unit testing for individual components
-- **Integration**: Integration testing for app features
-- **E2E**: End-to-end testing for complete workflows
-- **Performance**: Performance testing
-- **Comprehensive**: Complete testing suite
+### Tracing Commands
+```bash
+# Trace app development process
+python mobiledeveloper.py trace-app --app-data '{"app_name":"MyApp","platform":"react-native"}'
 
-## Deployment Targets
-- **App Store**: iOS App Store deployment
-- **Google Play**: Android Google Play Store deployment
-- **TestFlight**: iOS TestFlight for beta testing
-- **Internal**: Internal distribution
-- **Web**: Progressive Web App deployment
+# Trace mobile performance optimization
+python mobiledeveloper.py trace-performance --performance-data '{"type":"general","platform":"react-native"}'
 
-## Integration
-The MobileDeveloper Agent integrates with:
-- **Performance Monitor**: Real-time performance tracking
-- **Policy Engine**: Advanced policy management
-- **Message Bus**: Event-driven communication
-- **Supabase Context**: Data persistence and context management
-- **Slack Notifications**: Real-time notifications
+# Trace mobile app deployment
+python mobiledeveloper.py trace-deployment --deployment-data '{"target":"app-store","platform":"ios"}'
 
-## Error Handling
-Comprehensive error handling with custom exceptions:
-- **MobileError**: Base exception for mobile development errors
-- **MobileValidationError**: Validation-specific errors
-- **Platform-specific errors**: Platform-specific error handling
+# Trace mobile errors and exceptions
+python mobiledeveloper.py trace-error --error-data '{"type":"crash","message":"Test error"}'
 
-## Best Practices
-- Follow platform-specific design guidelines
-- Implement proper error handling and validation
-- Use performance monitoring for optimization
-- Maintain cross-platform compatibility
-- Follow mobile app store guidelines
-- Implement proper testing strategies
-- Use version control and deployment pipelines 
+# Get tracing summary and analytics
+python mobiledeveloper.py tracing-summary
+```
+
+## Usage Examples
+
+### Python Code Examples
+```python
+from bmad.agents.Agent.MobileDeveloper.mobiledeveloper import MobileDeveloperAgent
+
+# Initialize agent
+agent = MobileDeveloperAgent()
+
+# Create app with enhanced MCP and tracing
+result = await agent.create_app("MyApp", "react-native", "business")
+
+# Use enhanced MCP tools
+enhanced_data = await agent.use_enhanced_mcp_tools({
+    "app_name": "MyApp",
+    "platform": "react-native",
+    "capabilities": ["app_development", "performance_optimization"]
+})
+
+# Communicate with other agents
+communication_result = await agent.communicate_with_agents(
+    ["FrontendDeveloper", "BackendDeveloper"],
+    {"message": "Sync mobile requirements"}
+)
+
+# Trace app development
+trace_result = await agent.trace_app_development({
+    "app_name": "MyApp",
+    "platform": "react-native",
+    "app_type": "business"
+})
+
+# Get enhanced performance summary
+performance_summary = agent.get_enhanced_performance_summary()
+
+# Get tracing summary
+tracing_summary = agent.get_tracing_summary()
+```
+
+## Integration Points
+- **FrontendDeveloper**: UI component collaboration
+- **BackendDeveloper**: API integration and backend services
+- **TestEngineer**: Testing strategy and quality assurance
+- **DevOpsInfra**: CI/CD and deployment automation
+- **SecurityDeveloper**: Security validation and compliance
+
+## Performance Metrics
+- **App Creation Time**: < 5 seconds
+- **Component Building**: < 2 seconds
+- **Performance Optimization**: < 10 seconds
+- **Testing Execution**: < 30 seconds
+- **Deployment Process**: < 60 seconds
+
+## Dependencies
+- **Core Dependencies**: MCP client, performance monitor, policy engine
+- **Enhanced Dependencies**: Enhanced MCP integration, tracing system
+- **External Dependencies**: React Native, Flutter, iOS SDK, Android SDK
+- **Testing Dependencies**: Jest, Detox, Espresso, XCTest 

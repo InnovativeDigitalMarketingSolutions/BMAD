@@ -14,6 +14,40 @@ agent:
   max_concurrent_tasks: 5
   timeout: 300  # 5 minutes
 
+# Commands
+commands:
+  - help: "Show help information"
+  - create-app: "Create a new mobile app"
+  - build-component: "Build a mobile component"
+  - optimize-performance: "Optimize app performance"
+  - test-app: "Test mobile app"
+  - deploy-app: "Deploy app to target platform"
+  - analyze-performance: "Analyze app performance"
+  - show-app-history: "Show app development history"
+  - show-performance-history: "Show performance history"
+  - show-best-practices: "Show mobile development best practices"
+  - show-changelog: "Show mobile developer changelog"
+  - export-report: "Export mobile development report"
+  - test: "Test resource completeness"
+  - collaborate: "Demonstrate collaboration with other agents"
+  - run: "Run the agent and listen for events"
+  - show-status: "Show agent status"
+  - list-platforms: "List supported platforms"
+  - show-templates: "Show available templates"
+  - export-app: "Export app configuration"
+  # Enhanced MCP Phase 2 Commands
+  - enhanced-collaborate: "Enhanced inter-agent communication"
+  - enhanced-security: "Enhanced security validation"
+  - enhanced-performance: "Enhanced performance optimization"
+  - enhanced-tools: "Enhanced external tool integration"
+  - enhanced-summary: "Enhanced performance & communication summary"
+  # Tracing Commands
+  - trace-app: "Trace app development process"
+  - trace-performance: "Trace mobile performance optimization"
+  - trace-deployment: "Trace mobile app deployment"
+  - trace-error: "Trace mobile errors and exceptions"
+  - tracing-summary: "Get tracing summary and analytics"
+
 # Core Services
 services:
   performance_monitor:
