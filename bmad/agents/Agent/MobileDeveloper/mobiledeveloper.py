@@ -15,7 +15,7 @@ import logging
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 from dotenv import load_dotenv
 
@@ -38,6 +38,15 @@ from bmad.core.mcp import (
     get_framework_mcp_integration,
     initialize_framework_mcp_integration
 )
+
+# Enhanced MCP Integration for Phase 2
+from bmad.core.mcp.enhanced_mcp_integration import (
+    EnhancedMCPIntegration,
+    create_enhanced_mcp_integration
+)
+
+# Tracing Integration
+from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 
 load_dotenv()
 
@@ -91,6 +100,14 @@ class MobileDeveloperAgent:
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
         self.mcp_enabled = False
         
+        # Enhanced MCP Integration for Phase 2
+        self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_enabled = False
+        
+        # Tracing Integration
+        self.tracer: Optional[BMADTracer] = None
+        self.tracing_enabled = False
+        
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
     
     async def initialize_mcp(self):
@@ -104,6 +121,49 @@ class MobileDeveloperAgent:
         except Exception as e:
             logger.warning(f"MCP initialization failed for MobileDeveloper: {e}")
             self.mcp_enabled = False
+
+    async def initialize_enhanced_mcp(self):
+        """Initialize enhanced MCP capabilities for Phase 2."""
+        try:
+            self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+            self.enhanced_mcp_enabled = await self.enhanced_mcp.initialize_enhanced_mcp()
+            
+            if self.enhanced_mcp_enabled:
+                logger.info("Enhanced MCP capabilities initialized successfully for MobileDeveloper")
+            else:
+                logger.warning("Enhanced MCP initialization failed, falling back to standard MCP")
+                
+        except Exception as e:
+            logger.warning(f"Enhanced MCP initialization failed for MobileDeveloper: {e}")
+            self.enhanced_mcp_enabled = False
+
+    async def initialize_tracing(self):
+        """Initialize tracing capabilities for mobile development."""
+        try:
+            self.tracer = BMADTracer(config=type("Config", (), {
+                "service_name": f"{self.agent_name}",
+                "environment": "development",
+                "tracing_level": "detailed"
+            })())
+            self.tracing_enabled = await self.tracer.initialize()
+            
+            if self.tracing_enabled:
+                logger.info("Tracing capabilities initialized successfully for MobileDeveloper")
+                # Set up mobile-specific tracing spans
+                await self.tracer.setup_mobile_tracing({
+                    "agent_name": self.agent_name,
+                    "tracing_level": "detailed",
+                    "performance_tracking": True,
+                    "app_tracking": True,
+                    "deployment_tracking": True,
+                    "error_tracking": True
+                })
+            else:
+                logger.warning("Tracing initialization failed, continuing without tracing")
+                
+        except Exception as e:
+            logger.warning(f"Tracing initialization failed for MobileDeveloper: {e}")
+            self.tracing_enabled = False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -192,6 +252,248 @@ class MobileDeveloperAgent:
         
         return enhanced_data
 
+    async def use_enhanced_mcp_tools(self, agent_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use enhanced MCP tools voor Phase 2 capabilities."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available, using standard MCP tools")
+            return await self.use_mobile_specific_mcp_tools(agent_data)
+        
+        enhanced_data = {}
+        
+        # Core enhancement tools
+        core_result = await self.enhanced_mcp.use_enhanced_mcp_tool("core_enhancement", {
+            "agent_type": self.agent_name,
+            "enhancement_level": "advanced",
+            "capabilities": agent_data.get("capabilities", []),
+            "performance_metrics": agent_data.get("performance_metrics", {})
+        })
+        if core_result:
+            enhanced_data["core_enhancement"] = core_result
+        
+        # Mobile-specific enhancement tools
+        specific_result = await self.use_mobile_specific_enhanced_tools(agent_data)
+        if specific_result:
+            enhanced_data.update(specific_result)
+        
+        return enhanced_data
+
+    async def use_mobile_specific_enhanced_tools(self, mobile_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use mobile-specific enhanced MCP tools."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {}
+        
+        enhanced_data = {}
+        
+        # App development enhancement
+        app_result = await self.enhanced_mcp.use_enhanced_mcp_tool("app_development", {
+            "app_name": mobile_data.get("app_name", ""),
+            "platform": mobile_data.get("platform", "react-native"),
+            "app_type": mobile_data.get("app_type", "business"),
+            "features": mobile_data.get("features", []),
+            "target_platforms": mobile_data.get("target_platforms", [])
+        })
+        if app_result:
+            enhanced_data["app_development"] = app_result
+        
+        # Performance optimization enhancement
+        performance_result = await self.enhanced_mcp.use_enhanced_mcp_tool("performance_optimization", {
+            "optimization_type": mobile_data.get("optimization_type", "general"),
+            "platform_specific": mobile_data.get("platform_specific", {}),
+            "memory_optimization": mobile_data.get("memory_optimization", {}),
+            "battery_optimization": mobile_data.get("battery_optimization", {})
+        })
+        if performance_result:
+            enhanced_data["performance_optimization"] = performance_result
+        
+        # Deployment enhancement
+        deployment_result = await self.enhanced_mcp.use_enhanced_mcp_tool("deployment_enhancement", {
+            "deployment_target": mobile_data.get("deployment_target", "app-store"),
+            "platform": mobile_data.get("platform", "ios"),
+            "signing_config": mobile_data.get("signing_config", {}),
+            "distribution_config": mobile_data.get("distribution_config", {})
+        })
+        if deployment_result:
+            enhanced_data["deployment_enhancement"] = deployment_result
+        
+        return enhanced_data
+
+    async def communicate_with_agents(self, target_agents: List[str], message: Dict[str, Any]) -> Dict[str, Any]:
+        """Communicate with other agents via enhanced MCP."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {"error": "Enhanced MCP not available"}
+        
+        try:
+            return await self.enhanced_mcp.communicate_with_agents(target_agents, message)
+        except Exception as e:
+            logger.error(f"Enhanced agent communication failed: {e}")
+            return {"error": str(e)}
+
+    async def use_external_tools(self, tool_config: Dict[str, Any]) -> Dict[str, Any]:
+        """Use external tools via enhanced MCP."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {"error": "Enhanced MCP not available"}
+        
+        try:
+            return await self.enhanced_mcp.use_external_tool(tool_config)
+        except Exception as e:
+            logger.error(f"External tool usage failed: {e}")
+            return {"error": str(e)}
+
+    async def enhanced_security_validation(self, security_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhanced security validation for mobile development."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {"error": "Enhanced MCP not available"}
+        
+        try:
+            return await self.enhanced_mcp.enhanced_security_validation(security_data)
+        except Exception as e:
+            logger.error(f"Enhanced security validation failed: {e}")
+            return {"error": str(e)}
+
+    async def enhanced_performance_optimization(self, performance_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhanced performance optimization for mobile development."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {"error": "Enhanced MCP not available"}
+        
+        try:
+            return await self.enhanced_mcp.enhanced_performance_optimization(performance_data)
+        except Exception as e:
+            logger.error(f"Enhanced performance optimization failed: {e}")
+            return {"error": str(e)}
+
+    def get_enhanced_performance_summary(self) -> Dict[str, Any]:
+        """Get enhanced performance summary."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {}
+        
+        try:
+            return self.enhanced_mcp.get_performance_summary()
+        except Exception as e:
+            logger.error(f"Failed to get enhanced performance summary: {e}")
+            return {}
+
+    def get_enhanced_communication_summary(self) -> Dict[str, Any]:
+        """Get enhanced communication summary."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {}
+        
+        try:
+            return self.enhanced_mcp.get_communication_summary()
+        except Exception as e:
+            logger.error(f"Failed to get enhanced communication summary: {e}")
+            return {}
+
+    async def trace_app_development(self, app_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace app development process."""
+        if not self.tracing_enabled or not self.tracer:
+            logger.warning("Tracing not available for app development")
+            return {}
+        
+        try:
+            trace_result = await self.tracer.trace_app_development({
+                "app_name": app_data.get("app_name", ""),
+                "platform": app_data.get("platform", "react-native"),
+                "app_type": app_data.get("app_type", "business"),
+                "features": app_data.get("features", []),
+                "target_platforms": app_data.get("target_platforms", []),
+                "performance_metrics": app_data.get("performance_metrics", {}),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info(f"App development traced: {app_data.get('app_name', 'unknown')}")
+            return trace_result
+            
+        except Exception as e:
+            logger.error(f"App development tracing failed: {e}")
+            return {}
+
+    async def trace_mobile_performance(self, performance_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace mobile performance optimization process."""
+        if not self.tracing_enabled or not self.tracer:
+            logger.warning("Tracing not available for mobile performance")
+            return {}
+        
+        try:
+            trace_result = await self.tracer.trace_mobile_performance({
+                "optimization_type": performance_data.get("type", "general"),
+                "platform": performance_data.get("platform", "react-native"),
+                "memory_optimization": performance_data.get("memory_optimization", {}),
+                "battery_optimization": performance_data.get("battery_optimization", {}),
+                "network_optimization": performance_data.get("network_optimization", {}),
+                "ui_optimization": performance_data.get("ui_optimization", {}),
+                "before_metrics": performance_data.get("before_metrics", {}),
+                "after_metrics": performance_data.get("after_metrics", {}),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info(f"Mobile performance traced: {performance_data.get('type', 'unknown')}")
+            return trace_result
+            
+        except Exception as e:
+            logger.error(f"Mobile performance tracing failed: {e}")
+            return {}
+
+    async def trace_mobile_deployment(self, deployment_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace mobile app deployment process."""
+        if not self.tracing_enabled or not self.tracer:
+            logger.warning("Tracing not available for mobile deployment")
+            return {}
+        
+        try:
+            trace_result = await self.tracer.trace_mobile_deployment({
+                "deployment_target": deployment_data.get("target", "app-store"),
+                "platform": deployment_data.get("platform", "ios"),
+                "app_name": deployment_data.get("app_name", ""),
+                "version": deployment_data.get("version", ""),
+                "signing_config": deployment_data.get("signing_config", {}),
+                "distribution_config": deployment_data.get("distribution_config", {}),
+                "build_metrics": deployment_data.get("build_metrics", {}),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info(f"Mobile deployment traced: {deployment_data.get('target', 'unknown')}")
+            return trace_result
+            
+        except Exception as e:
+            logger.error(f"Mobile deployment tracing failed: {e}")
+            return {}
+
+    async def trace_mobile_error(self, error_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace mobile errors and exceptions."""
+        if not self.tracing_enabled or not self.tracer:
+            logger.warning("Tracing not available for mobile errors")
+            return {}
+        
+        try:
+            trace_result = await self.tracer.trace_mobile_error({
+                "error_type": error_data.get("type", "unknown"),
+                "error_message": error_data.get("message", ""),
+                "app_name": error_data.get("app_name", ""),
+                "platform": error_data.get("platform", ""),
+                "component": error_data.get("component", ""),
+                "stack_trace": error_data.get("stack_trace", ""),
+                "user_context": error_data.get("user_context", {}),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info(f"Mobile error traced: {error_data.get('type', 'unknown')}")
+            return trace_result
+            
+        except Exception as e:
+            logger.error(f"Mobile error tracing failed: {e}")
+            return {}
+
+    def get_tracing_summary(self) -> Dict[str, Any]:
+        """Get tracing summary for the agent."""
+        if not self.tracing_enabled or not self.tracer:
+            return {}
+        
+        try:
+            return self.tracer.get_tracing_summary()
+        except Exception as e:
+            logger.error(f"Failed to get tracing summary: {e}")
+            return {}
+
     def _load_app_history(self):
         """Load app history from data file"""
         try:
@@ -264,6 +566,27 @@ MobileDeveloper Agent Commands:
   show-templates          - Show available templates
   export-app              - Export app configuration
   test-resource-completeness - Test if all required resources are available
+
+Enhanced MCP Phase 2 Commands:
+  enhanced-collaborate    - Enhanced inter-agent communication
+  enhanced-security       - Enhanced security validation
+  enhanced-performance    - Enhanced performance optimization
+  enhanced-tools          - Enhanced external tool integration
+  enhanced-summary        - Enhanced performance & communication summary
+
+Tracing Commands:
+  trace-app               - Trace app development process
+  trace-performance       - Trace mobile performance optimization
+  trace-deployment        - Trace mobile app deployment
+  trace-error             - Trace mobile errors and exceptions
+  tracing-summary         - Get tracing summary and analytics
+
+Examples:
+  python mobiledeveloper.py create-app --app-name MyApp --platform react-native
+  python mobiledeveloper.py build-component --component-name CustomButton
+  python mobiledeveloper.py enhanced-collaborate --agents FrontendDeveloper BackendDeveloper --message 'Sync mobile requirements'
+  python mobiledeveloper.py trace-app --app-data '{"app_name":"MyApp","platform":"react-native"}'
+  python mobiledeveloper.py tracing-summary
         """
         print(help_text)
 
@@ -319,21 +642,7 @@ MobileDeveloper Agent Commands:
         # Simulate app creation
         time.sleep(1)
         
-        # Use MCP tools for enhanced mobile development
-        mobile_data = {
-            "app_name": app_name,
-            "platform": platform,
-            "app_type": app_type,
-            "features": ["authentication", "navigation", "state_management", "api_integration"],
-            "target_platforms": ["ios", "android"],
-            "framework": platform,
-            "platforms": ["ios", "android"],
-            "shared_code": True,
-            "platform_specific": False
-        }
-        
-        mcp_enhanced_data = await self.use_mobile_specific_mcp_tools(mobile_data)
-
+        # Initialize app_result
         app_result = {
             "app_id": hashlib.sha256(f"{app_name}_{platform}".encode()).hexdigest()[:8],
             "app_name": app_name,
@@ -402,12 +711,57 @@ MobileDeveloper Agent Commands:
                 "play_store": "Google Play Store deployment",
                 "beta_testing": "Beta testing platforms",
                 "ci_cd": "Continuous integration and deployment",
-                "monitoring": "Production monitoring and analytics"
-            },
-            "timestamp": datetime.now().isoformat(),
-            "agent": "MobileDeveloperAgent",
-            "created_at": datetime.now().isoformat()
+                "monitoring": "App performance monitoring"
+            }
         }
+        
+        # Use MCP tools for enhanced mobile development
+        mobile_data = {
+            "app_name": app_name,
+            "platform": platform,
+            "app_type": app_type,
+            "features": ["authentication", "navigation", "state_management", "api_integration"],
+            "target_platforms": ["ios", "android"],
+            "framework": platform,
+            "platforms": ["ios", "android"],
+            "shared_code": True,
+            "platform_specific": False
+        }
+        
+        mcp_enhanced_data = await self.use_enhanced_mcp_tools(mobile_data)
+
+        # Use enhanced MCP tools for Phase 2 capabilities
+        if self.enhanced_mcp_enabled:
+            try:
+                enhanced_data = await self.use_enhanced_mcp_tools({
+                    "app_name": app_name,
+                    "platform": platform,
+                    "app_type": app_type,
+                    "capabilities": ["app_development", "performance_optimization", "deployment"],
+                    "performance_metrics": {"creation_time": time.time()}
+                })
+                if enhanced_data:
+                    app_result["enhanced_mcp_data"] = enhanced_data
+                    app_result["enhanced_mcp_enabled"] = True
+            except Exception as e:
+                logger.warning(f"Enhanced MCP tools failed: {e}")
+
+        # Trace app development process
+        if self.tracing_enabled and self.tracer:
+            try:
+                trace_result = await self.trace_app_development({
+                    "app_name": app_name,
+                    "platform": platform,
+                    "app_type": app_type,
+                    "features": ["authentication", "navigation", "state_management"],
+                    "target_platforms": ["ios", "android"],
+                    "performance_metrics": {"creation_time": time.time()}
+                })
+                if trace_result:
+                    app_result["tracing_data"] = trace_result
+                    app_result["tracing_enabled"] = True
+            except Exception as e:
+                logger.warning(f"App development tracing failed: {e}")
 
         # Add platform-specific configurations
         if platform == "flutter":
@@ -1495,6 +1849,12 @@ fun {component_name}(
         # Initialize MCP
         await self.initialize_mcp()
         
+        # Initialize Enhanced MCP for Phase 2
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize Tracing
+        await self.initialize_tracing()
+        
         await self.collaborate_example()
 
 def main():
@@ -1506,7 +1866,13 @@ def main():
                                "test-app", "deploy-app", "analyze-performance", "show-app-history",
                                "show-performance-history", "show-best-practices", "show-changelog",
                                "export-report", "test", "collaborate", "run", "show-status",
-                               "list-platforms", "show-templates", "export-app"])
+                               "list-platforms", "show-templates", "export-app",
+                               # Enhanced MCP Phase 2 Commands
+                               "enhanced-collaborate", "enhanced-security", "enhanced-performance",
+                               "enhanced-tools", "enhanced-summary",
+                               # Tracing Commands
+                               "trace-app", "trace-performance", "trace-deployment", "trace-error",
+                               "tracing-summary"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--app-name", default="MyMobileApp", help="App name")
     parser.add_argument("--platform", default="react-native", help="Mobile platform")
@@ -1517,6 +1883,15 @@ def main():
     parser.add_argument("--test-type", default="comprehensive", help="Test type")
     parser.add_argument("--deployment-target", default="app-store", help="Deployment target")
     parser.add_argument("--analysis-type", default="comprehensive", help="Analysis type")
+    # Enhanced MCP arguments
+    parser.add_argument("--agents", nargs="+", help="Target agents for communication")
+    parser.add_argument("--message", help="Message for agent communication")
+    parser.add_argument("--tool-config", help="External tool configuration")
+    # Tracing arguments
+    parser.add_argument("--app-data", help="App data for tracing")
+    parser.add_argument("--performance-data", help="Performance data for tracing")
+    parser.add_argument("--deployment-data", help="Deployment data for tracing")
+    parser.add_argument("--error-data", help="Error data for tracing")
 
     args = parser.parse_args()
 
@@ -1559,14 +1934,80 @@ def main():
     elif args.command == "run":
         asyncio.run(agent.run())
     elif args.command == "show-status":
-        print(f"Current platform: {agent.platform}")
-        print(f"Current project: {agent.current_project}")
+        print(f"MobileDeveloper Agent Status: Active")
+        print(f"MCP Enabled: {agent.mcp_enabled}")
+        print(f"Enhanced MCP Enabled: {agent.enhanced_mcp_enabled}")
+        print(f"Tracing Enabled: {agent.tracing_enabled}")
     elif args.command == "list-platforms":
         agent.list_platforms()
     elif args.command == "show-templates":
         agent.show_templates()
-    elif args.command == "export-app":
-        agent.export_app(args.app_name)
+    # Enhanced MCP Phase 2 Commands
+    elif args.command == "enhanced-collaborate":
+        if not args.agents or not args.message:
+            print("Error: --agents and --message are required for enhanced-collaborate")
+            return
+        result = asyncio.run(agent.communicate_with_agents(args.agents, {"message": args.message}))
+        print(json.dumps(result, indent=2))
+    elif args.command == "enhanced-security":
+        security_data = {"platform": args.platform, "app_type": args.app_type}
+        result = asyncio.run(agent.enhanced_security_validation(security_data))
+        print(json.dumps(result, indent=2))
+    elif args.command == "enhanced-performance":
+        performance_data = {"optimization_type": args.optimization_type, "platform": args.platform}
+        result = asyncio.run(agent.enhanced_performance_optimization(performance_data))
+        print(json.dumps(result, indent=2))
+    elif args.command == "enhanced-tools":
+        if not args.tool_config:
+            print("Error: --tool-config is required for enhanced-tools")
+            return
+        tool_config = json.loads(args.tool_config)
+        result = asyncio.run(agent.use_external_tools(tool_config))
+        print(json.dumps(result, indent=2))
+    elif args.command == "enhanced-summary":
+        performance_summary = agent.get_enhanced_performance_summary()
+        communication_summary = agent.get_enhanced_communication_summary()
+        print("Enhanced Performance Summary:")
+        print(json.dumps(performance_summary, indent=2))
+        print("\nEnhanced Communication Summary:")
+        print(json.dumps(communication_summary, indent=2))
+    # Tracing Commands
+    elif args.command == "trace-app":
+        app_data = json.loads(args.app_data) if args.app_data else {
+            "app_name": args.app_name,
+            "platform": args.platform,
+            "app_type": args.app_type
+        }
+        result = asyncio.run(agent.trace_app_development(app_data))
+        print(json.dumps(result, indent=2))
+    elif args.command == "trace-performance":
+        performance_data = json.loads(args.performance_data) if args.performance_data else {
+            "type": args.optimization_type,
+            "platform": args.platform
+        }
+        result = asyncio.run(agent.trace_mobile_performance(performance_data))
+        print(json.dumps(result, indent=2))
+    elif args.command == "trace-deployment":
+        deployment_data = json.loads(args.deployment_data) if args.deployment_data else {
+            "target": args.deployment_target,
+            "platform": args.platform,
+            "app_name": args.app_name
+        }
+        result = asyncio.run(agent.trace_mobile_deployment(deployment_data))
+        print(json.dumps(result, indent=2))
+    elif args.command == "trace-error":
+        error_data = json.loads(args.error_data) if args.error_data else {
+            "type": "unknown",
+            "message": "Test error",
+            "app_name": args.app_name,
+            "platform": args.platform
+        }
+        result = asyncio.run(agent.trace_mobile_error(error_data))
+        print(json.dumps(result, indent=2))
+    elif args.command == "tracing-summary":
+        tracing_summary = agent.get_tracing_summary()
+        print("Tracing Summary:")
+        print(json.dumps(tracing_summary, indent=2))
 
 if __name__ == "__main__":
     main()
