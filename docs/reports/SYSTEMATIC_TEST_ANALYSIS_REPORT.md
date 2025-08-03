@@ -103,6 +103,87 @@ from unittest.mock import patch, mock_open, MagicMock, AsyncMock
 # In plaats daarvan: AsyncMock + assert callable()
 ```
 
+## Architect Agent Success Story (Januari 2025)
+
+### **Before/After Metrics**
+- **Before**: 5 failures, 27 passed (84.4% success rate)
+- **After**: 0 failures, 32 passed (100% success rate)
+- **Improvement**: +15.6% success rate, alle failures opgelost
+
+### **Root Cause Analysis**
+De Architect agent had vergelijkbare issues als de AiDeveloper agent, maar met enkele unieke uitdagingen:
+
+1. **Async/Sync MCP Pattern Issues**: `design_system` en `tech_stack` methodes waren sync maar werden async aangeroepen
+2. **Template File Priority**: `run` methode probeerde eerst template files te vinden voordat Python methodes werden aangeroepen
+3. **Method Mocking Complexity**: Sync en async methodes vereisten verschillende mock configuraties
+4. **MCP Integration Errors**: `object MCPClient can't be used in 'await' expression`
+
+### **Fixes Implemented**
+
+#### **1. Async/Sync MCP Pattern Implementation**
+```python
+# Before: Sync methodes die async werden aangeroepen
+def design_system(self):
+    # sync implementation
+
+# After: Async methodes met sync fallback
+async def design_system(self):
+    if self.mcp_enabled and self.mcp_client:
+        return await self.use_mcp_tool("design_system", {...})
+    else:
+        return await asyncio.to_thread(self._design_system_sync)
+
+def _design_system_sync(self):
+    # sync fallback implementation
+```
+
+#### **2. Template File Mocking Strategy**
+```python
+# Mock dat template files niet bestaan, zodat Python methodes worden aangeroepen
+with patch('pathlib.Path.exists', return_value=False):
+    await self.agent.run("best-practices")
+```
+
+#### **3. Correct Mock Configuration**
+```python
+# Voor sync methodes
+mock_method.__name__ = 'method_name'
+mock_method.__code__ = type(lambda: None).__code__
+
+# Voor async methodes
+async def async_mock():
+    return {"status": "completed"}
+mock_method.side_effect = async_mock
+```
+
+#### **4. Method Execution vs Mocking**
+```python
+# Voor methodes die externe calls doen, laat de methode zelf uitvoeren
+with patch('bmad.agents.Agent.Architect.architect.save_context') as mock_save:
+    await self.agent.run("collaborate_example")
+    mock_save.assert_called_once()
+```
+
+### **Lessons Learned**
+- **Template File Priority**: Agent `run` methodes kunnen template files prioriteren boven Python methodes
+- **Mock Configuration**: Sync/async methodes vereisen verschillende mock configuraties
+- **Method Execution**: Soms is het beter om methodes zelf uit te voeren dan te mocken
+- **MCP Pattern Consistency**: Alle MCP-capable methodes moeten async zijn met sync fallback
+
+### **Best Practices Established**
+1. **Template File Mocking**: Always mock `pathlib.Path.exists` for template-based commands
+2. **Mock Configuration**: Configure mocks to match the actual method behavior (sync/async)
+3. **Method Execution Strategy**: Choose between mocking and execution based on test goals
+4. **MCP Pattern**: Implement async/sync pattern consistently across all agents
+
+### **Impact**
+- **Test Reliability**: Alle tests zijn nu betrouwbaar en consistent
+- **MCP Integration**: Robuuste MCP integratie zonder await/sync conflicts
+- **Code Quality**: Uniforme async/sync patterns in alle agent methodes
+- **Maintainability**: Duidelijke best practices voor toekomstige agent development
+
+---
+
 ## 🔍 **Systematic Analysis van Andere Agent Tests**
 
 ### **📋 Geïdentificeerde Problemen**

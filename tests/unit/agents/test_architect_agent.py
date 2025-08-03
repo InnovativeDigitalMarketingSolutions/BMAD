@@ -8,7 +8,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
-from unittest.mock import patch, MagicMock, mock_open
+from unittest.mock import patch, MagicMock, mock_open, AsyncMock
 import pytest
 
 from bmad.agents.Agent.Architect.architect import (
@@ -50,8 +50,8 @@ class TestArchitectAgentInitialization:
         """Test best_practices met bestaand bestand."""
         mock_content = "Test best practices content"
         
-        with patch('pathlib.Path.exists', return_value=True),
-             patch('pathlib.Path.read_text', return_value=mock_content),
+        with patch('pathlib.Path.exists', return_value=True), \
+             patch('pathlib.Path.read_text', return_value=mock_content), \
              patch('builtins.print') as mock_print:
             
             agent = ArchitectAgent()
@@ -63,7 +63,7 @@ class TestArchitectAgentInitialization:
 
     def test_best_practices_without_file(self):
         """Test best_practices zonder bestand."""
-        with patch('pathlib.Path.exists', return_value=False),
+        with patch('pathlib.Path.exists', return_value=False), \
              patch('builtins.print') as mock_print:
             
             agent = ArchitectAgent()
@@ -102,9 +102,9 @@ class TestArchitectAgentInitialization:
 
     def test_collaborate_example(self):
         """Test collaborate_example command."""
-        with patch('builtins.print') as mock_print,
-             patch('bmad.agents.Agent.Architect.architect.save_context') as mock_save,
-             patch('bmad.agents.Agent.Architect.architect.get_context') as mock_get,
+        with patch('builtins.print') as mock_print, \
+             patch('bmad.agents.Agent.Architect.architect.save_context') as mock_save, \
+             patch('bmad.agents.Agent.Architect.architect.get_context') as mock_get, \
              patch('bmad.agents.Agent.Architect.architect.publish') as mock_publish:
             
             mock_get.return_value = [{"test": "context"}]
@@ -132,13 +132,14 @@ class TestArchitectAgentDesignMethods:
         """Setup method voor alle tests in deze class."""
         self.agent = ArchitectAgent()
 
-    def test_design_frontend(self):
+    @pytest.mark.asyncio
+    async def test_design_frontend(self):
         """Test design_frontend functionaliteit."""
-        with patch('bmad.agents.Agent.Architect.architect.ask_openai') as mock_llm,
-             patch('builtins.print') as mock_print,
-             patch('bmad.agents.Agent.Architect.architect.save_context') as mock_save,
-             patch('bmad.agents.Agent.Architect.architect.get_context') as mock_get,
-             patch('bmad.agents.Agent.Architect.architect.publish') as mock_publish,
+        with patch('bmad.agents.Agent.Architect.architect.ask_openai') as mock_llm, \
+             patch('builtins.print') as mock_print, \
+             patch('bmad.agents.Agent.Architect.architect.save_context') as mock_save, \
+             patch('bmad.agents.Agent.Architect.architect.get_context') as mock_get, \
+             patch('bmad.agents.Agent.Architect.architect.publish') as mock_publish, \
              patch('builtins.input', return_value="1"):
             
             mock_llm.return_value = {
@@ -147,7 +148,7 @@ class TestArchitectAgentDesignMethods:
             }
             mock_get.return_value = [{"stories": "Test user stories"}]
             
-            self.agent.await agent.design_frontend()
+            await self.agent.design_frontend()
             
             # Test dat LLM aangeroepen is
             mock_llm.assert_called()
@@ -161,9 +162,10 @@ class TestArchitectAgentDesignMethods:
             # Test dat publish aangeroepen is
             mock_publish.assert_called_once()
 
-    def test_design_system(self):
+    @pytest.mark.asyncio
+    async def test_design_system(self):
         """Test design_system functionaliteit."""
-        with patch('bmad.agents.Agent.Architect.architect.ask_openai') as mock_llm,
+        with patch('bmad.agents.Agent.Architect.architect.ask_openai') as mock_llm, \
              patch('builtins.print') as mock_print:
             
             mock_llm.return_value = {
@@ -171,17 +173,23 @@ class TestArchitectAgentDesignMethods:
                 "llm_confidence": 0.90
             }
             
-            self.agent.await agent.design_system()
+            result = await self.agent.design_system()
             
             # Test dat LLM aangeroepen is
             mock_llm.assert_called()
             
             # Test dat resultaat getoond is
             mock_print.assert_called()
+            
+            # Test dat resultaat correct is
+            assert result is not None
+            assert "design" in result
+            assert result["status"] == "completed"
 
-    def test_tech_stack(self):
+    @pytest.mark.asyncio
+    async def test_tech_stack(self):
         """Test tech_stack functionaliteit."""
-        with patch('bmad.agents.Agent.Architect.architect.ask_openai') as mock_llm,
+        with patch('bmad.agents.Agent.Architect.architect.ask_openai') as mock_llm, \
              patch('builtins.print') as mock_print:
             
             mock_llm.return_value = {
@@ -189,13 +197,18 @@ class TestArchitectAgentDesignMethods:
                 "llm_confidence": 0.88
             }
             
-            self.agent.await agent.tech_stack()
+            result = await self.agent.tech_stack()
             
             # Test dat LLM aangeroepen is
             mock_llm.assert_called()
             
             # Test dat resultaat getoond is
             mock_print.assert_called()
+            
+            # Test dat resultaat correct is
+            assert result is not None
+            assert "evaluation" in result
+            assert result["status"] == "completed"
 
     def test_ask_llm_api_design(self):
         """Test ask_llm_api_design functionaliteit."""
@@ -218,8 +231,8 @@ class TestArchitectAgentDesignMethods:
 
     def test_start_conversation(self):
         """Test start_conversation functionaliteit."""
-        with patch('bmad.agents.Agent.Architect.architect.ask_openai') as mock_llm,
-             patch('builtins.print') as mock_print,
+        with patch('bmad.agents.Agent.Architect.architect.ask_openai') as mock_llm, \
+             patch('builtins.print') as mock_print, \
              patch('builtins.input', side_effect=["help", "quit"]):
             
             mock_llm.return_value = {
@@ -243,57 +256,104 @@ class TestArchitectAgentRunMethod:
         """Setup method voor alle tests in deze class."""
         self.agent = ArchitectAgent()
 
-    def test_run_design_frontend(self):
+    @pytest.mark.asyncio
+    async def test_run_design_frontend(self):
         """Test run met design-frontend command."""
-        with patch.object(self.agent, 'design_frontend') as mock_design:
-            self.agent.await agent.run("design-frontend")
+        with patch.object(self.agent, 'design_frontend') as mock_design, \
+             patch('pathlib.Path.exists', return_value=False):
+            # Configure mock to behave like an async function
+            mock_design.__name__ = 'design_frontend'
+            mock_design.__code__ = type(lambda: None).__code__
+            async def async_mock():
+                return {"status": "completed"}
+            mock_design.side_effect = async_mock
+            await self.agent.run("design-frontend")
             mock_design.assert_called_once()
 
-    def test_run_design_system(self):
+    @pytest.mark.asyncio
+    async def test_run_design_system(self):
         """Test run met design-system command."""
-        with patch.object(self.agent, 'design_system') as mock_design:
-            self.agent.await agent.run("design-system")
+        with patch.object(self.agent, 'design_system') as mock_design, \
+             patch('pathlib.Path.exists', return_value=False):
+            # Configure mock to behave like an async function
+            mock_design.__name__ = 'design_system'
+            mock_design.__code__ = type(lambda: None).__code__
+            async def async_mock():
+                return {"status": "completed"}
+            mock_design.side_effect = async_mock
+            await self.agent.run("design-system")
             mock_design.assert_called_once()
 
-    def test_run_tech_stack(self):
+    @pytest.mark.asyncio
+    async def test_run_tech_stack(self):
         """Test run met tech-stack command."""
-        with patch.object(self.agent, 'tech_stack') as mock_tech:
-            self.agent.await agent.run("tech-stack")
+        with patch.object(self.agent, 'tech_stack') as mock_tech, \
+             patch('pathlib.Path.exists', return_value=False):
+            # Configure mock to behave like an async function
+            mock_tech.__name__ = 'tech_stack'
+            mock_tech.__code__ = type(lambda: None).__code__
+            async def async_mock():
+                return {"status": "completed"}
+            mock_tech.side_effect = async_mock
+            await self.agent.run("tech-stack")
             mock_tech.assert_called_once()
 
-    def test_run_best_practices(self):
+    @pytest.mark.asyncio
+    async def test_run_best_practices(self):
         """Test run met best-practices command."""
-        with patch.object(self.agent, 'best_practices') as mock_best:
-            self.agent.await agent.run("best-practices")
+        with patch.object(self.agent, 'best_practices') as mock_best, \
+             patch('pathlib.Path.exists', return_value=False):
+            # Configure mock to behave like a sync function
+            mock_best.__name__ = 'best_practices'
+            mock_best.__code__ = type(lambda: None).__code__
+            await self.agent.run("best-practices")
             mock_best.assert_called_once()
 
-    def test_run_changelog(self):
+    @pytest.mark.asyncio
+    async def test_run_changelog(self):
         """Test run met changelog command."""
-        with patch.object(self.agent, 'changelog') as mock_changelog:
-            self.agent.await agent.run("changelog")
+        with patch.object(self.agent, 'changelog') as mock_changelog, \
+             patch('pathlib.Path.exists', return_value=False):
+            # Configure mock to behave like a sync function
+            mock_changelog.__name__ = 'changelog'
+            mock_changelog.__code__ = type(lambda: None).__code__
+            await self.agent.run("changelog")
             mock_changelog.assert_called_once()
 
-    def test_run_list_resources(self):
+    @pytest.mark.asyncio
+    async def test_run_list_resources(self):
         """Test run met list-resources command."""
-        with patch.object(self.agent, 'list_resources') as mock_list:
-            self.agent.await agent.run("list-resources")
+        with patch.object(self.agent, 'list_resources') as mock_list, \
+             patch('pathlib.Path.exists', return_value=False):
+            # Configure mock to behave like a sync function
+            mock_list.__name__ = 'list_resources'
+            mock_list.__code__ = type(lambda: None).__code__
+            await self.agent.run("list-resources")
             mock_list.assert_called_once()
 
-    def test_run_test(self):
+    @pytest.mark.asyncio
+    async def test_run_test(self):
         """Test run met test command."""
-        with patch.object(self.agent, 'test') as mock_test:
-            self.agent.await agent.run("test")
+        with patch.object(self.agent, 'test') as mock_test, \
+             patch('pathlib.Path.exists', return_value=False):
+            # Configure mock to behave like a sync function
+            mock_test.__name__ = 'test'
+            mock_test.__code__ = type(lambda: None).__code__
+            await self.agent.run("test")
             mock_test.assert_called_once()
 
-    def test_run_collaborate_example(self):
+    @pytest.mark.asyncio
+    async def test_run_collaborate_example(self):
         """Test run collaborate_example command."""
-        with patch('bmad.agents.Agent.Architect.architect.save_context') as mock_save,
-             patch('bmad.agents.Agent.Architect.architect.get_context') as mock_get,
-             patch('bmad.agents.Agent.Architect.architect.publish') as mock_publish:
+        with patch('pathlib.Path.exists', return_value=False), \
+             patch('bmad.agents.Agent.Architect.architect.save_context') as mock_save, \
+             patch('bmad.agents.Agent.Architect.architect.get_context') as mock_get, \
+             patch('bmad.agents.Agent.Architect.architect.publish') as mock_publish, \
+             patch('builtins.print') as mock_print:
             
             mock_get.return_value = [{"test": "context"}]
             
-            result = self.agent.await agent.run("collaborate_example")
+            result = await self.agent.run("collaborate_example")
             
             # Test dat command uitgevoerd is
             assert result is None
@@ -306,18 +366,26 @@ class TestArchitectAgentRunMethod:
             
             # Test dat publish aangeroepen is
             mock_publish.assert_called_once_with("architecture_reviewed", {"status": "success", "agent": "Architect"})
+            
+            # Test dat print aangeroepen is
+            assert mock_print.call_count >= 2  # At least 2 print calls
 
-    def test_run_help(self):
+    @pytest.mark.asyncio
+    async def test_run_help(self):
         """Test run met help command."""
         with patch.object(self.agent, 'show_help') as mock_help:
-            self.agent.await agent.run("help")
+            # Configure mock to behave like a sync function
+            mock_help.__name__ = 'show_help'
+            mock_help.__code__ = type(lambda: None).__code__
+            await self.agent.run("help")
             mock_help.assert_called_once()
 
-    def test_run_unknown_command(self):
+    @pytest.mark.asyncio
+    async def test_run_unknown_command(self):
         """Test run met onbekend commando."""
-        with patch('builtins.print') as mock_print,
+        with patch('builtins.print') as mock_print, \
              patch('logging.error') as mock_logging:
-            self.agent.await agent.run("unknown-command")
+            await self.agent.run("unknown-command")
             
             # Test dat error gelogd is
             mock_logging.assert_called_once()
@@ -396,11 +464,12 @@ class TestArchitectAgentIntegration:
             assert hasattr(self.agent, 'start_conversation')
             assert hasattr(self.agent, 'run')
 
-    def test_agent_error_handling(self):
+    @pytest.mark.asyncio
+    async def test_agent_error_handling(self):
         """Test error handling van ArchitectAgent."""
         # Test dat agent robuust is bij errors
         try:
-            self.agent.await agent.run("invalid-command")
+            await self.agent.run("invalid-command")
             # Should not raise exception
         except Exception as e:
             pytest.fail(f"Agent should handle errors gracefully: {e}")
@@ -464,20 +533,37 @@ class TestArchitectAgentCommandValidation:
         """Setup method voor alle tests in deze class."""
         self.agent = ArchitectAgent()
 
-    def test_valid_commands(self):
+    @pytest.mark.asyncio
+    async def test_valid_commands(self):
         """Test geldige commands."""
-        valid_commands = [
-            "design-frontend", "design-system", "tech-stack",
-            "best-practices", "changelog", "list-resources",
-            "test", "collaborate_example"
-        ]
-
-        for command in valid_commands:
-            with patch.object(self.agent, command.replace('-', '_')) as mock_method:
-                self.agent.await agent.run(command)
+        # Test async commands
+        async_commands = ["design-frontend", "design-system", "tech-stack"]
+        for command in async_commands:
+            with patch.object(self.agent, command.replace('-', '_')) as mock_method, \
+                 patch('pathlib.Path.exists', return_value=False):
+                # Configure mock to behave like an async function
+                mock_method.__name__ = command.replace('-', '_')
+                mock_method.__code__ = type(lambda: None).__code__
+                # Make it return a coroutine
+                async def async_mock():
+                    return {"status": "completed"}
+                mock_method.side_effect = async_mock
+                await self.agent.run(command)
+                mock_method.assert_called_once()
+        
+        # Test sync commands
+        sync_commands = ["best-practices", "changelog", "list-resources", "test", "collaborate_example"]
+        for command in sync_commands:
+            with patch.object(self.agent, command.replace('-', '_')) as mock_method, \
+                 patch('pathlib.Path.exists', return_value=False):
+                # Configure mock to behave like a sync function
+                mock_method.__name__ = command.replace('-', '_')
+                mock_method.__code__ = type(lambda: None).__code__
+                await self.agent.run(command)
                 mock_method.assert_called_once()
 
-    def test_invalid_commands(self):
+    @pytest.mark.asyncio
+    async def test_invalid_commands(self):
         """Test ongeldige commands."""
         invalid_commands = [
             "invalid-command", "unknown", "test-command",
@@ -486,7 +572,7 @@ class TestArchitectAgentCommandValidation:
 
         for command in invalid_commands:
             with patch('logging.error') as mock_logging:
-                self.agent.await agent.run(command)
+                await self.agent.run(command)
 
                 # Test dat error gelogd is
                 mock_logging.assert_called_once()
