@@ -25,7 +25,7 @@ class TestReleaseManagerAgent:
         assert hasattr(agent, 'template_paths')
         assert hasattr(agent, 'data_paths')
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Release History\n\n- Release 1.2.0n- Release 1.1.0")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Release History\n\n- Release 1.2.0\n- Release 1.1.0")
     @patch('pathlib.Path.exists', return_value=True)
     @pytest.mark.asyncio
     async def test_load_release_history_success(self, mock_exists, mock_file, agent):
@@ -51,7 +51,7 @@ class TestReleaseManagerAgent:
         agent._save_release_history()
         mock_file.assert_called()
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Rollback History\n\n- Rollback 1.2.0n- Rollback 1.1.0")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Rollback History\n\n- Rollback 1.2.0\n- Rollback 1.1.0")
     @patch('pathlib.Path.exists', return_value=True)
     @pytest.mark.asyncio
     async def test_load_rollback_history_success(self, mock_exists, mock_file, agent):
@@ -79,7 +79,7 @@ class TestReleaseManagerAgent:
 
     def test_show_help(self, agent, capsys):
         """Test show_help method."""
-        await agent.show_help()
+        agent.show_help()
         captured = capsys.readouterr()
         assert "Release Manager Agent Commands:" in captured.out
         assert "create-release" in captured.out
@@ -257,13 +257,16 @@ class TestReleaseManagerAgent:
         mock_get_context.return_value = {"release_projects": ["Project1"]}
         mock_save_context.return_value = None
         
-        # Mock the entire collaborate_example method to avoid Supabase API calls
+        # Mock the entire collaborate_example method to prevent external API calls
         with patch.object(agent, 'collaborate_example') as mock_collaborate:
-            mock_collaborate.return_value = None
-            await agent.collaborate_example()
-        
-        # Verify the method was called
-        mock_collaborate.assert_called_once()
+            mock_collaborate.return_value = "Collaboration completed"
+            
+            # Test the method
+            result = agent.collaborate_example()
+            
+            # Verify the method was called
+            mock_collaborate.assert_called_once()
+            assert result == "Collaboration completed"
 
     def test_on_tests_passed(self, agent):
         """Test on_tests_passed method."""
@@ -288,7 +291,7 @@ class TestReleaseManagerAgent:
         # Mock the entire run method to avoid Supabase API calls
         with patch.object(agent, 'run') as mock_run:
             mock_run.return_value = None
-            await agent.run()
+            agent.run()
         
         # Verify the method was called
         mock_run.assert_called_once()
@@ -329,11 +332,11 @@ class TestReleaseManagerAgent:
         mock_monitor.return_value = mock_monitor_instance
         
         # Create release
-        release_result = await agent.create_release("1.3.0", "Feature release")
+        release_result = agent.create_release("1.3.0", "Feature release")
         assert release_result["status"] == "created"
         
         # Approve release
-        approval_result = await agent.approve_release("1.3.0")
+        approval_result = agent.approve_release("1.3.0")
         assert approval_result["status"] == "approved"
         
         # Deploy release
@@ -341,7 +344,7 @@ class TestReleaseManagerAgent:
         assert deployment_result["status"] == "deployed"
         
         # Rollback release (if needed)
-        rollback_result = await agent.rollback_release("1.3.0", "High error rate")
+        rollback_result = agent.rollback_release("1.3.0", "High error rate")
         assert rollback_result["status"] == "rolled_back"
         
         # Verify that all methods were called successfully
@@ -441,7 +444,7 @@ class TestReleaseManagerAgent:
         """Test show_resource method with empty resource type."""
         agent.show_resource("")  # Empty string
         captured = capsys.readouterr()
-        assert "Error: resource_type ca\n\not be empty" in captured.out
+        assert "Error: resource_type cannot be empty" in captured.out
 
     @patch('builtins.open', side_effect=FileNotFoundError("File not found"))
     @patch('pathlib.Path.exists', return_value=True)
@@ -469,32 +472,33 @@ class TestReleaseManagerAgent:
 
     def test_create_release_empty_version(self, agent):
         """Test create_release with empty version."""
-        with pytest.raises(ValueError, match="version ca\n\not be empty"):
+        with pytest.raises(ValueError, match="version cannot be empty"):
             agent.create_release("", "description")
 
     def test_create_release_empty_description(self, agent):
         """Test create_release with empty description."""
-        with pytest.raises(ValueError, match="description ca\n\not be empty"):
+        with pytest.raises(ValueError, match="description cannot be empty"):
             agent.create_release("1.2.0", "")
 
     def test_approve_release_empty_version(self, agent):
         """Test approve_release with empty version."""
-        with pytest.raises(ValueError, match="version ca\n\not be empty"):
+        with pytest.raises(ValueError, match="version cannot be empty"):
             agent.approve_release("")
 
-    def test_deploy_release_empty_version(self, agent):
+    @pytest.mark.asyncio
+    async def test_deploy_release_empty_version(self, agent):
         """Test deploy_release with empty version."""
-        with pytest.raises(ValueError, match="version ca\n\not be empty"):
+        with pytest.raises(ValueError, match="version cannot be empty"):
             await agent.deploy_release("")
 
     def test_rollback_release_empty_version(self, agent):
         """Test rollback_release with empty version."""
-        with pytest.raises(ValueError, match="version ca\n\not be empty"):
+        with pytest.raises(ValueError, match="version cannot be empty"):
             agent.rollback_release("", "reason")
 
     def test_rollback_release_empty_reason(self, agent):
         """Test rollback_release with empty reason."""
-        with pytest.raises(ValueError, match="reason ca\n\not be empty"):
+        with pytest.raises(ValueError, match="reason cannot be empty"):
             agent.rollback_release("1.2.0", "")
 
     def test_export_report_invalid_format_type(self, agent):
@@ -605,14 +609,18 @@ class TestReleaseManagerAgentCLI:
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.save_context')
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.publish')
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.get_context', return_value={"status": "active"})
+    @patch('asyncio.run')
     @pytest.mark.asyncio
-    async def test_cli_deploy_release(self, mock_get_context, mock_publish, mock_save_context):
+    async def test_cli_deploy_release(self, mock_asyncio_run, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.ReleaseManager.releasemanager import main
+        mock_asyncio_run.return_value = {"status": "deployed", "version": "1.3.0"}
         with patch('bmad.agents.Agent.ReleaseManager.releasemanager.ReleaseManagerAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
-            with patch.object(mock_agent, 'deploy_release', return_value={"result": "ok"}) as mock_deploy_release:
-                main()
-                mock_deploy_release.assert_called_once_with('1.3.0')
+            with patch.object(mock_agent, 'deploy_release') as mock_deploy:
+                mock_deploy.return_value = {"status": "deployed", "version": "1.3.0"}
+                with patch('builtins.print') as mock_print:
+                    main()
+                    mock_deploy.assert_called_once_with("1.3.0")
 
     @patch('sys.argv', ['releasemanager.py', 'rollback-release', '--version', '1.3.0', '--reason', 'Test rollback'])
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.save_context')
@@ -704,24 +712,28 @@ class TestReleaseManagerAgentCLI:
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.save_context')
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.publish')
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.get_context', return_value={"status": "active"})
+    @patch('asyncio.run')
     @pytest.mark.asyncio
-    async def test_cli_collaborate(self, mock_get_context, mock_publish, mock_save_context):
+    async def test_cli_collaborate(self, mock_asyncio_run, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.ReleaseManager.releasemanager import main
         with patch('bmad.agents.Agent.ReleaseManager.releasemanager.ReleaseManagerAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
-            with patch.object(mock_agent, 'collaborate_example') as mock_collaborate_example:
+            with patch.object(mock_agent, 'collaborate_example') as mock_collaborate:
+                mock_collaborate.return_value = "Collaboration completed"
                 main()
-                mock_collaborate_example.assert_called_once()
+                mock_collaborate.assert_called_once()
 
     @patch('sys.argv', ['releasemanager.py', 'run'])
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.save_context')
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.publish')
     @patch('bmad.agents.Agent.ReleaseManager.releasemanager.get_context', return_value={"status": "active"})
+    @patch('asyncio.run')
     @pytest.mark.asyncio
-    async def test_cli_run(self, mock_get_context, mock_publish, mock_save_context):
+    async def test_cli_run(self, mock_asyncio_run, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.ReleaseManager.releasemanager import main
         with patch('bmad.agents.Agent.ReleaseManager.releasemanager.ReleaseManagerAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
             with patch.object(mock_agent, 'run') as mock_run:
+                mock_run.return_value = None
                 main()
                 mock_run.assert_called_once() 
