@@ -25,6 +25,15 @@ from bmad.core.mcp import (
     initialize_framework_mcp_integration
 )
 
+# Enhanced MCP Integration for Phase 2
+from bmad.core.mcp.enhanced_mcp_integration import (
+    EnhancedMCPIntegration,
+    create_enhanced_mcp_integration
+)
+
+# Tracing Integration
+from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
+
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 
 RESOURCE_BASE = Path(__file__).parent.parent / "resources"
@@ -76,6 +85,23 @@ class ArchitectAgent:
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
         self.mcp_enabled = False
         
+        # Enhanced MCP Phase 2
+        self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_enabled = False
+        
+        # Tracing Integration
+        self.tracer: Optional[BMADTracer] = None
+        self.tracing_enabled = False
+        
+        # Initialize tracer
+        self.tracer = BMADTracer(config=type("Config", (), {
+            "service_name": "ArchitectAgent",
+            "service_version": "1.0.0",
+            "environment": "development",
+            "sample_rate": 1.0,
+            "exporters": []
+        })())
+        
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
         self.template_paths = {
@@ -104,16 +130,43 @@ class ArchitectAgent:
         logging.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
     
     async def initialize_mcp(self):
-        """Initialize MCP client voor enhanced architecture design capabilities."""
+        """Initialize MCP client and integration."""
         try:
             self.mcp_client = get_mcp_client()  # Remove await - this is a sync function
             self.mcp_integration = get_framework_mcp_integration()
             await initialize_framework_mcp_integration()
             self.mcp_enabled = True
-            logging.info("MCP client initialized successfully for Architect")
+            logging.info("MCP client initialized successfully")
         except Exception as e:
-            logging.warning(f"MCP initialization failed for Architect: {e}")
+            logging.warning(f"MCP initialization failed: {e}")
             self.mcp_enabled = False
+    
+    async def initialize_enhanced_mcp(self):
+        """Initialize enhanced MCP capabilities for Phase 2."""
+        try:
+            self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+            # Check if initialize method exists before calling it
+            if hasattr(self.enhanced_mcp, 'initialize'):
+                await self.enhanced_mcp.initialize()
+            self.enhanced_mcp_enabled = True
+            logging.info("Enhanced MCP initialized successfully")
+        except Exception as e:
+            logging.warning(f"Enhanced MCP initialization failed: {e}")
+            self.enhanced_mcp_enabled = False
+    
+    async def initialize_tracing(self):
+        """Initialize tracing capabilities."""
+        try:
+            if self.tracer and hasattr(self.tracer, 'initialize'):
+                await self.tracer.initialize()
+                self.tracing_enabled = True
+                logging.info("Tracing initialized successfully")
+            else:
+                logging.warning("Tracer not available or missing initialize method")
+                self.tracing_enabled = False
+        except Exception as e:
+            logging.warning(f"Tracing initialization failed: {e}")
+            self.tracing_enabled = False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced architecture design functionality."""
@@ -178,6 +231,105 @@ class ArchitectAgent:
             logging.error(f"Error in architecture-specific MCP tools: {e}")
         
         return enhanced_data
+    
+    async def use_enhanced_mcp_tools(self, design_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use enhanced MCP tools voor Phase 2 capabilities."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logging.warning("Enhanced MCP not available, using standard MCP tools")
+            return await self.use_architecture_specific_mcp_tools(design_data)
+        
+        enhanced_data = {}
+        
+        try:
+            # Core enhancement tools
+            core_result = await self.enhanced_mcp.use_enhanced_mcp_tool("core_enhancement", {
+                "agent_type": self.agent_name,
+                "enhancement_level": "advanced",
+                "capabilities": design_data.get("capabilities", []),
+                "performance_metrics": design_data.get("performance_metrics", {})
+            })
+            enhanced_data["core_enhancement"] = core_result
+            
+            # Architecture-specific enhanced tools
+            architecture_enhanced_result = await self.use_architecture_specific_enhanced_tools(design_data)
+            enhanced_data.update(architecture_enhanced_result)
+            
+            # Tracing integration
+            if self.tracing_enabled:
+                trace_result = await self.trace_architecture_operation(design_data)
+                enhanced_data["tracing"] = trace_result
+            
+            logging.info(f"Enhanced MCP tools used successfully: {len(enhanced_data)} tools")
+            
+        except Exception as e:
+            logging.error(f"Enhanced MCP tools failed: {e}")
+            enhanced_data["error"] = str(e)
+        
+        return enhanced_data
+    
+    async def use_architecture_specific_enhanced_tools(self, design_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use architecture-specific enhanced MCP tools."""
+        enhanced_tools = {}
+        
+        try:
+            # Enhanced API design
+            if "api_design" in design_data:
+                api_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_api_design", {
+                    "api_data": design_data["api_design"],
+                    "requirements": design_data.get("requirements", {}),
+                    "constraints": design_data.get("constraints", {})
+                })
+                enhanced_tools["enhanced_api_design"] = api_result
+            
+            # Enhanced system architecture
+            if "system_architecture" in design_data:
+                system_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_system_architecture", {
+                    "architecture_data": design_data["system_architecture"],
+                    "scalability_requirements": design_data.get("scalability_requirements", {}),
+                    "performance_requirements": design_data.get("performance_requirements", {})
+                })
+                enhanced_tools["enhanced_system_architecture"] = system_result
+            
+            # Enhanced team collaboration
+            if "team_collaboration" in design_data:
+                collaboration_result = await self.enhanced_mcp.communicate_with_agents(
+                    ["ProductOwner", "BackendDeveloper", "FrontendDeveloper", "DevOpsInfra"],
+                    {
+                        "type": "architecture_review",
+                        "content": design_data["team_collaboration"]
+                    }
+                )
+                enhanced_tools["enhanced_team_collaboration"] = collaboration_result
+            
+            logging.info(f"Architecture-specific enhanced tools used: {list(enhanced_tools.keys())}")
+            
+        except Exception as e:
+            logging.error(f"Architecture-specific enhanced tools failed: {e}")
+            enhanced_tools["error"] = str(e)
+        
+        return enhanced_tools
+    
+    async def trace_architecture_operation(self, operation_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace architecture operations for monitoring and debugging."""
+        if not self.tracing_enabled or not self.tracer:
+            return {"status": "tracing_disabled"}
+        
+        try:
+            trace_data = {
+                "agent": self.agent_name,
+                "operation": operation_data.get("operation_type", "unknown"),
+                "timestamp": datetime.now().isoformat(),
+                "data": operation_data
+            }
+            
+            result = await self.tracer.trace_operation(trace_data)
+            logging.info(f"Architecture operation traced: {operation_data.get('operation_type', 'unknown')}")
+            
+            return result
+            
+        except Exception as e:
+            logging.error(f"Tracing failed: {e}")
+            return {"status": "tracing_error", "error": str(e)}
 
     def show_help(self):
         print(
@@ -571,30 +723,44 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
                 print("Probeer 'help' voor beschikbare commando's.")
 
     async def run(self, command):
-        """Run the Architect agent met MCP integration."""
+        """Run the Architect agent met complete integration."""
         # Initialize MCP integration
         await self.initialize_mcp()
         
-        if command == "help" or command is None:
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing capabilities
+        await self.initialize_tracing()
+        
+        print("🏗️ Architect Agent is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        
+        if command == "design-frontend":
+            return await self.design_frontend()
+        elif command == "design-system":
+            return await self.design_system()
+        elif command == "tech-stack":
+            return await self.tech_stack()
+        elif command == "start-conversation":
+            return self.start_conversation()
+        elif command == "help":
             self.show_help()
-            return
-        path = self.template_paths.get(command)
-        if path and path.exists():
-            logging.info(f"Resource-bestand geladen: {path}")
-            print(path.read_text())
-            return
-        # Fallback naar Python-functie
-        func = getattr(self, command.replace("-", "_"), None)
-        if callable(func):
-            logging.info(f"Fallback Python-methode aangeroepen: {command}")
-            if asyncio.iscoroutinefunction(func):
-                await func()
-            else:
-                func()
+        elif command == "best-practices":
+            self.best_practices()
+        elif command == "export":
+            self.export()
+        elif command == "changelog":
+            self.changelog()
+        elif command == "list-resources":
+            self.list_resources()
+        elif command == "test":
+            self.test()
+        elif command == "collaborate":
+            self.collaborate_example()
         else:
-            logging.error(
-                f"Onbekend commando of ontbrekend resource-bestand: {command}"
-            )
+            print(f"Unknown command: {command}")
             self.show_help()
     
     @classmethod
@@ -629,7 +795,13 @@ def main():
     import argparse
     parser = argparse.ArgumentParser(description="Architect Agent")
     parser.add_argument(
-        "command", nargs="?", default="help", help="Commando voor de agent"
+        "command", nargs="?", default="help", 
+        choices=["help", "design-frontend", "design-system", "tech-stack", "start-conversation",
+                "best-practices", "export", "changelog", "list-resources", "test", "collaborate",
+                "initialize-mcp", "use-mcp-tool", "get-mcp-status", "use-architecture-mcp-tools", 
+                "check-dependencies", "enhanced-collaborate", "enhanced-security", "enhanced-performance",
+                "trace-operation", "trace-performance", "trace-error", "tracing-summary"],
+        help="Commando voor de agent"
     )
     parser.add_argument("--interactive", "-i", action="store_true", help="Start interactieve modus")
     args = parser.parse_args()
@@ -639,7 +811,54 @@ def main():
     if args.interactive:
         agent.start_conversation()
     else:
-        asyncio.run(agent.run(args.command))
+        if args.command in ["enhanced-collaborate", "enhanced-security", "enhanced-performance", 
+                           "trace-operation", "trace-performance", "trace-error", "tracing-summary"]:
+            # Enhanced MCP commands
+            if args.command == "enhanced-collaborate":
+                result = asyncio.run(agent.enhanced_mcp.communicate_with_agents(
+                    ["ProductOwner", "BackendDeveloper", "FrontendDeveloper", "DevOpsInfra"], 
+                    {"type": "architecture_review", "content": {"review_type": "system_design"}}
+                ))
+                print(json.dumps(result, indent=2))
+            elif args.command == "enhanced-security":
+                result = asyncio.run(agent.enhanced_mcp.enhanced_security_validation({
+                    "auth_method": "multi_factor",
+                    "security_level": "enterprise",
+                    "compliance": ["gdpr", "sox", "iso27001"]
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "enhanced-performance":
+                result = asyncio.run(agent.enhanced_mcp.enhanced_performance_optimization({
+                    "optimization_target": "system_architecture",
+                    "performance_metrics": {"response_time": 0.5, "throughput": 100}
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "trace-operation":
+                result = asyncio.run(agent.trace_architecture_operation({
+                    "operation_type": "api_design",
+                    "design_scope": "rest_api",
+                    "complexity": "medium"
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "trace-performance":
+                result = asyncio.run(agent.trace_architecture_operation({
+                    "operation_type": "performance_metrics",
+                    "metrics": {"response_time": 0.3, "scalability": "high"}
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "trace-error":
+                result = asyncio.run(agent.trace_architecture_operation({
+                    "operation_type": "error_scenario",
+                    "error_type": "design_conflict",
+                    "error_details": "Conflicting requirements between teams"
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "tracing-summary":
+                print(f"Tracing Status: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+                print(f"Enhanced MCP Status: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+                print(f"MCP Status: {'Enabled' if agent.mcp_enabled else 'Disabled'}")
+        else:
+            asyncio.run(agent.run(args.command))
 
 if __name__ == "__main__":
     main()

@@ -44,6 +44,26 @@ commands:
   - export: Exporteer architectuur artefacten
   - changelog: Toon changelog van architectuurwijzigingen
   - test: Test resource completeness
+  - design-frontend: Ontwerp frontend architectuur
+  - design-system: Ontwerp systeem architectuur
+  - tech-stack: Evalueer tech stack
+  - start-conversation: Start interactieve conversatie
+  - list-resources: Toon beschikbare resources
+  - collaborate: Demonstrate collaboration met andere agents
+  - run: Run agent met MCP integration
+  - initialize-mcp: Initialize MCP client
+  - use-mcp-tool: Use MCP tool met parameters
+  - get-mcp-status: Get MCP integration status
+  - use-architecture-mcp-tools: Use architecture-specific MCP tools
+  - check-dependencies: Check agent dependencies
+  # MCP Phase 2 Enhanced Commands
+  - enhanced-collaborate: Enhanced inter-agent communicatie
+  - enhanced-security: Enhanced security validatie
+  - enhanced-performance: Enhanced performance optimalisatie
+  - trace-operation: Trace architecture operations
+  - trace-performance: Get performance metrics
+  - trace-error: Trace error scenarios
+  - tracing-summary: Get tracing summary
 
 collaboration:
   - Vraagt door naar use cases, edge cases, schaalbaarheid, security, data flows
