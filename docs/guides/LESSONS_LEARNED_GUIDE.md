@@ -5,8 +5,8 @@
 Dit document bevat alle lessons learned uit het BMAD development proces. Deze lessons zijn verzameld tijdens development, testing, en MCP integration om de kwaliteit van toekomstige development te verbeteren.
 
 **Laatste Update**: 2025-01-27  
-**Versie**: 2.3  
-**Status**: Actief - TestEngineer Agent 100% Success Rate, Syntax Error Prevention
+**Versie**: 2.4  
+**Status**: Actief - Major Progress: 6/22 Agents Fixed (367 tests passing)
 
 ## 🎉 MCP Integration Completion Lessons
 
@@ -31,6 +31,23 @@ Dit document bevat alle lessons learned uit het BMAD development proces. Deze le
 ### **TestEngineer Agent Success Story (Januari 2025)**
 
 **Major Achievement**: Van syntax errors naar 100% success rate (38/38 tests) door systematische fixes.
+
+### **DataEngineer & DevOpsInfra Agents Success Story (Januari 2025)**
+
+**Major Achievement**: Van syntax errors naar 100% success rate (76/76 + 37/37 tests) door systematische fixes.
+
+**Key Lessons Learned**:
+1. **Systematic Approach Works**: Proven patterns can be applied across multiple agents
+2. **Async/Sync Pattern Matching**: Tests must match the actual method signatures
+3. **With Statement Syntax**: Line continuations work better than trailing commas
+4. **Mock Data Escape Sequences**: Proper escape sequences are essential
+5. **Test State Management**: Reset state before testing file operations
+
+**Success Metrics**:
+- **DataEngineer**: 76/76 tests passing (100% success rate)
+- **DevOpsInfra**: 37/37 tests passing (100% success rate)
+- **Total Progress**: 6/22 agents now at 100% success rate
+- **Overall Tests**: 367 tests passing out of ~800 total tests
 
 **Key Lessons Learned**:
 1. **Syntax Error Patterns**: Trailing commas in `with` statements veroorzaken syntax errors

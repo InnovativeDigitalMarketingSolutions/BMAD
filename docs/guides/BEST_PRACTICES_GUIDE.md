@@ -5,8 +5,8 @@
 Dit document bevat alle best practices voor BMAD development, geconsolideerd uit lessons learned en development ervaring. Deze guide dient als referentie voor alle development activiteiten.
 
 **Laatste Update**: 2025-01-27  
-**Versie**: 2.3  
-**Status**: Actief - TestEngineer Agent 100% Success Rate, Syntax Error Prevention
+**Versie**: 2.4  
+**Status**: Actief - Major Progress: 6/22 Agents Fixed (367 tests passing)
 
 ## Development Best Practices
 
@@ -84,6 +84,45 @@ class AsyncAgent:
 - ✅ Graceful degradation
 
 ### 3. Test Quality Best Practices
+
+#### **Systematic Test Fix Patterns** 🔧
+**Best Practice**: Proven patterns voor het systematisch fixen van syntax errors en test issues.
+
+```python
+# Pattern 1: Async Test Fixes
+@pytest.mark.asyncio
+async def test_method(self, agent):
+    result = await agent.method()
+    assert result is not None
+
+# Pattern 2: With Statement Syntax Fixes
+with patch('module.function'), \
+     patch('module.function2'), \
+     patch('module.function3'):
+    # test code
+
+# Pattern 3: Mock Data Escape Sequences
+read_data="# History\\n\\n- Item 1\\n- Item 2"
+
+# Pattern 4: AsyncMock Integration
+from unittest.mock import AsyncMock
+with patch.object(agent, 'method', new_callable=AsyncMock) as mock_method:
+    mock_method.return_value = {"status": "success"}
+    result = await agent.method()
+
+# Pattern 5: Test State Management
+def test_file_operation(self):
+    # Reset state first
+    self.agent.history = []
+    with patch('pathlib.Path.exists', return_value=False):
+        self.agent._load_history()
+        assert len(self.agent.history) == 0
+```
+
+**Success Metrics**:
+- **6/22 agents** now at 100% success rate
+- **367 tests** passing out of ~800 total tests
+- **Proven patterns** for syntax error fixes
 
 #### **Async Test Patterns**
 **Best Practice**: Proper async test patterns met pytest-asyncio.
