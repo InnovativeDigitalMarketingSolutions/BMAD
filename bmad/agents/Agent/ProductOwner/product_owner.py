@@ -90,7 +90,7 @@ class ProductOwnerAgent:
     async def initialize_mcp(self):
         """Initialize MCP client and integration."""
         try:
-            self.mcp_client = await get_mcp_client()
+            self.mcp_client = get_mcp_client()  # Remove await - this is a sync function
             self.mcp_integration = get_framework_mcp_integration()
             await initialize_framework_mcp_integration()
             self.mcp_enabled = True
@@ -106,7 +106,15 @@ class ProductOwnerAgent:
             return None
         
         try:
-            result = await self.mcp_client.execute_tool(tool_name, parameters)
+            # Create a context for the tool call
+            context = await self.mcp_client.create_context(agent_id=self.agent_name)
+            response = await self.mcp_client.call_tool(tool_name, parameters, context)
+            
+            if response.success:
+                result = response.data
+            else:
+                logger.error(f"MCP tool {tool_name} failed: {response.error}")
+                result = None
             logging.info(f"MCP tool {tool_name} executed successfully")
             return result
         except Exception as e:

@@ -96,7 +96,7 @@ class FeedbackAgent:
     async def initialize_mcp(self):
         """Initialize MCP client voor enhanced feedback capabilities."""
         try:
-            self.mcp_client = await get_mcp_client()
+            self.mcp_client = get_mcp_client()  # Remove await - this is a sync function
             self.mcp_integration = get_framework_mcp_integration()
             await initialize_framework_mcp_integration()
             self.mcp_enabled = True
@@ -106,15 +106,22 @@ class FeedbackAgent:
             self.mcp_enabled = False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Use MCP tool voor enhanced feedback functionality."""
+        """Use MCP tool voor enhanced functionality."""
         if not self.mcp_enabled or not self.mcp_client:
-            logger.warning("MCP not available, using local feedback tools")
+            logger.warning("MCP not available, using local tools")
             return None
         
         try:
-            result = await self.mcp_client.execute_tool(tool_name, parameters)
-            logger.info(f"MCP tool {tool_name} executed successfully")
-            return result
+            # Create a context for the tool call
+            context = await self.mcp_client.create_context(agent_id=self.agent_name)
+            response = await self.mcp_client.call_tool(tool_name, parameters, context)
+            
+            if response.success:
+                logger.info(f"MCP tool {tool_name} executed successfully")
+                return response.data
+            else:
+                logger.error(f"MCP tool {tool_name} failed: {response.error}")
+                return None
         except Exception as e:
             logger.error(f"MCP tool {tool_name} execution failed: {e}")
             return None

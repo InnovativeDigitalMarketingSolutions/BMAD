@@ -408,7 +408,7 @@ class TestDataEngineerAgent:
         """Test show_resource method with empty resource type."""
         agent.show_resource("")  # Empty string
         captured = capsys.readouterr()
-        assert "Error: resource_type ca\n\not be empty" in captured.out
+        assert "Error: resource_type cannot be empty" in captured.out
 
     @patch('builtins.open', side_effect=FileNotFoundError("File not found"))
     @patch('pathlib.Path.exists', return_value=True)
@@ -441,7 +441,7 @@ class TestDataEngineerAgent:
 
     def test_data_quality_check_empty_data_summary(self, agent):
         """Test data_quality_check with empty data summary."""
-        with pytest.raises(ValueError, match="data_summary ca\n\not be empty"):
+        with pytest.raises(ValueError, match="data_summary cannot be empty"):
             agent.data_quality_check("")
 
     def test_explain_pipeline_invalid_pipeline_code_type(self, agent):
@@ -451,7 +451,7 @@ class TestDataEngineerAgent:
 
     def test_explain_pipeline_empty_pipeline_code(self, agent):
         """Test explain_pipeline with empty pipeline code."""
-        with pytest.raises(ValueError, match="pipeline_code ca\n\not be empty"):
+        with pytest.raises(ValueError, match="pipeline_code cannot be empty"):
             agent.explain_pipeline("")
 
     @pytest.mark.asyncio
@@ -463,7 +463,7 @@ class TestDataEngineerAgent:
     @pytest.mark.asyncio
     async def test_build_pipeline_empty_pipeline_name(self, agent):
         """Test build_pipeline with empty pipeline name."""
-        with pytest.raises(ValueError, match="pipeline_name ca\n\not be empty"):
+        with pytest.raises(ValueError, match="pipeline_name cannot be empty"):
             await agent.build_pipeline("")
 
     def test_monitor_pipeline_invalid_pipeline_id_type(self, agent):
@@ -473,7 +473,7 @@ class TestDataEngineerAgent:
 
     def test_monitor_pipeline_empty_pipeline_id(self, agent):
         """Test monitor_pipeline with empty pipeline id."""
-        with pytest.raises(ValueError, match="pipeline_id ca\n\not be empty"):
+        with pytest.raises(ValueError, match="pipeline_id cannot be empty"):
             agent.monitor_pipeline("")
 
     def test_export_report_invalid_format_type(self, agent):

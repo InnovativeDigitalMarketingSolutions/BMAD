@@ -79,7 +79,7 @@ class UXUIDesignerAgent:
     async def initialize_mcp(self):
         """Initialize MCP client voor enhanced UX/UI design capabilities."""
         try:
-            self.mcp_client = await get_mcp_client()
+            self.mcp_client = get_mcp_client()  # Remove await - this is a sync function
             self.mcp_integration = get_framework_mcp_integration()
             await initialize_framework_mcp_integration()
             self.mcp_enabled = True
@@ -89,14 +89,22 @@ class UXUIDesignerAgent:
             self.mcp_enabled = False
 
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Use MCP tool voor enhanced UX/UI design functionality."""
+        """Use MCP tool voor enhanced functionality."""
         if not self.mcp_enabled or not self.mcp_client:
-            logger.warning("MCP not available, using local UX/UI design tools")
+            logger.warning("MCP not available, using local tools")
             return None
+        
         try:
-            result = await self.mcp_client.execute_tool(tool_name, parameters)
-            logger.info(f"MCP tool {tool_name} executed successfully")
-            return result
+            # Create a context for the tool call
+            context = await self.mcp_client.create_context(agent_id=self.agent_name)
+            response = await self.mcp_client.call_tool(tool_name, parameters, context)
+            
+            if response.success:
+                logger.info(f"MCP tool {tool_name} executed successfully")
+                return response.data
+            else:
+                logger.error(f"MCP tool {tool_name} failed: {response.error}")
+                return None
         except Exception as e:
             logger.error(f"MCP tool {tool_name} execution failed: {e}")
             return None
@@ -870,6 +878,9 @@ UXUIDesigner Agent Commands:
         print(f"Opgehaalde context: {context}")
 
     def design_feedback(self, feedback_text):
+        if not feedback_text:
+            return {"error": "Feedback text cannot be empty"}
+        
         prompt = f"Analyseer de volgende design feedback en doe 2 concrete verbetervoorstellen:\n{feedback_text}"
         result = ask_openai(prompt)
         logging.info(f"[UXUIDesigner][LLM Design Feedback]: {result}")
@@ -885,6 +896,9 @@ UXUIDesigner Agent Commands:
         return result
 
     def document_component(self, component_desc):
+        if not component_desc:
+            return {"error": "Component description cannot be empty"}
+        
         prompt = f"Genereer een korte documentatie voor deze UI-component:\n{component_desc}"
         result = ask_openai(prompt)
         logging.info(f"[UXUIDesigner][LLM Component Doc]: {result}")
@@ -903,6 +917,9 @@ UXUIDesigner Agent Commands:
         """
         Analyseer een Figma design op layout, kleurgebruik, en accessibility-signalen.
         """
+        if not figma_file_id:
+            return {"error": "Figma file ID cannot be empty"}
+        
         try:
             client = FigmaClient()
 
@@ -1162,18 +1179,27 @@ def main():
             print("Geef feedback tekst op met --feedback-text")
             sys.exit(1)
         result = agent.design_feedback(args.feedback_text)
+        if isinstance(result, dict) and "error" in result:
+            print(f"Error: {result['error']}")
+            sys.exit(1)
         print(json.dumps(result, indent=2))
     elif args.command == "document-component":
         if not args.component_desc:
             print("Geef component beschrijving op met --component-desc")
             sys.exit(1)
         result = agent.document_component(args.component_desc)
+        if isinstance(result, dict) and "error" in result:
+            print(f"Error: {result['error']}")
+            sys.exit(1)
         print(json.dumps(result, indent=2))
     elif args.command == "analyze-figma":
         if not args.figma_file_id:
             print("Geef Figma file ID op met --figma-file-id")
             sys.exit(1)
         result = agent.analyze_figma_design(args.figma_file_id)
+        if isinstance(result, dict) and "error" in result:
+            print(f"Error: {result['error']}")
+            sys.exit(1)
         print(json.dumps(result, indent=2))
     elif args.command == "show-design-history":
         agent.show_design_history()

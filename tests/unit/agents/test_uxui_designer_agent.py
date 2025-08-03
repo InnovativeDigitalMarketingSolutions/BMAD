@@ -831,8 +831,26 @@ class TestUXUIDesignerAgentCLI:
     @patch('sys.argv', ['uxuidesigner.py', 'analyze-figma', '--figma-file-id', 'test123'])
     @patch('builtins.print')
     @patch('json.dumps')
-    def test_cli_analyze_figma(self, mock_json_dumps, mock_print):
+    @patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.FigmaClient')
+    @patch('bmad.agents.Agent.UXUIDesigner.uxuidesigner.ask_openai', return_value="Mocked LLM response")
+    def test_cli_analyze_figma(self, mock_ask_openai, mock_figma_client, mock_json_dumps, mock_print):
         """Test CLI analyze-figma command."""
+        # Mock FigmaClient to return valid data
+        mock_client_instance = mock_figma_client.return_value
+        mock_client_instance.get_file.return_value = {
+            "name": "Test Design",
+            "document": {
+                "children": [
+                    {
+                        "name": "Page 1",
+                        "id": "1:1",
+                        "type": "CANVAS",
+                        "children": []
+                    }
+                ]
+            }
+        }
+        
         from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
         main()
         mock_json_dumps.assert_called()
@@ -916,29 +934,74 @@ class TestUXUIDesignerAgentCLI:
     @patch('sys.argv', ['uxuidesigner.py', 'design-feedback'])
     @patch('sys.exit')
     @patch('builtins.print')
-    def test_cli_design_feedback_missing_text(self, mock_print, mock_exit):
+    @patch('argparse.ArgumentParser.parse_args')
+    def test_cli_design_feedback_missing_text(self, mock_parse_args, mock_print, mock_exit):
         """Test CLI design-feedback command with missing feedback text."""
+        # Mock argparse to return args with missing feedback_text
+        mock_args = type('Args', (), {
+            'command': 'design-feedback',
+            'feedback_text': None,
+            'component_desc': None,
+            'figma_file_id': None,
+            'component_name': 'Button',
+            'platform': 'iOS',
+            'app_type': 'native',
+            'flow_name': 'Onboarding',
+            'format': 'md'
+        })()
+        mock_parse_args.return_value = mock_args
+        
         from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
         main()
-        mock_print.assert_called_with("Geef feedback tekst op met --feedback-text")
+        mock_print.assert_called_with('{\n  "error": "Feedback text cannot be empty"\n}')
         mock_exit.assert_called_with(1)
 
     @patch('sys.argv', ['uxuidesigner.py', 'document-component'])
     @patch('sys.exit')
     @patch('builtins.print')
-    def test_cli_document_component_missing_desc(self, mock_print, mock_exit):
+    @patch('argparse.ArgumentParser.parse_args')
+    def test_cli_document_component_missing_desc(self, mock_parse_args, mock_print, mock_exit):
         """Test CLI document-component command with missing component description."""
+        # Mock argparse to return args with missing component_desc
+        mock_args = type('Args', (), {
+            'command': 'document-component',
+            'feedback_text': None,
+            'component_desc': None,
+            'figma_file_id': None,
+            'component_name': 'Button',
+            'platform': 'iOS',
+            'app_type': 'native',
+            'flow_name': 'Onboarding',
+            'format': 'md'
+        })()
+        mock_parse_args.return_value = mock_args
+        
         from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
         main()
-        mock_print.assert_called_with("Geef component beschrijving op met --component-desc")
+        mock_print.assert_called_with('{\n  "error": "Component description cannot be empty"\n}')
         mock_exit.assert_called_with(1)
 
     @patch('sys.argv', ['uxuidesigner.py', 'analyze-figma'])
     @patch('sys.exit')
     @patch('builtins.print')
-    def test_cli_analyze_figma_missing_file_id(self, mock_print, mock_exit):
+    @patch('argparse.ArgumentParser.parse_args')
+    def test_cli_analyze_figma_missing_file_id(self, mock_parse_args, mock_print, mock_exit):
         """Test CLI analyze-figma command with missing file ID."""
+        # Mock argparse to return args with missing figma_file_id
+        mock_args = type('Args', (), {
+            'command': 'analyze-figma',
+            'feedback_text': None,
+            'component_desc': None,
+            'figma_file_id': None,
+            'component_name': 'Button',
+            'platform': 'iOS',
+            'app_type': 'native',
+            'flow_name': 'Onboarding',
+            'format': 'md'
+        })()
+        mock_parse_args.return_value = mock_args
+        
         from bmad.agents.Agent.UXUIDesigner.uxuidesigner import main
         main()
-        mock_print.assert_called_with("Geef Figma file ID op met --figma-file-id")
+        mock_print.assert_called_with('{\n  "error": "Figma file ID cannot be empty"\n}')
         mock_exit.assert_called_with(1) 

@@ -634,7 +634,7 @@ class TestAiDeveloperAgent:
 
     def test_show_resource_empty_type(self, agent, capsys):
         """Test show_resource method with empty type."""
-        with pytest.raises(AiValidationError, match="Resource type ca\n\not be empty"):
+        with pytest.raises(AiValidationError, match="Resource type cannot be empty"):
             agent.show_resource("")
 
     @patch('builtins.open', side_effect=FileNotFoundError("File not found"))
