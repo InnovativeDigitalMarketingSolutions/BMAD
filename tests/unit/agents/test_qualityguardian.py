@@ -211,22 +211,89 @@ class TestQualityGuardianAgent:
 
     @pytest.mark.asyncio
     async def test_quality_gate_check_success(self, agent):
-        """Test successful quality gate check."""
-        result = await agent.quality_gate_check(deployment=True)
-        
-        assert result["deployment"] is True
-        assert "all_gates_passed" in result
-        assert "quality_gates" in result
-        assert "metrics" in result
-        assert "timestamp" in result
-        assert result["agent"] == "QualityGuardianAgent"
-        assert isinstance(result["all_gates_passed"], bool)
+        """Test successful quality gate check with enhanced MCP and tracing."""
+        with patch('time.sleep'), \
+             patch.object(agent, 'initialize_enhanced_mcp'), \
+             patch.object(agent, 'initialize_tracing'), \
+             patch.object(agent, 'use_enhanced_mcp_tools', return_value=None), \
+             patch.object(agent, 'use_mcp_tool', return_value=None), \
+             patch.object(agent, 'use_quality_specific_mcp_tools', return_value=None), \
+             patch.object(agent, 'trace_quality_gate_check', return_value={}):
+            
+            result = await agent.quality_gate_check(deployment=True)
+            
+            assert result["deployment"] is True
+            assert "all_gates_passed" in result
+            assert "quality_gates" in result
+            assert "metrics" in result
+            assert "quality_config" in result
+            assert "timestamp" in result
+            assert "quality_check_method" in result
+            assert "enhanced_capabilities" in result
+            assert result["agent"] == "QualityGuardianAgent"
+            assert isinstance(result["all_gates_passed"], bool)
+            assert result["quality_check_method"] == "local"
 
     @pytest.mark.asyncio
     async def test_quality_gate_check_invalid_deployment_type(self, agent):
         """Test quality gate check with invalid deployment type."""
         with pytest.raises(QualityValidationError, match="Invalid type for deployment"):
             await agent.quality_gate_check("invalid")
+
+    @pytest.mark.asyncio
+    async def test_quality_gate_check_with_enhanced_mcp(self, agent):
+        """Test quality gate check with enhanced MCP enabled."""
+        enhanced_result = {
+            "quality_gate_enhancement": {
+                "status": "success",
+                "enhanced_mcp_used": True,
+                "check_time": "2.8s"
+            }
+        }
+        
+        with patch('time.sleep'), \
+             patch.object(agent, 'initialize_enhanced_mcp'), \
+             patch.object(agent, 'initialize_tracing'), \
+             patch.object(agent, 'use_enhanced_mcp_tools', return_value=enhanced_result), \
+             patch.object(agent, 'use_quality_specific_mcp_tools', return_value={}), \
+             patch.object(agent, 'trace_quality_gate_check', return_value={}):
+            
+            # Mock the enhanced MCP to be available
+            agent.enhanced_mcp_enabled = True
+            agent.enhanced_mcp = MagicMock()
+            agent.tracing_enabled = True
+            
+            result = await agent.quality_gate_check(deployment=False)
+            
+            assert result["deployment"] is False
+            assert "enhanced_capabilities" in result
+            assert result["enhanced_capabilities"]["enhanced_mcp_used"] == True
+            assert result["enhanced_capabilities"]["tracing_enabled"] == True
+
+    @pytest.mark.asyncio
+    async def test_quality_gate_check_with_tracing(self, agent):
+        """Test quality gate check with tracing enabled."""
+        trace_data = {
+            "trace_id": "trace_456",
+            "quality_gate_traced": True,
+            "performance_metrics": {"check_time": "1.9s"}
+        }
+        
+        with patch('time.sleep'), \
+             patch.object(agent, 'initialize_enhanced_mcp'), \
+             patch.object(agent, 'initialize_tracing'), \
+             patch.object(agent, 'use_enhanced_mcp_tools', return_value=None), \
+             patch.object(agent, 'use_mcp_tool', return_value=None), \
+             patch.object(agent, 'use_quality_specific_mcp_tools', return_value={}), \
+             patch.object(agent, 'trace_quality_gate_check', return_value=trace_data):
+            
+            agent.tracing_enabled = True
+            
+            result = await agent.quality_gate_check(deployment=True)
+            
+            assert result["deployment"] is True
+            assert "tracing_data" in result
+            assert result["tracing_data"]["trace_id"] == "trace_456"
 
     @pytest.mark.asyncio
     async def test_generate_quality_report_success(self, agent):
