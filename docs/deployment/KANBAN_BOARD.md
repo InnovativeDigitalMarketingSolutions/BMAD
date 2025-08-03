@@ -86,11 +86,12 @@
   - ⏳ Agent resource management update
 
 ### **MCP Phase 2: Agent Enhancement** 🔧 🔥 **IN PROGRESS**
-- **Status**: IN PROGRESS - Enhanced MCP + Tracing integration (6/23 complete)
+- **Status**: IN PROGRESS - Enhanced MCP + Tracing integration (8/23 complete)
   - **Scope**: Verbeter agent functionaliteit en performance met enhanced MCP en tracing
   - **Timeline**: Week 12-13
   - **Deliverables**: Enhanced agent capabilities, improved performance, comprehensive tracing
   - **Success Criteria**: Alle agents hebben enhanced MCP en tracing functionaliteit
+  - **Workflow**: Volg `docs/guides/MCP_INTEGRATION_GUIDE.md` - Enhanced MCP Phase 2 Integration patterns
   - **Progress**: 
     - ✅ DevOpsInfra: Enhanced MCP integration + Tracing complete
     - ✅ QualityGuardian: Enhanced MCP integration + Tracing complete
@@ -98,17 +99,17 @@
     - ✅ FrontendDeveloper: Enhanced MCP integration + Tracing complete
     - ✅ FullstackDeveloper: Enhanced MCP integration + Tracing complete
     - ✅ MobileDeveloper: Enhanced MCP integration + Tracing complete
-    - ⏳ Remaining 17 agents: Pending
+    - ✅ TestEngineer: Enhanced MCP integration + Tracing complete
+    - ✅ ProductOwner: Enhanced MCP integration + Tracing complete
+    - ⏳ Remaining 15 agents: Pending
 
 ### **Remaining Agent Enhanced MCP Integration** 🔧 🔥 **HIGH PRIORITY**
-- **Status**: TO DO - Enhanced MCP + Tracing voor overige 17 agents
+- **Status**: TO DO - Enhanced MCP + Tracing voor overige 15 agents
 - **Scope**: Implementeer enhanced MCP en tracing voor alle overige agents
 - **Timeline**: Week 13-14
 - **Deliverables**: Enhanced MCP integration voor alle agents
 - **Success Criteria**: Alle 23 agents hebben enhanced MCP en tracing
 - **Agents Pending**:
-  - ⏳ TestEngineer: Enhanced MCP + Tracing integration
-  - ⏳ ProductOwner: Enhanced MCP + Tracing integration
   - ⏳ Scrummaster: Enhanced MCP + Tracing integration
   - ⏳ SecurityDeveloper: Enhanced MCP + Tracing integration
   - ⏳ Architect: Enhanced MCP + Tracing integration
@@ -137,6 +138,15 @@
   - User Guides updates
   - Developer Guides updates
 - **Success Criteria**: Alle documentatie is up-to-date en compleet
+
+### **Agent Functionality Analysis** 🔍 🔥 **NEW HIGH PRIORITY**
+- **Status**: TO DO - Analyse van agent functionaliteit en overlap
+- **Scope**: Analyseer welke functionaliteit door welke agents wordt opgepakt
+- **Findings**: 
+  - ✅ **Refinement Functionaliteit**: Wordt opgepakt door StrategiePartner agent (idea refinement, validation, improvement)
+  - ✅ **Geen aparte RefinementAgent nodig**: Functionaliteit is geïntegreerd in bestaande agents
+  - ⏳ **Overige functionaliteit**: Analyseer andere mogelijke overlap
+- **Success Criteria**: Duidelijke verdeling van functionaliteit tussen agents
 
 ### **Integration Testing Framework** 🧪 🔥 **NEW HIGH PRIORITY**
 - **Status**: TO DO - Echte externe service testing

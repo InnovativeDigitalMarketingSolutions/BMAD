@@ -37,6 +37,15 @@ from bmad.core.mcp import (
     initialize_framework_mcp_integration
 )
 
+# Enhanced MCP Integration for Phase 2
+from bmad.core.mcp.enhanced_mcp_integration import (
+    EnhancedMCPIntegration,
+    create_enhanced_mcp_integration
+)
+
+# Tracing Integration
+from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
+
 
 load_dotenv()
 
@@ -64,6 +73,14 @@ class ProductOwnerAgent:
         self.mcp_client: Optional[MCPClient] = None
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
         self.mcp_enabled = False
+        
+        # Enhanced MCP Phase 2
+        self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_enabled = False
+        
+        # Tracing Integration
+        self.tracer: Optional[BMADTracer] = None
+        self.tracing_enabled = False
         
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
@@ -98,6 +115,42 @@ class ProductOwnerAgent:
         except Exception as e:
             logging.warning(f"MCP initialization failed: {e}")
             self.mcp_enabled = False
+    
+    async def initialize_enhanced_mcp(self):
+        """Initialize enhanced MCP capabilities for Phase 2."""
+        try:
+            self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+            self.enhanced_mcp_enabled = await self.enhanced_mcp.initialize_enhanced_mcp()
+            
+            if self.enhanced_mcp_enabled:
+                logging.info("Enhanced MCP capabilities initialized successfully")
+            else:
+                logging.warning("Enhanced MCP initialization failed, falling back to standard MCP")
+        except Exception as e:
+            logging.warning(f"Enhanced MCP initialization failed: {e}")
+            self.enhanced_mcp_enabled = False
+    
+    async def initialize_tracing(self):
+        """Initialize tracing capabilities."""
+        try:
+            self.tracer = BMADTracer(config=type("Config", (), {
+                "service_name": f"{self.agent_name}",
+                "environment": "development",
+                "tracing_level": "detailed"
+            })())
+            self.tracing_enabled = await self.tracer.initialize()
+            
+            if self.tracing_enabled:
+                logging.info("Tracing capabilities initialized successfully")
+                await self.tracer.setup_agent_specific_tracing({
+                    "agent_name": self.agent_name,
+                    "tracing_level": "detailed",
+                    "performance_tracking": True,
+                    "error_tracking": True
+                })
+        except Exception as e:
+            logging.warning(f"Tracing initialization failed: {e}")
+            self.tracing_enabled = False
 
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -167,6 +220,94 @@ class ProductOwnerAgent:
             enhanced_data["stakeholder_analysis"] = stakeholder_result
         
         return enhanced_data
+    
+    async def use_enhanced_mcp_tools(self, product_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use enhanced MCP tools voor Phase 2 capabilities."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logging.warning("Enhanced MCP not available, using standard MCP tools")
+            return await self.use_product_specific_mcp_tools(product_data)
+        
+        enhanced_data = {}
+        
+        try:
+            # Core enhancement tools
+            core_result = await self.enhanced_mcp.use_enhanced_mcp_tool("core_enhancement", {
+                "agent_type": self.agent_name,
+                "enhancement_level": "advanced",
+                "capabilities": product_data.get("capabilities", []),
+                "performance_metrics": product_data.get("performance_metrics", {})
+            })
+            if core_result:
+                enhanced_data["core_enhancement"] = core_result
+            
+            # Product-specific enhancement tools
+            specific_result = await self.use_product_specific_enhanced_tools(product_data)
+            if specific_result:
+                enhanced_data.update(specific_result)
+            
+        except Exception as e:
+            logging.error(f"Error in enhanced MCP tools: {e}")
+        
+        return enhanced_data
+    
+    async def use_product_specific_enhanced_tools(self, product_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use product-specific enhanced MCP tools."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {}
+        
+        enhanced_data = {}
+        
+        try:
+            # Enhanced user story creation
+            enhanced_story_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_user_story_creation", {
+                "requirement": product_data.get("requirement", ""),
+                "enhancement_level": "advanced",
+                "stakeholder_analysis": product_data.get("stakeholder_analysis", True),
+                "market_research": product_data.get("market_research", True)
+            })
+            if enhanced_story_result:
+                enhanced_data["enhanced_user_story_creation"] = enhanced_story_result
+            
+            # Enhanced product vision
+            enhanced_vision_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_product_vision", {
+                "product_name": product_data.get("product_name", ""),
+                "enhancement_level": "advanced",
+                "competitive_analysis": product_data.get("competitive_analysis", True),
+                "trend_analysis": product_data.get("trend_analysis", True)
+            })
+            if enhanced_vision_result:
+                enhanced_data["enhanced_product_vision"] = enhanced_vision_result
+            
+            # Enhanced performance optimization
+            enhanced_performance_result = await self.enhanced_mcp.enhanced_performance_optimization({
+                "agent_type": "product_owner",
+                "product_data": product_data,
+                "optimization_targets": ["story_quality", "vision_clarity", "stakeholder_satisfaction"]
+            })
+            if enhanced_performance_result:
+                enhanced_data["enhanced_performance_optimization"] = enhanced_performance_result
+            
+        except Exception as e:
+            logging.error(f"Error in product-specific enhanced tools: {e}")
+        
+        return enhanced_data
+    
+    async def trace_product_operation(self, operation_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace product-specific operations."""
+        if not self.tracing_enabled or not self.tracer:
+            return {}
+        
+        try:
+            trace_result = await self.tracer.trace_agent_operation({
+                "operation_type": operation_data.get("type", "story_creation"),
+                "agent_name": self.agent_name,
+                "performance_metrics": operation_data.get("performance_metrics", {}),
+                "timestamp": datetime.now().isoformat()
+            })
+            return trace_result
+        except Exception as e:
+            logging.error(f"Product operation tracing failed: {e}")
+            return {}
 
     def show_help(self):
         print("""
@@ -391,12 +532,20 @@ Voorbeelden:
             logging.error(f"Error saving report: {e}")
 
     async def run(self):
-        """Main event loop for the agent met MCP integration."""
+        """Main event loop for the agent met complete integration."""
         # Initialize MCP integration
         await self.initialize_mcp()
         
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing capabilities
+        await self.initialize_tracing()
+        
         print("🎯 ProductOwner Agent is running...")
         print("Listening for events: user_story_requested, feedback_sentiment_analyzed, feature_planned")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
         print("Press Ctrl+C to stop")
         
         try:

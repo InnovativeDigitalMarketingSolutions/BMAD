@@ -62,6 +62,80 @@ Dit document consolideert alle planning documenten tot één master roadmap voor
 
 ### 🆕 **New Backlog Items (January 2025)**
 
+#### **MCP Integration & Agent Enhancement (Priority 1)**
+
+**🔧 MCP Phase 2: Agent Enhancement (IN PROGRESS)**
+- **Status**: 8/23 agents complete (34.8% complete)
+- **Scope**: Enhanced MCP + Tracing integration voor alle agents
+- **Workflow**: Volg `docs/guides/MCP_INTEGRATION_GUIDE.md` - Enhanced MCP Phase 2 Integration patterns
+- **Completed Agents**: 
+  - ✅ DevOpsInfra: Enhanced MCP integration + Tracing complete
+  - ✅ QualityGuardian: Enhanced MCP integration + Tracing complete
+  - ✅ BackendDeveloper: Enhanced MCP integration + Tracing complete
+  - ✅ FrontendDeveloper: Enhanced MCP integration + Tracing complete
+  - ✅ FullstackDeveloper: Enhanced MCP integration + Tracing complete
+  - ✅ MobileDeveloper: Enhanced MCP integration + Tracing complete
+  - ✅ TestEngineer: Enhanced MCP integration + Tracing complete
+  - ✅ ProductOwner: Enhanced MCP integration + Tracing complete
+- **Remaining Agents**: 15 agents pending enhanced MCP integration
+- **Success Criteria**: Alle 23 agents hebben enhanced MCP en tracing functionaliteit
+
+**🔧 FrameworkTemplatesManager Implementation (NEW HIGH PRIORITY)**
+- **Status**: TO DO - FrameworkTemplatesManager implementatie en fix
+- **Scope**: Implementeer en fix FrameworkTemplatesManager voor agent resource management
+- **Timeline**: Week 12-13
+- **Deliverables**: Werkende FrameworkTemplatesManager, resource management fix
+- **Success Criteria**: Alle agents kunnen resources correct laden en gebruiken
+
+**📚 Project Documentation Update (NEW HIGH PRIORITY)**
+- **Status**: TO DO - Update project documentatie na MCP implementatie
+- **Scope**: Complete documentatie update
+- **Timeline**: Week 13
+- **Deliverables**: 
+  - MCP Integration Documentation
+  - Agent Enhancement Documentation
+  - Quality Assurance Documentation
+  - API Documentation updates
+  - User Guides updates
+  - Developer Guides updates
+- **Success Criteria**: Alle documentatie is up-to-date en compleet
+
+**🧪 Integration Testing Framework (NEW HIGH PRIORITY)**
+- **Status**: TO DO - Echte externe service testing
+- **Scope**: Setup integration test environment en implement test categories
+- **Timeline**: Week 6-7
+- **Deliverables**:
+  - Integration test environment
+  - Database integration tests
+  - LLM integration tests
+  - Tracing integration tests
+  - Workflow integration tests
+  - Policy integration tests
+- **Success Criteria**: Complete integration testing framework
+
+**🔧 Agent Commands Analysis & Improvement (NEW HIGH PRIORITY)**
+- **Status**: TO DO - Analyse en verbetering van agent commands
+- **Scope**: Audit en verbeter alle agent commands
+- **Timeline**: Week 13-14
+- **Deliverables**:
+  - Current commands audit
+  - Command consistency check
+  - Command standardization
+  - Command enhancement
+  - New commands development
+- **Success Criteria**: Alle agent commands zijn geoptimaliseerd en consistent
+
+**🔍 Agent Functionality Analysis (NEW HIGH PRIORITY)**
+- **Status**: TO DO - Analyse van agent functionaliteit en overlap
+- **Scope**: Analyseer welke functionaliteit door welke agents wordt opgepakt
+- **Findings**: 
+  - ✅ **Refinement Functionaliteit**: Wordt opgepakt door StrategiePartner agent (idea refinement, validation, improvement)
+  - ✅ **Geen aparte RefinementAgent nodig**: Functionaliteit is geïntegreerd in bestaande agents
+  - ⏳ **Overige functionaliteit**: Analyseer andere mogelijke overlap
+- **Success Criteria**: Duidelijke verdeling van functionaliteit tussen agents
+
+#### **Production Ready Features**
+
 #### **Production Ready Features**
 
 **🔒 Security & Compliance (Priority 1)**
