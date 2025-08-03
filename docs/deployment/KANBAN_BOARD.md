@@ -460,11 +460,12 @@ Voor uitgebreide backlog items met implementatie details, zie:
 **Capacity**: 3 tasks
 **Focus**: Documentatie en user guides
 
-### **Sprint 13-14: Agent Commands**
+### **Sprint 13-14: Agent Commands** ✅ **ANALYSIS COMPLETE**
 **Goal**: Agent commands analyse en verbetering
 **Capacity**: 3 tasks
 **Focus**: Command consistency en usability
 **Demo**: Agent commands showcase en usability improvements
+**Status**: Analysis completed, standardization design in progress
 
 ### **Sprint 14-15: Comprehensive Bug Analysis & Test Quality Enhancement** 🔥 **HIGH PRIORITY**
 **Goal**: Systematische analyse en fix van alle bugs en falende tests
