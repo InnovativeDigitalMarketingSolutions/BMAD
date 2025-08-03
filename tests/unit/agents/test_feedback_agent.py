@@ -25,10 +25,9 @@ class TestFeedbackAgent:
         assert hasattr(agent, 'template_paths')
         assert hasattr(agent, 'data_paths')
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Feedback Historynn- Feedback 1n- Feedback 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Feedback History\n\n- Feedback 1\n- Feedback 2")
     @patch('pathlib.Path.exists', return_value=True)
-    @pytest.mark.asyncio
-    async def test_load_feedback_history_success(self, mock_exists, mock_file, agent):
+    def test_load_feedback_history_success(self, mock_exists, mock_file, agent):
         """Test successful feedback history loading."""
         agent.feedback_history = []  # Reset history
         agent._load_feedback_history()
@@ -51,10 +50,9 @@ class TestFeedbackAgent:
         agent._save_feedback_history()
         mock_file.assert_called()
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Sentiment Historynn- Sentiment 1n- Sentiment 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Sentiment History\n\n- Sentiment 1\n- Sentiment 2")
     @patch('pathlib.Path.exists', return_value=True)
-    @pytest.mark.asyncio
-    async def test_load_sentiment_history_success(self, mock_exists, mock_file, agent):
+    def test_load_sentiment_history_success(self, mock_exists, mock_file, agent):
         """Test successful sentiment history loading."""
         agent.sentiment_history = []  # Reset history
         agent._load_sentiment_history()
@@ -79,13 +77,13 @@ class TestFeedbackAgent:
 
     def test_show_help(self, agent, capsys):
         """Test show_help method."""
-        await agent.show_help()
+        agent.show_help()
         captured = capsys.readouterr()
         assert "Feedback Agent Commands:" in captured.out
         assert "collect-feedback" in captured.out
         assert "analyze-sentiment" in captured.out
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Best PracticesnnTest content")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Best Practices\n\nTest content")
     @patch('pathlib.Path.exists', return_value=True)
     def test_show_resource_best_practices(self, mock_exists, mock_file, agent, capsys):
         """Test show_resource method for best-practices."""
@@ -140,7 +138,6 @@ class TestFeedbackAgent:
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
     async def test_collect_feedback(self, mock_monitor, agent):
         """Test collect_feedback method."""
         mock_monitor_instance = MagicMock()
@@ -176,7 +173,6 @@ class TestFeedbackAgent:
         assert result["agent"] == "FeedbackAgent"
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
-    @pytest.mark.asyncio
     @pytest.mark.asyncio
     async def test_summarize_feedback(self, mock_monitor, agent):
         """Test summarize_feedback method."""
@@ -288,7 +284,6 @@ class TestFeedbackAgent:
     @patch('bmad.agents.core.communication.message_bus.publish')
     @patch('bmad.agents.core.data.supabase_context.save_context')
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
     async def test_publish_feedback(self, mock_save_context, mock_publish, agent):
         """Test publish_feedback method."""
         mock_save_context.return_value = None
@@ -342,7 +337,6 @@ class TestFeedbackAgent:
         mock_on_feedback.assert_called_once()
 
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
     async def test_on_summarize_feedback(self, agent):
         """Test on_summarize_feedback method."""
         test_event = {"feedback_list": ["Feedback 1", "Feedback 2"]}
@@ -361,7 +355,8 @@ class TestFeedbackAgent:
         result = agent.handle_feedback_collected(test_event)
         assert result is None
 
-    def test_run(self, agent):
+    @pytest.mark.asyncio
+    async def test_run(self, agent):
         """Test run method."""
         # Mock the entire run method to avoid Supabase API calls
         with patch.object(agent, 'run') as mock_run:
@@ -433,7 +428,6 @@ class TestFeedbackAgent:
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
     @patch('bmad.agents.core.communication.message_bus.publish')
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
     async def test_complete_feedback_workflow(self, mock_publish, mock_monitor, agent):
         """Test complete feedback workflow from collection to insights."""
         mock_monitor_instance = MagicMock()
@@ -444,21 +438,21 @@ class TestFeedbackAgent:
         assert feedback_result["status"] == "collected"
         
         # Analyze sentiment
-        sentiment_result = await agent.analyze_sentiment("Great user experience")
+        sentiment_result = agent.analyze_sentiment("Great user experience")
         assert sentiment_result["status"] == "analyzed"
         
         # Summarize feedback
         feedback_list = ["Great experience", "Needs improvement", "Excellent service"]
-        summary_result = await agent.summarize_feedback(feedback_list)
+        summary_result = agent.summarize_feedback(feedback_list)
         assert summary_result["status"] == "summarized"
         
         # Generate insights
         feedback_data = {"total_feedback": 20, "positive_feedback": 15, "negative_feedback": 3, "neutral_feedback": 2}
-        insights_result = await agent.generate_insights(feedback_data)
+        insights_result = agent.generate_insights(feedback_data)
         assert insights_result["status"] == "generated"
         
         # Track trends
-        trends_result = await agent.track_trends("30 days")
+        trends_result = agent.track_trends("30 days")
         assert trends_result["status"] == "tracked"
         
         # Verify that all methods were called successfully
@@ -487,15 +481,16 @@ class TestFeedbackAgentCLI:
     @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.save_context')
     @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.publish')
     @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.get_context', return_value={"status": "active"})
-    @pytest.mark.asyncio
-    @pytest.mark.asyncio
-    async def test_cli_collect_feedback(self, mock_get_context, mock_publish, mock_save_context):
+    def test_cli_collect_feedback(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.FeedbackAgent.feedbackagent import main
         with patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.FeedbackAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
             with patch.object(mock_agent, 'collect_feedback', return_value={"result": "ok"}) as mock_collect_feedback:
-                main()
-                mock_collect_feedback.assert_called_once_with('Test feedback', 'Test source')
+                with patch('asyncio.run') as mock_asyncio_run:
+                    with patch('json.dumps') as mock_json_dumps:
+                        main()
+                        mock_asyncio_run.assert_called_once()
+                        mock_collect_feedback.assert_called_once_with('Test feedback', 'Test source')
 
     @patch('sys.argv', ['feedbackagent.py', 'analyze-sentiment', '--feedback-text', 'Test feedback'])
     @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.save_context')
@@ -513,15 +508,14 @@ class TestFeedbackAgentCLI:
     @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.save_context')
     @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.publish')
     @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.get_context', return_value={"status": "active"})
-    @pytest.mark.asyncio
-    @pytest.mark.asyncio
-    async def test_cli_summarize_feedback(self, mock_get_context, mock_publish, mock_save_context):
+    def test_cli_summarize_feedback(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.FeedbackAgent.feedbackagent import main
         with patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.FeedbackAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
             with patch.object(mock_agent, 'summarize_feedback', return_value={"result": "ok"}) as mock_summarize_feedback:
-                main()
-                mock_summarize_feedback.assert_called_once_with(['Feedback1', 'Feedback2'])
+                with patch('json.dumps') as mock_json_dumps:
+                    main()
+                    mock_summarize_feedback.assert_called_once_with(['Feedback1', 'Feedback2'])
 
     @patch('sys.argv', ['feedbackagent.py', 'generate-insights'])
     @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.save_context')
@@ -611,8 +605,7 @@ class TestFeedbackAgentCLI:
     @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.save_context')
     @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.publish')
     @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.get_context', return_value={"status": "active"})
-    @pytest.mark.asyncio
-    async def test_cli_test(self, mock_get_context, mock_publish, mock_save_context):
+    def test_cli_test(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.FeedbackAgent.feedbackagent import main
         with patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.FeedbackAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
@@ -624,24 +617,26 @@ class TestFeedbackAgentCLI:
     @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.save_context')
     @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.publish')
     @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.get_context', return_value={"status": "active"})
-    @pytest.mark.asyncio
-    async def test_cli_collaborate(self, mock_get_context, mock_publish, mock_save_context):
+    def test_cli_collaborate(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.FeedbackAgent.feedbackagent import main
         with patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.FeedbackAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
             with patch.object(mock_agent, 'collaborate_example') as mock_collaborate_example:
-                main()
-                mock_collaborate_example.assert_called_once()
+                with patch('asyncio.run') as mock_asyncio_run:
+                    main()
+                    mock_asyncio_run.assert_called_once()
+                    mock_collaborate_example.assert_called_once()
 
     @patch('sys.argv', ['feedbackagent.py', 'run'])
     @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.save_context')
     @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.publish')
     @patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.get_context', return_value={"status": "active"})
-    @pytest.mark.asyncio
-    async def test_cli_run(self, mock_get_context, mock_publish, mock_save_context):
+    def test_cli_run(self, mock_get_context, mock_publish, mock_save_context):
         from bmad.agents.Agent.FeedbackAgent.feedbackagent import main
         with patch('bmad.agents.Agent.FeedbackAgent.feedbackagent.FeedbackAgent') as mock_agent_class:
             mock_agent = mock_agent_class.return_value
             with patch.object(mock_agent, 'run') as mock_run:
-                main()
-                mock_run.assert_called_once() 
+                with patch('asyncio.run') as mock_asyncio_run:
+                    main()
+                    mock_asyncio_run.assert_called_once()
+                    mock_run.assert_called_once() 
