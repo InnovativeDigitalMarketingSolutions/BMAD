@@ -189,6 +189,47 @@ def test_load_history_with_proper_newlines(self, mock_file):
 - **Total Progress**: 9/22 agents now at 100% success rate
 - **Overall Tests**: 506 tests passing out of ~800 total tests
 
+**Waarom**: Voorkomt test vastlopen, zorgt voor correcte async/sync handling, en verbetert test performance.
+
+#### **Documentation Structure & Workflow Best Practices** 📋
+**Best Practice**: Duidelijke scheiding tussen planning (kanban board) en gedetailleerde documentatie.
+
+**Documentation Structure**:
+```markdown
+# Kanban Board (Planning Focus)
+- Korte beschrijving van taken
+- Sprint status en progress
+- Verwijzingen naar gedetailleerde documenten
+- Clean & focused overview
+
+# Master Planning (Detailed Backlog)
+- Complete backlog items
+- Implementatie details
+- Technical specifications
+- Historical information
+
+# Guides (Development Reference)
+- Lessons learned
+- Best practices
+- Code patterns
+- Development insights
+```
+
+**Workflow Best Practice**:
+1. **Kanban Board**: Alleen essentiële planning informatie
+2. **Cross-References**: Altijd verwijzen naar gedetailleerde documenten
+3. **Documentation Separation**: Geen duplicatie van informatie
+4. **Maintainability**: Eenvoudig bijwerken van specifieke secties
+
+**Benefits**:
+- ✅ Overzichtelijke planning
+- ✅ Geen informatie duplicatie
+- ✅ Onderhoudbare documentatie
+- ✅ Duidelijke informatie structuur
+- ✅ Eenvoudige navigatie
+
+**Waarom**: Voorkomt verwarring, zorgt voor overzichtelijke planning, en maakt documentatie onderhoudbaar.
+
 #### **Async Test Patterns**
 **Best Practice**: Proper async test patterns met pytest-asyncio.
 

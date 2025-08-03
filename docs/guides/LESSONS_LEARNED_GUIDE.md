@@ -83,6 +83,31 @@ async def test_run_agent_class_method(self):
 
 **Waarom**: Voorkomt test vastlopen, zorgt voor correcte async/sync handling, en verbetert test performance.
 
+### **Documentation Structure & Workflow Lessons (Januari 2025)**
+
+**Major Achievement**: Opgeschoonde kanban board structuur met duidelijke documentatie workflow.
+
+**Key Lessons Learned**:
+1. **Kanban Board Focus**: Alleen planning en sprint status, geen gedetailleerde uitleg
+2. **Cross-References**: Verwijzingen naar gedetailleerde documenten voor meer informatie
+3. **Documentation Separation**: Gedetailleerde informatie in specifieke documenten
+4. **Workflow Clarity**: Duidelijke structuur voor waar welke informatie te vinden is
+
+**Documentation Structure Best Practice**:
+- **Kanban Board**: Huidige sprint taken en status (clean & focused)
+- **Master Planning**: Gedetailleerde backlog items en implementatie details
+- **Implementation Details**: Demo process en technical details
+- **Lessons Learned**: Development insights en success stories
+- **Best Practices**: Development guidelines en patterns
+
+**Workflow Best Practice**:
+1. **Kanban Board**: Korte beschrijving van taken met verwijzingen naar gedetailleerde documenten
+2. **Master Planning**: Complete backlog items met implementatie details
+3. **Guides**: Lessons learned en best practices voor development
+4. **Cross-References**: Altijd verwijzen naar de juiste documenten voor meer informatie
+
+**Waarom**: Voorkomt informatie duplicatie, zorgt voor overzichtelijke planning, en maakt documentatie onderhoudbaar.
+
 ### **TestEngineer Agent Success Story (Januari 2025)**
 
 **Major Achievement**: Van syntax errors naar 100% success rate (38/38 tests) door systematische fixes.

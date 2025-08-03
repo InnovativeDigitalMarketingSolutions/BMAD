@@ -167,4 +167,10 @@
 - **Lessons Learned**: Development insights en success stories
 - **Best Practices**: Development guidelines en patterns
 
+### **Documentation Workflow**
+- **Kanban Board**: Alleen korte beschrijving van taken met verwijzingen naar gedetailleerde documenten
+- **Gedetailleerde Informatie**: Altijd in specifieke documenten (master planning, guides, etc.)
+- **Cross-References**: Altijd verwijzen naar de juiste documenten voor meer informatie
+- **Geen Duplicatie**: Informatie niet dupliceren tussen documenten
+
  
