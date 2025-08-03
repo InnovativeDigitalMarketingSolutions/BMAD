@@ -22,6 +22,29 @@ commands:
   - show-audit-history: Toon audit historie
   - changelog: Toon changelog van accessibility verbeteringen
   - test: Test resource completeness
+  - test-shadcn-component: Test Shadcn component accessibility
+  - validate-aria: Validate ARIA attributes
+  - test-screen-reader: Test screen reader compatibility
+  - check-design-tokens: Check design tokens accessibility
+  - show-checklist: Show accessibility checklist
+  - show-best-practices: Show accessibility best practices
+  - export-audit: Export accessibility audit
+  - generate-report: Generate improvement report
+  - collaborate: Demonstrate collaboration
+  - run: Run agent met MCP integration
+  - initialize-mcp: Initialize MCP client
+  - use-mcp-tool: Use MCP tool met parameters
+  - get-mcp-status: Get MCP integration status
+  - use-accessibility-mcp-tools: Use accessibility-specific MCP tools
+  - check-dependencies: Check agent dependencies
+  # MCP Phase 2 Enhanced Commands
+  - enhanced-collaborate: Enhanced inter-agent communicatie
+  - enhanced-security: Enhanced security validatie
+  - enhanced-performance: Enhanced performance optimalisatie
+  - trace-operation: Trace accessibility operations
+  - trace-performance: Get performance metrics
+  - trace-error: Trace error scenarios
+  - tracing-summary: Get tracing summary
 
 dependencies:
   templates:

@@ -32,6 +32,13 @@ from bmad.core.mcp import (
     initialize_framework_mcp_integration
 )
 
+# Enhanced MCP Phase 2 imports
+from bmad.core.mcp.enhanced_mcp_integration import (
+    EnhancedMCPIntegration,
+    create_enhanced_mcp_integration
+)
+from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -89,6 +96,23 @@ class AccessibilityAgent:
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
         self.mcp_enabled = False
         
+        # Enhanced MCP Phase 2 attributes
+        self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_enabled = False
+        
+        # Tracing Integration
+        self.tracer: Optional[BMADTracer] = None
+        self.tracing_enabled = False
+        
+        # Initialize tracer
+        self.tracer = BMADTracer(config=type("Config", (), {
+            "service_name": "AccessibilityAgent",
+            "service_version": "1.0.0",
+            "environment": "development",
+            "sample_rate": 1.0,
+            "exporters": []
+        })())
+        
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
     
     async def initialize_mcp(self):
@@ -102,6 +126,33 @@ class AccessibilityAgent:
         except Exception as e:
             logger.warning(f"MCP initialization failed for AccessibilityAgent: {e}")
             self.mcp_enabled = False
+
+    async def initialize_enhanced_mcp(self):
+        """Initialize enhanced MCP capabilities for Phase 2."""
+        try:
+            self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+            # Check if initialize method exists before calling it
+            if hasattr(self.enhanced_mcp, 'initialize'):
+                await self.enhanced_mcp.initialize()
+            self.enhanced_mcp_enabled = True
+            logger.info("Enhanced MCP initialized successfully")
+        except Exception as e:
+            logger.warning(f"Enhanced MCP initialization failed: {e}")
+            self.enhanced_mcp_enabled = False
+    
+    async def initialize_tracing(self):
+        """Initialize tracing capabilities."""
+        try:
+            if self.tracer and hasattr(self.tracer, 'initialize'):
+                await self.tracer.initialize()
+                self.tracing_enabled = True
+                logger.info("Tracing initialized successfully")
+            else:
+                logger.warning("Tracer not available or missing initialize method")
+                self.tracing_enabled = False
+        except Exception as e:
+            logger.warning(f"Tracing initialization failed: {e}")
+            self.tracing_enabled = False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -155,6 +206,120 @@ class AccessibilityAgent:
             logger.error(f"Error in accessibility-specific MCP tools: {e}")
         
         return enhanced_data
+
+    async def use_enhanced_mcp_tools(self, accessibility_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use enhanced MCP tools voor Phase 2 capabilities."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available, using standard MCP tools")
+            return await self.use_accessibility_specific_mcp_tools(accessibility_data)
+        
+        enhanced_data = {}
+        
+        try:
+            # Core enhancement tools
+            core_result = await self.enhanced_mcp.use_enhanced_mcp_tool("core_enhancement", {
+                "agent_type": self.agent_name,
+                "enhancement_level": "advanced",
+                "capabilities": accessibility_data.get("capabilities", []),
+                "performance_metrics": accessibility_data.get("performance_metrics", {})
+            })
+            enhanced_data["core_enhancement"] = core_result
+            
+            # Accessibility-specific enhanced tools
+            accessibility_enhanced_result = await self.use_accessibility_specific_enhanced_tools(accessibility_data)
+            enhanced_data.update(accessibility_enhanced_result)
+            
+            # Tracing integration
+            if self.tracing_enabled:
+                trace_result = await self.trace_accessibility_operation(accessibility_data)
+                enhanced_data["tracing"] = trace_result
+            
+            logger.info(f"Enhanced MCP tools used successfully: {len(enhanced_data)} tools")
+            
+        except Exception as e:
+            logger.error(f"Enhanced MCP tools failed: {e}")
+            enhanced_data["error"] = str(e)
+        
+        return enhanced_data
+    
+    async def use_accessibility_specific_enhanced_tools(self, accessibility_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use accessibility-specific enhanced MCP tools."""
+        enhanced_tools = {}
+        
+        try:
+            # Enhanced accessibility audit
+            if "accessibility_audit" in accessibility_data:
+                audit_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_accessibility_audit", {
+                    "audit_data": accessibility_data["accessibility_audit"],
+                    "standards": accessibility_data.get("standards", ["WCAG2.1", "WCAG2.2"]),
+                    "validation_level": accessibility_data.get("validation_level", "comprehensive")
+                })
+                enhanced_tools["enhanced_accessibility_audit"] = audit_result
+            
+            # Enhanced ARIA validation
+            if "aria_validation" in accessibility_data:
+                aria_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_aria_validation", {
+                    "aria_data": accessibility_data["aria_validation"],
+                    "aria_version": accessibility_data.get("aria_version", "1.2"),
+                    "validation_scope": accessibility_data.get("validation_scope", "full")
+                })
+                enhanced_tools["enhanced_aria_validation"] = aria_result
+            
+            # Enhanced team collaboration
+            if "team_collaboration" in accessibility_data:
+                collaboration_result = await self.enhanced_mcp.communicate_with_agents(
+                    ["UXUIDesigner", "FrontendDeveloper", "QualityGuardian", "ProductOwner"],
+                    {
+                        "type": "accessibility_review",
+                        "content": accessibility_data["team_collaboration"]
+                    }
+                )
+                enhanced_tools["enhanced_team_collaboration"] = collaboration_result
+            
+            # Enhanced screen reader testing
+            if "screen_reader_testing" in accessibility_data:
+                screen_reader_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_screen_reader_testing", {
+                    "testing_data": accessibility_data["screen_reader_testing"],
+                    "screen_readers": accessibility_data.get("screen_readers", ["NVDA", "JAWS", "VoiceOver"]),
+                    "testing_scenarios": accessibility_data.get("testing_scenarios", ["navigation", "forms", "content"])
+                })
+                enhanced_tools["enhanced_screen_reader_testing"] = screen_reader_result
+            
+            logger.info(f"Accessibility-specific enhanced tools executed: {list(enhanced_tools.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Error in accessibility-specific enhanced tools: {e}")
+        
+        return enhanced_tools
+    
+    async def trace_accessibility_operation(self, operation_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace accessibility operations."""
+        if not self.tracing_enabled or not self.tracer:
+            return {"tracing": "disabled"}
+        
+        try:
+            trace_data = {
+                "operation_type": "accessibility_operation",
+                "agent": self.agent_name,
+                "timestamp": datetime.now().isoformat(),
+                "operation_data": operation_data,
+                "performance_metrics": {
+                    "audit_complexity": len(operation_data.get("components", [])),
+                    "accessibility_checks": len(operation_data.get("accessibility_requirements", [])),
+                    "collaboration_agents": len(operation_data.get("team_collaboration", {}).get("agents", []))
+                }
+            }
+            
+            # Add trace to tracer
+            if hasattr(self.tracer, 'add_trace'):
+                await self.tracer.add_trace("accessibility_operation", trace_data)
+            
+            logger.info(f"Accessibility operation traced: {trace_data['operation_type']}")
+            return trace_data
+            
+        except Exception as e:
+            logger.error(f"Tracing failed: {e}")
+            return {"tracing": "error", "error": str(e)}
 
     def _validate_input(self, value: Any, expected_type: type, param_name: str) -> None:
         """Validate input parameters with type checking."""
@@ -631,7 +796,7 @@ Accessibility Agent Commands:
             # Try MCP-enhanced audit first
             if self.mcp_enabled:
                 try:
-                    mcp_result = await self.use_accessibility_specific_mcp_tools({
+                    mcp_result = await self.use_enhanced_mcp_tools({
                         "target": target,
                         "audit_type": "comprehensive",
                         "standards": self.accessibility_standards
@@ -933,8 +1098,18 @@ Accessibility Agent Commands:
 
     async def run(self):
         """Run the agent and listen for events."""
-        # Initialize MCP
+        # Initialize MCP integration
         await self.initialize_mcp()
+        
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing capabilities
+        await self.initialize_tracing()
+        
+        print("♿ Accessibility Agent is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
         
         def sync_handler(event):
             asyncio.run(self.handle_audit_completed(event))
@@ -951,7 +1126,10 @@ def main():
                        choices=["help", "audit", "test-shadcn-component", "validate-aria",
                                "test-screen-reader", "check-design-tokens", "show-audit-history",
                                "show-checklist", "show-best-practices", "show-changelog",
-                               "export-audit", "generate-report", "test", "collaborate", "run"])
+                               "export-audit", "generate-report", "test", "collaborate", "run",
+                               "initialize-mcp", "use-mcp-tool", "get-mcp-status", "use-accessibility-mcp-tools", 
+                               "check-dependencies", "enhanced-collaborate", "enhanced-security", "enhanced-performance",
+                               "trace-operation", "trace-performance", "trace-error", "tracing-summary"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--target", default="/mock/page", help="Target for accessibility audit")
     parser.add_argument("--component", default="Button", help="Component name for testing")
@@ -998,6 +1176,55 @@ def main():
         asyncio.run(agent.collaborate_example())
     elif args.command == "run":
         asyncio.run(agent.run())
+    # Enhanced MCP Phase 2 Commands
+    elif args.command in ["enhanced-collaborate", "enhanced-security", "enhanced-performance", 
+                         "trace-operation", "trace-performance", "trace-error", "tracing-summary"]:
+        # Enhanced MCP commands
+        if args.command == "enhanced-collaborate":
+            result = asyncio.run(agent.enhanced_mcp.communicate_with_agents(
+                ["UXUIDesigner", "FrontendDeveloper", "QualityGuardian", "ProductOwner"], 
+                {"type": "accessibility_review", "content": {"review_type": "accessibility_audit"}}
+            ))
+            print(json.dumps(result, indent=2))
+        elif args.command == "enhanced-security":
+            result = asyncio.run(agent.enhanced_mcp.enhanced_security_validation({
+                "accessibility_data": {"components": ["Button", "Form", "Navigation"]},
+                "security_requirements": ["input_validation", "xss_prevention", "csrf_protection"]
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "enhanced-performance":
+            result = asyncio.run(agent.enhanced_mcp.enhanced_performance_optimization({
+                "accessibility_data": {"components": ["Button", "Form", "Navigation"]},
+                "performance_metrics": {"load_time": 2.5, "render_time": 1.2}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-operation":
+            result = asyncio.run(agent.trace_accessibility_operation({
+                "operation_type": "accessibility_audit",
+                "components": ["Button", "Form", "Navigation"],
+                "accessibility_requirements": ["WCAG2.1", "WCAG2.2"]
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-performance":
+            result = asyncio.run(agent.trace_accessibility_operation({
+                "operation_type": "performance_analysis",
+                "performance_metrics": {"load_time": 2.5, "render_time": 1.2}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-error":
+            result = asyncio.run(agent.trace_accessibility_operation({
+                "operation_type": "error_analysis",
+                "error_data": {"error_type": "accessibility_validation", "error_message": "WCAG compliance check failed"}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "tracing-summary":
+            print("Tracing Summary for AccessibilityAgent:")
+            print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+            print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+            print(f"Agent: {agent.agent_name}")
+    else:
+        print(f"Unknown command: {args.command}")
+        agent.show_help()
 
 if __name__ == "__main__":
     main()
