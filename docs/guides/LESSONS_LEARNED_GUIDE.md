@@ -6,7 +6,7 @@ Dit document bevat alle lessons learned uit het BMAD development proces. Deze le
 
 **Laatste Update**: 2025-01-27  
 **Versie**: 2.5  
-**Status**: Actief - Major Progress: 9/22 Agents Fixed (506 tests passing)
+**Status**: Actief - Major Progress: 10/22 Agents Fixed (560 tests passing)
 
 **📋 Voor gedetailleerde backlog items en implementatie details, zie:**
 - `docs/deployment/BMAD_MASTER_PLANNING.md` - Complete master planning met alle backlog items
@@ -32,6 +32,50 @@ Dit document bevat alle lessons learned uit het BMAD development proces. Deze le
 5. **Error Handling**: MCP failures mogen geen crashes veroorzaken
 6. **Test Fix Automation**: Systematische aanpak voor het fixen van syntax errors in test files
 7. **Quality Over Speed**: Kwalitatieve oplossingen boven snelle hacks
+
+### **FeedbackAgent Agent Success Story (Januari 2025)**
+
+**Major Achievement**: Van 5 failing tests naar 100% success rate (54/54 tests) door systematische fixes.
+
+**Key Lessons Learned**:
+1. **Mock Data Escape Sequences**: `\\n\\n` moet `\n\n` zijn voor newlines
+2. **Async/Sync Method Identification**: History loading methods zijn synchronous
+3. **CLI Testing Patterns**: Mock `asyncio.run()` en `json.dumps()` voor CLI tests
+4. **JSON Serialization Mocking**: MagicMock is niet JSON serializable
+
+**Success Metrics**:
+- **FeedbackAgent**: 54/54 tests passing (100% success rate)
+- **Total Progress**: 10/22 agents now at 100% success rate
+- **Overall Tests**: 560 tests passing out of ~800 total tests
+
+**Key Technical Fixes**:
+1. **Mock Data Fix**: `read_data="# History\n\n- Item 1\n- Item 2"`
+2. **Async/Sync Pattern**: Removed `@pytest.mark.asyncio` for sync methods
+3. **CLI Testing**: Mock `asyncio.run()` for async CLI commands
+4. **JSON Output**: Mock `json.dumps()` for CLI output tests
+
+**Best Practices voor CLI Testing**:
+```python
+# ❌ VERKEERD: asyncio.run() in async test
+@pytest.mark.asyncio
+async def test_cli_collect_feedback(self):
+    main()  # ❌ RuntimeError: asyncio.run() cannot be called from a running event loop
+
+# ✅ CORRECT: Mock asyncio.run() in sync test
+def test_cli_collect_feedback(self):
+    with patch('asyncio.run') as mock_asyncio_run:
+        with patch('json.dumps') as mock_json_dumps:
+            main()  # ✅ Correct mocking
+```
+
+**Best Practices voor Mock Data**:
+```python
+# ❌ VERKEERD: Double escaped newlines
+read_data="# History\\n\\n- Item 1\\n- Item 2"
+
+# ✅ CORRECT: Single escaped newlines
+read_data="# History\n\n- Item 1\n- Item 2"
+```
 
 ### **FrontendDeveloper Agent Success Story (Januari 2025)**
 

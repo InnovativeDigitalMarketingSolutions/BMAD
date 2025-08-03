@@ -6,7 +6,7 @@ Dit document bevat alle best practices voor BMAD development, geconsolideerd uit
 
 **Laatste Update**: 2025-01-27  
 **Versie**: 2.5  
-**Status**: Actief - Major Progress: 9/22 Agents Fixed (506 tests passing)
+**Status**: Actief - Major Progress: 10/22 Agents Fixed (560 tests passing)
 
 **📋 Voor gedetailleerde backlog items en implementatie details, zie:**
 - `docs/deployment/BMAD_MASTER_PLANNING.md` - Complete master planning met alle backlog items
@@ -129,7 +129,48 @@ def test_file_operation(self):
 - **506 tests** passing out of ~800 total tests
 - **Proven patterns** for syntax error fixes
 
-#### **FrontendDeveloper Agent Best Practices** 🔧
+#### **FeedbackAgent Agent Best Practices**
+
+### **CLI Testing Best Practices**
+```python
+# ✅ CORRECT: Mock asyncio.run() for async CLI commands
+def test_cli_collect_feedback(self):
+    with patch('asyncio.run') as mock_asyncio_run:
+        with patch('json.dumps') as mock_json_dumps:
+            main()
+            mock_asyncio_run.assert_called_once()
+
+# ✅ CORRECT: No asyncio.run() mocking for sync CLI commands
+def test_cli_summarize_feedback(self):
+    with patch('json.dumps') as mock_json_dumps:
+        main()
+        # No asyncio.run() call for sync methods
+```
+
+### **Mock Data Best Practices**
+```python
+# ✅ CORRECT: Single escaped newlines for mock data
+@patch('builtins.open', new_callable=mock_open, read_data="# History\n\n- Item 1\n- Item 2")
+
+# ❌ VERKEERD: Double escaped newlines
+@patch('builtins.open', new_callable=mock_open, read_data="# History\\n\\n- Item 1\\n- Item 2")
+```
+
+### **Async/Sync Method Testing**
+```python
+# ✅ CORRECT: Sync methods don't need @pytest.mark.asyncio
+def test_load_feedback_history_success(self, mock_exists, mock_file, agent):
+    agent._load_feedback_history()  # Sync method
+    assert len(agent.feedback_history) == 2
+
+# ✅ CORRECT: Async methods need @pytest.mark.asyncio
+@pytest.mark.asyncio
+async def test_collect_feedback(self, mock_monitor, agent):
+    result = await agent.collect_feedback()  # Async method
+    assert result is not None
+```
+
+## **FrontendDeveloper Agent Best Practices** 🔧
 **Best Practice**: Advanced patterns voor complexe agent testing met infinite loops en async class methods.
 
 ```python
