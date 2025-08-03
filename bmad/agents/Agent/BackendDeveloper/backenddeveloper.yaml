@@ -24,6 +24,12 @@ commands:
   - show-performance: Toon performance metrics
   - changelog: Toon changelog van backend wijzigingen
   - test: Test resource completeness
+  # MCP Phase 2 Enhanced Commands
+  - enhanced-collaborate: Enhanced inter-agent communicatie
+  - enhanced-security: Enhanced security validatie
+  - enhanced-performance: Enhanced performance optimalisatie
+  - enhanced-tools: Enhanced externe tool integratie
+  - enhanced-summary: Overzicht enhanced prestaties & communicatie
 
 dependencies:
   templates:

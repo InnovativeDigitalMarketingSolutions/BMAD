@@ -35,6 +35,12 @@ from bmad.core.mcp import (
     initialize_framework_mcp_integration
 )
 
+# Enhanced MCP Integration for Phase 2
+from bmad.core.mcp.enhanced_mcp_integration import (
+    EnhancedMCPIntegration,
+    create_enhanced_mcp_integration
+)
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -113,8 +119,12 @@ class BackendDeveloperAgent:
         self.mcp_client: Optional[MCPClient] = None
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
         self.mcp_enabled = False
+        
+        # Enhanced MCP Integration for Phase 2
+        self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_enabled = False
 
-        logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+        logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration en enhanced capabilities")
 
     async def initialize_mcp(self):
         """Initialize MCP client and integration."""
@@ -127,6 +137,21 @@ class BackendDeveloperAgent:
         except Exception as e:
             logger.warning(f"MCP initialization failed: {e}")
             self.mcp_enabled = False
+
+    async def initialize_enhanced_mcp(self):
+        """Initialize enhanced MCP capabilities for Phase 2."""
+        try:
+            self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+            self.enhanced_mcp_enabled = await self.enhanced_mcp.initialize_enhanced_mcp()
+            
+            if self.enhanced_mcp_enabled:
+                logger.info("Enhanced MCP capabilities initialized successfully")
+            else:
+                logger.warning("Enhanced MCP initialization failed, falling back to standard MCP")
+                
+        except Exception as e:
+            logger.warning(f"Enhanced MCP initialization failed: {e}")
+            self.enhanced_mcp_enabled = False
 
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -194,6 +219,130 @@ class BackendDeveloperAgent:
             enhanced_data["performance_optimization"] = performance_result
         
         return enhanced_data
+    
+    async def use_enhanced_mcp_tools(self, agent_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use enhanced MCP tools voor Phase 2 capabilities."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available, using standard MCP tools")
+            return await self.use_backend_specific_mcp_tools(agent_data)
+        
+        enhanced_data = {}
+        
+        # Core enhancement tools
+        core_result = await self.enhanced_mcp.use_enhanced_mcp_tool("core_enhancement", {
+            "agent_type": self.agent_name,
+            "enhancement_level": "advanced",
+            "capabilities": agent_data.get("capabilities", []),
+            "performance_metrics": agent_data.get("performance_metrics", {})
+        })
+        if core_result:
+            enhanced_data["core_enhancement"] = core_result
+        
+        # Backend-specific enhancement tools
+        backend_result = await self.use_backend_specific_enhanced_tools(agent_data)
+        if backend_result:
+            enhanced_data.update(backend_result)
+        
+        return enhanced_data
+    
+    async def use_backend_specific_enhanced_tools(self, backend_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use backend-specific enhanced MCP tools."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {}
+        
+        enhanced_data = {}
+        
+        # Enhanced API development
+        api_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_api_development", {
+            "endpoint": backend_data.get("endpoint", ""),
+            "method": backend_data.get("method", "GET"),
+            "framework": backend_data.get("framework", "fastapi"),
+            "development_type": "advanced",
+            "optimization_level": "comprehensive"
+        })
+        if api_result:
+            enhanced_data["enhanced_api_development"] = api_result
+        
+        # Enhanced database design
+        db_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_database_design", {
+            "database_type": backend_data.get("database_type", "postgresql"),
+            "schema_requirements": backend_data.get("schema_requirements", {}),
+            "design_type": "advanced_optimized",
+            "scalability": backend_data.get("scalability", "enterprise"),
+            "performance_optimization": True
+        })
+        if db_result:
+            enhanced_data["enhanced_database_design"] = db_result
+        
+        # Enhanced security implementation
+        security_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_security_implementation", {
+            "security_level": backend_data.get("security_level", "enterprise"),
+            "authentication": backend_data.get("authentication", "multi_factor"),
+            "authorization": backend_data.get("authorization", "fine_grained"),
+            "compliance": backend_data.get("compliance", ["gdpr", "sox", "iso27001"]),
+            "threat_detection": True
+        })
+        if security_result:
+            enhanced_data["enhanced_security_implementation"] = security_result
+        
+        # Enhanced performance optimization
+        performance_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_performance_optimization", {
+            "performance_metrics": backend_data.get("performance_metrics", {}),
+            "optimization_type": "advanced_comprehensive",
+            "target_latency": backend_data.get("target_latency", 50),
+            "scaling_strategy": backend_data.get("scaling_strategy", "intelligent"),
+            "predictive_optimization": True
+        })
+        if performance_result:
+            enhanced_data["enhanced_performance_optimization"] = performance_result
+        
+        return enhanced_data
+    
+    async def communicate_with_agents(self, target_agents: List[str], message: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhanced inter-agent communication via MCP."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available for agent communication")
+            return {}
+        
+        return await self.enhanced_mcp.communicate_with_agents(target_agents, message)
+    
+    async def use_external_tools(self, tool_config: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhanced external tool integration via MCP adapters."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available for external tools")
+            return {}
+        
+        return await self.enhanced_mcp.use_external_tools(tool_config)
+    
+    async def enhanced_security_validation(self, security_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhanced security validation and controls."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available for security validation")
+            return {}
+        
+        return await self.enhanced_mcp.enhanced_security_validation(security_data)
+    
+    async def enhanced_performance_optimization(self, performance_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhanced performance optimization for agents."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available for performance optimization")
+            return {}
+        
+        return await self.enhanced_mcp.enhanced_performance_optimization(performance_data)
+    
+    def get_enhanced_performance_summary(self) -> Dict[str, Any]:
+        """Get enhanced performance summary for the agent."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {}
+        
+        return self.enhanced_mcp.get_performance_summary()
+    
+    def get_enhanced_communication_summary(self) -> Dict[str, Any]:
+        """Get enhanced communication summary for the agent."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {}
+        
+        return self.enhanced_mcp.get_communication_summary()
     
     def _validate_input(self, value: Any, expected_type: type, param_name: str) -> None:
         """Validate input parameters with type checking."""
@@ -364,6 +513,20 @@ BackendDeveloper Agent Commands:
   test                    - Test resource completeness
   collaborate             - Demonstrate collaboration with other agents
   run                     - Start the agent in event listening mode
+
+Enhanced MCP Phase 2 Commands:
+  enhanced-collaborate    - Enhanced inter-agent communication
+  enhanced-security       - Enhanced security validation
+  enhanced-performance    - Enhanced performance optimization
+  enhanced-tools          - Enhanced external tool integration
+  enhanced-summary        - Show enhanced performance and communication summaries
+
+Enhanced Command Examples:
+  enhanced-collaborate --agents FrontendDeveloper TestEngineer --message "API ready for testing"
+  enhanced-security
+  enhanced-performance
+  enhanced-tools --tool-config '{"tool_name": "github", "category": "development"}'
+  enhanced-summary
         """
         print(help_text)
 
@@ -463,7 +626,7 @@ BackendDeveloper Agent Commands:
                 "scaling_strategy": "horizontal"
             }
             
-            enhanced_data = await self.use_backend_specific_mcp_tools(backend_data)
+            enhanced_data = await self.use_enhanced_mcp_tools(backend_data)
 
             # Simulate API building process
             time.sleep(2)
@@ -831,6 +994,9 @@ BackendDeveloper Agent Commands:
         # Initialize MCP integration
         await self.initialize_mcp()
         
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+        
         def sync_handler(event):
             asyncio.run(self.handle_api_change_completed(event))
 
@@ -843,8 +1009,9 @@ BackendDeveloper Agent Commands:
         subscribe("api_deployment_requested", self.handle_api_deployment_requested)
 
         logger.info("BackendDeveloperAgent ready and listening for events...")
-        print("🔧 BackendDeveloper Agent is running...")
+        print("🔧 BackendDeveloper Agent is running with enhanced MCP capabilities...")
         print("Listening for events: api_change_completed, api_change_requested, api_deployment_completed, api_deployment_requested")
+        print("Enhanced MCP capabilities: Inter-agent communication, External tools, Security validation, Performance optimization")
         print("Press Ctrl+C to stop")
         
         try:
@@ -865,9 +1032,13 @@ def main():
     parser.add_argument("command", nargs="?", default="help",
                        choices=["help", "build-api", "deploy-api", "show-api-history", "show-performance",
                                "show-deployment-history", "show-best-practices", "show-changelog", "export-api",
-                               "test", "collaborate", "run"])
+                               "test", "collaborate", "run", "enhanced-collaborate", "enhanced-security", 
+                               "enhanced-performance", "enhanced-tools", "enhanced-summary"])
     parser.add_argument("--endpoint", default="/api/v1/users", help="API endpoint")
     parser.add_argument("--format", choices=["md", "json", "yaml", "html"], default="md", help="Export format")
+    parser.add_argument("--agents", nargs="+", help="Target agents for collaboration")
+    parser.add_argument("--message", help="Message for agent communication")
+    parser.add_argument("--tool-config", help="External tool configuration (JSON)")
 
     args = parser.parse_args()
 
@@ -902,6 +1073,49 @@ def main():
                 print("Resource completeness test failed!")
         elif args.command == "collaborate":
             agent.collaborate_example()
+        elif args.command == "enhanced-collaborate":
+            if not args.agents or not args.message:
+                print("Error: --agents and --message are required for enhanced collaboration")
+                sys.exit(1)
+            message = {"type": "collaboration", "content": {"message": args.message}}
+            result = asyncio.run(agent.communicate_with_agents(args.agents, message))
+            print(f"Enhanced collaboration result: {result}")
+        elif args.command == "enhanced-security":
+            security_data = {
+                "auth_method": "multi_factor",
+                "security_level": "enterprise",
+                "compliance": ["gdpr", "sox", "iso27001"],
+                "model": "rbac",
+                "indicators": ["suspicious_activity", "unauthorized_access"]
+            }
+            result = asyncio.run(agent.enhanced_security_validation(security_data))
+            print(f"Enhanced security validation result: {result}")
+        elif args.command == "enhanced-performance":
+            performance_data = {
+                "cache_strategy": "adaptive",
+                "memory_usage": {"current": 50, "peak": 80},
+                "target_latency": 50
+            }
+            result = asyncio.run(agent.enhanced_performance_optimization(performance_data))
+            print(f"Enhanced performance optimization result: {result}")
+        elif args.command == "enhanced-tools":
+            if not args.tool_config:
+                print("Error: --tool-config is required for enhanced tools")
+                sys.exit(1)
+            try:
+                tool_config = json.loads(args.tool_config)
+                result = asyncio.run(agent.use_external_tools(tool_config))
+                print(f"Enhanced external tools result: {result}")
+            except json.JSONDecodeError:
+                print("Error: Invalid JSON in --tool-config")
+                sys.exit(1)
+        elif args.command == "enhanced-summary":
+            performance_summary = agent.get_enhanced_performance_summary()
+            communication_summary = agent.get_enhanced_communication_summary()
+            print("Enhanced Performance Summary:")
+            print(json.dumps(performance_summary, indent=2))
+            print("\nEnhanced Communication Summary:")
+            print(json.dumps(communication_summary, indent=2))
         elif args.command == "run":
             asyncio.run(agent.run())
         else:
