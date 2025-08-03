@@ -15,7 +15,7 @@ import textwrap
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 from dotenv import load_dotenv
 
@@ -42,6 +42,15 @@ from bmad.core.mcp import (
     get_framework_mcp_integration,
     initialize_framework_mcp_integration
 )
+
+# Enhanced MCP Integration for Phase 2
+from bmad.core.mcp.enhanced_mcp_integration import (
+    EnhancedMCPIntegration,
+    create_enhanced_mcp_integration
+)
+
+# Tracing Integration
+from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 
 load_dotenv()
 
@@ -79,6 +88,19 @@ class FullstackDeveloperAgent:
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
 
+        # MCP Integration
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
+        
+        # Enhanced MCP Integration for Phase 2
+        self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_enabled = False
+        
+        # Tracing Integration
+        self.tracer: Optional[BMADTracer] = None
+        self.tracing_enabled = False
+
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
         self.template_paths = {
@@ -102,11 +124,6 @@ class FullstackDeveloperAgent:
         self._load_development_history()
         self._load_performance_history()
         
-        # MCP Integration
-        self.mcp_client: Optional[MCPClient] = None
-        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
-        self.mcp_enabled = False
-        
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
     
     async def initialize_mcp(self):
@@ -120,6 +137,49 @@ class FullstackDeveloperAgent:
         except Exception as e:
             logger.warning(f"MCP initialization failed for FullstackDeveloper: {e}")
             self.mcp_enabled = False
+
+    async def initialize_enhanced_mcp(self):
+        """Initialize enhanced MCP capabilities for Phase 2."""
+        try:
+            self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+            self.enhanced_mcp_enabled = await self.enhanced_mcp.initialize_enhanced_mcp()
+            
+            if self.enhanced_mcp_enabled:
+                logger.info("Enhanced MCP capabilities initialized successfully for FullstackDeveloper")
+            else:
+                logger.warning("Enhanced MCP initialization failed, falling back to standard MCP")
+                
+        except Exception as e:
+            logger.warning(f"Enhanced MCP initialization failed for FullstackDeveloper: {e}")
+            self.enhanced_mcp_enabled = False
+
+    async def initialize_tracing(self):
+        """Initialize tracing capabilities for fullstack development."""
+        try:
+            self.tracer = BMADTracer(config=type("Config", (), {
+                "service_name": f"{self.agent_name}",
+                "environment": "development",
+                "tracing_level": "detailed"
+            })())
+            self.tracing_enabled = await self.tracer.initialize()
+            
+            if self.tracing_enabled:
+                logger.info("Tracing capabilities initialized successfully for FullstackDeveloper")
+                # Set up fullstack-specific tracing spans
+                await self.tracer.setup_fullstack_tracing({
+                    "agent_name": self.agent_name,
+                    "tracing_level": "detailed",
+                    "performance_tracking": True,
+                    "feature_tracking": True,
+                    "integration_tracking": True,
+                    "error_tracking": True
+                })
+            else:
+                logger.warning("Tracing initialization failed, continuing without tracing")
+                
+        except Exception as e:
+            logger.warning(f"Tracing initialization failed for FullstackDeveloper: {e}")
+            self.tracing_enabled = False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -200,6 +260,246 @@ class FullstackDeveloperAgent:
             logger.error(f"Error in fullstack-specific MCP tools: {e}")
         
         return enhanced_data
+
+    async def use_enhanced_mcp_tools(self, agent_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use enhanced MCP tools voor Phase 2 capabilities."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available, using standard MCP tools")
+            return await self.use_fullstack_specific_mcp_tools(agent_data)
+        
+        enhanced_data = {}
+        
+        # Core enhancement tools
+        core_result = await self.enhanced_mcp.use_enhanced_mcp_tool("core_enhancement", {
+            "agent_type": self.agent_name,
+            "enhancement_level": "advanced",
+            "capabilities": agent_data.get("capabilities", []),
+            "performance_metrics": agent_data.get("performance_metrics", {})
+        })
+        if core_result:
+            enhanced_data["core_enhancement"] = core_result
+        
+        # Fullstack-specific enhancement tools
+        specific_result = await self.use_fullstack_specific_enhanced_tools(agent_data)
+        if specific_result:
+            enhanced_data.update(specific_result)
+        
+        return enhanced_data
+
+    async def use_fullstack_specific_enhanced_tools(self, fullstack_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use fullstack-specific enhanced MCP tools."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {}
+        
+        enhanced_data = {}
+        
+        # Feature development enhancement
+        feature_result = await self.enhanced_mcp.use_enhanced_mcp_tool("feature_development", {
+            "feature_name": fullstack_data.get("feature_name", ""),
+            "complexity": fullstack_data.get("complexity", "medium"),
+            "frontend_requirements": fullstack_data.get("frontend_requirements", {}),
+            "backend_requirements": fullstack_data.get("backend_requirements", {}),
+            "integration_points": fullstack_data.get("integration_points", [])
+        })
+        if feature_result:
+            enhanced_data["feature_development"] = feature_result
+        
+        # Integration enhancement
+        integration_result = await self.enhanced_mcp.use_enhanced_mcp_tool("integration_enhancement", {
+            "frontend_backend_integration": fullstack_data.get("frontend_backend_integration", {}),
+            "api_contracts": fullstack_data.get("api_contracts", {}),
+            "data_flow": fullstack_data.get("data_flow", {}),
+            "error_handling": fullstack_data.get("error_handling", {})
+        })
+        if integration_result:
+            enhanced_data["integration_enhancement"] = integration_result
+        
+        # Performance optimization
+        performance_result = await self.enhanced_mcp.use_enhanced_mcp_tool("performance_optimization", {
+            "frontend_performance": fullstack_data.get("frontend_performance", {}),
+            "backend_performance": fullstack_data.get("backend_performance", {}),
+            "database_optimization": fullstack_data.get("database_optimization", {}),
+            "caching_strategy": fullstack_data.get("caching_strategy", {})
+        })
+        if performance_result:
+            enhanced_data["performance_optimization"] = performance_result
+        
+        return enhanced_data
+
+    async def communicate_with_agents(self, target_agents: List[str], message: Dict[str, Any]) -> Dict[str, Any]:
+        """Communicate with other agents via enhanced MCP."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {"error": "Enhanced MCP not available"}
+        
+        try:
+            return await self.enhanced_mcp.communicate_with_agents(target_agents, message)
+        except Exception as e:
+            logger.error(f"Enhanced agent communication failed: {e}")
+            return {"error": str(e)}
+
+    async def use_external_tools(self, tool_config: Dict[str, Any]) -> Dict[str, Any]:
+        """Use external tools via enhanced MCP."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {"error": "Enhanced MCP not available"}
+        
+        try:
+            return await self.enhanced_mcp.use_external_tool(tool_config)
+        except Exception as e:
+            logger.error(f"External tool usage failed: {e}")
+            return {"error": str(e)}
+
+    async def enhanced_security_validation(self, security_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhanced security validation for fullstack development."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {"error": "Enhanced MCP not available"}
+        
+        try:
+            return await self.enhanced_mcp.enhanced_security_validation(security_data)
+        except Exception as e:
+            logger.error(f"Enhanced security validation failed: {e}")
+            return {"error": str(e)}
+
+    async def enhanced_performance_optimization(self, performance_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhanced performance optimization for fullstack development."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {"error": "Enhanced MCP not available"}
+        
+        try:
+            return await self.enhanced_mcp.enhanced_performance_optimization(performance_data)
+        except Exception as e:
+            logger.error(f"Enhanced performance optimization failed: {e}")
+            return {"error": str(e)}
+
+    def get_enhanced_performance_summary(self) -> Dict[str, Any]:
+        """Get enhanced performance summary."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {}
+        
+        try:
+            return self.enhanced_mcp.get_performance_summary()
+        except Exception as e:
+            logger.error(f"Failed to get enhanced performance summary: {e}")
+            return {}
+
+    def get_enhanced_communication_summary(self) -> Dict[str, Any]:
+        """Get enhanced communication summary."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {}
+        
+        try:
+            return self.enhanced_mcp.get_communication_summary()
+        except Exception as e:
+            logger.error(f"Failed to get enhanced communication summary: {e}")
+            return {}
+
+    async def trace_feature_development(self, feature_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace feature development process."""
+        if not self.tracing_enabled or not self.tracer:
+            logger.warning("Tracing not available for feature development")
+            return {}
+        
+        try:
+            trace_result = await self.tracer.trace_feature_development({
+                "feature_name": feature_data.get("feature_name", ""),
+                "complexity": feature_data.get("complexity", "medium"),
+                "frontend_components": feature_data.get("frontend_components", []),
+                "backend_apis": feature_data.get("backend_apis", []),
+                "integration_points": feature_data.get("integration_points", []),
+                "performance_metrics": feature_data.get("performance_metrics", {}),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info(f"Feature development traced: {feature_data.get('feature_name', 'unknown')}")
+            return trace_result
+            
+        except Exception as e:
+            logger.error(f"Feature development tracing failed: {e}")
+            return {}
+
+    async def trace_fullstack_integration(self, integration_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace fullstack integration process."""
+        if not self.tracing_enabled or not self.tracer:
+            logger.warning("Tracing not available for fullstack integration")
+            return {}
+        
+        try:
+            trace_result = await self.tracer.trace_fullstack_integration({
+                "integration_type": integration_data.get("type", "api_integration"),
+                "frontend_component": integration_data.get("frontend_component", ""),
+                "backend_api": integration_data.get("backend_api", ""),
+                "data_flow": integration_data.get("data_flow", {}),
+                "error_handling": integration_data.get("error_handling", {}),
+                "performance_impact": integration_data.get("performance_impact", {}),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info(f"Fullstack integration traced: {integration_data.get('type', 'unknown')}")
+            return trace_result
+            
+        except Exception as e:
+            logger.error(f"Fullstack integration tracing failed: {e}")
+            return {}
+
+    async def trace_performance_optimization(self, performance_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace performance optimization process."""
+        if not self.tracing_enabled or not self.tracer:
+            logger.warning("Tracing not available for performance optimization")
+            return {}
+        
+        try:
+            trace_result = await self.tracer.trace_performance_optimization({
+                "optimization_type": performance_data.get("type", "general"),
+                "frontend_optimizations": performance_data.get("frontend_optimizations", {}),
+                "backend_optimizations": performance_data.get("backend_optimizations", {}),
+                "database_optimizations": performance_data.get("database_optimizations", {}),
+                "caching_strategies": performance_data.get("caching_strategies", {}),
+                "before_metrics": performance_data.get("before_metrics", {}),
+                "after_metrics": performance_data.get("after_metrics", {}),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info(f"Performance optimization traced: {performance_data.get('type', 'unknown')}")
+            return trace_result
+            
+        except Exception as e:
+            logger.error(f"Performance optimization tracing failed: {e}")
+            return {}
+
+    async def trace_fullstack_error(self, error_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace fullstack errors and exceptions."""
+        if not self.tracing_enabled or not self.tracer:
+            logger.warning("Tracing not available for fullstack errors")
+            return {}
+        
+        try:
+            trace_result = await self.tracer.trace_fullstack_error({
+                "error_type": error_data.get("type", "unknown"),
+                "error_message": error_data.get("message", ""),
+                "feature_name": error_data.get("feature_name", ""),
+                "frontend_component": error_data.get("frontend_component", ""),
+                "backend_api": error_data.get("backend_api", ""),
+                "stack_trace": error_data.get("stack_trace", ""),
+                "user_context": error_data.get("user_context", {}),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info(f"Fullstack error traced: {error_data.get('type', 'unknown')}")
+            return trace_result
+            
+        except Exception as e:
+            logger.error(f"Fullstack error tracing failed: {e}")
+            return {}
+
+    def get_tracing_summary(self) -> Dict[str, Any]:
+        """Get tracing summary for the agent."""
+        if not self.tracing_enabled or not self.tracer:
+            return {}
+        
+        try:
+            return self.tracer.get_tracing_summary()
+        except Exception as e:
+            logger.error(f"Failed to get tracing summary: {e}")
+            return {}
 
     def _validate_input(self, value: Any, expected_type: type, param_name: str) -> None:
         """Validate input type for parameters."""
@@ -358,6 +658,32 @@ FullstackDeveloper Agent Commands:
   release-notes           - Show release notes
   devops-handover         - Show DevOps handover
   tech-debt               - Show technical debt
+
+Enhanced MCP Phase 2 Commands:
+  enhanced-collaborate    - Enhanced inter-agent communication
+  enhanced-security       - Enhanced security validation
+  enhanced-performance    - Enhanced performance optimization
+  enhanced-tools          - Enhanced external tool integration
+  enhanced-summary        - Show enhanced performance and communication summaries
+
+Tracing Commands:
+  trace-feature           - Trace feature development process
+  trace-integration       - Trace fullstack integration process
+  trace-performance       - Trace performance optimization process
+  trace-error             - Trace fullstack errors and exceptions
+  tracing-summary         - Get tracing summary and analytics
+
+Enhanced Command Examples:
+  enhanced-collaborate --agents FrontendDeveloper BackendDeveloper --message "Feature integration ready"
+  enhanced-security
+  enhanced-performance
+  enhanced-tools --tool-config '{"tool_name": "github", "category": "development"}'
+  enhanced-summary
+  trace-feature --feature-data '{"feature_name": "UserAuth", "complexity": "medium"}'
+  trace-integration --integration-data '{"type": "api_integration", "frontend_component": "LoginForm"}'
+  trace-performance --performance-data '{"type": "general", "frontend_optimizations": {}}'
+  trace-error --error-data '{"type": "integration_error", "message": "API connection failed"}'
+  tracing-summary
         """
         print(help_text)
 
@@ -624,6 +950,8 @@ export function {component_name}({{
         """Run the agent and listen for events met MCP integration."""
         # Initialize MCP integration
         await self.initialize_mcp()
+        await self.initialize_enhanced_mcp()
+        await self.initialize_tracing()
         
         def sync_handler(event):
             asyncio.run(self.handle_fullstack_development_completed(event))
@@ -1477,6 +1805,39 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
                 except Exception as e:
                     logger.warning(f"Fullstack-specific MCP tools failed: {e}")
 
+            # Use enhanced MCP tools for Phase 2 capabilities
+            if self.enhanced_mcp_enabled:
+                try:
+                    enhanced_data = await self.use_enhanced_mcp_tools({
+                        "feature_name": feature_name,
+                        "feature_description": feature_description,
+                        "complexity": complexity,
+                        "capabilities": ["frontend", "backend", "api", "integration"],
+                        "performance_metrics": {"development_time": start_time}
+                    })
+                    if enhanced_data:
+                        result["enhanced_mcp_data"] = enhanced_data
+                        result["enhanced_mcp_enabled"] = True
+                except Exception as e:
+                    logger.warning(f"Enhanced MCP tools failed: {e}")
+
+            # Trace feature development process
+            if self.tracing_enabled and self.tracer:
+                try:
+                    trace_result = await self.trace_feature_development({
+                        "feature_name": feature_name,
+                        "complexity": complexity,
+                        "frontend_components": [f"{feature_name}Component"],
+                        "backend_apis": [f"{feature_name}API"],
+                        "integration_points": ["api_integration", "data_flow"],
+                        "performance_metrics": {"development_time": start_time}
+                    })
+                    if trace_result:
+                        result["tracing_data"] = trace_result
+                        result["tracing_enabled"] = True
+                except Exception as e:
+                    logger.warning(f"Feature development tracing failed: {e}")
+
             # Record performance
             end_time = time.time()
             development_time = end_time - start_time
@@ -1568,9 +1929,18 @@ def main():
                                "show-changelog", "export-report", "test", "collaborate", "run", "integrate-service",
                                "ci-cd", "dev-log", "review", "refactor", "security-check", "blockers", "api-contract",
                                "component-doc", "performance-profile", "a11y-check", "feature-toggle", "monitoring-setup",
-                               "release-notes", "devops-handover", "tech-debt"])
+                               "release-notes", "devops-handover", "tech-debt", "develop-feature",
+                               "enhanced-collaborate", "enhanced-security", "enhanced-performance", "enhanced-tools", "enhanced-summary",
+                               "trace-feature", "trace-integration", "trace-performance", "trace-error", "tracing-summary"])
     parser.add_argument("--name", default="User Authentication", help="Story/Component name")
     parser.add_argument("--format", choices=["md", "json"], default="md", help="Export format")
+    parser.add_argument("--agents", nargs="+", help="Target agents for collaboration")
+    parser.add_argument("--message", help="Message for agent communication")
+    parser.add_argument("--tool-config", help="External tool configuration (JSON)")
+    parser.add_argument("--feature-data", help="Feature data for tracing (JSON)")
+    parser.add_argument("--integration-data", help="Integration data for tracing (JSON)")
+    parser.add_argument("--performance-data", help="Performance data for tracing (JSON)")
+    parser.add_argument("--error-data", help="Error data for tracing (JSON)")
 
     args = parser.parse_args()
 
@@ -1636,6 +2006,100 @@ def main():
         agent.devops_handover()
     elif args.command == "tech-debt":
         agent.tech_debt()
+    elif args.command == "develop-feature":
+        result = asyncio.run(agent.develop_feature(args.name, "Feature development with enhanced MCP and tracing"))
+        print(f"Feature development result: {result}")
+    elif args.command == "enhanced-collaborate":
+        if not args.agents or not args.message:
+            print("Error: --agents and --message are required for enhanced collaboration")
+            sys.exit(1)
+        message = {"type": "collaboration", "content": {"message": args.message}}
+        result = asyncio.run(agent.communicate_with_agents(args.agents, message))
+        print(f"Enhanced collaboration result: {result}")
+    elif args.command == "enhanced-security":
+        security_data = {
+            "auth_method": "multi_factor",
+            "security_level": "enterprise",
+            "compliance": ["gdpr", "sox", "iso27001"],
+            "model": "rbac",
+            "indicators": ["suspicious_activity", "unauthorized_access"]
+        }
+        result = asyncio.run(agent.enhanced_security_validation(security_data))
+        print(f"Enhanced security validation result: {result}")
+    elif args.command == "enhanced-performance":
+        performance_data = {
+            "cache_strategy": "adaptive",
+            "memory_usage": {"current": 50, "peak": 80},
+            "target_latency": 50
+        }
+        result = asyncio.run(agent.enhanced_performance_optimization(performance_data))
+        print(f"Enhanced performance optimization result: {result}")
+    elif args.command == "enhanced-tools":
+        if not args.tool_config:
+            print("Error: --tool-config is required for enhanced tools")
+            sys.exit(1)
+        try:
+            tool_config = json.loads(args.tool_config)
+            result = asyncio.run(agent.use_external_tools(tool_config))
+            print(f"Enhanced external tools result: {result}")
+        except json.JSONDecodeError:
+            print("Error: Invalid JSON in --tool-config")
+            sys.exit(1)
+    elif args.command == "enhanced-summary":
+        performance_summary = agent.get_enhanced_performance_summary()
+        communication_summary = agent.get_enhanced_communication_summary()
+        print("Enhanced Performance Summary:")
+        print(json.dumps(performance_summary, indent=2))
+        print("\nEnhanced Communication Summary:")
+        print(json.dumps(communication_summary, indent=2))
+    elif args.command == "trace-feature":
+        if not args.feature_data:
+            print("Error: --feature-data is required for trace-feature command")
+            sys.exit(1)
+        try:
+            feature_data = json.loads(args.feature_data)
+            result = asyncio.run(agent.trace_feature_development(feature_data))
+            print(f"Feature tracing result: {result}")
+        except json.JSONDecodeError:
+            print("Error: Invalid JSON in --feature-data")
+            sys.exit(1)
+    elif args.command == "trace-integration":
+        if not args.integration_data:
+            print("Error: --integration-data is required for trace-integration command")
+            sys.exit(1)
+        try:
+            integration_data = json.loads(args.integration_data)
+            result = asyncio.run(agent.trace_fullstack_integration(integration_data))
+            print(f"Integration tracing result: {result}")
+        except json.JSONDecodeError:
+            print("Error: Invalid JSON in --integration-data")
+            sys.exit(1)
+    elif args.command == "trace-performance":
+        if not args.performance_data:
+            print("Error: --performance-data is required for trace-performance command")
+            sys.exit(1)
+        try:
+            performance_data = json.loads(args.performance_data)
+            result = asyncio.run(agent.trace_performance_optimization(performance_data))
+            print(f"Performance tracing result: {result}")
+        except json.JSONDecodeError:
+            print("Error: Invalid JSON in --performance-data")
+            sys.exit(1)
+    elif args.command == "trace-error":
+        if not args.error_data:
+            print("Error: --error-data is required for trace-error command")
+            sys.exit(1)
+        try:
+            error_data = json.loads(args.error_data)
+            result = asyncio.run(agent.trace_fullstack_error(error_data))
+            print(f"Error tracing result: {result}")
+        except json.JSONDecodeError:
+            print("Error: Invalid JSON in --error-data")
+            sys.exit(1)
+    elif args.command == "tracing-summary":
+        tracing_summary = agent.get_tracing_summary()
+        print("Tracing Summary:")
+        print(json.dumps(tracing_summary, indent=2))
 
 if __name__ == "__main__":
     main()
