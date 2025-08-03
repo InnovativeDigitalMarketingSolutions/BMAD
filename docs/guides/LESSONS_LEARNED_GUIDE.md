@@ -5,8 +5,8 @@
 Dit document bevat alle lessons learned uit het BMAD development proces. Deze lessons zijn verzameld tijdens development, testing, en MCP integration om de kwaliteit van toekomstige development te verbeteren.
 
 **Laatste Update**: 2025-01-27  
-**Versie**: 2.5  
-**Status**: Actief - Major Progress: 10/22 Agents Fixed (560 tests passing)
+**Versie**: 2.6  
+**Status**: Actief - Major Progress: 15/23 Agents Fixed (898 tests passing)
 
 **📋 Voor gedetailleerde backlog items en implementatie details, zie:**
 - `docs/deployment/BMAD_MASTER_PLANNING.md` - Complete master planning met alle backlog items
@@ -75,6 +75,52 @@ read_data="# History\\n\\n- Item 1\\n- Item 2"
 
 # ✅ CORRECT: Single escaped newlines
 read_data="# History\n\n- Item 1\n- Item 2"
+```
+
+### **DocumentationAgent Complex Issues Analysis (Januari 2025)**
+
+**Major Challenge**: 40+ syntax errors in één test file, complexe trailing comma issues in with statements.
+
+**Root Cause Analysis**:
+1. **Trailing Comma Issues**: 40+ instances van `with patch(...),` zonder line continuation
+2. **Mock Data Escape Sequences**: `nn` in plaats van `\n\n` in mock data
+3. **Async/Sync Mismatches**: `await` buiten async functions
+4. **File Complexity**: 1068 lines met meerdere test classes en complexe mocking
+
+**Technical Analysis**:
+```bash
+# Syntax Error Pattern Analysis
+grep -n "with patch.*," tests/unit/agents/test_documentation_agent.py
+# Result: 40+ instances found
+
+# Mock Data Issues
+grep -n "nn" tests/unit/agents/test_documentation_agent.py
+# Result: Multiple instances of incorrect escape sequences
+```
+
+**Lessons Learned**:
+1. **Complex File Strategy**: Files met 40+ syntax errors vereisen speciale aanpak
+2. **Systematic Fix Approach**: Eén error tegelijk fixen is inefficiënt voor complexe files
+3. **File Size Impact**: 1000+ line files hebben exponentiële complexity
+4. **Mock Data Consistency**: Escape sequences moeten consistent zijn door hele file
+5. **Strategic Pivoting**: Soms is het beter om naar eenvoudigere files te pivoten
+
+**Recommended Approach**:
+1. **Automated Detection**: Script om alle syntax errors te detecteren
+2. **Bulk Fix Strategy**: Fix alle trailing commas in één keer
+3. **Mock Data Standardization**: Consistent escape sequence handling
+4. **File Segmentation**: Break complex files in kleinere test modules
+5. **Priority Assessment**: Focus op files met meeste impact
+
+**Best Practices voor Complex Files**:
+```python
+# ❌ INEFFICIËNT: Eén error tegelijk fixen
+with patch('pathlib.Path.exists', return_value=True),  # ❌ Trailing comma
+     patch('builtins.open', mock_open(read_data=mock_data)):
+
+# ✅ EFFICIËNT: Bulk fix strategy
+with patch('pathlib.Path.exists', return_value=True), \
+     patch('builtins.open', mock_open(read_data=mock_data)):
 ```
 
 ### **FrontendDeveloper Agent Success Story (Januari 2025)**

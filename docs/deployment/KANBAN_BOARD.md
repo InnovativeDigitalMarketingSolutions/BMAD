@@ -51,6 +51,20 @@
 - **Deliverables**: Process improvement recommendations, CI/CD pipeline updates
 - **Success Criteria**: Geen syntax errors meer in toekomstige MCP implementaties
 
+### **DocumentationAgent Complex Issues Analysis** 🔍 (Week 15-16) 🔥 **NEW HIGH PRIORITY**
+- **Doel**: Root cause analysis van 40+ syntax errors in DocumentationAgent
+- **Scope**: Systematische analyse van trailing comma issues in with statements
+- **Deliverables**: Comprehensive fix strategy, improved systematic approach
+- **Success Criteria**: DocumentationAgent naar 100% test success rate
+- **Referentie**: `docs/guides/LESSONS_LEARNED_GUIDE.md#documentationagent-complex-syntax-errors`
+
+### **Systematic Approach Optimization** 🔧 (Week 15-16) 🔥 **NEW HIGH PRIORITY**
+- **Doel**: Efficiëntere aanpak voor complexe test files
+- **Scope**: Verbeterde strategie voor files met 40+ syntax errors
+- **Deliverables**: Enhanced systematic approach, automated detection tools
+- **Success Criteria**: Snellere en betrouwbaardere fixes voor complexe files
+- **Referentie**: `docs/guides/BEST_PRACTICES_GUIDE.md#complex-file-handling`
+
 ## 🚧 **In Progress** (Huidige Taken)
 
 ### **Code Quality Principles & Lessons Learned** 📝
