@@ -670,3 +670,47 @@ Voeg nieuwe MCP patterns toe door:
 ---
 
 **Note**: Deze guide wordt continu bijgewerkt tijdens MCP integration. Check regelmatig voor nieuwe patterns en best practices. 
+
+## ⚡️ Async/Synchronous MCP Integration Pattern (2025-01-27)
+
+### Probleem
+Bij sommige agents (zoals Architect en BackendDeveloper) ontstonden errors zoals:
+- `TypeError: object dict can't be used in 'await' expression`
+- `object MCPClient can't be used in 'await' expression`
+
+Dit komt doordat methodes die MCP kunnen aanroepen soms sync zijn, maar in de praktijk (en in tests) async worden aangeroepen. MCP vereist altijd een async interface.
+
+### Best Practice Pattern
+
+**Alle methodes die MCP kunnen aanroepen moeten async zijn, ook als de lokale fallback sync is.**
+
+#### Voorbeeldimplementatie:
+```python
+async def deploy_api(self, ...):
+    if self.mcp_enabled and self.mcp_client:
+        return await self.mcp_client.execute_tool(...)
+    else:
+        # Fallback naar sync, maar via thread
+        return await asyncio.to_thread(self._deploy_api_sync, ...)
+
+def _deploy_api_sync(self, ...):
+    # Lokale implementatie
+    ...
+```
+
+- **Waarom:** Dit voorkomt await/sync mismatches, maakt testen eenvoudiger en zorgt voor uniforme agent interfaces.
+- **Tests:** Gebruik altijd `AsyncMock` voor async methodes.
+
+### Lessons Learned
+- Sync fallback direct aanroepen in een async context veroorzaakt TypeErrors.
+- MCP integratie is alleen robuust als alle relevante agentmethodes async zijn.
+- Fallbacks moeten via `await asyncio.to_thread(...)` worden aangeroepen.
+- Dit patroon is nu verplicht voor alle BMAD agents.
+
+### Checklist voor MCP-integratie
+- [x] Alle MCP-methodes zijn async
+- [x] Lokale fallback via `asyncio.to_thread`
+- [x] Tests gebruiken `AsyncMock` voor alle async methodes
+- [x] Documentatie en guides zijn geüpdatet
+
+--- 

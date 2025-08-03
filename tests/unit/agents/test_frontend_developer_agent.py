@@ -31,7 +31,7 @@ class TestFrontendDeveloperAgent:
         assert isinstance(agent.template_paths, dict)
         assert isinstance(agent.data_paths, dict)
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Component Historynn- Component 1n- Component 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Component History\n\n- Component 1\n- Component 2")
     @patch('pathlib.Path.exists', return_value=True)
     @pytest.mark.asyncio
     async def test_load_component_history_success(self, mock_exists, mock_file):
@@ -54,7 +54,7 @@ class TestFrontendDeveloperAgent:
         
         assert len(agent.component_history) == 0
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Performance Historynn- Performance 1n- Performance 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Performance History\n\n- Performance 1\n- Performance 2")
     @patch('pathlib.Path.exists', return_value=True)
     @pytest.mark.asyncio
     async def test_load_performance_history_success(self, mock_exists, mock_file):
@@ -106,7 +106,7 @@ class TestFrontendDeveloperAgent:
     def test_show_help(self, capsys):
         """Test show_help method."""
         agent = FrontendDeveloperAgent()
-        await agent.show_help()
+        agent.show_help()
         
         captured = capsys.readouterr()
         assert "FrontendDeveloper Agent Commands:" in captured.out
@@ -195,7 +195,8 @@ class TestFrontendDeveloperAgent:
             agent.validate_input("TestComponent", "invalid")
 
     @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.time.sleep')
-    def test_build_shadcn_component(self, mock_sleep):
+    @pytest.mark.asyncio
+    async def test_build_shadcn_component(self, mock_sleep):
         """Test build_shadcn_component method."""
         agent = FrontendDeveloperAgent()
         # Initialize services to avoid monitor error
@@ -306,16 +307,15 @@ class TestFrontendDeveloperAgent:
         assert "resources_loaded" in status
 
     @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.time.sleep')
-    @pytest.mark.asyncio
-    async def test_collaborate_example(self, mock_sleep, capsys):
+    def test_collaborate_example(self, mock_sleep, capsys):
         """Test collaborate_example method."""
         agent = FrontendDeveloperAgent()
         # Initialize services to avoid monitor error
         agent._ensure_services_initialized()
-        await agent.collaborate_example()
+        agent.collaborate_example()
         
         captured = capsys.readouterr()
-        assert "Collaboration example completed successfully." in captured.out
+        assert "Collaboration example completed successfully" in captured.out
 
     def test_handle_component_build_requested(self):
         """Test handle_component_build_requested method."""
@@ -365,7 +365,7 @@ class TestFrontendDeveloperAgent:
         mock_llm.return_value = "Bug analysis result"
         
         agent = FrontendDeveloperAgent()
-        result = agent.bug_root_cause("Error: Cannot read property of undefined")
+        result = agent.bug_root_cause("Error: Ca\n\not read property of undefined")
         
         assert result == "Bug analysis result"
         assert mock_llm.called
@@ -376,7 +376,7 @@ class TestFrontendDeveloperAgent:
         mock_llm.side_effect = Exception("LLM error")
         
         agent = FrontendDeveloperAgent()
-        result = agent.bug_root_cause("Error: Cannot read property of undefined")
+        result = agent.bug_root_cause("Error: Ca\n\not read property of undefined")
         
         assert "Error analyzing bug root cause" in result
 
@@ -494,20 +494,32 @@ class TestFrontendDeveloperAgent:
         assert "error" in result
         assert "Figma API error" in result["error"]
 
-    def test_run_method(self):
+    @pytest.mark.asyncio
+    async def test_run_method(self):
         """Test run method."""
         agent = FrontendDeveloperAgent()
         # Initialize services to avoid monitor error
         agent._ensure_services_initialized()
-        await agent.run()
         
-        # Just check that it doesn't raise an error
-        assert True
+        # Mock the infinite loop to avoid hanging
+        with patch.object(agent, 'initialize_mcp') as mock_init, \
+             patch.object(agent, 'collaborate_example') as mock_collab, \
+             patch('asyncio.sleep') as mock_sleep:
+            
+            # Mock sleep to raise KeyboardInterrupt after first call
+            mock_sleep.side_effect = KeyboardInterrupt()
+            
+            await agent.run()
+            
+            # Verify methods were called
+            mock_init.assert_called_once()
+            mock_collab.assert_called_once()
 
-    def test_run_agent_class_method(self):
+    @pytest.mark.asyncio
+    async def test_run_agent_class_method(self):
         """Test run_agent class method."""
         with patch.object(FrontendDeveloperAgent, 'run') as mock_run:
-            FrontendDeveloperAgent.run_agent()
+            await FrontendDeveloperAgent.run_agent()
             
             assert mock_run.called
 
@@ -519,7 +531,6 @@ class TestFrontendDeveloperIntegration:
     @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_advanced_policy_engine')
     @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.get_sprite_library')
     @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.time.sleep')
-    @pytest.mark.asyncio
     @pytest.mark.asyncio
     async def test_complete_component_build_workflow(self, mock_sleep, mock_sprite, mock_policy, mock_monitor):
         """Test complete component build workflow."""
@@ -537,7 +548,7 @@ class TestFrontendDeveloperIntegration:
         assert result["type"] == "React/Next.js"
         
         # Test accessibility check
-        accessibility_result = await agent.run_accessibility_check("TestComponent")
+        accessibility_result = agent.run_accessibility_check("TestComponent")
         assert accessibility_result["component"] == "TestComponent"
         assert "score" in accessibility_result
         

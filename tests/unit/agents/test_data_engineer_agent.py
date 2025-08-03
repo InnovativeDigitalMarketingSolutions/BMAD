@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, mock_open, MagicMock
+from unittest.mock import patch, mock_open, MagicMock, AsyncMock
 from datetime import datetime
 import json
 import csv
@@ -26,7 +26,7 @@ class TestDataEngineerAgent:
         assert hasattr(agent, 'template_paths')
         assert hasattr(agent, 'data_paths')
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Pipeline Historynn- Pipeline 1n- Pipeline 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Pipeline History\n\n- Pipeline 1\n- Pipeline 2")
     @patch('pathlib.Path.exists', return_value=True)
     @pytest.mark.asyncio
     async def test_load_pipeline_history_success(self, mock_exists, mock_file, agent):
@@ -52,7 +52,7 @@ class TestDataEngineerAgent:
         agent._save_pipeline_history()
         mock_file.assert_called()
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Quality Historynn- Quality 1n- Quality 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Quality History\n\n- Quality 1\n- Quality 2")
     @patch('pathlib.Path.exists', return_value=True)
     @pytest.mark.asyncio
     async def test_load_quality_history_success(self, mock_exists, mock_file, agent):
@@ -80,13 +80,13 @@ class TestDataEngineerAgent:
 
     def test_show_help(self, agent, capsys):
         """Test show_help method."""
-        await agent.show_help()
+        agent.show_help()
         captured = capsys.readouterr()
         assert "Data Engineer Agent Commands:" in captured.out
         assert "data-quality-check" in captured.out
         assert "explain-pipeline" in captured.out
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Best PracticesnnTest content")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Best Practices\n\nTest content")
     @patch('pathlib.Path.exists', return_value=True)
     def test_show_resource_best_practices(self, mock_exists, mock_file, agent, capsys):
         """Test show_resource method for best-practices."""
@@ -275,7 +275,8 @@ class TestDataEngineerAgent:
         result = agent.handle_explain_pipeline(test_event)
         assert result is None
 
-    def test_run(self, agent):
+    @pytest.mark.asyncio
+    async def test_run(self, agent):
         """Test run method."""
         # Mock the entire run method to avoid event subscription issues
         with patch.object(agent, 'run') as mock_run:
@@ -289,18 +290,17 @@ class TestDataEngineerAgent:
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
     @patch('bmad.agents.core.communication.message_bus.publish')
     @pytest.mark.asyncio
-    @pytest.mark.asyncio
     async def test_complete_data_engineering_workflow(self, mock_publish, mock_monitor, agent):
         """Test complete data engineering workflow from quality check to monitoring."""
         mock_monitor_instance = MagicMock()
         mock_monitor.return_value = mock_monitor_instance
 
         # Run data quality check
-        quality_result = await agent.data_quality_check("Test data")
+        quality_result = agent.data_quality_check("Test data")
         assert quality_result["check_type"] == "Data Quality Assessment"
 
         # Explain pipeline
-        explanation_result = await agent.explain_pipeline("Test ETL pipeline")
+        explanation_result = agent.explain_pipeline("Test ETL pipeline")
         assert explanation_result["explanation_type"] == "ETL Pipeline Analysis"
 
         # Build pipeline
@@ -308,7 +308,7 @@ class TestDataEngineerAgent:
         assert build_result["pipeline_name"] == "Test Pipeline"
 
         # Monitor pipeline
-        monitor_result = await agent.monitor_pipeline("pipeline_001")
+        monitor_result = agent.monitor_pipeline("pipeline_001")
         assert monitor_result["pipeline_id"] == "pipeline_001"
 
         # Verify all methods were called successfully
@@ -408,7 +408,7 @@ class TestDataEngineerAgent:
         """Test show_resource method with empty resource type."""
         agent.show_resource("")  # Empty string
         captured = capsys.readouterr()
-        assert "Error: resource_type cannot be empty" in captured.out
+        assert "Error: resource_type ca\n\not be empty" in captured.out
 
     @patch('builtins.open', side_effect=FileNotFoundError("File not found"))
     @patch('pathlib.Path.exists', return_value=True)
@@ -441,7 +441,7 @@ class TestDataEngineerAgent:
 
     def test_data_quality_check_empty_data_summary(self, agent):
         """Test data_quality_check with empty data summary."""
-        with pytest.raises(ValueError, match="data_summary cannot be empty"):
+        with pytest.raises(ValueError, match="data_summary ca\n\not be empty"):
             agent.data_quality_check("")
 
     def test_explain_pipeline_invalid_pipeline_code_type(self, agent):
@@ -451,7 +451,7 @@ class TestDataEngineerAgent:
 
     def test_explain_pipeline_empty_pipeline_code(self, agent):
         """Test explain_pipeline with empty pipeline code."""
-        with pytest.raises(ValueError, match="pipeline_code cannot be empty"):
+        with pytest.raises(ValueError, match="pipeline_code ca\n\not be empty"):
             agent.explain_pipeline("")
 
     @pytest.mark.asyncio
@@ -463,7 +463,7 @@ class TestDataEngineerAgent:
     @pytest.mark.asyncio
     async def test_build_pipeline_empty_pipeline_name(self, agent):
         """Test build_pipeline with empty pipeline name."""
-        with pytest.raises(ValueError, match="pipeline_name cannot be empty"):
+        with pytest.raises(ValueError, match="pipeline_name ca\n\not be empty"):
             await agent.build_pipeline("")
 
     def test_monitor_pipeline_invalid_pipeline_id_type(self, agent):
@@ -473,7 +473,7 @@ class TestDataEngineerAgent:
 
     def test_monitor_pipeline_empty_pipeline_id(self, agent):
         """Test monitor_pipeline with empty pipeline id."""
-        with pytest.raises(ValueError, match="pipeline_id cannot be empty"):
+        with pytest.raises(ValueError, match="pipeline_id ca\n\not be empty"):
             agent.monitor_pipeline("")
 
     def test_export_report_invalid_format_type(self, agent):
