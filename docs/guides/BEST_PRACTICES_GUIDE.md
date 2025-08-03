@@ -64,6 +64,66 @@ def test_cli_command(self, mock_asyncio_run):
 - **Systematic approach proven effective**
 - **Quality over speed approach successful**
 
+### 0.1. Regression Testing Best Practices 🛡️
+
+#### **Mandatory Regression Testing**
+**Best Practice**: Bij elke nieuwe feature implementatie altijd controleren op mogelijke regressie.
+
+**Pre-Implementation Checklist**:
+```bash
+# 1. Baseline Test Run
+python -m pytest tests/unit/agents/ --tb=short -v | grep -E "(FAILED|ERROR|passed)" | tail -5
+
+# 2. Document Current State
+echo "Baseline: $(date) - $(python -m pytest tests/unit/agents/ --tb=short -q | grep passed | tail -1)"
+
+# 3. Run Critical Path Tests
+python -m pytest tests/unit/agents/ -k "test_show_resource_empty_type or test_cli_design_feedback" -v
+```
+
+**Post-Implementation Regression Check**:
+```bash
+# 1. Full Test Suite Run
+python -m pytest tests/unit/agents/ --tb=short -v | grep -E "(FAILED|ERROR|passed)" | tail -5
+
+# 2. Compare Results
+echo "Post-implementation: $(date) - $(python -m pytest tests/unit/agents/ --tb=short -q | grep passed | tail -1)"
+
+# 3. Critical Path Verification
+python -m pytest tests/unit/agents/ -k "test_show_resource_empty_type or test_cli_design_feedback" -v
+```
+
+**Regression Detection Patterns**:
+```python
+# ✅ Before Implementation
+def test_baseline_regression_check():
+    """Baseline test to detect regressions."""
+    result = agent.method_under_test()
+    assert result["status"] == "success"
+    assert "expected_key" in result
+
+# ✅ After Implementation
+def test_regression_verification():
+    """Verify no regressions after changes."""
+    result = agent.method_under_test()
+    assert result["status"] == "success"  # Should still work
+    assert "expected_key" in result       # Should still have key
+    assert "new_feature" in result        # Should have new feature
+```
+
+**Regression Prevention Strategies**:
+1. **Test Isolation**: Elke test moet onafhankelijk zijn
+2. **Mock External Dependencies**: Voorkom externe API calls in tests
+3. **Baseline Documentation**: Documenteer baseline test results
+4. **Incremental Testing**: Test kleine wijzigingen stap voor stap
+5. **Rollback Plan**: Bereid rollback strategie voor
+
+**Success Criteria**:
+- ✅ Geen nieuwe failing tests na implementatie
+- ✅ Alle bestaande functionaliteit blijft werken
+- ✅ Test coverage blijft gelijk of verbetert
+- ✅ Performance metrics blijven stabiel
+
 ### 1. Agent Development
 
 #### **Agent Initialization Pattern**
@@ -1308,3 +1368,78 @@ Voeg nieuwe best practices toe door:
 ---
 
 **Note**: Deze guide wordt continu bijgewerkt tijdens development. Check regelmatig voor nieuwe best practices. 
+
+## 0.2. Tracing Best Practices 🔍
+
+### **Mandatory Tracing Implementation**
+Voor alle agents met enhanced MCP Phase 2 capabilities:
+
+```bash
+# Tracing initialization check
+python -m pytest tests/unit/agents/test_*_enhanced_mcp.py -k "tracing" -v
+
+# Tracing functionality validation
+python agent_name.py tracing-summary
+```
+
+### **Tracing Implementation Patterns**
+```python
+# Standard tracing initialization
+async def initialize_tracing(self):
+    """Initialize tracing capabilities."""
+    try:
+        self.tracer = BMADTracer(config=type("Config", (), {
+            "service_name": f"{self.agent_name}",
+            "environment": "development",
+            "tracing_level": "detailed"
+        })())
+        self.tracing_enabled = await self.tracer.initialize()
+        
+        if self.tracing_enabled:
+            logger.info("Tracing capabilities initialized successfully")
+            await self.tracer.setup_agent_specific_tracing({
+                "agent_name": self.agent_name,
+                "tracing_level": "detailed",
+                "performance_tracking": True,
+                "error_tracking": True
+            })
+    except Exception as e:
+        logger.warning(f"Tracing initialization failed: {e}")
+        self.tracing_enabled = False
+
+# Agent-specific tracing methods
+async def trace_agent_operation(self, operation_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Trace agent-specific operations."""
+    if not self.tracing_enabled or not self.tracer:
+        return {}
+    
+    try:
+        trace_result = await self.tracer.trace_agent_operation({
+            "operation_type": operation_data.get("type", "unknown"),
+            "agent_name": self.agent_name,
+            "performance_metrics": operation_data.get("performance_metrics", {}),
+            "timestamp": datetime.now().isoformat()
+        })
+        return trace_result
+    except Exception as e:
+        logger.error(f"Agent operation tracing failed: {e}")
+        return {}
+```
+
+### **Tracing Integration Checklist**
+- [ ] **BMADTracer Import**: `from integrations.opentelemetry.opentelemetry_tracing import BMADTracer`
+- [ ] **Tracing Attributes**: `self.tracer: Optional[BMADTracer] = None`, `self.tracing_enabled = False`
+- [ ] **Initialization Method**: `async def initialize_tracing(self)`
+- [ ] **Agent-Specific Tracing Methods**: `trace_agent_operation`, `trace_performance_metrics`, `trace_error_event`
+- [ ] **CLI Commands**: `trace-*` commands voor tracing functionaliteit
+- [ ] **Integration**: Tracing calls in main agent methods (build, process, etc.)
+- [ ] **Error Handling**: Graceful fallback wanneer tracing niet beschikbaar is
+- [ ] **Documentation**: Tracing capabilities beschreven in agent documentatie
+- [ ] **Tests**: Comprehensive test suite voor tracing functionaliteit
+
+### **Tracing Benefits**
+- **Performance Monitoring**: Real-time performance metrics en bottlenecks
+- **Debugging**: Detailed operation tracing voor troubleshooting
+- **Collaboration**: Trace sharing tussen agents voor end-to-end debugging
+- **Analytics**: User behavior en interaction pattern analysis
+- **Error Tracking**: Comprehensive error event tracking en analysis 

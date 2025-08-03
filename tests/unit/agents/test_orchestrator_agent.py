@@ -261,7 +261,7 @@ class TestOrchestratorAgent:
         assert result["status"] == "completed"
         assert "agent_assignments" in result
         assert "coordination_plan" in result
-        assert "communication_cha\n\nels" in result
+        assert "communication_channels" in result
         assert "success_criteria" in result
         assert "risk_mitigation" in result
         assert "performance_metrics" in result

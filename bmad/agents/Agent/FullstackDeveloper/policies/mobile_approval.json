@@ -1,0 +1,48 @@
+{
+  "policy_id": "mobile_approval",
+  "policy_name": "Mobile App Approval Policy",
+  "policy_type": "workflow_policies",
+  "version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "app_store_requirements",
+      "rule_name": "App Store Requirements Check",
+      "policy_type": "workflow_policies",
+      "conditions": [
+        {
+          "condition_id": "store_guidelines",
+          "condition_type": "context_based",
+          "parameters": {
+            "app_store_guidelines": true,
+            "performance_optimization": true,
+            "accessibility": true
+          },
+          "description": "App store requirements",
+          "severity": "high",
+          "enabled": true
+        }
+      ],
+      "actions": [
+        "allow"
+      ],
+      "priority": 200,
+      "enabled": true,
+      "description": "Mobile app approval requirements",
+      "metadata": {}
+    }
+  ],
+  "parent_policy": null,
+  "inheritance_rules": {},
+  "status": "active",
+  "created_at": "2025-08-03T19:20:59.969358",
+  "updated_at": "2025-08-03T19:20:59.969358",
+  "expires_at": null,
+  "metadata": {
+    "category": "mobile",
+    "tags": [
+      "mobile",
+      "app",
+      "approval"
+    ]
+  }
+}

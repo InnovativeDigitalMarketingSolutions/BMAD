@@ -232,7 +232,7 @@ class TestTestEngineerAgent:
             assert isinstance(result, dict)
             assert "redis_cache" in result
             assert "monitoring" in result
-            assert "co\n\nection_pool" in result
+            assert "connection_pool" in result
             assert "llm_caching" in result
             assert len(agent.test_history) > 0
 

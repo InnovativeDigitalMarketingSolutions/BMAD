@@ -714,3 +714,169 @@ def _deploy_api_sync(self, ...):
 - [x] Documentatie en guides zijn geüpdatet
 
 --- 
+
+## 4. Enhanced MCP Phase 2 Integration
+
+### 4.1 Enhanced MCP Tool Integration
+```python
+# Enhanced MCP initialization
+async def initialize_enhanced_mcp(self):
+    """Initialize enhanced MCP capabilities for Phase 2."""
+    try:
+        self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+        self.enhanced_mcp_enabled = await self.enhanced_mcp.initialize_enhanced_mcp()
+        
+        if self.enhanced_mcp_enabled:
+            logger.info("Enhanced MCP capabilities initialized successfully")
+        else:
+            logger.warning("Enhanced MCP initialization failed, falling back to standard MCP")
+    except Exception as e:
+        logger.warning(f"Enhanced MCP initialization failed: {e}")
+        self.enhanced_mcp_enabled = False
+
+# Enhanced MCP tool usage
+async def use_enhanced_mcp_tools(self, agent_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Use enhanced MCP tools voor Phase 2 capabilities."""
+    if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+        logger.warning("Enhanced MCP not available, using standard MCP tools")
+        return await self.use_agent_specific_mcp_tools(agent_data)
+    
+    enhanced_data = {}
+    
+    # Core enhancement tools
+    core_result = await self.enhanced_mcp.use_enhanced_mcp_tool("core_enhancement", {
+        "agent_type": self.agent_name,
+        "enhancement_level": "advanced",
+        "capabilities": agent_data.get("capabilities", []),
+        "performance_metrics": agent_data.get("performance_metrics", {})
+    })
+    if core_result:
+        enhanced_data["core_enhancement"] = core_result
+    
+    # Agent-specific enhancement tools
+    specific_result = await self.use_agent_specific_enhanced_tools(agent_data)
+    if specific_result:
+        enhanced_data.update(specific_result)
+    
+    return enhanced_data
+```
+
+### 4.2 Tracing Integration
+```python
+# Tracing initialization
+async def initialize_tracing(self):
+    """Initialize tracing capabilities."""
+    try:
+        self.tracer = BMADTracer(config=type("Config", (), {
+            "service_name": f"{self.agent_name}",
+            "environment": "development",
+            "tracing_level": "detailed"
+        })())
+        self.tracing_enabled = await self.tracer.initialize()
+        
+        if self.tracing_enabled:
+            logger.info("Tracing capabilities initialized successfully")
+            await self.tracer.setup_agent_specific_tracing({
+                "agent_name": self.agent_name,
+                "tracing_level": "detailed",
+                "performance_tracking": True,
+                "error_tracking": True
+            })
+    except Exception as e:
+        logger.warning(f"Tracing initialization failed: {e}")
+        self.tracing_enabled = False
+
+# Agent-specific tracing methods
+async def trace_agent_operation(self, operation_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Trace agent-specific operations."""
+    if not self.tracing_enabled or not self.tracer:
+        return {}
+    
+    try:
+        trace_result = await self.tracer.trace_agent_operation({
+            "operation_type": operation_data.get("type", "unknown"),
+            "agent_name": self.agent_name,
+            "performance_metrics": operation_data.get("performance_metrics", {}),
+            "timestamp": datetime.now().isoformat()
+        })
+        return trace_result
+    except Exception as e:
+        logger.error(f"Agent operation tracing failed: {e}")
+        return {}
+```
+
+### 4.3 Complete Integration Pattern
+```python
+class EnhancedAgent:
+    def __init__(self):
+        # Standard MCP
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
+        
+        # Enhanced MCP Phase 2
+        self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_enabled = False
+        
+        # Tracing Integration
+        self.tracer: Optional[BMADTracer] = None
+        self.tracing_enabled = False
+
+    async def run(self):
+        """Run the agent with complete integration."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing capabilities
+        await self.initialize_tracing()
+        
+        logger.info("Agent ready with enhanced MCP and tracing capabilities...")
+```
+
+### 4.4 CLI Integration
+```python
+def main():
+    parser = argparse.ArgumentParser(description="Enhanced Agent CLI")
+    parser.add_argument("command", nargs="?", default="help",
+                       choices=["help", "enhanced-collaborate", "enhanced-security", 
+                               "enhanced-performance", "enhanced-tools", "enhanced-summary",
+                               "trace-operation", "trace-performance", "trace-error", "tracing-summary"])
+    
+    # Enhanced MCP commands
+    elif args.command == "enhanced-collaborate":
+        result = asyncio.run(agent.communicate_with_agents(args.agents, message))
+    
+    # Tracing commands
+    elif args.command == "trace-operation":
+        result = asyncio.run(agent.trace_agent_operation(operation_data))
+    elif args.command == "tracing-summary":
+        tracing_summary = agent.get_tracing_summary()
+```
+
+### 4.5 Testing Strategy
+```python
+@pytest.mark.asyncio
+async def test_enhanced_mcp_integration(agent):
+    """Test enhanced MCP integration."""
+    with patch('create_enhanced_mcp_integration') as mock_create:
+        mock_enhanced_mcp = MagicMock()
+        mock_enhanced_mcp.initialize_enhanced_mcp = AsyncMock(return_value=True)
+        mock_create.return_value = mock_enhanced_mcp
+        
+        await agent.initialize_enhanced_mcp()
+        assert agent.enhanced_mcp_enabled is True
+
+@pytest.mark.asyncio
+async def test_tracing_integration(agent):
+    """Test tracing integration."""
+    with patch('BMADTracer') as mock_tracer_class:
+        mock_tracer = MagicMock()
+        mock_tracer.initialize = AsyncMock(return_value=True)
+        mock_tracer_class.return_value = mock_tracer
+        
+        await agent.initialize_tracing()
+        assert agent.tracing_enabled is True
+``` 

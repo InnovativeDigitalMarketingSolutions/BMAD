@@ -1,0 +1,30 @@
+{
+  "name": "WorkflowManager_sprite",
+  "sprite_type": "SpriteType.COMPONENT",
+  "component_name": "WorkflowManager",
+  "states": [
+    "SpriteState.DEFAULT",
+    "SpriteState.LOADING",
+    "SpriteState.ACTIVE"
+  ],
+  "attributes": {},
+  "accessibility_checks": [
+    "aria-label",
+    "role",
+    "keyboard-navigation"
+  ],
+  "visual_checks": [
+    "layout",
+    "spacing",
+    "typography"
+  ],
+  "interaction_tests": [
+    "click",
+    "hover",
+    "focus",
+    "keyboard"
+  ],
+  "screenshot_path": null,
+  "baseline_path": null,
+  "metadata": {}
+}
