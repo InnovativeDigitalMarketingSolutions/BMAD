@@ -64,6 +64,66 @@ def test_cli_command(self, mock_asyncio_run):
 - **Systematic approach proven effective**
 - **Quality over speed approach successful**
 
+### 0.1. Regression Testing Best Practices 🛡️
+
+#### **Mandatory Regression Testing**
+**Best Practice**: Bij elke nieuwe feature implementatie altijd controleren op mogelijke regressie.
+
+**Pre-Implementation Checklist**:
+```bash
+# 1. Baseline Test Run
+python -m pytest tests/unit/agents/ --tb=short -v | grep -E "(FAILED|ERROR|passed)" | tail -5
+
+# 2. Document Current State
+echo "Baseline: $(date) - $(python -m pytest tests/unit/agents/ --tb=short -q | grep passed | tail -1)"
+
+# 3. Run Critical Path Tests
+python -m pytest tests/unit/agents/ -k "test_show_resource_empty_type or test_cli_design_feedback" -v
+```
+
+**Post-Implementation Regression Check**:
+```bash
+# 1. Full Test Suite Run
+python -m pytest tests/unit/agents/ --tb=short -v | grep -E "(FAILED|ERROR|passed)" | tail -5
+
+# 2. Compare Results
+echo "Post-implementation: $(date) - $(python -m pytest tests/unit/agents/ --tb=short -q | grep passed | tail -1)"
+
+# 3. Critical Path Verification
+python -m pytest tests/unit/agents/ -k "test_show_resource_empty_type or test_cli_design_feedback" -v
+```
+
+**Regression Detection Patterns**:
+```python
+# ✅ Before Implementation
+def test_baseline_regression_check():
+    """Baseline test to detect regressions."""
+    result = agent.method_under_test()
+    assert result["status"] == "success"
+    assert "expected_key" in result
+
+# ✅ After Implementation
+def test_regression_verification():
+    """Verify no regressions after changes."""
+    result = agent.method_under_test()
+    assert result["status"] == "success"  # Should still work
+    assert "expected_key" in result       # Should still have key
+    assert "new_feature" in result        # Should have new feature
+```
+
+**Regression Prevention Strategies**:
+1. **Test Isolation**: Elke test moet onafhankelijk zijn
+2. **Mock External Dependencies**: Voorkom externe API calls in tests
+3. **Baseline Documentation**: Documenteer baseline test results
+4. **Incremental Testing**: Test kleine wijzigingen stap voor stap
+5. **Rollback Plan**: Bereid rollback strategie voor
+
+**Success Criteria**:
+- ✅ Geen nieuwe failing tests na implementatie
+- ✅ Alle bestaande functionaliteit blijft werken
+- ✅ Test coverage blijft gelijk of verbetert
+- ✅ Performance metrics blijven stabiel
+
 ### 1. Agent Development
 
 #### **Agent Initialization Pattern**

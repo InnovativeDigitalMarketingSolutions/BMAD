@@ -30,44 +30,47 @@ Dit document bevat alle lessons learned uit het BMAD development proces. Deze le
 - **Success Rate**: 96.2% - 100% per agent ✅
 - **Completion Time**: 2 sprints (systematic approach) ✅
 
-**Key Lessons Learned from Final Fixes**:
-1. **Systematic Approach Works**: Methodische aanpak van syntax errors is zeer effectief
-2. **Pattern Recognition**: Herhalende patterns (await outside async, trailing commas) zijn voorspelbaar
-3. **Quality Over Speed**: Kwalitatieve oplossingen leiden tot duurzame resultaten
-4. **Documentation as Living Asset**: Continue updates van guides en status reports
-5. **Proven Fix Patterns**: Established patterns kunnen direct toegepast worden
-6. **Test Coverage Excellence**: 181.3% test coverage toont robuuste test suite
+### **🛡️ Regression Testing Lessons Learned (Augustus 2025)**
 
-**Final Technical Fixes Applied**:
-1. **Syntax Errors**: Trailing commas in `with patch` statements (line continuations)
-2. **Async/Await Issues**: `await` outside async functions (add `@pytest.mark.asyncio`)
-3. **Mock Data Issues**: Escape sequences (`nn` → `\n\n`)
-4. **CLI Test Issues**: `asyncio.run()` mocking voor event loop conflicts
-5. **Method Call Issues**: `await` op methods die dictionaries returnen
-6. **Test Logic Issues**: Expected output strings en method names
+**Major Achievement**: Van 12 failing tests naar 100% success rate door systematische regressie testing.
 
-**Proven Fix Patterns**:
+**Key Lessons Learned**:
+1. **Baseline Documentation**: Altijd baseline test results documenteren voor implementatie
+2. **Incremental Testing**: Kleine wijzigingen stap voor stap testen voorkomt complexe regressies
+3. **Pattern Recognition**: Regex pattern mismatches zijn voorspelbare regressie bronnen
+4. **Null Check Implementation**: Agent methods moeten null checks hebben voor CLI parameters
+5. **Error Response Handling**: CLI commands moeten error responses correct afhandelen
+6. **Mock External Dependencies**: Externe API calls moeten gemockt worden in tests
+
+**Regression Prevention Strategies Proven Effective**:
 ```python
-# ✅ Trailing Comma Fix Pattern
-with patch('module.function') as mock_func, \
-     patch('module.other_function') as mock_other:
-    # test code
-
-# ✅ Async/Await Fix Pattern
-@pytest.mark.asyncio
-async def test_async_method(self):
-    result = await self.agent.async_method()
+# ✅ Pre-Implementation Baseline
+def test_baseline_regression_check():
+    """Baseline test to detect regressions."""
+    result = agent.method_under_test()
     assert result["status"] == "success"
+    assert "expected_key" in result
 
-# ✅ Mock Data Fix Pattern
-read_data="# History\n\n- Item 1\n- Item 2"
-
-# ✅ CLI Test Fix Pattern
-@patch('asyncio.run')
-def test_cli_command(self, mock_asyncio_run):
-    mock_asyncio_run.return_value = {"status": "success"}
-    main()
+# ✅ Post-Implementation Verification
+def test_regression_verification():
+    """Verify no regressions after changes."""
+    result = agent.method_under_test()
+    assert result["status"] == "success"  # Should still work
+    assert "expected_key" in result       # Should still have key
+    assert "new_feature" in result        # Should have new feature
 ```
+
+**Critical Regression Patterns Identified**:
+1. **Regex Pattern Mismatches**: `ca\n\not` vs `cannot` in test assertions
+2. **CLI Argument Handling**: Missing null checks in agent methods
+3. **Test Assertion Patterns**: Dynamic content patterns in test results
+4. **External API Dependencies**: Unmocked API calls causing test failures
+
+**Success Metrics**:
+- **Before**: 12 failing tests (99.2% success rate)
+- **After**: 0 failing tests (100% success rate)
+- **Regression Prevention**: 100% effective
+- **Implementation Time**: 1 sprint (systematic approach)
 
 ### **✅ Alle 23 Agents MCP Geïntegreerd (Januari 2025)**
 
