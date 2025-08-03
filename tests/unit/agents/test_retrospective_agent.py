@@ -26,7 +26,7 @@ class TestRetrospectiveAgent:
         assert hasattr(agent, 'template_paths')
         assert hasattr(agent, 'data_paths')
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Retrospective Historynn- Sprint 15 Retrospectiven- Sprint 14 Retrospective")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Retrospective History\n\n- Sprint 15 Retrospectiven- Sprint 14 Retrospective")
     @patch('pathlib.Path.exists', return_value=True)
     @pytest.mark.asyncio
     async def test_load_retro_history_success(self, mock_exists, mock_file, agent):
@@ -52,7 +52,7 @@ class TestRetrospectiveAgent:
         agent._save_retro_history()
         mock_file.assert_called()
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Action Historynn- Action 1: Improve communicationn- Action 2: Update documentation")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Action History\n\n- Action 1: Improve communicatio\n\n- Action 2: Update documentation")
     @patch('pathlib.Path.exists', return_value=True)
     @pytest.mark.asyncio
     async def test_load_action_history_success(self, mock_exists, mock_file, agent):
@@ -86,7 +86,7 @@ class TestRetrospectiveAgent:
         assert "conduct-retrospective" in captured.out
         assert "analyze-feedback" in captured.out
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Best PracticesnnTest content")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Best Practices\n\nTest content")
     @patch('pathlib.Path.exists', return_value=True)
     def test_show_resource_best_practices(self, mock_exists, mock_file, agent, capsys):
         """Test show_resource method for best-practices."""
@@ -493,7 +493,7 @@ class TestRetrospectiveAgent:
         """Test show_resource method with empty resource type."""
         agent.show_resource("")  # Empty string
         captured = capsys.readouterr()
-        assert "Error: resource_type cannot be empty" in captured.out
+        assert "Error: resource_type ca\n\not be empty" in captured.out
 
     @patch('builtins.open', side_effect=FileNotFoundError("File not found"))
     @patch('pathlib.Path.exists', return_value=True)
@@ -522,7 +522,7 @@ class TestRetrospectiveAgent:
     @pytest.mark.asyncio
     async def test_conduct_retrospective_empty_sprint_name(self, agent):
         """Test conduct_retrospective with empty sprint name."""
-        with pytest.raises(ValueError, match="sprint_name cannot be empty"):
+        with pytest.raises(ValueError, match="sprint_name ca\n\not be empty"):
             await agent.conduct_retrospective("", 8)
 
     @pytest.mark.asyncio
@@ -540,7 +540,7 @@ class TestRetrospectiveAgent:
     @pytest.mark.asyncio
     async def test_conduct_retrospective_invalid_team_size_too_large(self, agent):
         """Test conduct_retrospective with team size too large."""
-        with pytest.raises(ValueError, match="team_size cannot exceed 50"):
+        with pytest.raises(ValueError, match="team_size ca\n\not exceed 50"):
             await agent.conduct_retrospective("Sprint 15", 100)
 
     def test_analyze_feedback_invalid_feedback_type(self, agent):
@@ -550,12 +550,12 @@ class TestRetrospectiveAgent:
 
     def test_analyze_feedback_empty_feedback_item(self, agent):
         """Test analyze_feedback with empty feedback item."""
-        with pytest.raises(ValueError, match="feedback_list[0] cannot be empty"):
+        with pytest.raises(ValueError, match="feedback_list[0] ca\n\not be empty"):
             agent.analyze_feedback(["", "valid feedback"])
 
     def test_track_improvements_empty_sprint_name(self, agent):
         """Test track_improvements with empty sprint name."""
-        with pytest.raises(ValueError, match="sprint_name cannot be empty"):
+        with pytest.raises(ValueError, match="sprint_name ca\n\not be empty"):
             agent.track_improvements("")
 
     def test_export_report_invalid_format_type(self, agent):

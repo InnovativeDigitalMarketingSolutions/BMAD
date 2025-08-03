@@ -54,7 +54,7 @@ class TestSecurityDeveloperAgent:
 
     def test_validate_security_target_empty(self, agent):
         """Test security target validation with empty string."""
-        with pytest.raises(SecurityValidationError, match="Security target cannot be empty"):
+        with pytest.raises(SecurityValidationError, match="Security target ca\n\not be empty"):
             agent._validate_security_target("")
 
     def test_validate_security_target_invalid_type(self, agent):
@@ -158,7 +158,7 @@ class TestSecurityDeveloperAgent:
             agent._record_security_metric("test_metric", 85.5)
             # Should not raise exception, just log error
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Scan Historynn- Scan 1n- Scan 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Scan History\n\n- Scan 1n- Scan 2")
     @patch('pathlib.Path.exists', return_value=True)
     @pytest.mark.asyncio
     async def test_load_scan_history_success(self, mock_exists, mock_file, agent):
@@ -184,7 +184,7 @@ class TestSecurityDeveloperAgent:
         agent._save_scan_history()
         mock_file.assert_called()
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Incident Historynn- Incident 1n- Incident 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Incident History\n\n- Incident 1n- Incident 2")
     @patch('pathlib.Path.exists', return_value=True)
     @pytest.mark.asyncio
     async def test_load_incident_history_success(self, mock_exists, mock_file, agent):
@@ -220,7 +220,7 @@ class TestSecurityDeveloperAgent:
         assert "threat-assessment" in captured.out
         assert "security-recommendations" in captured.out
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Best PracticesnnTest content")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Best Practices\n\nTest content")
     @patch('pathlib.Path.exists', return_value=True)
     def test_show_resource_best_practices(self, mock_exists, mock_file, agent, capsys):
         """Test show_resource method for best-practices."""
@@ -381,7 +381,7 @@ class TestSecurityDeveloperAgent:
         }
         recommendations = agent.generate_security_recommendations(context)
         assert "Implement strict input validation rules" in recommendations
-        assert "Use database connection pooling" in recommendations
+        assert "Use database co\n\nection pooling" in recommendations
         assert "Implement API rate limiting" in recommendations
 
     def test_generate_security_recommendations_invalid_context(self, agent):
@@ -699,7 +699,7 @@ class TestSecurityDeveloperAgent:
 
     def test_perform_penetration_test_invalid_target(self, agent):
         """Test penetration test with invalid target."""
-        with pytest.raises(SecurityValidationError, match="Security target cannot be empty"):
+        with pytest.raises(SecurityValidationError, match="Security target ca\n\not be empty"):
             agent.perform_penetration_test("", "web")
 
     def test_perform_penetration_test_invalid_scope(self, agent):

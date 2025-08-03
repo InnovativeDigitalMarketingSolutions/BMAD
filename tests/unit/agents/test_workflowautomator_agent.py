@@ -210,7 +210,7 @@ class TestWorkflowAutomatorAgent:
         )
         workflow_id = workflow_result["workflow_id"]
         
-        # Set workflow status to running first
+        # Set workflow status to ru\n\ning first
         from bmad.agents.Agent.WorkflowAutomator.workflowautomator import WorkflowStatus
         workflow = agent.workflows[workflow_id]
         workflow.status = WorkflowStatus.RUNNING

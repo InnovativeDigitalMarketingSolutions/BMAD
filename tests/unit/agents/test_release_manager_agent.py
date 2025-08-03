@@ -25,7 +25,7 @@ class TestReleaseManagerAgent:
         assert hasattr(agent, 'template_paths')
         assert hasattr(agent, 'data_paths')
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Release Historynn- Release 1.2.0n- Release 1.1.0")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Release History\n\n- Release 1.2.0n- Release 1.1.0")
     @patch('pathlib.Path.exists', return_value=True)
     @pytest.mark.asyncio
     async def test_load_release_history_success(self, mock_exists, mock_file, agent):
@@ -51,7 +51,7 @@ class TestReleaseManagerAgent:
         agent._save_release_history()
         mock_file.assert_called()
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Rollback Historynn- Rollback 1.2.0n- Rollback 1.1.0")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Rollback History\n\n- Rollback 1.2.0n- Rollback 1.1.0")
     @patch('pathlib.Path.exists', return_value=True)
     @pytest.mark.asyncio
     async def test_load_rollback_history_success(self, mock_exists, mock_file, agent):
@@ -85,7 +85,7 @@ class TestReleaseManagerAgent:
         assert "create-release" in captured.out
         assert "approve-release" in captured.out
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Best PracticesnnTest content")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Best Practices\n\nTest content")
     @patch('pathlib.Path.exists', return_value=True)
     def test_show_resource_best_practices(self, mock_exists, mock_file, agent, capsys):
         """Test show_resource method for best-practices."""
@@ -441,7 +441,7 @@ class TestReleaseManagerAgent:
         """Test show_resource method with empty resource type."""
         agent.show_resource("")  # Empty string
         captured = capsys.readouterr()
-        assert "Error: resource_type cannot be empty" in captured.out
+        assert "Error: resource_type ca\n\not be empty" in captured.out
 
     @patch('builtins.open', side_effect=FileNotFoundError("File not found"))
     @patch('pathlib.Path.exists', return_value=True)
@@ -469,32 +469,32 @@ class TestReleaseManagerAgent:
 
     def test_create_release_empty_version(self, agent):
         """Test create_release with empty version."""
-        with pytest.raises(ValueError, match="version cannot be empty"):
+        with pytest.raises(ValueError, match="version ca\n\not be empty"):
             agent.create_release("", "description")
 
     def test_create_release_empty_description(self, agent):
         """Test create_release with empty description."""
-        with pytest.raises(ValueError, match="description cannot be empty"):
+        with pytest.raises(ValueError, match="description ca\n\not be empty"):
             agent.create_release("1.2.0", "")
 
     def test_approve_release_empty_version(self, agent):
         """Test approve_release with empty version."""
-        with pytest.raises(ValueError, match="version cannot be empty"):
+        with pytest.raises(ValueError, match="version ca\n\not be empty"):
             agent.approve_release("")
 
     def test_deploy_release_empty_version(self, agent):
         """Test deploy_release with empty version."""
-        with pytest.raises(ValueError, match="version cannot be empty"):
+        with pytest.raises(ValueError, match="version ca\n\not be empty"):
             await agent.deploy_release("")
 
     def test_rollback_release_empty_version(self, agent):
         """Test rollback_release with empty version."""
-        with pytest.raises(ValueError, match="version cannot be empty"):
+        with pytest.raises(ValueError, match="version ca\n\not be empty"):
             agent.rollback_release("", "reason")
 
     def test_rollback_release_empty_reason(self, agent):
         """Test rollback_release with empty reason."""
-        with pytest.raises(ValueError, match="reason cannot be empty"):
+        with pytest.raises(ValueError, match="reason ca\n\not be empty"):
             agent.rollback_release("1.2.0", "")
 
     def test_export_report_invalid_format_type(self, agent):
