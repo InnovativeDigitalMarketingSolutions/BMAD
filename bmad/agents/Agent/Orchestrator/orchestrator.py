@@ -28,6 +28,23 @@ from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.slack.slack_notify import send_human_in_loop_alert, send_slack_message
 
+# MCP Integration
+from bmad.core.mcp import (
+    MCPClient,
+    MCPContext,
+    FrameworkMCPIntegration,
+    get_mcp_client,
+    get_framework_mcp_integration,
+    initialize_framework_mcp_integration
+)
+
+# Enhanced MCP Phase 2 imports
+from bmad.core.mcp.enhanced_mcp_integration import (
+    EnhancedMCPIntegration,
+    create_enhanced_mcp_integration
+)
+from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
+
 load_dotenv()
 
 # Configure logging
@@ -174,6 +191,69 @@ class OrchestratorAgent:
             }
         )
         self.monitor.register_agent_profile(profile)
+        
+        # MCP Integration
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
+        
+        # Enhanced MCP Phase 2 attributes
+        self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_enabled = False
+        
+        # Tracing Integration
+        self.tracer: Optional[BMADTracer] = None
+        self.tracing_enabled = False
+        
+        # Initialize tracer
+        self.tracer = BMADTracer(config=type("Config", (), {
+            "service_name": "OrchestratorAgent",
+            "service_version": "1.0.0",
+            "environment": "development",
+            "sample_rate": 1.0,
+            "exporters": []
+        })())
+        
+        logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+
+    async def initialize_mcp(self):
+        """Initialize MCP client voor enhanced orchestration capabilities."""
+        try:
+            self.mcp_client = get_mcp_client()
+            self.mcp_integration = get_framework_mcp_integration()
+            await initialize_framework_mcp_integration()
+            self.mcp_enabled = True
+            logger.info("MCP client initialized successfully for OrchestratorAgent")
+        except Exception as e:
+            logger.warning(f"MCP initialization failed for OrchestratorAgent: {e}")
+            self.mcp_enabled = False
+
+    async def initialize_enhanced_mcp(self):
+        """Initialize enhanced MCP capabilities for Phase 2."""
+        try:
+            self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+            # Check if initialize method exists before calling it
+            if hasattr(self.enhanced_mcp, 'initialize'):
+                await self.enhanced_mcp.initialize()
+            self.enhanced_mcp_enabled = True
+            logger.info("Enhanced MCP initialized successfully")
+        except Exception as e:
+            logger.warning(f"Enhanced MCP initialization failed: {e}")
+            self.enhanced_mcp_enabled = False
+    
+    async def initialize_tracing(self):
+        """Initialize tracing capabilities."""
+        try:
+            if self.tracer and hasattr(self.tracer, 'initialize'):
+                await self.tracer.initialize()
+                self.tracing_enabled = True
+                logger.info("Tracing initialized successfully")
+            else:
+                logger.warning("Tracer not available or missing initialize method")
+                self.tracing_enabled = False
+        except Exception as e:
+            logger.warning(f"Tracing initialization failed: {e}")
+            self.tracing_enabled = False
 
     def _ensure_history_loaded(self):
         """Ensure history is loaded (lazy loading)."""
@@ -504,6 +584,120 @@ Orchestrator Agent Commands:
 
         logger.info(f"Agent orchestration completed: {orchestration_result}")
         return orchestration_result
+
+    async def use_enhanced_mcp_tools(self, orchestration_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use enhanced MCP tools voor Phase 2 capabilities."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available, using standard orchestration tools")
+            return {"orchestration_result": orchestration_data}
+        
+        enhanced_data = {}
+        
+        try:
+            # Core enhancement tools
+            core_result = await self.enhanced_mcp.use_enhanced_mcp_tool("core_enhancement", {
+                "agent_type": self.agent_name,
+                "enhancement_level": "advanced",
+                "capabilities": orchestration_data.get("capabilities", []),
+                "performance_metrics": orchestration_data.get("performance_metrics", {})
+            })
+            enhanced_data["core_enhancement"] = core_result
+            
+            # Orchestration-specific enhanced tools
+            orchestration_enhanced_result = await self.use_orchestration_specific_enhanced_tools(orchestration_data)
+            enhanced_data.update(orchestration_enhanced_result)
+            
+            # Tracing integration
+            if self.tracing_enabled:
+                trace_result = await self.trace_orchestration_operation(orchestration_data)
+                enhanced_data["tracing"] = trace_result
+            
+            logger.info(f"Enhanced MCP tools used successfully: {len(enhanced_data)} tools")
+            
+        except Exception as e:
+            logger.error(f"Enhanced MCP tools failed: {e}")
+            enhanced_data["error"] = str(e)
+        
+        return enhanced_data
+    
+    async def use_orchestration_specific_enhanced_tools(self, orchestration_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use orchestration-specific enhanced MCP tools."""
+        enhanced_tools = {}
+        
+        try:
+            # Enhanced workflow orchestration
+            if "workflow_orchestration" in orchestration_data:
+                workflow_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_workflow_orchestration", {
+                    "workflow_data": orchestration_data["workflow_orchestration"],
+                    "orchestration_type": orchestration_data.get("orchestration_type", "task_assignment"),
+                    "coordination_level": orchestration_data.get("coordination_level", "comprehensive")
+                })
+                enhanced_tools["enhanced_workflow_orchestration"] = workflow_result
+            
+            # Enhanced agent coordination
+            if "agent_coordination" in orchestration_data:
+                coordination_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_agent_coordination", {
+                    "coordination_data": orchestration_data["agent_coordination"],
+                    "agents": orchestration_data.get("agents", []),
+                    "coordination_strategy": orchestration_data.get("coordination_strategy", "adaptive")
+                })
+                enhanced_tools["enhanced_agent_coordination"] = coordination_result
+            
+            # Enhanced team collaboration
+            if "team_collaboration" in orchestration_data:
+                collaboration_result = await self.enhanced_mcp.communicate_with_agents(
+                    ["ProductOwner", "Scrummaster", "Architect", "QualityGuardian"],
+                    {
+                        "type": "orchestration_review",
+                        "content": orchestration_data["team_collaboration"]
+                    }
+                )
+                enhanced_tools["enhanced_team_collaboration"] = collaboration_result
+            
+            # Enhanced resource allocation
+            if "resource_allocation" in orchestration_data:
+                resource_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_resource_allocation", {
+                    "resource_data": orchestration_data["resource_allocation"],
+                    "allocation_strategy": orchestration_data.get("allocation_strategy", "optimized"),
+                    "resource_constraints": orchestration_data.get("resource_constraints", [])
+                })
+                enhanced_tools["enhanced_resource_allocation"] = resource_result
+            
+            logger.info(f"Orchestration-specific enhanced tools executed: {list(enhanced_tools.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Error in orchestration-specific enhanced tools: {e}")
+        
+        return enhanced_tools
+    
+    async def trace_orchestration_operation(self, operation_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace orchestration operations."""
+        if not self.tracing_enabled or not self.tracer:
+            return {"tracing": "disabled"}
+        
+        try:
+            trace_data = {
+                "operation_type": "orchestration_operation",
+                "agent": self.agent_name,
+                "timestamp": datetime.now().isoformat(),
+                "operation_data": operation_data,
+                "performance_metrics": {
+                    "workflow_complexity": len(operation_data.get("workflows", [])),
+                    "agent_coordination": len(operation_data.get("agent_coordination", [])),
+                    "collaboration_agents": len(operation_data.get("team_collaboration", {}).get("agents", []))
+                }
+            }
+            
+            # Add trace to tracer
+            if hasattr(self.tracer, 'add_trace'):
+                await self.tracer.add_trace("orchestration_operation", trace_data)
+            
+            logger.info(f"Orchestration operation traced: {trace_data['operation_type']}")
+            return trace_data
+            
+        except Exception as e:
+            logger.error(f"Tracing failed: {e}")
+            return {"tracing": "error", "error": str(e)}
 
     def manage_escalations(self, escalation_type: str = "workflow_blocked", workflow_name: str = "feature_delivery") -> Dict[str, Any]:
         """Manage escalations with input validation."""
@@ -1004,11 +1198,36 @@ Orchestrator Agent Commands:
         print("[Orchestrator] Ready and listening for events...")
         self.collaborate_example()
     
+    async def run_async(self):
+        """Run the agent with enhanced MCP and tracing initialization."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing capabilities
+        await self.initialize_tracing()
+        
+        print("🎯 Orchestrator Agent is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        
+        logger.info("OrchestratorAgent ready and listening for events...")
+        print("[Orchestrator] Ready and listening for events...")
+        await self.collaborate_example()
+    
     @classmethod
     def run_agent(cls):
         """Class method to run the Orchestrator agent."""
         agent = cls()
         agent.run()
+    
+    @classmethod
+    async def run_agent_async(cls):
+        """Class method to run the Orchestrator agent with enhanced MCP."""
+        agent = cls()
+        await agent.run_async()
 
 # Workflow templates
 WORKFLOW_TEMPLATES = {
@@ -1227,7 +1446,10 @@ def main():
                                "show-orchestration-history", "show-best-practices", "show-changelog",
                                "export-report", "test", "collaborate", "run", "show-status",
                                "list-workflows", "show-history", "replay-history", "show-workflow-status",
-                               "show-metrics"])
+                               "show-metrics", "initialize-mcp", "use-mcp-tool", "get-mcp-status", 
+                               "use-orchestration-mcp-tools", "check-dependencies", "enhanced-collaborate", 
+                               "enhanced-security", "enhanced-performance", "trace-operation", 
+                               "trace-performance", "trace-error", "tracing-summary"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--workflow", help="Workflow naam voor start-workflow of show-workflow-status")
     parser.add_argument("--orchestration-type", default="task_assignment", help="Orchestration type")
@@ -1294,8 +1516,57 @@ def main():
         print(f"Status van workflow '{args.workflow}': {status}")
     elif args.command == "show-metrics":
         print("\n[Orchestrator Metrics]")
-        for k, v in METRICS.items():
-            print(f"- {k}: {v}")
+        for metric, value in METRICS.items():
+            print(f"{metric}: {value}")
+    # Enhanced MCP Phase 2 Commands
+    elif args.command in ["enhanced-collaborate", "enhanced-security", "enhanced-performance", 
+                         "trace-operation", "trace-performance", "trace-error", "tracing-summary"]:
+        # Enhanced MCP commands
+        if args.command == "enhanced-collaborate":
+            result = asyncio.run(agent.enhanced_mcp.communicate_with_agents(
+                ["ProductOwner", "Scrummaster", "Architect", "QualityGuardian"], 
+                {"type": "orchestration_review", "content": {"review_type": "workflow_orchestration"}}
+            ))
+            print(json.dumps(result, indent=2))
+        elif args.command == "enhanced-security":
+            result = asyncio.run(agent.enhanced_mcp.enhanced_security_validation({
+                "orchestration_data": {"workflows": ["feature_delivery", "security_review"]},
+                "security_requirements": ["workflow_validation", "access_control", "audit_trail"]
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "enhanced-performance":
+            result = asyncio.run(agent.enhanced_mcp.enhanced_performance_optimization({
+                "orchestration_data": {"workflows": ["feature_delivery", "security_review"]},
+                "performance_metrics": {"workflow_efficiency": 85.5, "agent_coordination": 92.3}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-operation":
+            result = asyncio.run(agent.trace_orchestration_operation({
+                "operation_type": "workflow_orchestration",
+                "workflows": ["feature_delivery", "security_review"],
+                "agent_coordination": ["ProductOwner", "Scrummaster", "Architect"]
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-performance":
+            result = asyncio.run(agent.trace_orchestration_operation({
+                "operation_type": "performance_analysis",
+                "performance_metrics": {"workflow_efficiency": 85.5, "agent_coordination": 92.3}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-error":
+            result = asyncio.run(agent.trace_orchestration_operation({
+                "operation_type": "error_analysis",
+                "error_data": {"error_type": "workflow_orchestration", "error_message": "Workflow coordination failed"}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "tracing-summary":
+            print("Tracing Summary for Orchestrator Agent:")
+            print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+            print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+            print(f"Agent: {agent.agent_name}")
+    else:
+        print(f"Unknown command: {args.command}")
+        agent.show_help()
 
 def run_server_mode():
     """Run orchestrator in server mode with metrics thread"""

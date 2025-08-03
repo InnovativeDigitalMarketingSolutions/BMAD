@@ -24,6 +24,36 @@ commands:
   - assign-task: Wijs taak toe op basis van LLM-advies
   - changelog: Toon changelog van orchestrator
   - test: Test resource completeness
+  - start-workflow: Start een workflow
+  - monitor-workflows: Monitor alle workflows
+  - orchestrate-agents: Orchestreer agents voor taak uitvoering
+  - manage-escalations: Beheer escalaties
+  - analyze-metrics: Analyseer metrics
+  - show-workflow-history: Toon workflow historie
+  - show-orchestration-history: Toon orchestration historie
+  - show-best-practices: Show best practices
+  - export-report: Export rapport
+  - collaborate: Demonstrate collaboration
+  - run: Run agent met MCP integration
+  - show-status: Show agent status
+  - list-workflows: List beschikbare workflows
+  - show-history: Show event history
+  - replay-history: Replay event history
+  - show-workflow-status: Show workflow status
+  - show-metrics: Show metrics
+  - initialize-mcp: Initialize MCP client
+  - use-mcp-tool: Use MCP tool met parameters
+  - get-mcp-status: Get MCP integration status
+  - use-orchestration-mcp-tools: Use orchestration-specific MCP tools
+  - check-dependencies: Check agent dependencies
+  # MCP Phase 2 Enhanced Commands
+  - enhanced-collaborate: Enhanced inter-agent communicatie
+  - enhanced-security: Enhanced security validatie
+  - enhanced-performance: Enhanced performance optimalisatie
+  - trace-operation: Trace orchestration operations
+  - trace-performance: Get performance metrics
+  - trace-error: Trace error scenarios
+  - tracing-summary: Get tracing summary
 
 dependencies:
   templates:
