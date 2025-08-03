@@ -23,10 +23,10 @@ class TestScrummasterAgent:
     @pytest.fixture
     def agent(self):
         """Create a ScrummasterAgent instance for testing."""
-        with patch('bmad.agents.Agent.Scrummaster.scrummaster.get_performance_monitor'),
-             patch('bmad.agents.Agent.Scrummaster.scrummaster.get_advanced_policy_engine'),
-             patch('bmad.agents.Agent.Scrummaster.scrummaster.get_sprite_library'),
-             patch('bmad.agents.Agent.Scrummaster.scrummaster.BMADTracer'),
+        with patch('bmad.agents.Agent.Scrummaster.scrummaster.get_performance_monitor'), \
+             patch('bmad.agents.Agent.Scrummaster.scrummaster.get_advanced_policy_engine'), \
+             patch('bmad.agents.Agent.Scrummaster.scrummaster.get_sprite_library'), \
+             patch('bmad.agents.Agent.Scrummaster.scrummaster.BMADTracer'), \
              patch('bmad.agents.Agent.Scrummaster.scrummaster.PrefectWorkflowOrchestrator'):
             return ScrummasterAgent()
 
@@ -86,7 +86,7 @@ class TestScrummasterAgent:
         # Clear existing history first
         agent.sprint_history = []
         mock_exists.return_value = True
-        mock_open.return_value.__enter__.return_value.read.return_value = "# Sprint Historynn- Sprint 1 completedn- Sprint 2 in progress"
+        mock_open.return_value.__enter__.return_value.read.return_value = "# Sprint History\n\n- Sprint 1 completed\n- Sprint 2 in progress"
         
         agent._load_sprint_history()
         assert len(agent.sprint_history) == 2
@@ -140,7 +140,7 @@ class TestScrummasterAgent:
     @pytest.mark.asyncio
     async def test_show_resource_success(self, agent, capsys):
         """Test resource display with valid resource type."""
-        with patch('builtins.open', create=True) as mock_open,
+        with patch('builtins.open', create=True) as mock_open, \
              patch('pathlib.Path.exists', return_value=True):
             mock_open.return_value.__enter__.return_value.read.return_value = "Sprint planning content"
             agent.show_resource("sprint-planning")
@@ -252,11 +252,11 @@ class TestScrummasterAgent:
     async def test_start_sprint_success(self, mock_sleep, agent):
         """Test successful sprint start."""
         initial_count = len(agent.sprint_history)
-        result = agent.start_sprint(1)
+        start_result = agent.start_sprint(1)
         
-        assert result["sprint_number"] == 1
-        assert result["status"] == "active"
-        assert "start_date" in result
+        assert start_result["sprint_number"] == 1
+        assert start_result["status"] == "active"
+        assert "start_date" in start_result
         assert agent.current_sprint == 1
         assert len(agent.sprint_history) == initial_count + 1
 
@@ -382,12 +382,12 @@ class TestScrummasterAgent:
     @pytest.mark.asyncio
     async def test_collaborate_example_success(self, mock_publish, agent):
         """Test successful collaboration example."""
-        with patch.object(agent, 'plan_sprint') as mock_plan, 
-             patch.object(agent, 'start_sprint') as mock_start, 
-             patch.object(agent, 'track_impediment') as mock_track, 
-             patch.object(agent, 'daily_standup') as mock_standup, 
-             patch.object(agent, 'resolve_impediment') as mock_resolve, 
-             patch.object(agent, 'end_sprint') as mock_end, 
+        with patch.object(agent, 'plan_sprint') as mock_plan, \
+             patch.object(agent, 'start_sprint') as mock_start, \
+             patch.object(agent, 'track_impediment') as mock_track, \
+             patch.object(agent, 'daily_standup') as mock_standup, \
+             patch.object(agent, 'resolve_impediment') as mock_resolve, \
+             patch.object(agent, 'end_sprint') as mock_end, \
              patch.object(agent, 'calculate_velocity') as mock_velocity:
             agent.collaborate_example()
             
@@ -441,10 +441,10 @@ class TestScrummasterAgentCLI:
     @pytest.fixture
     def agent(self):
         """Create a ScrummasterAgent instance for CLI testing."""
-        with patch('bmad.agents.Agent.Scrummaster.scrummaster.get_performance_monitor'),
-             patch('bmad.agents.Agent.Scrummaster.scrummaster.get_advanced_policy_engine'),
-             patch('bmad.agents.Agent.Scrummaster.scrummaster.get_sprite_library'),
-             patch('bmad.agents.Agent.Scrummaster.scrummaster.BMADTracer'),
+        with patch('bmad.agents.Agent.Scrummaster.scrummaster.get_performance_monitor'), \
+             patch('bmad.agents.Agent.Scrummaster.scrummaster.get_advanced_policy_engine'), \
+             patch('bmad.agents.Agent.Scrummaster.scrummaster.get_sprite_library'), \
+             patch('bmad.agents.Agent.Scrummaster.scrummaster.BMADTracer'), \
              patch('bmad.agents.Agent.Scrummaster.scrummaster.PrefectWorkflowOrchestrator'):
             return ScrummasterAgent()
 
@@ -650,10 +650,10 @@ class TestScrummasterAgentIntegration:
     @pytest.fixture
     def agent(self):
         """Create a ScrummasterAgent instance for integration testing."""
-        with patch('bmad.agents.Agent.Scrummaster.scrummaster.get_performance_monitor'),
-             patch('bmad.agents.Agent.Scrummaster.scrummaster.get_advanced_policy_engine'),
-             patch('bmad.agents.Agent.Scrummaster.scrummaster.get_sprite_library'),
-             patch('bmad.agents.Agent.Scrummaster.scrummaster.BMADTracer'),
+        with patch('bmad.agents.Agent.Scrummaster.scrummaster.get_performance_monitor'), \
+             patch('bmad.agents.Agent.Scrummaster.scrummaster.get_advanced_policy_engine'), \
+             patch('bmad.agents.Agent.Scrummaster.scrummaster.get_sprite_library'), \
+             patch('bmad.agents.Agent.Scrummaster.scrummaster.BMADTracer'), \
              patch('bmad.agents.Agent.Scrummaster.scrummaster.PrefectWorkflowOrchestrator'):
             return ScrummasterAgent()
 
@@ -667,29 +667,29 @@ class TestScrummasterAgentIntegration:
         assert len(agent.sprint_history) == initial_sprint_count + 1
 
         # Start sprint
-        start_result = await agent.start_sprint(1)
+        start_result = agent.start_sprint(1)
         assert start_result["status"] == "active"
         assert agent.current_sprint == 1
 
         # Conduct daily standup
-        standup_result = await agent.daily_standup()
+        standup_result = agent.daily_standup()
         assert standup_result["type"] == "daily_standup"
 
         # Track impediment
-        impediment_result = await agent.track_impediment("Technical issue")
+        impediment_result = agent.track_impediment("Technical issue")
         assert impediment_result["status"] == "open"
 
         # Resolve impediment
-        resolve_result = await agent.resolve_impediment(1)
+        resolve_result = agent.resolve_impediment(1)
         assert resolve_result["status"] == "resolved"
 
         # End sprint
-        end_result = await agent.end_sprint(1)
+        end_result = agent.end_sprint(1)
         assert end_result["status"] == "completed"
         assert agent.current_sprint is None
 
         # Calculate velocity
-        velocity_result = await agent.calculate_velocity()
+        velocity_result = agent.calculate_velocity()
         assert "average_velocity" in velocity_result
 
     def test_agent_resource_completeness(self, agent):
