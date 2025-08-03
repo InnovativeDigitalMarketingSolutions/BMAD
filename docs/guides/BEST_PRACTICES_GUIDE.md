@@ -1368,3 +1368,78 @@ Voeg nieuwe best practices toe door:
 ---
 
 **Note**: Deze guide wordt continu bijgewerkt tijdens development. Check regelmatig voor nieuwe best practices. 
+
+## 0.2. Tracing Best Practices 🔍
+
+### **Mandatory Tracing Implementation**
+Voor alle agents met enhanced MCP Phase 2 capabilities:
+
+```bash
+# Tracing initialization check
+python -m pytest tests/unit/agents/test_*_enhanced_mcp.py -k "tracing" -v
+
+# Tracing functionality validation
+python agent_name.py tracing-summary
+```
+
+### **Tracing Implementation Patterns**
+```python
+# Standard tracing initialization
+async def initialize_tracing(self):
+    """Initialize tracing capabilities."""
+    try:
+        self.tracer = BMADTracer(config=type("Config", (), {
+            "service_name": f"{self.agent_name}",
+            "environment": "development",
+            "tracing_level": "detailed"
+        })())
+        self.tracing_enabled = await self.tracer.initialize()
+        
+        if self.tracing_enabled:
+            logger.info("Tracing capabilities initialized successfully")
+            await self.tracer.setup_agent_specific_tracing({
+                "agent_name": self.agent_name,
+                "tracing_level": "detailed",
+                "performance_tracking": True,
+                "error_tracking": True
+            })
+    except Exception as e:
+        logger.warning(f"Tracing initialization failed: {e}")
+        self.tracing_enabled = False
+
+# Agent-specific tracing methods
+async def trace_agent_operation(self, operation_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Trace agent-specific operations."""
+    if not self.tracing_enabled or not self.tracer:
+        return {}
+    
+    try:
+        trace_result = await self.tracer.trace_agent_operation({
+            "operation_type": operation_data.get("type", "unknown"),
+            "agent_name": self.agent_name,
+            "performance_metrics": operation_data.get("performance_metrics", {}),
+            "timestamp": datetime.now().isoformat()
+        })
+        return trace_result
+    except Exception as e:
+        logger.error(f"Agent operation tracing failed: {e}")
+        return {}
+```
+
+### **Tracing Integration Checklist**
+- [ ] **BMADTracer Import**: `from integrations.opentelemetry.opentelemetry_tracing import BMADTracer`
+- [ ] **Tracing Attributes**: `self.tracer: Optional[BMADTracer] = None`, `self.tracing_enabled = False`
+- [ ] **Initialization Method**: `async def initialize_tracing(self)`
+- [ ] **Agent-Specific Tracing Methods**: `trace_agent_operation`, `trace_performance_metrics`, `trace_error_event`
+- [ ] **CLI Commands**: `trace-*` commands voor tracing functionaliteit
+- [ ] **Integration**: Tracing calls in main agent methods (build, process, etc.)
+- [ ] **Error Handling**: Graceful fallback wanneer tracing niet beschikbaar is
+- [ ] **Documentation**: Tracing capabilities beschreven in agent documentatie
+- [ ] **Tests**: Comprehensive test suite voor tracing functionaliteit
+
+### **Tracing Benefits**
+- **Performance Monitoring**: Real-time performance metrics en bottlenecks
+- **Debugging**: Detailed operation tracing voor troubleshooting
+- **Collaboration**: Trace sharing tussen agents voor end-to-end debugging
+- **Analytics**: User behavior en interaction pattern analysis
+- **Error Tracking**: Comprehensive error event tracking en analysis 

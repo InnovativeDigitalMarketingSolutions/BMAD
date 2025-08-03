@@ -1026,3 +1026,51 @@ Voeg nieuwe lessons learned toe door:
 ---
 
 **Note**: Deze guide wordt continu bijgewerkt tijdens development. Check regelmatig voor nieuwe lessons learned. 
+
+## 🔍 Tracing Integration Lessons Learned (Augustus 2025)
+
+### **Key Insights from Tracing Implementation**
+
+**1. Import Path Consistency**
+- **Lesson**: BMADTracer moet geïmporteerd worden vanuit `integrations.opentelemetry.opentelemetry_tracing`, niet vanuit `bmad.core.tracing`
+- **Impact**: Import errors kunnen voorkomen worden door consistentie in import paths
+- **Application**: Alle agents gebruiken dezelfde import path voor BMADTracer
+
+**2. Tracing Configuration Pattern**
+- **Lesson**: Consistent tracing configuration pattern met `type("Config", (), {...})()` syntax
+- **Impact**: Uniforme tracing setup across alle agents
+- **Application**: Standardized configuration pattern voor alle agent tracing
+
+**3. Graceful Fallback Strategy**
+- **Lesson**: Tracing functionaliteit moet graceful fallback hebben wanneer niet beschikbaar
+- **Impact**: Agents blijven functioneren zelfs zonder tracing capabilities
+- **Application**: Alle tracing methods return empty dict wanneer tracing disabled
+
+**4. Agent-Specific Tracing Methods**
+- **Lesson**: Elke agent type heeft specifieke tracing behoeften (component development, API calls, etc.)
+- **Impact**: Tailored tracing voor optimale debugging en monitoring
+- **Application**: Custom tracing methods per agent type
+
+**5. CLI Integration for Tracing**
+- **Lesson**: Tracing capabilities moeten toegankelijk zijn via CLI commands
+- **Impact**: Developers kunnen tracing functionaliteit direct testen en gebruiken
+- **Application**: Standard `trace-*` commands voor alle agents
+
+### **Critical Tracing Patterns Identified**
+- **Initialization Pattern**: Consistent async initialization met error handling
+- **Method Delegation**: Tracing methods delegeren naar BMADTracer instance
+- **Error Handling**: Comprehensive try-catch blocks in alle tracing methods
+- **Logging Integration**: Detailed logging voor tracing operations
+- **Test Coverage**: Extensive test suite voor tracing functionality
+
+### **Tracing Implementation Checklist**
+- [ ] BMADTracer import vanuit correcte path
+- [ ] Consistent configuration pattern
+- [ ] Graceful fallback mechanisms
+- [ ] Agent-specific tracing methods
+- [ ] CLI command integration
+- [ ] Comprehensive error handling
+- [ ] Detailed logging
+- [ ] Test coverage voor tracing functionality
+- [ ] Documentation updates
+- [ ] Changelog entries 

@@ -591,3 +591,150 @@ The BMad framework now provides a comprehensive, optimized agent system with:
 - **Quality Assurance**: Continuous quality monitoring and improvement
 
 The framework is now ready for production use with enterprise-grade features and capabilities. 
+
+## 5. Tracing Optimization
+
+### 5.1 Tracing Performance Impact
+```python
+# Optimized tracing initialization
+async def initialize_tracing(self):
+    """Initialize tracing capabilities with performance optimization."""
+    try:
+        # Lazy initialization to reduce startup time
+        if not hasattr(self, '_tracing_initialized'):
+            self.tracer = BMADTracer(config=type("Config", (), {
+                "service_name": f"{self.agent_name}",
+                "environment": "development",
+                "tracing_level": "detailed",
+                "sampling_rate": 0.1,  # Sample 10% of traces for performance
+                "batch_size": 100,      # Batch traces for efficiency
+                "flush_interval": 5     # Flush every 5 seconds
+            })())
+            self.tracing_enabled = await self.tracer.initialize()
+            self._tracing_initialized = True
+            
+            if self.tracing_enabled:
+                logger.info("Tracing capabilities initialized with optimization")
+    except Exception as e:
+        logger.warning(f"Tracing initialization failed: {e}")
+        self.tracing_enabled = False
+
+# Optimized tracing methods
+async def trace_agent_operation(self, operation_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Trace agent operations with performance optimization."""
+    if not self.tracing_enabled or not self.tracer:
+        return {}
+    
+    # Performance optimization: only trace significant operations
+    if operation_data.get("performance_impact", 0) < 100:  # Skip low-impact operations
+        return {}
+    
+    try:
+        trace_result = await self.tracer.trace_agent_operation({
+            "operation_type": operation_data.get("type", "unknown"),
+            "agent_name": self.agent_name,
+            "performance_metrics": operation_data.get("performance_metrics", {}),
+            "timestamp": datetime.now().isoformat(),
+            "sampling_decision": "record"  # Explicit sampling decision
+        })
+        return trace_result
+    except Exception as e:
+        logger.error(f"Agent operation tracing failed: {e}")
+        return {}
+```
+
+### 5.2 Tracing Configuration Optimization
+```python
+# Environment-specific tracing configuration
+def get_tracing_config(self):
+    """Get optimized tracing configuration based on environment."""
+    base_config = {
+        "service_name": f"{self.agent_name}",
+        "environment": os.getenv("ENVIRONMENT", "development"),
+        "tracing_level": "detailed"
+    }
+    
+    # Production optimizations
+    if base_config["environment"] == "production":
+        base_config.update({
+            "sampling_rate": 0.05,      # Lower sampling in production
+            "batch_size": 500,          # Larger batches
+            "flush_interval": 10,       # Longer flush intervals
+            "max_trace_duration": 30    # Limit trace duration
+        })
+    
+    # Development optimizations
+    elif base_config["environment"] == "development":
+        base_config.update({
+            "sampling_rate": 1.0,       # Full sampling in development
+            "batch_size": 50,           # Smaller batches for faster feedback
+            "flush_interval": 2,        # Quick flush for debugging
+            "max_trace_duration": 60    # Longer traces for debugging
+        })
+    
+    return base_config
+```
+
+### 5.3 Tracing Memory Management
+```python
+# Memory-efficient tracing
+class TracingManager:
+    def __init__(self, max_traces=1000):
+        self.max_traces = max_traces
+        self.trace_buffer = []
+        self.trace_lock = asyncio.Lock()
+    
+    async def add_trace(self, trace_data: Dict[str, Any]):
+        """Add trace with memory management."""
+        async with self.trace_lock:
+            if len(self.trace_buffer) >= self.max_traces:
+                # Remove oldest traces to prevent memory overflow
+                self.trace_buffer = self.trace_buffer[-self.max_traces//2:]
+            
+            self.trace_buffer.append(trace_data)
+    
+    async def flush_traces(self):
+        """Flush traces to external system."""
+        async with self.trace_lock:
+            if self.trace_buffer:
+                await self.send_traces_to_external_system(self.trace_buffer)
+                self.trace_buffer.clear()
+```
+
+### 5.4 Tracing Integration Best Practices
+```python
+# Selective tracing for performance
+async def trace_critical_operations_only(self, operation_data: Dict[str, Any]) -> Dict[str, Any]:
+    """Trace only critical operations for performance optimization."""
+    critical_operations = [
+        "component_build",
+        "api_call",
+        "database_query",
+        "file_operation",
+        "external_service_call"
+    ]
+    
+    operation_type = operation_data.get("type", "")
+    if operation_type not in critical_operations:
+        return {}  # Skip non-critical operations
+    
+    return await self.trace_agent_operation(operation_data)
+
+# Batch tracing for efficiency
+async def batch_trace_operations(self, operations: List[Dict[str, Any]]) -> Dict[str, Any]:
+    """Batch multiple operations for efficient tracing."""
+    if not self.tracing_enabled or not self.tracer:
+        return {}
+    
+    try:
+        batch_result = await self.tracer.batch_trace_operations({
+            "operations": operations,
+            "batch_id": str(uuid.uuid4()),
+            "agent_name": self.agent_name,
+            "timestamp": datetime.now().isoformat()
+        })
+        return batch_result
+    except Exception as e:
+        logger.error(f"Batch tracing failed: {e}")
+        return {}
+``` 
