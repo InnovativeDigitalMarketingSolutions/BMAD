@@ -45,7 +45,7 @@
 
 ## 🔄 **MCP Integration Status**
 
-### **✅ Completed (7/23)**
+### **✅ Completed (8/23)**
 - TestEngineer
 - FrontendDeveloper  
 - Architect
@@ -53,15 +53,15 @@
 - Scrummaster
 - SecurityDeveloper
 - DevOpsInfra
+- QualityGuardian
 
-### **❌ Pending (16/23)**
+### **❌ Pending (15/23)**
 - BackendDeveloper
 - FullstackDeveloper
 - MobileDeveloper
 - AiDeveloper
 - UXUIDesigner
 - AccessibilityAgent
-- QualityGuardian
 - ReleaseManager
 - DataEngineer
 - DocumentationAgent
@@ -125,11 +125,11 @@ Alle agents communiceren via:
 ## 📊 **Integration Progress**
 
 - **Total Agents**: 23
-- **MCP Integrated**: 7 (30.4%)
-- **Pending Integration**: 16 (69.6%)
+- **MCP Integrated**: 8 (34.8%)
+- **Pending Integration**: 15 (65.2%)
 - **Target Completion**: 100% MCP integration
 
 ---
 
-**Last Updated**: January 2025
+**Last Updated**: August 2025
 **Next Review**: After each agent MCP integration 
