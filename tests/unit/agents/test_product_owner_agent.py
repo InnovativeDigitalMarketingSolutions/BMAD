@@ -30,7 +30,7 @@ class TestProductOwnerAgent:
         assert isinstance(agent.story_history, list)
         assert isinstance(agent.vision_history, list)
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Story Historynn- Story: Test story 1n- Story: Test story 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Story History\n\n- Story: Test story 1\n- Story: Test story 2")
     @patch('os.path.exists', return_value=True)
     @pytest.mark.asyncio
     async def test_load_story_history_success(self, mock_exists, mock_file, agent):
@@ -57,7 +57,7 @@ class TestProductOwnerAgent:
         agent._save_story_history()
         mock_file.assert_called()
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Vision Historynn- Vision: Test vision 1n- Vision: Test vision 2")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Vision History\n\n- Vision: Test vision 1\n- Vision: Test vision 2")
     @patch('os.path.exists', return_value=True)
     @pytest.mark.asyncio
     async def test_load_vision_history_success(self, mock_exists, mock_file, agent):
@@ -86,13 +86,13 @@ class TestProductOwnerAgent:
 
     def test_show_help(self, agent, capsys):
         """Test show_help method."""
-        await agent.show_help()
+        agent.show_help()
         captured = capsys.readouterr()
         assert "ProductOwner Agent" in captured.out
         assert "create-story" in captured.out
         assert "show-vision" in captured.out
 
-    @patch('builtins.open', new_callable=mock_open, read_data="# Best PracticesnnTest content")
+    @patch('builtins.open', new_callable=mock_open, read_data="# Best Practices\n\nTest content")
     @patch('os.path.exists', return_value=True)
     def test_show_resource_best_practices(self, mock_exists, mock_file, agent, capsys):
         """Test show_resource method with best_practices."""
@@ -201,28 +201,31 @@ class TestProductOwnerAgent:
         """Test collaborate_example method."""
         # Mock the entire collaborate_example method to prevent external API calls
         with patch.object(agent, 'collaborate_example') as mock_collaborate:
-            mock_collaborate.return_value = None
+            mock_collaborate.return_value = "Collaboration completed"
             
             # Test the method
-            await agent.collaborate_example()
+            result = agent.collaborate_example()
             
             # Verify the method was called
             mock_collaborate.assert_called_once()
+            assert result == "Collaboration completed"
 
     @patch('bmad.agents.core.communication.message_bus.publish')
     @patch('bmad.agents.core.data.supabase_context.save_context')
     @patch('bmad.agents.core.data.supabase_context.get_context')
-    def test_collaborate_example_error(self, mock_get_context, mock_save_context, mock_publish, agent, capsys):
+    @pytest.mark.asyncio
+    async def test_collaborate_example_error(self, mock_get_context, mock_save_context, mock_publish, agent, capsys):
         """Test collaborate_example method with error."""
         # Mock the entire collaborate_example method to prevent external API calls
         with patch.object(agent, 'collaborate_example') as mock_collaborate:
-            mock_collaborate.return_value = None
+            mock_collaborate.return_value = "Collaboration completed"
             
             # Test the method
-            await agent.collaborate_example()
+            result = agent.collaborate_example()
             
             # Verify the method was called
             mock_collaborate.assert_called_once()
+            assert result == "Collaboration completed"
 
     @pytest.mark.asyncio
     async def test_run_method(self, agent, capsys):
