@@ -35,6 +35,12 @@ from bmad.core.mcp import (
     initialize_framework_mcp_integration
 )
 
+# Enhanced MCP Integration for Phase 2
+from bmad.core.mcp.enhanced_mcp_integration import (
+    EnhancedMCPIntegration,
+    create_enhanced_mcp_integration
+)
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
@@ -98,6 +104,18 @@ class ScrummasterAgent:
         }
 
         # Initialize histories
+        
+        # MCP Integration
+        self.mcp_client: Optional[MCPClient] = None
+        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
+        self.mcp_enabled = False
+        
+        # Enhanced MCP Phase 2
+        self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_enabled = False
+        
+        # Tracing Integration
+        self.tracing_enabled = False
         self.sprint_history = []
         self.team_metrics = []
         self.impediment_log = []
@@ -140,6 +158,31 @@ class ScrummasterAgent:
         except Exception as e:
             logger.warning(f"MCP initialization failed: {e}")
             self.mcp_enabled = False
+    
+    async def initialize_enhanced_mcp(self):
+        """Initialize enhanced MCP capabilities for Phase 2."""
+        try:
+            self.enhanced_mcp = create_enhanced_mcp_integration()
+            await self.enhanced_mcp.initialize()
+            self.enhanced_mcp_enabled = True
+            logger.info("Enhanced MCP initialized successfully")
+        except Exception as e:
+            logger.warning(f"Enhanced MCP initialization failed: {e}")
+            self.enhanced_mcp_enabled = False
+    
+    async def initialize_tracing(self):
+        """Initialize tracing capabilities."""
+        try:
+            if self.tracer:
+                await self.tracer.initialize()
+                self.tracing_enabled = True
+                logger.info("Tracing initialized successfully")
+            else:
+                logger.warning("Tracer not available")
+                self.tracing_enabled = False
+        except Exception as e:
+            logger.warning(f"Tracing initialization failed: {e}")
+            self.tracing_enabled = False
 
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -207,6 +250,104 @@ class ScrummasterAgent:
             enhanced_data["impediment_management"] = impediment_result
         
         return enhanced_data
+    
+    async def use_enhanced_mcp_tools(self, scrum_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use enhanced MCP tools voor Phase 2 capabilities."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available, using standard MCP tools")
+            return await self.use_scrum_specific_mcp_tools(scrum_data)
+        
+        enhanced_data = {}
+        
+        try:
+            # Core enhancement tools
+            core_result = await self.enhanced_mcp.use_enhanced_mcp_tool("core_enhancement", {
+                "agent_type": self.agent_name,
+                "enhancement_level": "advanced",
+                "capabilities": scrum_data.get("capabilities", []),
+                "performance_metrics": scrum_data.get("performance_metrics", {})
+            })
+            enhanced_data["core_enhancement"] = core_result
+            
+            # Scrum-specific enhanced tools
+            scrum_enhanced_result = await self.use_scrum_specific_enhanced_tools(scrum_data)
+            enhanced_data.update(scrum_enhanced_result)
+            
+            # Tracing integration
+            if self.tracing_enabled:
+                trace_result = await self.trace_scrum_operation(scrum_data)
+                enhanced_data["tracing"] = trace_result
+            
+            logger.info(f"Enhanced MCP tools used successfully: {len(enhanced_data)} tools")
+            
+        except Exception as e:
+            logger.error(f"Enhanced MCP tools failed: {e}")
+            enhanced_data["error"] = str(e)
+        
+        return enhanced_data
+    
+    async def use_scrum_specific_enhanced_tools(self, scrum_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use scrum-specific enhanced MCP tools."""
+        enhanced_tools = {}
+        
+        try:
+            # Enhanced sprint planning
+            if "sprint_planning" in scrum_data:
+                sprint_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_sprint_planning", {
+                    "sprint_data": scrum_data["sprint_planning"],
+                    "team_capacity": scrum_data.get("team_capacity", {}),
+                    "velocity_history": scrum_data.get("velocity_history", [])
+                })
+                enhanced_tools["enhanced_sprint_planning"] = sprint_result
+            
+            # Enhanced team collaboration
+            if "team_collaboration" in scrum_data:
+                collaboration_result = await self.enhanced_mcp.communicate_with_agents(
+                    ["ProductOwner", "TestEngineer", "BackendDeveloper", "FrontendDeveloper"],
+                    {
+                        "type": "sprint_coordination",
+                        "content": scrum_data["team_collaboration"]
+                    }
+                )
+                enhanced_tools["enhanced_team_collaboration"] = collaboration_result
+            
+            # Enhanced impediment resolution
+            if "impediment_resolution" in scrum_data:
+                impediment_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_impediment_resolution", {
+                    "impediment_data": scrum_data["impediment_resolution"],
+                    "resolution_strategies": scrum_data.get("resolution_strategies", [])
+                })
+                enhanced_tools["enhanced_impediment_resolution"] = impediment_result
+            
+            logger.info(f"Scrum-specific enhanced tools used: {list(enhanced_tools.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Scrum-specific enhanced tools failed: {e}")
+            enhanced_tools["error"] = str(e)
+        
+        return enhanced_tools
+    
+    async def trace_scrum_operation(self, operation_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace scrum operations for monitoring and debugging."""
+        if not self.tracing_enabled or not self.tracer:
+            return {"status": "tracing_disabled"}
+        
+        try:
+            trace_data = {
+                "agent": self.agent_name,
+                "operation": operation_data.get("operation_type", "unknown"),
+                "timestamp": datetime.now().isoformat(),
+                "data": operation_data
+            }
+            
+            result = await self.tracer.trace_operation(trace_data)
+            logger.info(f"Scrum operation traced: {operation_data.get('operation_type', 'unknown')}")
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Tracing failed: {e}")
+            return {"status": "tracing_error", "error": str(e)}
 
     def _validate_input(self, value: Any, expected_type: type, param_name: str) -> None:
         """Validate input parameters with type checking."""
@@ -958,14 +1099,23 @@ Scrummaster Agent Commands:
             logger.error(f"Error handling sprint planning requested: {e}")
 
     async def run(self):
-        """Start the agent in event listening mode met MCP integration."""
+        """Start the agent in event listening mode met complete integration."""
         # Initialize MCP integration
         await self.initialize_mcp()
+        
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing capabilities
+        await self.initialize_tracing()
         
         subscribe("sprint_review_completed", self.handle_sprint_review_completed)
         subscribe("sprint_planning_requested", self.handle_sprint_planning_requested)
 
         logger.info("ScrummasterAgent ready and listening for events...")
+        print("🎯 Scrummaster Agent is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
         self.collaborate_example()
         
         try:
@@ -974,6 +1124,7 @@ Scrummaster Agent Commands:
                 await asyncio.sleep(1)
         except KeyboardInterrupt:
             logger.info("Scrummaster agent stopped.")
+            print("\n🛑 Scrummaster Agent stopped.")
     
     @classmethod
     async def run_agent(cls):
@@ -990,7 +1141,10 @@ def main():
                                "track-impediment", "resolve-impediment", "show-sprint-history",
                                "show-team-metrics", "show-impediments", "show-velocity",
                                "calculate-velocity", "team-health-check", "show-scrum-guide",
-                               "test", "collaborate", "run"])
+                               "test", "collaborate", "run", "initialize-mcp", "use-mcp-tool", 
+                               "get-mcp-status", "use-scrum-mcp-tools", "check-dependencies",
+                               "enhanced-collaborate", "enhanced-security", "enhanced-performance",
+                               "trace-operation", "trace-performance", "trace-error", "tracing-summary"])
     parser.add_argument("--sprint-number", type=int, default=1, help="Sprint number")
     parser.add_argument("--impediment-id", type=int, default=1, help="Impediment ID")
     parser.add_argument("--description", default="General impediment", help="Impediment description")
@@ -1045,7 +1199,51 @@ def main():
         elif args.command == "collaborate":
             agent.collaborate_example()
         elif args.command == "run":
-            agent.run()
+            asyncio.run(agent.run())
+        # Enhanced MCP commands
+        elif args.command == "enhanced-collaborate":
+            result = asyncio.run(agent.enhanced_mcp.communicate_with_agents(
+                ["ProductOwner", "TestEngineer", "BackendDeveloper", "FrontendDeveloper"], 
+                {"type": "sprint_coordination", "content": {"sprint_phase": "planning"}}
+            ))
+            print(json.dumps(result, indent=2))
+        elif args.command == "enhanced-security":
+            result = asyncio.run(agent.enhanced_mcp.enhanced_security_validation({
+                "auth_method": "multi_factor",
+                "security_level": "enterprise",
+                "compliance": ["gdpr", "sox", "iso27001"]
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "enhanced-performance":
+            result = asyncio.run(agent.enhanced_mcp.enhanced_performance_optimization({
+                "optimization_target": "sprint_planning",
+                "performance_metrics": {"response_time": 0.5, "throughput": 100}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-operation":
+            result = asyncio.run(agent.trace_scrum_operation({
+                "operation_type": "sprint_planning",
+                "sprint_number": args.sprint_number,
+                "team_size": 5
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-performance":
+            result = asyncio.run(agent.trace_scrum_operation({
+                "operation_type": "performance_metrics",
+                "metrics": {"velocity": 15, "sprint_duration": 14}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-error":
+            result = asyncio.run(agent.trace_scrum_operation({
+                "operation_type": "error_scenario",
+                "error_type": "impediment_resolution_failed",
+                "error_details": "Team member unavailable"
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "tracing-summary":
+            print(f"Tracing Status: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+            print(f"Enhanced MCP Status: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+            print(f"MCP Status: {'Enabled' if agent.mcp_enabled else 'Disabled'}")
             
     except ScrumValidationError as e:
         print(f"Validation error: {e}")

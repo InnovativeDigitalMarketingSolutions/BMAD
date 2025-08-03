@@ -633,7 +633,8 @@ class TestScrummasterAgentCLI:
             mock_agent.collaborate_example.assert_called()
 
     @patch('sys.argv', ['test_scrummaster_agent.py', 'run'])
-    def test_cli_run_command(self, capsys):
+    @patch('asyncio.run')
+    def test_cli_run_command(self, mock_asyncio_run, capsys):
         """Test CLI run command."""
         from bmad.agents.Agent.Scrummaster.scrummaster import main
         with patch('bmad.agents.Agent.Scrummaster.scrummaster.ScrummasterAgent') as mock_agent_class:
@@ -641,7 +642,7 @@ class TestScrummasterAgentCLI:
             mock_agent_class.return_value = mock_agent
             
             main()
-            mock_agent.run.assert_called()
+            mock_asyncio_run.assert_called_with(mock_agent.run())
 
 
 class TestScrummasterAgentIntegration:
