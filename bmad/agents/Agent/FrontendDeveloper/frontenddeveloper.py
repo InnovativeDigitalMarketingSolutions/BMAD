@@ -9,7 +9,7 @@ import logging
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 from bmad.agents.core.agent.agent_performance_monitor import (
     MetricType,
@@ -34,6 +34,15 @@ from bmad.core.mcp import (
     get_framework_mcp_integration,
     initialize_framework_mcp_integration
 )
+
+# Enhanced MCP Integration for Phase 2
+from bmad.core.mcp.enhanced_mcp_integration import (
+    EnhancedMCPIntegration,
+    create_enhanced_mcp_integration
+)
+
+# Tracing Integration
+from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 
 
 # Configure logging
@@ -60,6 +69,14 @@ class FrontendDeveloperAgent:
         self.mcp_client: Optional[MCPClient] = None
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
         self.mcp_enabled = False
+        
+        # Enhanced MCP Integration for Phase 2
+        self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_enabled = False
+        
+        # Tracing Integration
+        self.tracer: Optional[BMADTracer] = None
+        self.tracing_enabled = False
         
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
@@ -98,6 +115,48 @@ class FrontendDeveloperAgent:
         except Exception as e:
             logger.warning(f"MCP initialization failed for FrontendDeveloper: {e}")
             self.mcp_enabled = False
+
+    async def initialize_enhanced_mcp(self):
+        """Initialize enhanced MCP capabilities for Phase 2."""
+        try:
+            self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+            self.enhanced_mcp_enabled = await self.enhanced_mcp.initialize_enhanced_mcp()
+            
+            if self.enhanced_mcp_enabled:
+                logger.info("Enhanced MCP capabilities initialized successfully for FrontendDeveloper")
+            else:
+                logger.warning("Enhanced MCP initialization failed, falling back to standard MCP")
+                
+        except Exception as e:
+            logger.warning(f"Enhanced MCP initialization failed for FrontendDeveloper: {e}")
+            self.enhanced_mcp_enabled = False
+
+    async def initialize_tracing(self):
+        """Initialize tracing capabilities for frontend development."""
+        try:
+            self.tracer = BMADTracer(config=type("Config", (), {
+                "service_name": f"{self.agent_name}",
+                "environment": "development",
+                "tracing_level": "detailed"
+            })())
+            self.tracing_enabled = await self.tracer.initialize()
+            
+            if self.tracing_enabled:
+                logger.info("Tracing capabilities initialized successfully for FrontendDeveloper")
+                # Set up frontend-specific tracing spans
+                await self.tracer.setup_frontend_tracing({
+                    "agent_name": self.agent_name,
+                    "tracing_level": "detailed",
+                    "performance_tracking": True,
+                    "user_interaction_tracking": True,
+                    "error_tracking": True
+                })
+            else:
+                logger.warning("Tracing initialization failed, continuing without tracing")
+                
+        except Exception as e:
+            logger.warning(f"Tracing initialization failed for FrontendDeveloper: {e}")
+            self.tracing_enabled = False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -168,6 +227,236 @@ class FrontendDeveloperAgent:
             logger.error(f"Error in frontend-specific MCP tools: {e}")
         
         return enhanced_data
+    
+    async def use_enhanced_mcp_tools(self, agent_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use enhanced MCP tools voor Phase 2 capabilities."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available, using standard MCP tools")
+            return await self.use_frontend_specific_mcp_tools(agent_data)
+        
+        enhanced_data = {}
+        
+        # Core enhancement tools
+        core_result = await self.enhanced_mcp.use_enhanced_mcp_tool("core_enhancement", {
+            "agent_type": self.agent_name,
+            "enhancement_level": "advanced",
+            "capabilities": agent_data.get("capabilities", []),
+            "performance_metrics": agent_data.get("performance_metrics", {})
+        })
+        if core_result:
+            enhanced_data["core_enhancement"] = core_result
+        
+        # Frontend-specific enhancement tools
+        frontend_result = await self.use_frontend_specific_enhanced_tools(agent_data)
+        if frontend_result:
+            enhanced_data.update(frontend_result)
+        
+        return enhanced_data
+    
+    async def use_frontend_specific_enhanced_tools(self, frontend_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use frontend-specific enhanced MCP tools."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {}
+        
+        enhanced_data = {}
+        
+        # Enhanced component development
+        component_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_component_development", {
+            "component_name": frontend_data.get("component_name", ""),
+            "framework": frontend_data.get("framework", "react"),
+            "ui_library": frontend_data.get("ui_library", "shadcn/ui"),
+            "development_type": "advanced",
+            "optimization_level": "comprehensive"
+        })
+        if component_result:
+            enhanced_data["enhanced_component_development"] = component_result
+        
+        # Enhanced accessibility testing
+        accessibility_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_accessibility_testing", {
+            "component_name": frontend_data.get("component_name", ""),
+            "testing_type": "comprehensive",
+            "wcag_level": frontend_data.get("wcag_level", "AA"),
+            "automated_testing": True,
+            "manual_testing": True
+        })
+        if accessibility_result:
+            enhanced_data["enhanced_accessibility_testing"] = accessibility_result
+        
+        # Enhanced design system integration
+        design_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_design_system_integration", {
+            "design_system": frontend_data.get("design_system", "shadcn/ui"),
+            "integration_type": "advanced",
+            "component_library": frontend_data.get("component_library", "radix-ui"),
+            "theme_management": True,
+            "responsive_design": True
+        })
+        if design_result:
+            enhanced_data["enhanced_design_system_integration"] = design_result
+        
+        # Enhanced performance optimization
+        performance_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_frontend_performance", {
+            "performance_metrics": frontend_data.get("performance_metrics", {}),
+            "optimization_type": "advanced_comprehensive",
+            "bundle_optimization": True,
+            "lazy_loading": True,
+            "code_splitting": True,
+            "caching_strategy": "intelligent"
+        })
+        if performance_result:
+            enhanced_data["enhanced_frontend_performance"] = performance_result
+        
+        return enhanced_data
+    
+    async def communicate_with_agents(self, target_agents: List[str], message: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhanced inter-agent communication via MCP."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available for agent communication")
+            return {}
+        
+        return await self.enhanced_mcp.communicate_with_agents(target_agents, message)
+    
+    async def use_external_tools(self, tool_config: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhanced external tool integration via MCP adapters."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available for external tools")
+            return {}
+        
+        return await self.enhanced_mcp.use_external_tools(tool_config)
+    
+    async def enhanced_security_validation(self, security_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhanced security validation and controls."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available for security validation")
+            return {}
+        
+        return await self.enhanced_mcp.enhanced_security_validation(security_data)
+    
+    async def enhanced_performance_optimization(self, performance_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhanced performance optimization for agents."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available for performance optimization")
+            return {}
+        
+        return await self.enhanced_mcp.enhanced_performance_optimization(performance_data)
+    
+    def get_enhanced_performance_summary(self) -> Dict[str, Any]:
+        """Get enhanced performance summary for the agent."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {}
+        
+        return self.enhanced_mcp.get_performance_summary()
+    
+    def get_enhanced_communication_summary(self) -> Dict[str, Any]:
+        """Get enhanced communication summary for the agent."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {}
+        
+        return self.enhanced_mcp.get_communication_summary()
+    
+    async def trace_component_development(self, component_name: str, development_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace component development process."""
+        if not self.tracing_enabled or not self.tracer:
+            logger.warning("Tracing not available for component development")
+            return {}
+        
+        try:
+            trace_result = await self.tracer.trace_component_development({
+                "component_name": component_name,
+                "development_phase": development_data.get("phase", "build"),
+                "framework": development_data.get("framework", "react"),
+                "ui_library": development_data.get("ui_library", "shadcn/ui"),
+                "performance_metrics": development_data.get("performance_metrics", {}),
+                "accessibility_score": development_data.get("accessibility_score", 0),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info(f"Component development traced: {component_name}")
+            return trace_result
+            
+        except Exception as e:
+            logger.error(f"Component development tracing failed: {e}")
+            return {}
+    
+    async def trace_user_interaction(self, interaction_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace user interactions and behavior patterns."""
+        if not self.tracing_enabled or not self.tracer:
+            logger.warning("Tracing not available for user interaction")
+            return {}
+        
+        try:
+            trace_result = await self.tracer.trace_user_interaction({
+                "interaction_type": interaction_data.get("type", "click"),
+                "component_name": interaction_data.get("component_name", ""),
+                "user_behavior": interaction_data.get("behavior", {}),
+                "performance_impact": interaction_data.get("performance_impact", {}),
+                "accessibility_impact": interaction_data.get("accessibility_impact", {}),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info(f"User interaction traced: {interaction_data.get('type', 'unknown')}")
+            return trace_result
+            
+        except Exception as e:
+            logger.error(f"User interaction tracing failed: {e}")
+            return {}
+    
+    async def trace_performance_metrics(self, performance_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace frontend performance metrics."""
+        if not self.tracing_enabled or not self.tracer:
+            logger.warning("Tracing not available for performance metrics")
+            return {}
+        
+        try:
+            trace_result = await self.tracer.trace_performance_metrics({
+                "bundle_size": performance_data.get("bundle_size", 0),
+                "load_time": performance_data.get("load_time", 0),
+                "render_time": performance_data.get("render_time", 0),
+                "api_response_time": performance_data.get("api_response_time", 0),
+                "memory_usage": performance_data.get("memory_usage", 0),
+                "cpu_usage": performance_data.get("cpu_usage", 0),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info("Performance metrics traced")
+            return trace_result
+            
+        except Exception as e:
+            logger.error(f"Performance metrics tracing failed: {e}")
+            return {}
+    
+    async def trace_error_event(self, error_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace frontend errors and exceptions."""
+        if not self.tracing_enabled or not self.tracer:
+            logger.warning("Tracing not available for error events")
+            return {}
+        
+        try:
+            trace_result = await self.tracer.trace_error_event({
+                "error_type": error_data.get("type", "unknown"),
+                "error_message": error_data.get("message", ""),
+                "component_name": error_data.get("component_name", ""),
+                "stack_trace": error_data.get("stack_trace", ""),
+                "user_context": error_data.get("user_context", {}),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info(f"Error event traced: {error_data.get('type', 'unknown')}")
+            return trace_result
+            
+        except Exception as e:
+            logger.error(f"Error event tracing failed: {e}")
+            return {}
+    
+    def get_tracing_summary(self) -> Dict[str, Any]:
+        """Get tracing summary for the agent."""
+        if not self.tracing_enabled or not self.tracer:
+            return {}
+        
+        try:
+            return self.tracer.get_tracing_summary()
+        except Exception as e:
+            logger.error(f"Failed to get tracing summary: {e}")
+            return {}
     
     def _ensure_message_bus_initialized(self):
         """Lazy initialize MessageBus only when needed."""
@@ -292,6 +581,40 @@ FrontendDeveloper Agent Commands:
   export-component [format] - Export component (md, json)
   test                    - Test resource completeness
   collaborate             - Demonstrate collaboration with other agents
+
+MCP Integration Commands:
+  initialize-mcp          - Initialize MCP client
+  use-mcp-tool            - Use MCP tool with parameters
+  get-mcp-status          - Get MCP integration status
+  use-frontend-mcp-tools  - Use frontend-specific MCP tools
+  check-dependencies      - Check agent dependencies
+
+Enhanced MCP Phase 2 Commands:
+  enhanced-collaborate    - Enhanced inter-agent collaboration
+  enhanced-security       - Enhanced security validation
+  enhanced-performance    - Enhanced performance optimization
+  enhanced-tools          - Enhanced external tool integration
+  enhanced-summary        - Get enhanced performance and communication summaries
+
+Tracing Commands:
+  trace-component         - Trace component development process
+  trace-interaction       - Trace user interactions and behavior
+  trace-performance       - Trace frontend performance metrics
+  trace-error             - Trace frontend errors and exceptions
+  tracing-summary         - Get tracing summary and analytics
+
+Examples:
+  python frontenddeveloper.py build-shadcn-component --name Button
+  python frontenddeveloper.py enhanced-collaborate --agents BackendDeveloper UXUIDesigner --message "Component API design"
+  python frontenddeveloper.py enhanced-security
+  python frontenddeveloper.py enhanced-performance
+  python frontenddeveloper.py enhanced-tools --tool-config '{"tool": "figma", "action": "parse"}'
+  python frontenddeveloper.py enhanced-summary
+  python frontenddeveloper.py trace-component --name Button --component-data '{"phase": "build", "framework": "react"}'
+  python frontenddeveloper.py trace-interaction --interaction-data '{"type": "click", "component_name": "Button"}'
+  python frontenddeveloper.py trace-performance --performance-data '{"bundle_size": 150, "load_time": 200}'
+  python frontenddeveloper.py trace-error --error-data '{"type": "render_error", "message": "Component failed to render"}'
+  python frontenddeveloper.py tracing-summary
         """
         print(help_text)
 
@@ -386,6 +709,26 @@ FrontendDeveloper Agent Commands:
             except Exception as e:
                 logger.warning(f"MCP component building failed: {e}, using local building")
         
+        # Use enhanced MCP tools for Phase 2 capabilities
+        if self.enhanced_mcp_enabled and self.enhanced_mcp:
+            try:
+                enhanced_result = await self.use_enhanced_mcp_tools({
+                    "component_name": component_name,
+                    "framework": "react",
+                    "ui_library": "shadcn/ui",
+                    "capabilities": ["accessibility", "performance", "design_system"],
+                    "performance_metrics": result
+                })
+                
+                if enhanced_result:
+                    logger.info("Enhanced MCP tools completed")
+                    result["enhanced_mcp_result"] = enhanced_result
+                    result["enhanced_mcp_enabled"] = True
+                else:
+                    logger.warning("Enhanced MCP tools failed, using standard MCP")
+            except Exception as e:
+                logger.warning(f"Enhanced MCP tools failed: {e}, using standard MCP")
+        
         # Use frontend-specific MCP tools for additional enhancement
         if self.mcp_enabled:
             try:
@@ -394,6 +737,22 @@ FrontendDeveloper Agent Commands:
                     result["frontend_enhancements"] = frontend_enhanced
             except Exception as e:
                 logger.warning(f"Frontend-specific MCP tools failed: {e}")
+
+        # Trace component development process
+        if self.tracing_enabled and self.tracer:
+            try:
+                trace_result = await self.trace_component_development(component_name, {
+                    "phase": "build",
+                    "framework": "react",
+                    "ui_library": "shadcn/ui",
+                    "performance_metrics": result,
+                    "accessibility_score": result.get("accessibility_score", 0)
+                })
+                if trace_result:
+                    result["tracing_data"] = trace_result
+                    result["tracing_enabled"] = True
+            except Exception as e:
+                logger.warning(f"Component development tracing failed: {e}")
 
         # Add to component history
         comp_entry = f"{datetime.now().isoformat()}: Shadcn {component_name} component built with {result['accessibility_score']}% accessibility score"
@@ -738,13 +1097,19 @@ FrontendDeveloper Agent Commands:
         # Initialize MCP integration
         await self.initialize_mcp()
         
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+
+        # Initialize tracing capabilities for frontend development
+        await self.initialize_tracing()
+        
         def sync_handler(event):
             asyncio.run(self.handle_component_build_completed(event))
 
         subscribe("component_build_completed", sync_handler)
         subscribe("component_build_requested", self.handle_component_build_requested)
 
-        logger.info("FrontendDeveloperAgent ready and listening for events...")
+        logger.info("FrontendDeveloperAgent ready and listening for events with enhanced MCP capabilities...")
         self.collaborate_example()
         
         try:
@@ -765,12 +1130,20 @@ def main():
     parser.add_argument("command", nargs="?", default="help",
                        choices=["help", "build-component", "build-shadcn-component", "run-accessibility-check", "show-component-history",
                                "show-performance", "show-best-practices", "show-changelog", "export-component",
-                               "test", "collaborate", "run", "initialize-mcp", "use-mcp-tool", "get-mcp-status", "use-frontend-mcp-tools", "check-dependencies"])
+                               "test", "collaborate", "run", "initialize-mcp", "use-mcp-tool", "get-mcp-status", "use-frontend-mcp-tools", "check-dependencies",
+                               "enhanced-collaborate", "enhanced-security", "enhanced-performance", "enhanced-tools", "enhanced-summary",
+                               "trace-component", "trace-interaction", "trace-performance", "trace-error", "tracing-summary"])
     parser.add_argument("--name", default="Button", help="Component name")
     parser.add_argument("--format", choices=["md", "json"], default="md", help="Export format")
     parser.add_argument("--tool-name", help="MCP tool name")
     parser.add_argument("--parameters", help="MCP tool parameters (JSON string)")
     parser.add_argument("--component-data", help="Component data for frontend MCP tools (JSON string)")
+    parser.add_argument("--agents", nargs="+", help="Target agents for collaboration")
+    parser.add_argument("--message", help="Message for agent communication")
+    parser.add_argument("--tool-config", help="External tool configuration (JSON)")
+    parser.add_argument("--interaction-data", help="User interaction data (JSON)")
+    parser.add_argument("--performance-data", help="Performance metrics data (JSON)")
+    parser.add_argument("--error-data", help="Error event data (JSON)")
 
     args = parser.parse_args()
 
@@ -832,6 +1205,97 @@ def main():
     elif args.command == "check-dependencies":
         status = agent.check_dependencies()
         print(json.dumps(status, indent=2, default=str))
+    elif args.command == "enhanced-collaborate":
+        if not args.agents or not args.message:
+            print("Error: --agents and --message are required for enhanced collaboration")
+            return
+        message = {"type": "collaboration", "content": {"message": args.message}}
+        result = asyncio.run(agent.communicate_with_agents(args.agents, message))
+        print(f"Enhanced collaboration result: {result}")
+    elif args.command == "enhanced-security":
+        security_data = {
+            "auth_method": "multi_factor",
+            "security_level": "enterprise",
+            "compliance": ["gdpr", "sox", "iso27001"],
+            "model": "rbac",
+            "indicators": ["suspicious_activity", "unauthorized_access"]
+        }
+        result = asyncio.run(agent.enhanced_security_validation(security_data))
+        print(f"Enhanced security validation result: {result}")
+    elif args.command == "enhanced-performance":
+        performance_data = {
+            "cache_strategy": "adaptive",
+            "memory_usage": {"current": 50, "peak": 80},
+            "target_latency": 50
+        }
+        result = asyncio.run(agent.enhanced_performance_optimization(performance_data))
+        print(f"Enhanced performance optimization result: {result}")
+    elif args.command == "enhanced-tools":
+        if not args.tool_config:
+            print("Error: --tool-config is required for enhanced tools")
+            return
+        try:
+            tool_config = json.loads(args.tool_config)
+            result = asyncio.run(agent.use_external_tools(tool_config))
+            print(f"Enhanced external tools result: {result}")
+        except json.JSONDecodeError:
+            print("Error: Invalid JSON in --tool-config")
+            return
+    elif args.command == "enhanced-summary":
+        performance_summary = agent.get_enhanced_performance_summary()
+        communication_summary = agent.get_enhanced_communication_summary()
+        print("Enhanced Performance Summary:")
+        print(json.dumps(performance_summary, indent=2))
+        print("\nEnhanced Communication Summary:")
+        print(json.dumps(communication_summary, indent=2))
+    elif args.command == "trace-component":
+        if not args.component_data:
+            print("Error: --component-data is required for trace-component command")
+            return
+        try:
+            component_data = json.loads(args.component_data)
+            result = asyncio.run(agent.trace_component_development(args.name, component_data))
+            print(f"Component tracing result: {result}")
+        except json.JSONDecodeError:
+            print("Error: Invalid JSON in --component-data")
+            return
+    elif args.command == "trace-interaction":
+        if not args.interaction_data:
+            print("Error: --interaction-data is required for trace-interaction command")
+            return
+        try:
+            interaction_data = json.loads(args.interaction_data)
+            result = asyncio.run(agent.trace_user_interaction(interaction_data))
+            print(f"User interaction tracing result: {result}")
+        except json.JSONDecodeError:
+            print("Error: Invalid JSON in --interaction-data")
+            return
+    elif args.command == "trace-performance":
+        if not args.performance_data:
+            print("Error: --performance-data is required for trace-performance command")
+            return
+        try:
+            performance_data = json.loads(args.performance_data)
+            result = asyncio.run(agent.trace_performance_metrics(performance_data))
+            print(f"Performance tracing result: {result}")
+        except json.JSONDecodeError:
+            print("Error: Invalid JSON in --performance-data")
+            return
+    elif args.command == "trace-error":
+        if not args.error_data:
+            print("Error: --error-data is required for trace-error command")
+            return
+        try:
+            error_data = json.loads(args.error_data)
+            result = asyncio.run(agent.trace_error_event(error_data))
+            print(f"Error tracing result: {result}")
+        except json.JSONDecodeError:
+            print("Error: Invalid JSON in --error-data")
+            return
+    elif args.command == "tracing-summary":
+        tracing_summary = agent.get_tracing_summary()
+        print("Tracing Summary:")
+        print(json.dumps(tracing_summary, indent=2))
 
 if __name__ == "__main__":
     main()
