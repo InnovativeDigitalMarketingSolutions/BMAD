@@ -1,3 +1,0 @@
-# Workflow History
-
-- 2025-08-02T23:59:09.275143: Workflow started - automated_deployment
