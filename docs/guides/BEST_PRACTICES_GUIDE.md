@@ -5,8 +5,8 @@
 Dit document bevat alle best practices voor BMAD development, geconsolideerd uit lessons learned en development ervaring. Deze guide dient als referentie voor alle development activiteiten.
 
 **Laatste Update**: 2025-01-27  
-**Versie**: 2.2  
-**Status**: Actief - MCP Integration voltooid, AiDeveloper Agent 100% Success Rate
+**Versie**: 2.3  
+**Status**: Actief - TestEngineer Agent 100% Success Rate, Syntax Error Prevention
 
 ## Development Best Practices
 
@@ -955,6 +955,21 @@ def method_name(self, param: str) -> Dict[str, Any]:
     
     return self._process(param)
 ```
+
+### **Event Loop Handling**
+- **Problem**: `asyncio.run()` cannot be called from a running event loop
+- **Solution**: Use `await` instead of `asyncio.run()` in async tests
+- **Best Practice**: Always use `await` for async method calls in async test contexts
+
+### **Syntax Error Prevention**
+- **Problem**: Trailing commas in `with` statements cause syntax errors
+- **Solution**: Use line continuation (`\`) without trailing commas
+- **Best Practice**: Always check for trailing commas in multi-line `with` statements
+
+### **Mock Data Validation**
+- **Problem**: Incorrect escape sequences in mock data cause parsing failures
+- **Solution**: Use correct escape sequences (`\n` instead of `nn`)
+- **Best Practice**: Verify mock data matches expected format exactly
 
 ## Version History
 

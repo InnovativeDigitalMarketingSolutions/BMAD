@@ -5,8 +5,8 @@
 Dit document bevat alle lessons learned uit het BMAD development proces. Deze lessons zijn verzameld tijdens development, testing, en MCP integration om de kwaliteit van toekomstige development te verbeteren.
 
 **Laatste Update**: 2025-01-27  
-**Versie**: 2.2  
-**Status**: Actief - MCP Integration voltooid, AiDeveloper Agent 100% Success Rate
+**Versie**: 2.3  
+**Status**: Actief - TestEngineer Agent 100% Success Rate, Syntax Error Prevention
 
 ## 🎉 MCP Integration Completion Lessons
 
@@ -27,6 +27,52 @@ Dit document bevat alle lessons learned uit het BMAD development proces. Deze le
 5. **Error Handling**: MCP failures mogen geen crashes veroorzaken
 6. **Test Fix Automation**: Systematische aanpak voor het fixen van syntax errors in test files
 7. **Quality Over Speed**: Kwalitatieve oplossingen boven snelle hacks
+
+### **TestEngineer Agent Success Story (Januari 2025)**
+
+**Major Achievement**: Van syntax errors naar 100% success rate (38/38 tests) door systematische fixes.
+
+**Key Lessons Learned**:
+1. **Syntax Error Patterns**: Trailing commas in `with` statements veroorzaken syntax errors
+2. **Mock Data Escape Sequences**: `nn` moet `\n` zijn in mock data strings
+3. **Event Loop Conflicts**: `asyncio.run()` kan niet worden aangeroepen in bestaande event loops
+4. **Sync vs Async Test Detection**: Tests moeten correct sync/async worden gemarkeerd
+5. **Mock Data Parsing**: Mock data moet exact matchen wat de methode verwacht
+
+**Best Practices voor Syntax Error Fixes**:
+```python
+# ❌ VERKEERD: Trailing comma in with statement
+with patch('module.function'), \
+     patch('module.function2'),  # ❌ Trailing comma
+
+# ✅ CORRECT: Line continuation zonder trailing comma
+with patch('module.function'), \
+     patch('module.function2'):  # ✅ Geen trailing comma
+```
+
+**Best Practices voor Mock Data**:
+```python
+# ❌ VERKEERD: Verkeerde escape sequences
+read_data="# Test Historynn- Test 1n- Test 2"
+
+# ✅ CORRECT: Juiste escape sequences
+read_data="# Test History\n\n- Test 1\n- Test 2"
+```
+
+**Best Practices voor Event Loop Handling**:
+```python
+# ❌ VERKEERD: asyncio.run() in async test
+@pytest.mark.asyncio
+async def test_method():
+    result = asyncio.run(agent.method())  # ❌ Event loop conflict
+
+# ✅ CORRECT: await in async test
+@pytest.mark.asyncio
+async def test_method():
+    result = await agent.method()  # ✅ Correct async call
+```
+
+**Waarom**: Voorkomt syntax errors, zorgt voor correcte mock data parsing, en voorkomt event loop conflicts.
 
 ## Development Process Lessons
 

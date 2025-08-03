@@ -23,6 +23,17 @@ Voor uitgebreide backlog items met implementatie details, zie:
   - Tool Orchestration
   - **Demo**: Advanced MCP features showcase
 
+- [ ] **QualityGuardian Agent Test Development** (Week 15-16) 🔥 **NEW HIGH PRIORITY**
+  - **Doel**: Kwaliteitsvalidatie van code via uitgebreide test suite
+  - **Success Rate Target**: 100% (alle tests moeten slagen)
+  - **Coverage Targets**: 
+    - Essentiële onderdelen: >90% coverage
+    - Rest van code en functionaliteiten: >70% coverage
+  - **Test Types**: Unit tests, integration tests, quality validation tests
+  - **Quality Metrics**: Code quality analysis, security scanning, performance testing
+  - **MCP Integration**: Quality-specific MCP tools voor enhanced analysis
+  - **Demo**: Quality validation showcase en coverage metrics
+
 - [ ] **Advanced Analytics Dashboard** (Week 15-16)
   - Real-time metrics visualization
   - Performance analytics
@@ -421,12 +432,12 @@ Voor uitgebreide backlog items met implementatie details, zie:
 ## 📊 **Project Metrics**
 
 ### **Completion Rate**
-- **Total Tasks**: 57 (incl. 5 nieuwe bug analysis tasks + demo tasks)
+- **Total Tasks**: 58 (incl. 6 nieuwe bug analysis tasks + demo tasks + QualityGuardian tests)
 - **Completed**: 34
 - **In Progress**: 0
-- **To Do**: 13 (incl. 5 nieuwe bug analysis tasks + demo tasks)
+- **To Do**: 14 (incl. 6 nieuwe bug analysis tasks + demo tasks + QualityGuardian tests)
 - **Backlog**: 10
-- **Completion Rate**: 59.6% (34/57 tasks completed)
+- **Completion Rate**: 58.6% (34/58 tasks completed)
 
 ### **Quality Metrics**
 - **System Health**: 95% functionaliteit
@@ -436,9 +447,9 @@ Voor uitgebreide backlog items met implementatie details, zie:
 - **Performance Tests**: 100% success rate
 
 ### **Priority Distribution**
-- **Priority 1**: 15 tasks (31.9%)
-- **Priority 2**: 22 tasks (46.8%)
-- **Priority 3**: 10 tasks (21.3%)
+- **Priority 1**: 16 tasks (32.0%)
+- **Priority 2**: 22 tasks (44.0%)
+- **Priority 3**: 10 tasks (20.0%)
 
 ### **Sprint Velocity**
 - **Week 12-13**: 11 tasks completed (MCP Agent Integration)
@@ -484,6 +495,16 @@ Voor uitgebreide backlog items met implementatie details, zie:
 - **Test Quality**: 93.2% success rate (AiDeveloper agent)
 - **Integration Tests**: 98.8% success rate
 - **Performance Tests**: 100% success rate
+
+### **Sprint 15-16: QualityGuardian Agent Test Development** 🔥 **NEW HIGH PRIORITY**
+**Goal**: Uitgebreide test suite voor kwaliteitsvalidatie van code
+**Capacity**: 4 tasks (incl. demo)
+**Focus**: Quality validation, coverage targets, MCP integration
+**Demo**: Quality validation showcase en coverage metrics
+**Targets**:
+- **Success Rate**: 100% (alle tests moeten slagen)
+- **Coverage**: >90% voor essentiële onderdelen, >70% voor rest
+- **Quality Metrics**: Code quality, security, performance analysis
 
 ## 🎬 **Sprint Workflow & Demo Process**
 
