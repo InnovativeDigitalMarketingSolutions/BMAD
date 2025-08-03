@@ -8,6 +8,11 @@ Dit document bevat alle lessons learned uit het BMAD development proces. Deze le
 **Versie**: 2.5  
 **Status**: Actief - Major Progress: 9/22 Agents Fixed (506 tests passing)
 
+**📋 Voor gedetailleerde backlog items en implementatie details, zie:**
+- `docs/deployment/BMAD_MASTER_PLANNING.md` - Complete master planning met alle backlog items
+- `docs/deployment/IMPLEMENTATION_DETAILS.md` - Gedetailleerde implementatie uitleg
+- `docs/deployment/KANBAN_BOARD.md` - Huidige sprint taken en status
+
 ## 🎉 MCP Integration Completion Lessons
 
 ### **✅ Alle 23 Agents MCP Geïntegreerd (Januari 2025)**
