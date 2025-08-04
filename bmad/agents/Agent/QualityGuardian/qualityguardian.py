@@ -24,6 +24,9 @@ from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_e
 from integrations.slack.slack_notify import send_slack_message
 from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
 
+# Tracing Integration
+from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
+
 # MCP Integration
 from bmad.core.mcp import (
     MCPClient,
@@ -128,7 +131,7 @@ class QualityGuardianAgent:
         self.enhanced_mcp_client = None
         
         # Tracing Integration
-        self.tracer = None
+        self.tracer: Optional[BMADTracer] = None
         self.tracing_enabled = False
         
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
@@ -165,8 +168,11 @@ class QualityGuardianAgent:
     async def initialize_tracing(self):
         """Initialize tracing voor quality assurance monitoring."""
         try:
-            from bmad.core.tracing import get_tracer
-            self.tracer = await get_tracer()
+            self.tracer = BMADTracer(config=type("Config", (), {
+                "service_name": self.agent_name,
+                "service_version": "1.0.0",
+                "environment": "development"
+            })())
             self.tracing_enabled = True
             logger.info("Tracing initialized for QualityGuardian")
         except Exception as e:

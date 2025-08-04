@@ -36,6 +36,12 @@ from .framework_integration import (
     initialize_framework_mcp_integration
 )
 
+# Enhanced MCP Integration
+from .enhanced_mcp_integration import (
+    EnhancedMCPIntegration,
+    create_enhanced_mcp_integration
+)
+
 # Version information
 __version__ = "1.1.0"
 __author__ = "BMAD Development Team"
@@ -67,5 +73,9 @@ __all__ = [
     "FrameworkTool",
     "FrameworkType",
     "get_framework_mcp_integration",
-    "initialize_framework_mcp_integration"
+    "initialize_framework_mcp_integration",
+    
+    # Enhanced MCP Integration
+    "EnhancedMCPIntegration",
+    "create_enhanced_mcp_integration"
 ] 
