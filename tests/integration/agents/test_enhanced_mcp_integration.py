@@ -24,6 +24,7 @@ try:
     from bmad.agents.Agent.Architect.architect import ArchitectAgent
     from bmad.agents.Agent.TestEngineer.testengineer import TestEngineerAgent
     from bmad.agents.Agent.DevOpsInfra.devopsinfra import DevOpsInfraAgent
+    from bmad.agents.Agent.QualityGuardian.qualityguardian import QualityGuardianAgent
     
     # Group 2: Operations & Infrastructure Agents
     from bmad.agents.Agent.SecurityDeveloper.securitydeveloper import SecurityDeveloperAgent
@@ -66,7 +67,8 @@ class TestEnhancedMCPIntegration:
             'frontend': FrontendDeveloperAgent(),
             'architect': ArchitectAgent(),
             'test': TestEngineerAgent(),
-            'devops': DevOpsInfraAgent()
+            'devops': DevOpsInfraAgent(),
+            'quality': QualityGuardianAgent()
         }
         return agents
     
@@ -80,6 +82,7 @@ class TestEnhancedMCPIntegration:
             'architect': ArchitectAgent(),
             'test': TestEngineerAgent(),
             'devops': DevOpsInfraAgent(),
+            'quality': QualityGuardianAgent(),
             # Group 2: Operations & Infrastructure Agents
             'security': SecurityDeveloperAgent(),
             'release': ReleaseManagerAgent(),

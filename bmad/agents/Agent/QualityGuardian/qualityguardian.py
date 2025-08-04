@@ -125,6 +125,7 @@ class QualityGuardianAgent:
         # Enhanced MCP Integration
         self.enhanced_mcp = None
         self.enhanced_mcp_enabled = False
+        self.enhanced_mcp_client = None
         
         # Tracing Integration
         self.tracer = None
@@ -150,6 +151,7 @@ class QualityGuardianAgent:
             from bmad.core.mcp import get_enhanced_mcp_client
             self.enhanced_mcp = await get_enhanced_mcp_client()
             self.enhanced_mcp_enabled = True
+            self.enhanced_mcp_client = self.enhanced_mcp
             logger.info("Enhanced MCP Integration initialized for QualityGuardian")
         except Exception as e:
             logger.warning(f"Enhanced MCP initialization failed for QualityGuardian: {e}")
