@@ -614,8 +614,6 @@ class TestLLMClientIntegration:
     @patch('requests.post')
     @patch('bmad.agents.core.data.redis_cache.cache.get')
     @pytest.mark.asyncio
-    async @pytest.mark.asyncio
-    async @pytest.mark.asyncio
     async def test_confidence_scoring_workflow(self, mock_cache_get, mock_post, mock_file_cache_get):
         """Test confidence scoring workflow integration."""
         mock_file_cache_get.return_value = None
