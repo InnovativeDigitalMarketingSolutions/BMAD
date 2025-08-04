@@ -25,20 +25,22 @@ try:
     from bmad.agents.Agent.TestEngineer.testengineer import TestEngineerAgent
     from bmad.agents.Agent.DevOpsInfra.devopsinfra import DevOpsInfraAgent
     
+    # Group 2: Operations & Infrastructure Agents
+    from bmad.agents.Agent.SecurityDeveloper.securitydeveloper import SecurityDeveloperAgent
+    from bmad.agents.Agent.ReleaseManager.releasemanager import ReleaseManagerAgent
+    from bmad.agents.Agent.DataEngineer.dataengineer import DataEngineerAgent
+    from bmad.agents.Agent.AiDeveloper.aidev import AiDeveloperAgent
+    
     # Additional agents for comprehensive testing (commented out for initial testing)
     # from bmad.agents.Agent.FullstackDeveloper.fullstackdeveloper import FullstackDeveloperAgent
     # from bmad.agents.Agent.MobileDeveloper.mobiledeveloper import MobileDeveloperAgent
-    # from bmad.agents.Agent.AiDeveloper.aideveloper import AiDeveloperAgent
     # from bmad.agents.Agent.UXUIDesigner.uxuidesigner import UXUIDesignerAgent
     # from bmad.agents.Agent.AccessibilityAgent.accessibilityagent import AccessibilityAgent
     # from bmad.agents.Agent.QualityGuardian.qualityguardian import QualityGuardianAgent
     # from bmad.agents.Agent.ProductOwner.productowner import ProductOwnerAgent
     # from bmad.agents.Agent.Scrummaster.scrummaster import ScrummasterAgent
-    # from bmad.agents.Agent.ReleaseManager.releasemanager import ReleaseManagerAgent
     # from bmad.agents.Agent.DocumentationAgent.documentationagent import DocumentationAgent
     # from bmad.agents.Agent.FeedbackAgent.feedbackagent import FeedbackAgent
-    # from bmad.agents.Agent.DataEngineer.dataengineer import DataEngineerAgent
-    # from bmad.agents.Agent.SecurityDeveloper.securitydeveloper import SecurityDeveloperAgent
     # from bmad.agents.Agent.StrategiePartner.strategiepartner import StrategiePartnerAgent
     # from bmad.agents.Agent.Retrospective.retrospective import RetrospectiveAgent
     # from bmad.agents.Agent.RnD.rnd import RnDAgent
@@ -74,21 +76,22 @@ class TestEnhancedMCPIntegration:
             'frontend': FrontendDeveloperAgent(),
             'architect': ArchitectAgent(),
             'test': TestEngineerAgent(),
-            'devops': DevOpsInfraAgent()
-            # TODO: Add remaining 18 agents when imports are uncommented
+            'devops': DevOpsInfraAgent(),
+            # Group 2: Operations & Infrastructure Agents
+            'security': SecurityDeveloperAgent(),
+            'release': ReleaseManagerAgent(),
+            'data': DataEngineerAgent(),
+            'ai': AiDeveloperAgent()
+            # TODO: Add remaining 14 agents when imports are uncommented
             # 'fullstack': FullstackDeveloperAgent(),
             # 'mobile': MobileDeveloperAgent(),
-            # 'ai': AiDeveloperAgent(),
             # 'uxui': UXUIDesignerAgent(),
             # 'accessibility': AccessibilityAgent(),
             # 'quality': QualityGuardianAgent(),
             # 'product': ProductOwnerAgent(),
             # 'scrum': ScrummasterAgent(),
-            # 'release': ReleaseManagerAgent(),
             # 'docs': DocumentationAgent(),
             # 'feedback': FeedbackAgent(),
-            # 'data': DataEngineerAgent(),
-            # 'security': SecurityDeveloperAgent(),
             # 'strategy': StrategiePartnerAgent(),
             # 'retro': RetrospectiveAgent(),
             # 'rnd': RnDAgent(),
@@ -430,6 +433,13 @@ class TestEnhancedMCPWorkflows:
         test = TestEngineerAgent()
         # quality = QualityGuardianAgent()
         
+        # Group 2: Operations & Infrastructure Agents
+        devops = DevOpsInfraAgent()
+        security = SecurityDeveloperAgent()
+        release = ReleaseManagerAgent()
+        data = DataEngineerAgent()
+        ai = AiDeveloperAgent()
+
         # Initialize enhanced MCP for all
         # await product.initialize_enhanced_mcp()
         await architect.initialize_enhanced_mcp()
@@ -438,6 +448,13 @@ class TestEnhancedMCPWorkflows:
         await test.initialize_enhanced_mcp()
         # await quality.initialize_enhanced_mcp()
         
+        # Initialize enhanced MCP for Group 2 agents
+        await devops.initialize_enhanced_mcp()
+        await security.initialize_enhanced_mcp()
+        await release.initialize_enhanced_mcp()
+        await data.initialize_enhanced_mcp()
+        await ai.initialize_enhanced_mcp()
+
         # Simulate workflow
         # 1. Product creates user story (skipped for now)
         # story = await product.create_user_story({
@@ -446,22 +463,22 @@ class TestEnhancedMCPWorkflows:
         #     'priority': 'high'
         # })
         # assert story is not None
-        
+
         # 2. Architect designs solution
         design = await architect.design_architecture({
             'requirements': {'test': True},
             'constraints': ['performance', 'security']
         })
         assert design is not None
-        
+
         # 3. Backend implements API
         api = await backend.build_api('/api/v1/test')
         assert api is not None
-        
+
         # 4. Frontend implements UI
         ui = await frontend.build_component('TestForm')
         assert ui is not None
-        
+
         # 5. Test validates implementation
         test_result = await test.run_tests({
             'backend': api,
@@ -470,13 +487,35 @@ class TestEnhancedMCPWorkflows:
         })
         assert test_result is not None
         
-        # 6. Quality validates (skipped for now)
-        # quality_result = await quality.validate_quality({
-        #     'backend': api,
-        #     'frontend': ui,
-        #     'tests': test_result
-        # })
-        # assert quality_result is not None
+        # 6. DevOps sets up infrastructure
+        infra_result = await devops.setup_infrastructure({
+            'environment': 'production',
+            'services': ['api', 'frontend', 'database']
+        })
+        assert infra_result is not None
+        
+        # 7. Security scans for vulnerabilities
+        security_result = await security.scan_vulnerabilities({
+            'target': 'application',
+            'scan_type': 'comprehensive'
+        })
+        assert security_result is not None
+        
+        # 8. Data Engineer builds pipeline
+        pipeline_result = await data.build_pipeline('TestPipeline')
+        assert pipeline_result is not None
+        
+        # 9. AI Developer builds model
+        model_result = await ai.build_pipeline()
+        assert model_result is not None
+        
+        # 10. Release Manager prepares release
+        release_result = await release.prepare_release({
+            'version': '1.0.0',
+            'description': 'Initial release',
+            'components': ['api', 'frontend', 'ai_model']
+        })
+        assert release_result is not None
         
         print("✅ Full development workflow successful with enhanced MCP (core agents only)")
     
