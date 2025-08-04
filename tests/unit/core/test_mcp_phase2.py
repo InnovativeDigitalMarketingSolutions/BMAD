@@ -8,10 +8,11 @@ import asyncio
 import json
 import sys
 import os
+import pytest
 from pathlib import Path
 
 # Add project root to path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../../..')))
 
 from bmad.core.mcp import (
     MCPClient,
@@ -22,9 +23,12 @@ from bmad.core.mcp import (
     get_mcp_client,
     get_mcp_tool_registry,
     get_framework_mcp_integration,
-    initialize_framework_mcp_integration
+    initialize_framework_mcp_integration,
+    MCPMessageType,
+    ToolCategory
 )
 
+@pytest.mark.asyncio
 async def test_mcp_core_components():
     """Test MCP core components following official specification."""
     print("🧪 Testing MCP Core Components...")
@@ -67,6 +71,7 @@ async def test_mcp_core_components():
         print(f"❌ MCP Core Components test failed: {e}")
         return False
 
+@pytest.mark.asyncio
 async def test_tool_registry():
     """Test MCP Tool Registry following official specification."""
     print("\n🧪 Testing MCP Tool Registry...")
@@ -106,6 +111,7 @@ async def test_tool_registry():
         print(f"❌ Tool Registry test failed: {e}")
         return False
 
+@pytest.mark.asyncio
 async def test_framework_integration():
     """Test Framework MCP Integration following official specification."""
     print("\n🧪 Testing Framework MCP Integration...")
@@ -149,6 +155,7 @@ async def test_framework_integration():
         print(f"❌ Framework Integration test failed: {e}")
         return False
 
+@pytest.mark.asyncio
 async def test_agent_integration():
     """Test Agent MCP Integration."""
     print("\n🧪 Testing Agent MCP Integration...")
@@ -183,6 +190,7 @@ async def test_agent_integration():
         print(f"❌ Agent Integration test failed: {e}")
         return False
 
+@pytest.mark.asyncio
 async def test_mcp_workflow():
     """Test complete MCP workflow following official specification."""
     print("\n🧪 Testing Complete MCP Workflow...")
@@ -232,6 +240,7 @@ async def test_mcp_workflow():
         print(f"❌ MCP Workflow test failed: {e}")
         return False
 
+@pytest.mark.asyncio
 async def test_mcp_specification_compliance():
     """Test MCP specification compliance."""
     print("\n🧪 Testing MCP Specification Compliance...")

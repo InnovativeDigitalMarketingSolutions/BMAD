@@ -24,7 +24,7 @@ class TestConnectionPoolManagerUnit:
         mock_pool.return_value = MagicMock()
         
         manager = cp.ConnectionPoolManager()
-        asyncio.run(manager._init_redis_pool())
+        await manager._init_redis_pool()
         assert 'redis' in manager.pools
         assert manager.health_checks['redis'] is True
 
@@ -51,21 +51,23 @@ class TestConnectionPoolManagerUnit:
         
         with patch.dict('os.environ', {'DATABASE_URL': 'postgres://user:pass@localhost/db'}):
             manager = cp.ConnectionPoolManager()
-            asyncio.run(manager._init_postgres_pool())
+            await manager._init_postgres_pool()
             assert 'postgres' in manager.pools
             assert manager.health_checks['postgres'] is True
 
     @patch('bmad.agents.core.data.connection_pool.asyncpg.create_pool', side_effect=Exception("fail"))
-    def test_init_postgres_pool_fail(self, mock_create_pool):
+    @pytest.mark.asyncio
+    async def test_init_postgres_pool_fail(self, mock_create_pool):
         with patch.dict('os.environ', {'DATABASE_URL': 'postgres://user:pass@localhost/db'}):
             manager = cp.ConnectionPoolManager()
-            asyncio.run(manager._init_postgres_pool())
+            await manager._init_postgres_pool()
             assert manager.health_checks['postgres'] is False
 
-    def test_init_postgres_pool_no_url(self):
+    @pytest.mark.asyncio
+    async def test_init_postgres_pool_no_url(self):
         with patch.dict('os.environ', {}, clear=True):
             manager = cp.ConnectionPoolManager()
-            asyncio.run(manager._init_postgres_pool())
+            await manager._init_postgres_pool()
             assert manager.health_checks['postgres'] is False
 
     @patch('bmad.agents.core.data.connection_pool.aiohttp.ClientSession')
@@ -75,15 +77,16 @@ class TestConnectionPoolManagerUnit:
         mock_session.return_value = MagicMock()
         mock_connector.return_value = MagicMock()
         manager = cp.ConnectionPoolManager()
-        asyncio.run(manager._init_http_pool())
+        await manager._init_http_pool()
         assert 'http' in manager.pools
         assert manager.health_checks['http'] is True
 
     @patch('bmad.agents.core.data.connection_pool.aiohttp.ClientSession', side_effect=Exception("fail"))
     @patch('bmad.agents.core.data.connection_pool.aiohttp.TCPConnector')
-    def test_init_http_pool_fail(self, mock_connector, mock_session):
+    @pytest.mark.asyncio
+    async def test_init_http_pool_fail(self, mock_connector, mock_session):
         manager = cp.ConnectionPoolManager()
-        asyncio.run(manager._init_http_pool())
+        await manager._init_http_pool()
         assert manager.health_checks['http'] is False
 
     @patch('bmad.agents.core.data.connection_pool.Redis')
@@ -93,20 +96,18 @@ class TestConnectionPoolManagerUnit:
         manager.pools['redis'] = MagicMock()
         manager.health_checks['redis'] = True
         mock_redis.return_value = MagicMock()
-        async def test():
-            async with manager.get_redis_connection() as conn:
-                assert conn is not None
-        asyncio.run(test())
+        async with manager.get_redis_connection() as conn:
+            assert conn is not None
 
-    def test_get_redis_connection_unavailable(self):
+    @pytest.mark.asyncio
+    async def test_get_redis_connection_unavailable(self):
         manager = cp.ConnectionPoolManager()
         with pytest.raises(ConnectionError):
-            async def test():
-                async with manager.get_redis_connection():
-                    pass
-            asyncio.run(test())
+            async with manager.get_redis_connection():
+                pass
 
-    def test_get_postgres_connection_success(self):
+    @pytest.mark.asyncio
+    async def test_get_postgres_connection_success(self):
         manager = cp.ConnectionPoolManager()
         pool = MagicMock()
         conn_mock = MagicMock()
@@ -118,36 +119,31 @@ class TestConnectionPoolManagerUnit:
         pool.acquire = MagicMock(return_value=context_manager)
         manager.pools['postgres'] = pool
         manager.health_checks['postgres'] = True
-        async def test():
-            async with manager.get_postgres_connection() as conn:
-                assert conn is not None
-        asyncio.run(test())
+        async with manager.get_postgres_connection() as conn:
+            assert conn is not None
 
-    def test_get_postgres_connection_unavailable(self):
+    @pytest.mark.asyncio
+    async def test_get_postgres_connection_unavailable(self):
         manager = cp.ConnectionPoolManager()
         with pytest.raises(ConnectionError):
-            async def test():
-                async with manager.get_postgres_connection():
-                    pass
-            asyncio.run(test())
+            async with manager.get_postgres_connection():
+                pass
 
-    def test_get_http_session_success(self):
+    @pytest.mark.asyncio
+    async def test_get_http_session_success(self):
         manager = cp.ConnectionPoolManager()
         session = MagicMock()
         manager.pools['http'] = session
         manager.health_checks['http'] = True
-        async def test():
-            async with manager.get_http_session() as sess:
-                assert sess is session
-        asyncio.run(test())
+        async with manager.get_http_session() as sess:
+            assert sess is session
 
-    def test_get_http_session_unavailable(self):
+    @pytest.mark.asyncio
+    async def test_get_http_session_unavailable(self):
         manager = cp.ConnectionPoolManager()
         with pytest.raises(ConnectionError):
-            async def test():
-                async with manager.get_http_session():
-                    pass
-            asyncio.run(test())
+            async with manager.get_http_session():
+                pass
 
     @patch('bmad.agents.core.data.connection_pool.Redis')
     def test_get_pool_stats_redis(self, mock_redis):

@@ -1721,3 +1721,21 @@ def test_cli_command(self, mock_asyncio_run):
 **Document**: `docs/guides/BEST_PRACTICES_GUIDE.md`  
 **Status**: ✅ **COMPLETE** - Enhanced MCP Phase 2 implementation successful  
 **Last Update**: 2025-01-27 
+
+## 🧪 **Testing Best Practices**
+
+### **Test Fix Workflow**
+Voor systematische, kwalitatieve test fixes, volg de **Test Fix Workflow Guide** (`docs/guides/TEST_FIX_WORKFLOW.md`):
+
+**Kernprincipes**:
+- **Analyse eerst**: Begrijp waarom de test faalt
+- **Behoud functionaliteit**: Verwijder nooit code zonder analyse
+- **Gerichte fixes**: Fix alleen het specifieke probleem
+- **Verificatie**: Test altijd de fix en gerelateerde tests
+
+**Successvolle Resultaten**:
+- **474/475 tests passing** (99.8% success rate)
+- **Geen functionaliteit verloren**
+- **Systematische aanpak bewezen effectief**
+
+### **Test Organization** 
