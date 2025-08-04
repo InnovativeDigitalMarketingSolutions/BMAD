@@ -148,11 +148,16 @@ class QualityGuardianAgent:
     async def initialize_enhanced_mcp(self):
         """Initialize enhanced MCP voor Phase 2 capabilities."""
         try:
-            from bmad.core.mcp import get_enhanced_mcp_client
-            self.enhanced_mcp = await get_enhanced_mcp_client()
-            self.enhanced_mcp_enabled = True
+            from bmad.core.mcp import create_enhanced_mcp_integration
+            self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+            self.enhanced_mcp_enabled = await self.enhanced_mcp.initialize_enhanced_mcp()
             self.enhanced_mcp_client = self.enhanced_mcp
-            logger.info("Enhanced MCP Integration initialized for QualityGuardian")
+            
+            if self.enhanced_mcp_enabled:
+                logger.info("Enhanced MCP capabilities initialized successfully for QualityGuardian")
+            else:
+                logger.warning("Enhanced MCP initialization failed, falling back to standard MCP")
+                
         except Exception as e:
             logger.warning(f"Enhanced MCP initialization failed for QualityGuardian: {e}")
             self.enhanced_mcp_enabled = False

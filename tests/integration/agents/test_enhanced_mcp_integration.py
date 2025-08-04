@@ -469,6 +469,12 @@ class TestEnhancedMCPWorkflows:
         uxui = UXUIDesignerAgent()
         mobile = MobileDeveloperAgent()
 
+        # Group 5: Advanced & Specialized Agents
+        fullstack = FullstackDeveloperAgent()
+        orchestrator = OrchestratorAgent()
+        workflow = WorkflowAutomatorAgent()
+        quality = QualityGuardianAgent()
+
         # Initialize enhanced MCP for all
         # await product.initialize_enhanced_mcp()
         await architect.initialize_enhanced_mcp()
@@ -497,6 +503,12 @@ class TestEnhancedMCPWorkflows:
         await accessibility.initialize_enhanced_mcp()
         await uxui.initialize_enhanced_mcp()
         await mobile.initialize_enhanced_mcp()
+
+        # Initialize enhanced MCP for Group 5 agents
+        await fullstack.initialize_enhanced_mcp()
+        await orchestrator.initialize_enhanced_mcp()
+        await workflow.initialize_enhanced_mcp()
+        await quality.initialize_enhanced_mcp()
 
         # Simulate workflow
         # 1. Product creates user story (skipped for now)
@@ -605,7 +617,23 @@ class TestEnhancedMCPWorkflows:
         mobile_result = await mobile.build_mobile_app('TestApp', 'react-native')
         assert mobile_result is not None
         
-        print("✅ Full development workflow successful with enhanced MCP (including Group 4 agents)")
+        # 21. Fullstack Developer builds fullstack feature
+        fullstack_result = fullstack.build_shadcn_component("TestComponent")
+        assert fullstack_result is not None
+        
+        # 22. Orchestrator coordinates workflow
+        orchestration_result = orchestrator.orchestrate_agents('workflow_coordination', 'Feature development workflow')
+        assert orchestration_result is not None
+        
+        # 23. Workflow Automator creates workflow
+        workflow_result = workflow.create_workflow('Feature Development', 'Complete feature development workflow', ['architect', 'backend', 'frontend', 'test'], ['design', 'build', 'test', 'deploy'])
+        assert workflow_result is not None
+        
+        # 24. Quality Guardian validates quality
+        quality_result = await quality.validate_quality({'validation_type': 'comprehensive', 'components': ['api', 'frontend', 'mobile']})
+        assert quality_result is not None
+        
+        print("✅ Full development workflow successful with enhanced MCP (including ALL 23 agents)")
     
     @pytest.mark.asyncio
     async def test_devops_workflow_core(self):
