@@ -94,6 +94,7 @@ class ReleaseManagerAgent:
         # Enhanced MCP Phase 2 attributes
         self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
         self.enhanced_mcp_enabled = False
+        self.enhanced_mcp_client = None
         
         # Tracing Integration
         self.tracer: Optional[BMADTracer] = None
@@ -126,6 +127,7 @@ class ReleaseManagerAgent:
         """Initialize enhanced MCP capabilities for Phase 2."""
         try:
             self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+            self.enhanced_mcp_client = self.enhanced_mcp.mcp_client if self.enhanced_mcp else None
             # Check if initialize method exists before calling it
             if hasattr(self.enhanced_mcp, 'initialize'):
                 await self.enhanced_mcp.initialize()
