@@ -13,19 +13,25 @@ Dit document bevat een gefocuste workflow template voor Cursor AI development, g
 ### **Fase 1: Analyse** 🔍
 **Doel**: Begrijp de requirements en bestaande situatie
 
-#### **1.1 Requirements Analysis**
+#### **1.1 Task Selection & Planning**
+- [ ] **Kanban Board Review**: Haal nieuwe taak op van `docs/deployment/KANBAN_BOARD.md`
+- [ ] **Task Analysis**: Analyseer de geselecteerde taak en requirements
+- [ ] **Priority Assessment**: Bepaal prioriteit en urgentie van de taak
+- [ ] **Resource Planning**: Plan benodigde resources en tijd
+
+#### **1.2 Requirements Analysis**
 - [ ] **Functionaliteit Analyse**: Wat moet er precies gebeuren?
 - [ ] **Scope Definitie**: Wat valt binnen en buiten scope?
 - [ ] **Dependencies Identificatie**: Welke bestaande systemen zijn betrokken?
 - [ ] **Impact Assessment**: Welke impact heeft dit op bestaande functionaliteit?
 
-#### **1.2 Current State Analysis**
+#### **1.3 Current State Analysis**
 - [ ] **Bestaande Code Review**: Analyseer relevante bestaande code
 - [ ] **Documentation Review**: Check bestaande documentatie
 - [ ] **Test Coverage Assessment**: Evalueer huidige test coverage
 - [ ] **Performance Baseline**: Meet huidige performance metrics
 
-#### **1.3 Risk Assessment**
+#### **1.4 Risk Assessment**
 - [ ] **Technical Risks**: Identificeer technische risico's
 - [ ] **Integration Risks**: Evalueer integratie risico's
 - [ ] **Regression Risks**: Beoordeel risico op regressie
@@ -224,7 +230,7 @@ Dit document bevat een gefocuste workflow template voor Cursor AI development, g
 ## ⏱️ **Time Tracking per Fase**
 
 ### **Estimated Time per Fase**
-- **Fase 1 (Analyse)**: 15-30 minuten
+- **Fase 1 (Analyse)**: 20-40 minuten (inclusief task selection)
 - **Fase 2 (Documentation Review)**: 10-20 minuten  
 - **Fase 3 (Implementation)**: 30-120 minuten (afhankelijk van scope)
 - **Fase 4 (Testing)**: 15-45 minuten
@@ -269,6 +275,10 @@ Deze template kan worden aangepast voor specifieke use cases:
 ## Cursor AI Workflow Checklist voor [Project/Feature]
 
 ### Fase 1: Analyse
+- [ ] Nieuwe taak opgehaald van Kanban board (`docs/deployment/KANBAN_BOARD.md`)
+- [ ] Task analysis uitgevoerd
+- [ ] Priority assessment gedaan
+- [ ] Resource planning voltooid
 - [ ] Requirements geanalyseerd
 - [ ] Current state geëvalueerd
 - [ ] Risico's geïdentificeerd
@@ -313,8 +323,9 @@ Deze template kan worden aangepast voor specifieke use cases:
 - [ ] Pre-commit checks voltooid
 - [ ] Git operations uitgevoerd
 - [ ] Post-deployment geverifieerd
-- [ ] Kanban board bijgewerkt (`docs/deployment/KANBAN_BOARD.md`)
-- [ ] Lessons learned bijgewerkt (`docs/guides/LESSONS_LEARNED_GUIDE.md`)
+- [ ] **Kanban board bijgewerkt** - Taak status naar "COMPLETE" (`docs/deployment/KANBAN_BOARD.md`)
+- [ ] **Lessons learned bijgewerkt** (`docs/guides/LESSONS_LEARNED_GUIDE.md`)
+- [ ] **Nieuwe taak geselecteerd** voor volgende iteratie
 ```
 
 ## 🚀 **Cursor AI Specific Features**
