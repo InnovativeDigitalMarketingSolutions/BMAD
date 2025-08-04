@@ -2,6 +2,24 @@
 
 ## 1. Overview
 
+**What’s new: Enhanced MCP Phase 2 integration complete – 23/23 agents!**
+
+BMAD ondersteunt nu volledige **Enhanced MCP Phase 2** functionaliteit. Dit betekent dat alle 23 agents zijn uitgebreid met geavanceerde Multi-Agent Communication Protocol (MCP) features, observability en performance monitoring.
+
+### MCP Enhanced Features (Phase 2)
+- **Volledige Enhanced MCP integratie** voor alle agents (23/23)
+- **Advanced Tracing**: OpenTelemetry-gebaseerde distributed tracing voor alle agent-operaties
+- **Inter-agent Communication**: Geavanceerde communicatie en samenwerking tussen agents via MCP
+- **Performance Optimization**: Real-time performance monitoring, metrics en optimalisatie
+- **Security Validation**: Uitgebreide security checks en policy enforcement
+- **Uitgebreide CLI**: Nieuwe en verbeterde CLI commands voor alle agents (inclusief tracing, security, performance, collaboration)
+- **Volledige test coverage**: 1000+ tests, 100% passing
+- **Gedocumenteerde YAML en README’s** voor alle agents
+
+**Let op:** Deze functies zijn alleen beschikbaar in de Enhanced MCP Phase 2 implementatie (2025).
+
+---
+
 The BMad Method is designed to provide agentic modes, tasks and templates to allow repeatable helpful workflows be it for agile agentic development, or expansion into vastly different domains. The core purpose of the project is to provide a structured yet flexible set of prompts, templates, and workflows that users can employ to guide AI agents (like Gemini, Claude, or ChatGPT) to perform complex tasks, guided discussions, or other meaningful domain specific flows in a predictable, high-quality manner.
 
 The systems core module facilitates a full development lifecycle tailored to the challenges of current modern AI Agentic tooling:
@@ -441,6 +459,20 @@ Sophisticated agent collaboration capabilities:
 - **Context Sharing**: Seamless context sharing and synchronization across agents
 - **Workflow Orchestration**: Intelligent workflow orchestration and task assignment
 - **Resource Coordination**: Coordinated resource management and allocation
+
+### 6.5. Enhanced MCP Phase 2 Features (2025)
+
+De Enhanced MCP Phase 2 upgrade brengt de volgende nieuwe mogelijkheden naar het BMAD framework:
+- **Volledige Enhanced MCP integratie** voor alle agents (23/23)
+- **Advanced Tracing**: OpenTelemetry-gebaseerde distributed tracing voor alle agent-operaties
+- **Inter-agent Communication**: Geavanceerde communicatie en samenwerking tussen agents via MCP
+- **Performance Optimization**: Real-time performance monitoring, metrics en optimalisatie
+- **Security Validation**: Uitgebreide security checks en policy enforcement
+- **Uitgebreide CLI**: Nieuwe en verbeterde CLI commands voor alle agents (inclusief tracing, security, performance, collaboration)
+- **Volledige test coverage**: 1000+ tests, 100% passing
+- **Gedocumenteerde YAML en README’s** voor alle agents
+
+Deze MCP enhanced features zijn essentieel voor enterprise-grade agent orchestration, observability en veilige samenwerking in complexe multi-agent systemen.
 
 ## 7. Future Enhancements
 
