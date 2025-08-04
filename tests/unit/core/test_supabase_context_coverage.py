@@ -300,8 +300,6 @@ class TestSupabaseContextIntegration:
     """Integration tests for supabase context."""
     
     @pytest.mark.asyncio
-    async @pytest.mark.asyncio
-    async @pytest.mark.asyncio
     async def test_full_workflow(self, mock_supabase):
         """Test complete workflow: save, get, archive."""
         agent_name = "test_agent"

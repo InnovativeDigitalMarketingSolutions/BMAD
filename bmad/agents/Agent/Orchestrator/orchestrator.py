@@ -200,6 +200,7 @@ class OrchestratorAgent:
         # Enhanced MCP Phase 2 attributes
         self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
         self.enhanced_mcp_enabled = False
+        self.enhanced_mcp_client = None
         
         # Tracing Integration
         self.tracer: Optional[BMADTracer] = None
@@ -232,13 +233,16 @@ class OrchestratorAgent:
         """Initialize enhanced MCP capabilities for Phase 2."""
         try:
             self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
-            # Check if initialize method exists before calling it
-            if hasattr(self.enhanced_mcp, 'initialize'):
-                await self.enhanced_mcp.initialize()
-            self.enhanced_mcp_enabled = True
-            logger.info("Enhanced MCP initialized successfully")
+            self.enhanced_mcp_enabled = await self.enhanced_mcp.initialize_enhanced_mcp()
+            self.enhanced_mcp_client = self.enhanced_mcp
+            
+            if self.enhanced_mcp_enabled:
+                logger.info("Enhanced MCP capabilities initialized successfully for Orchestrator")
+            else:
+                logger.warning("Enhanced MCP initialization failed, falling back to standard MCP")
+                
         except Exception as e:
-            logger.warning(f"Enhanced MCP initialization failed: {e}")
+            logger.warning(f"Enhanced MCP initialization failed for Orchestrator: {e}")
             self.enhanced_mcp_enabled = False
     
     async def initialize_tracing(self):

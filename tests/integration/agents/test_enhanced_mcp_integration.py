@@ -24,6 +24,7 @@ try:
     from bmad.agents.Agent.Architect.architect import ArchitectAgent
     from bmad.agents.Agent.TestEngineer.testengineer import TestEngineerAgent
     from bmad.agents.Agent.DevOpsInfra.devopsinfra import DevOpsInfraAgent
+    from bmad.agents.Agent.QualityGuardian.qualityguardian import QualityGuardianAgent
     
     # Group 2: Operations & Infrastructure Agents
     from bmad.agents.Agent.SecurityDeveloper.securitydeveloper import SecurityDeveloperAgent
@@ -38,21 +39,17 @@ try:
     from bmad.agents.Agent.RnD.rnd import RnDAgent
     from bmad.agents.Agent.Retrospective.retrospective import RetrospectiveAgent
     
-    # Additional agents for comprehensive testing (commented out for initial testing)
-    # from bmad.agents.Agent.FullstackDeveloper.fullstackdeveloper import FullstackDeveloperAgent
-    # from bmad.agents.Agent.MobileDeveloper.mobiledeveloper import MobileDeveloperAgent
-    # from bmad.agents.Agent.UXUIDesigner.uxuidesigner import UXUIDesignerAgent
-    # from bmad.agents.Agent.AccessibilityAgent.accessibilityagent import AccessibilityAgent
-    # from bmad.agents.Agent.QualityGuardian.qualityguardian import QualityGuardianAgent
-    # from bmad.agents.Agent.ProductOwner.productowner import ProductOwnerAgent
-    # from bmad.agents.Agent.Scrummaster.scrummaster import ScrummasterAgent
-    # from bmad.agents.Agent.DocumentationAgent.documentationagent import DocumentationAgent
-    # from bmad.agents.Agent.FeedbackAgent.feedbackagent import FeedbackAgent
-    # from bmad.agents.Agent.StrategiePartner.strategiepartner import StrategiePartnerAgent
-    # from bmad.agents.Agent.Retrospective.retrospective import RetrospectiveAgent
-    # from bmad.agents.Agent.RnD.rnd import RnDAgent
-    # from bmad.agents.Agent.Orchestrator.orchestrator import OrchestratorAgent
-    # from bmad.agents.Agent.WorkflowAutomator.workflowautomator import WorkflowAutomatorAgent
+    # Group 4: Support & Specialized Agents
+    from bmad.agents.Agent.DocumentationAgent.documentationagent import DocumentationAgent
+    from bmad.agents.Agent.FeedbackAgent.feedbackagent import FeedbackAgent
+    from bmad.agents.Agent.AccessibilityAgent.accessibilityagent import AccessibilityAgent
+    from bmad.agents.Agent.UXUIDesigner.uxuidesigner import UXUIDesignerAgent
+    from bmad.agents.Agent.MobileDeveloper.mobiledeveloper import MobileDeveloperAgent
+    
+    # Group 5: Advanced & Specialized Agents
+    from bmad.agents.Agent.FullstackDeveloper.fullstackdeveloper import FullstackDeveloperAgent
+    from bmad.agents.Agent.Orchestrator.orchestrator import OrchestratorAgent
+    from bmad.agents.Agent.WorkflowAutomator.workflowautomator import WorkflowAutomatorAgent
 except ImportError as e:
     print(f"Import error: {e}")
     print(f"Project root: {project_root}")
@@ -70,7 +67,8 @@ class TestEnhancedMCPIntegration:
             'frontend': FrontendDeveloperAgent(),
             'architect': ArchitectAgent(),
             'test': TestEngineerAgent(),
-            'devops': DevOpsInfraAgent()
+            'devops': DevOpsInfraAgent(),
+            'quality': QualityGuardianAgent()
         }
         return agents
     
@@ -84,6 +82,7 @@ class TestEnhancedMCPIntegration:
             'architect': ArchitectAgent(),
             'test': TestEngineerAgent(),
             'devops': DevOpsInfraAgent(),
+            'quality': QualityGuardianAgent(),
             # Group 2: Operations & Infrastructure Agents
             'security': SecurityDeveloperAgent(),
             'release': ReleaseManagerAgent(),
@@ -94,10 +93,18 @@ class TestEnhancedMCPIntegration:
             'strategy': StrategiePartnerAgent(),
             'scrum': ScrummasterAgent(),
             'rnd': RnDAgent(),
-            'retro': RetrospectiveAgent()
-            # TODO: Add remaining 8 agents when imports are uncommented
+            'retro': RetrospectiveAgent(),
+            # Group 4: Support & Specialized Agents
+            'documentation': DocumentationAgent(),
+            'feedback': FeedbackAgent(),
+            'accessibility': AccessibilityAgent(),
+            'uxui': UXUIDesignerAgent(),
+            'mobile': MobileDeveloperAgent(),
+            # Group 5: Advanced & Specialized Agents
+            'fullstack': FullstackDeveloperAgent(),
+            'orchestrator': OrchestratorAgent(),
+            'workflow': WorkflowAutomatorAgent()
             # 'fullstack': FullstackDeveloperAgent(),
-            # 'mobile': MobileDeveloperAgent(),
             # 'uxui': UXUIDesignerAgent(),
             # 'accessibility': AccessibilityAgent(),
             # 'quality': QualityGuardianAgent(),
@@ -455,6 +462,19 @@ class TestEnhancedMCPWorkflows:
         rnd = RnDAgent()
         retro = RetrospectiveAgent()
 
+        # Group 4: Support & Specialized Agents
+        documentation = DocumentationAgent()
+        feedback = FeedbackAgent()
+        accessibility = AccessibilityAgent()
+        uxui = UXUIDesignerAgent()
+        mobile = MobileDeveloperAgent()
+
+        # Group 5: Advanced & Specialized Agents
+        fullstack = FullstackDeveloperAgent()
+        orchestrator = OrchestratorAgent()
+        workflow = WorkflowAutomatorAgent()
+        quality = QualityGuardianAgent()
+
         # Initialize enhanced MCP for all
         # await product.initialize_enhanced_mcp()
         await architect.initialize_enhanced_mcp()
@@ -476,6 +496,19 @@ class TestEnhancedMCPWorkflows:
         await scrum.initialize_enhanced_mcp()
         await rnd.initialize_enhanced_mcp()
         await retro.initialize_enhanced_mcp()
+
+        # Initialize enhanced MCP for Group 4 agents
+        await documentation.initialize_enhanced_mcp()
+        await feedback.initialize_enhanced_mcp()
+        await accessibility.initialize_enhanced_mcp()
+        await uxui.initialize_enhanced_mcp()
+        await mobile.initialize_enhanced_mcp()
+
+        # Initialize enhanced MCP for Group 5 agents
+        await fullstack.initialize_enhanced_mcp()
+        await orchestrator.initialize_enhanced_mcp()
+        await workflow.initialize_enhanced_mcp()
+        await quality.initialize_enhanced_mcp()
 
         # Simulate workflow
         # 1. Product creates user story (skipped for now)
@@ -564,7 +597,43 @@ class TestEnhancedMCPWorkflows:
         retro_result = await retro.conduct_retrospective('Sprint 15', 8)
         assert retro_result is not None
         
-        print("✅ Full development workflow successful with enhanced MCP (core agents only)")
+        # 16. Documentation Agent creates API docs
+        docs_result = await documentation.create_api_docs('Test API', 'REST')
+        assert docs_result is not None
+        
+        # 17. Feedback Agent collects feedback
+        feedback_result = await feedback.collect_feedback('Improve user interface', 'user_survey')
+        assert feedback_result is not None
+        
+        # 18. Accessibility Agent checks accessibility
+        accessibility_result = await accessibility.run_accessibility_audit('/mock/page')
+        assert accessibility_result is not None
+        
+        # 19. UX/UI Designer analyzes design
+        design_result = uxui.analyze_figma_design('figma_file_id')
+        assert design_result is not None
+        
+        # 20. Mobile Developer builds mobile app
+        mobile_result = await mobile.build_mobile_app('TestApp', 'react-native')
+        assert mobile_result is not None
+        
+        # 21. Fullstack Developer builds fullstack feature
+        fullstack_result = fullstack.build_shadcn_component("TestComponent")
+        assert fullstack_result is not None
+        
+        # 22. Orchestrator coordinates workflow
+        orchestration_result = orchestrator.orchestrate_agents('workflow_coordination', 'Feature development workflow')
+        assert orchestration_result is not None
+        
+        # 23. Workflow Automator creates workflow
+        workflow_result = workflow.create_workflow('Feature Development', 'Complete feature development workflow', ['architect', 'backend', 'frontend', 'test'], ['design', 'build', 'test', 'deploy'])
+        assert workflow_result is not None
+        
+        # 24. Quality Guardian validates quality
+        quality_result = await quality.validate_quality({'validation_type': 'comprehensive', 'components': ['api', 'frontend', 'mobile']})
+        assert quality_result is not None
+        
+        print("✅ Full development workflow successful with enhanced MCP (including ALL 23 agents)")
     
     @pytest.mark.asyncio
     async def test_devops_workflow_core(self):

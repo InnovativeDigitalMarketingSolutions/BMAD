@@ -50,7 +50,8 @@ class TestArchitectAgent:
         except ImportError as e:
             pytest.skip(f"architect module not available: {e}")
     
-    def test_architect_error_handling(self):
+    @pytest.mark.asyncio
+    async def test_architect_error_handling(self):
         """Test architect error handling."""
         try:
             from bmad.agents.Agent.Architect.architect import ArchitectAgent
@@ -59,7 +60,7 @@ class TestArchitectAgent:
             
             # Test with invalid input
             try:
-                result = await agent\.design_system\(None)
+                result = await agent.design_system(None)
                 # Should handle gracefully
                 assert True
             except Exception:

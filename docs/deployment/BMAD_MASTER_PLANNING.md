@@ -2586,17 +2586,16 @@ Implementatie van een gestructureerde sprint demo workflow om de waarde van elke
 - **MonitoringAgent** - System monitoring, alerting, and observability
 - **AutomationAgent** - Process automation, workflow optimization, and efficiency
 - **ComplianceAgent** - Regulatory compliance, audit management, and governance
-- **SecurityAgent** - Security monitoring, threat detection, and incident response
 - **BackupAgent** - Data backup, recovery, and disaster management
 - **DeploymentAgent** - Deployment automation, CI/CD, and release management
-- **TestingAgent** - Automated testing, test orchestration, and quality assurance
-- **DocumentationAgent** - Automated documentation, knowledge management, and content creation
 - **SupportAgent** - Customer support, issue resolution, and help desk automation
+
+**Note**: SecurityAgent, TestingAgent, en DocumentationAgent zijn al geïmplementeerd als SecurityDeveloper, TestEngineer, en DocumentationAgent.
 
 ### **Implementation Priority**
 1. **High Priority**: MarketingAgent, SalesAgent, CustomerSuccessAgent, PerformanceAgent
 2. **Medium Priority**: AnalyticsAgent, ComplianceAgent, IntegrationAgent, MonitoringAgent, AutomationAgent
-3. **Low Priority**: ResearchAgent, InnovationAgent, OptimizationAgent, SecurityAgent, BackupAgent, DeploymentAgent, TestingAgent, DocumentationAgent, SupportAgent
+3. **Low Priority**: ResearchAgent, InnovationAgent, OptimizationAgent, BackupAgent, DeploymentAgent, SupportAgent
 
 ### **Development Timeline**
 - **Phase 1**: Business & Strategy Agents (Q2 2025)

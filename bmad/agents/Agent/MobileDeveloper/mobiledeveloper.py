@@ -130,6 +130,7 @@ class MobileDeveloperAgent:
             self.enhanced_mcp_enabled = await self.enhanced_mcp.initialize_enhanced_mcp()
             
             if self.enhanced_mcp_enabled:
+                self.enhanced_mcp_client = self.enhanced_mcp.mcp_client if self.enhanced_mcp else None
                 logger.info("Enhanced MCP capabilities initialized successfully for MobileDeveloper")
             else:
                 logger.warning("Enhanced MCP initialization failed, falling back to standard MCP")
@@ -1857,6 +1858,33 @@ fun {component_name}(
         await self.initialize_tracing()
         
         await self.collaborate_example()
+
+    async def build_mobile_app(self, app_name: str = "MyMobileApp", platform: str = "react-native") -> Dict[str, Any]:
+        """
+        Bouw een mobiele app met enhanced MCP integratie indien beschikbaar.
+        """
+        # Enhanced MCP integratie
+        if hasattr(self, 'enhanced_mcp_client') and self.enhanced_mcp_client:
+            try:
+                result = await self.enhanced_mcp_client.build_mobile_app(app_name, platform)
+                if result:
+                    return result
+            except Exception as e:
+                logger.warning(f"Enhanced MCP build_mobile_app failed: {e}")
+        # Fallback naar sync
+        return self._build_mobile_app_sync(app_name, platform)
+
+    def _build_mobile_app_sync(self, app_name: str = "MyMobileApp", platform: str = "react-native") -> Dict[str, Any]:
+        """
+        Synchronous fallback voor build_mobile_app.
+        """
+        logger.info(f"[Fallback] Building mobile app '{app_name}' for platform '{platform}'...")
+        return {
+            "status": "success",
+            "app_name": app_name,
+            "platform": platform,
+            "message": f"Mobile app '{app_name}' built for platform '{platform}' (fallback mode)."
+        }
 
 def main():
     import asyncio

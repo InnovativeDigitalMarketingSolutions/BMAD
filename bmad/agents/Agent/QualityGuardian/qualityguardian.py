@@ -24,6 +24,9 @@ from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_e
 from integrations.slack.slack_notify import send_slack_message
 from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
 
+# Tracing Integration
+from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
+
 # MCP Integration
 from bmad.core.mcp import (
     MCPClient,
@@ -125,9 +128,10 @@ class QualityGuardianAgent:
         # Enhanced MCP Integration
         self.enhanced_mcp = None
         self.enhanced_mcp_enabled = False
+        self.enhanced_mcp_client = None
         
         # Tracing Integration
-        self.tracer = None
+        self.tracer: Optional[BMADTracer] = None
         self.tracing_enabled = False
         
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
@@ -147,10 +151,16 @@ class QualityGuardianAgent:
     async def initialize_enhanced_mcp(self):
         """Initialize enhanced MCP voor Phase 2 capabilities."""
         try:
-            from bmad.core.mcp import get_enhanced_mcp_client
-            self.enhanced_mcp = await get_enhanced_mcp_client()
-            self.enhanced_mcp_enabled = True
-            logger.info("Enhanced MCP Integration initialized for QualityGuardian")
+            from bmad.core.mcp import create_enhanced_mcp_integration
+            self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+            self.enhanced_mcp_enabled = await self.enhanced_mcp.initialize_enhanced_mcp()
+            self.enhanced_mcp_client = self.enhanced_mcp
+            
+            if self.enhanced_mcp_enabled:
+                logger.info("Enhanced MCP capabilities initialized successfully for QualityGuardian")
+            else:
+                logger.warning("Enhanced MCP initialization failed, falling back to standard MCP")
+                
         except Exception as e:
             logger.warning(f"Enhanced MCP initialization failed for QualityGuardian: {e}")
             self.enhanced_mcp_enabled = False
@@ -158,8 +168,11 @@ class QualityGuardianAgent:
     async def initialize_tracing(self):
         """Initialize tracing voor quality assurance monitoring."""
         try:
-            from bmad.core.tracing import get_tracer
-            self.tracer = await get_tracer()
+            self.tracer = BMADTracer(config=type("Config", (), {
+                "service_name": self.agent_name,
+                "service_version": "1.0.0",
+                "environment": "development"
+            })())
             self.tracing_enabled = True
             logger.info("Tracing initialized for QualityGuardian")
         except Exception as e:
