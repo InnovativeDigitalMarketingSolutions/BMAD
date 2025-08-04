@@ -41,12 +41,12 @@ Dit document bevat een gefocuste workflow template voor Cursor AI development, g
 **Doel**: Raadpleeg bestaande best practices en lessons learned
 
 #### **2.1 Documentation Review**
-- [ ] **Lessons Learned Guide**: `docs/guides/LESSONS_LEARNED_GUIDE.md`
-- [ ] **Best Practices Guide**: `docs/guides/BEST_PRACTICES_GUIDE.md`
-- [ ] **Relevant Integration Guide**: Check specifieke integration guides
-- [ ] **Test Workflow Guide**: `docs/guides/TEST_WORKFLOW_GUIDE.md`
 - [ ] **MCP Integration Guide**: `docs/guides/MCP_INTEGRATION_GUIDE.md`
 - [ ] **Agent Optimization Guide**: `docs/guides/agent-optimization-guide.md`
+- [ ] **Best Practices Guide**: `docs/guides/BEST_PRACTICES_GUIDE.md`
+- [ ] **Lessons Learned Guide**: `docs/guides/LESSONS_LEARNED_GUIDE.md`
+- [ ] **Relevant Integration Guide**: Check specifieke integration guides
+- [ ] **Test Workflow Guide**: `docs/guides/TEST_WORKFLOW_GUIDE.md`
 
 #### **2.2 Deployment Files Review**
 - [ ] **Kanban Board**: `docs/deployment/KANBAN_BOARD.md`
@@ -178,8 +178,10 @@ Dit document bevat een gefocuste workflow template voor Cursor AI development, g
 #### **7.3 Post-deployment**
 - [ ] **Deployment Verification**: Controleer deployment succes
 - [ ] **Monitoring**: Monitor system performance
-- [ ] **Lessons Learned**: Update lessons learned
+- [ ] **Lessons Learned**: Update lessons learned (`docs/guides/LESSONS_LEARNED_GUIDE.md`)
+- [ ] **Best Practices**: Update best practices (`docs/guides/BEST_PRACTICES_GUIDE.md`)
 - [ ] **Status Update**: Update `docs/deployment/KANBAN_BOARD.md`
+- [ ] **Nieuwe taak geselecteerd** voor volgende iteratie
 
 ## 🔧 **Quality Gates**
 
