@@ -23,6 +23,32 @@ commands:
   - show-feedback-history: Toon feedback historie
   - changelog: Toon changelog van feedback
   - test: Test resource completeness
+  - analyze-sentiment: Analyseer sentiment
+  - summarize-feedback: Samenvatting van feedback
+  - generate-insights: Genereer inzichten
+  - track-trends: Track trends
+  - show-sentiment-history: Toon sentiment historie
+  - show-best-practices: Show best practices
+  - export-report: Export rapport
+  - collaborate: Demonstrate collaboration
+  - run: Run agent met MCP integration
+  - collect-template-feedback: Verzamel template feedback
+  - analyze-template-trends: Analyseer template trends
+  - suggest-template-improvements: Suggesteer template verbeteringen
+  - get-template-quality-report: Krijg template kwaliteit rapport
+  - initialize-mcp: Initialize MCP client
+  - use-mcp-tool: Use MCP tool met parameters
+  - get-mcp-status: Get MCP integration status
+  - use-feedback-mcp-tools: Use feedback-specific MCP tools
+  - check-dependencies: Check agent dependencies
+  # MCP Phase 2 Enhanced Commands
+  - enhanced-collaborate: Enhanced inter-agent communicatie
+  - enhanced-security: Enhanced security validatie
+  - enhanced-performance: Enhanced performance optimalisatie
+  - trace-operation: Trace feedback operations
+  - trace-performance: Get performance metrics
+  - trace-error: Trace error scenarios
+  - tracing-summary: Get tracing summary
 
 dependencies:
   templates:
