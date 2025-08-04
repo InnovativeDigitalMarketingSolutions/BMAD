@@ -25,9 +25,9 @@ class TestBackendDeveloperAgent:
              patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BMADTracer'), \
              patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.PrefectWorkflowOrchestrator'), \
              patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_framework_templates_manager') as mock_framework_manager:
-            # Mock the framework manager to return a mock with get_template method
+            # Mock the framework manager to return a mock with get_framework_template method
             mock_manager_instance = Mock()
-            mock_manager_instance.get_template.return_value = {"name": "backend_development", "version": "1.0"}
+            mock_manager_instance.get_framework_template.return_value = {"name": "backend_development", "version": "1.0"}
             mock_framework_manager.return_value = mock_manager_instance
             return BackendDeveloperAgent()
 
@@ -403,9 +403,9 @@ class TestBackendDeveloperAgentCLI:
              patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BMADTracer'), \
              patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.PrefectWorkflowOrchestrator'), \
              patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_framework_templates_manager') as mock_framework_manager:
-            # Mock the framework manager to return a mock with get_template method
+            # Mock the framework manager to return a mock with get_framework_template method
             mock_manager_instance = Mock()
-            mock_manager_instance.get_template.return_value = {"name": "backend_development", "version": "1.0"}
+            mock_manager_instance.get_framework_template.return_value = {"name": "backend_development", "version": "1.0"}
             mock_framework_manager.return_value = mock_manager_instance
             return BackendDeveloperAgent()
 
@@ -560,7 +560,7 @@ class TestBackendDeveloperAgentIntegration:
              patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_framework_templates_manager') as mock_framework_manager:
             # Mock the framework manager to return a mock with get_template method
             mock_manager_instance = Mock()
-            mock_manager_instance.get_template.return_value = {"name": "backend_development", "version": "1.0"}
+            mock_manager_instance.get_framework_template.return_value = {"name": "backend_development", "version": "1.0"}
             mock_framework_manager.return_value = mock_manager_instance
             return BackendDeveloperAgent()
 
