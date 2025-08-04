@@ -31,6 +31,13 @@ try:
     from bmad.agents.Agent.DataEngineer.dataengineer import DataEngineerAgent
     from bmad.agents.Agent.AiDeveloper.aidev import AiDeveloperAgent
     
+    # Group 3: Business & Strategy Agents
+    from bmad.agents.Agent.ProductOwner.product_owner import ProductOwnerAgent
+    from bmad.agents.Agent.StrategiePartner.strategiepartner import StrategiePartnerAgent
+    from bmad.agents.Agent.Scrummaster.scrummaster import ScrummasterAgent
+    from bmad.agents.Agent.RnD.rnd import RnDAgent
+    from bmad.agents.Agent.Retrospective.retrospective import RetrospectiveAgent
+    
     # Additional agents for comprehensive testing (commented out for initial testing)
     # from bmad.agents.Agent.FullstackDeveloper.fullstackdeveloper import FullstackDeveloperAgent
     # from bmad.agents.Agent.MobileDeveloper.mobiledeveloper import MobileDeveloperAgent
@@ -81,20 +88,21 @@ class TestEnhancedMCPIntegration:
             'security': SecurityDeveloperAgent(),
             'release': ReleaseManagerAgent(),
             'data': DataEngineerAgent(),
-            'ai': AiDeveloperAgent()
-            # TODO: Add remaining 14 agents when imports are uncommented
+            'ai': AiDeveloperAgent(),
+            # Group 3: Business & Strategy Agents
+            'product': ProductOwnerAgent(),
+            'strategy': StrategiePartnerAgent(),
+            'scrum': ScrummasterAgent(),
+            'rnd': RnDAgent(),
+            'retro': RetrospectiveAgent()
+            # TODO: Add remaining 8 agents when imports are uncommented
             # 'fullstack': FullstackDeveloperAgent(),
             # 'mobile': MobileDeveloperAgent(),
             # 'uxui': UXUIDesignerAgent(),
             # 'accessibility': AccessibilityAgent(),
             # 'quality': QualityGuardianAgent(),
-            # 'product': ProductOwnerAgent(),
-            # 'scrum': ScrummasterAgent(),
             # 'docs': DocumentationAgent(),
             # 'feedback': FeedbackAgent(),
-            # 'strategy': StrategiePartnerAgent(),
-            # 'retro': RetrospectiveAgent(),
-            # 'rnd': RnDAgent(),
             # 'orchestrator': OrchestratorAgent(),
             # 'workflow': WorkflowAutomatorAgent()
         }
@@ -440,6 +448,13 @@ class TestEnhancedMCPWorkflows:
         data = DataEngineerAgent()
         ai = AiDeveloperAgent()
 
+        # Group 3: Business & Strategy Agents
+        product = ProductOwnerAgent()
+        strategy = StrategiePartnerAgent()
+        scrum = ScrummasterAgent()
+        rnd = RnDAgent()
+        retro = RetrospectiveAgent()
+
         # Initialize enhanced MCP for all
         # await product.initialize_enhanced_mcp()
         await architect.initialize_enhanced_mcp()
@@ -454,6 +469,13 @@ class TestEnhancedMCPWorkflows:
         await release.initialize_enhanced_mcp()
         await data.initialize_enhanced_mcp()
         await ai.initialize_enhanced_mcp()
+
+        # Initialize enhanced MCP for Group 3 agents
+        await product.initialize_enhanced_mcp()
+        await strategy.initialize_enhanced_mcp()
+        await scrum.initialize_enhanced_mcp()
+        await rnd.initialize_enhanced_mcp()
+        await retro.initialize_enhanced_mcp()
 
         # Simulate workflow
         # 1. Product creates user story (skipped for now)
@@ -516,6 +538,31 @@ class TestEnhancedMCPWorkflows:
             'components': ['api', 'frontend', 'ai_model']
         })
         assert release_result is not None
+        
+        # 11. Product Owner creates user story
+        story_result = await product.create_user_story({
+            'title': 'Enhanced User Experience',
+            'description': 'Improve user interface and workflow',
+            'priority': 'high',
+            'story_points': 8
+        })
+        assert story_result is not None
+        
+        # 12. Strategy Partner develops strategy
+        strategy_result = await strategy.develop_strategy('Digital Transformation Strategy')
+        assert strategy_result is not None
+        
+        # 13. Scrum Master plans sprint
+        sprint_result = await scrum.plan_sprint(1)
+        assert sprint_result is not None
+        
+        # 14. R&D conducts research
+        research_result = await rnd.conduct_research('AI-powered automation', 'Technology Research')
+        assert research_result is not None
+        
+        # 15. Retrospective conducts retrospective
+        retro_result = await retro.conduct_retrospective('Sprint 15', 8)
+        assert retro_result is not None
         
         print("✅ Full development workflow successful with enhanced MCP (core agents only)")
     

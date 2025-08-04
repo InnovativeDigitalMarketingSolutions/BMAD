@@ -1,7 +1,5 @@
 # Risk Register
 
-- 2025-08-01T22:00:36.925562: Risk assessment for Digital Transformation - Risk score: Medium
-- 2025-08-01T22:00:41.042418: Risk assessment for Digital Transformation - Risk score: Medium
 - 2025-08-01T22:00:49.100805: Risk assessment for Test Strategy - Risk score: Medium
 - 2025-08-01T22:09:09.549883: Risk assessment for Digital Transformation - Risk score: Medium
 - 2025-08-01T22:09:13.657096: Risk assessment for Digital Transformation - Risk score: Medium
@@ -50,3 +48,5 @@
 - 2025-08-03T20:57:31.664940: Risk assessment for Digital Transformation - Risk score: Medium
 - 2025-08-03T21:43:08.075930: Risk assessment for Digital Transformation - Risk score: Medium
 - 2025-08-03T21:43:12.247498: Risk assessment for Digital Transformation - Risk score: Medium
+- 2025-08-04T13:10:42.257986: Risk assessment for Digital Transformation - Risk score: Medium
+- 2025-08-04T13:10:46.510760: Risk assessment for Digital Transformation - Risk score: Medium

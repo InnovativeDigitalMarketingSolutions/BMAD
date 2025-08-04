@@ -234,7 +234,7 @@ Dit document bevat de workflow voor het uitbreiden van de Enhanced MCP Integrati
 - TestEngineerAgent
 - QualityGuardianAgent
 
-### **Group 2: Operations & Infrastructure Agents** 📋 (PLANNED)
+### **Group 2: Operations & Infrastructure Agents** ✅ (COMPLETED)
 - DevOpsInfraAgent
 - SecurityDeveloperAgent
 - ReleaseManagerAgent
@@ -244,18 +244,29 @@ Dit document bevat de workflow voor het uitbreiden van de Enhanced MCP Integrati
 ### **Group 3: Business & Strategy Agents** 📋 (PLANNED)
 - ProductOwnerAgent
 - StrategiePartnerAgent
-- MarketingAgent
-- SalesAgent
-- CustomerSuccessAgent
+- ScrummasterAgent
+- RnDAgent
+- RetrospectiveAgent
 
 ### **Group 4: Support & Specialized Agents** 📋 (PLANNED)
 - DocumentationAgent
 - FeedbackAgent
+- AccessibilityAgent
+- UXUIDesignerAgent
+- MobileDeveloperAgent
+
+### **Group 5: Advanced & Specialized Agents** 📋 (PLANNED)
+- FullstackDeveloperAgent
+- OrchestratorAgent
+- WorkflowAutomatorAgent
+
+### **Future Agents (Master Planning)** 📋 (PLANNED)
+- MarketingAgent
+- SalesAgent
+- CustomerSuccessAgent
 - AnalyticsAgent
 - ComplianceAgent
 - IntegrationAgent
-
-### **Group 5: Advanced & Specialized Agents** 📋 (PLANNED)
 - ResearchAgent
 - InnovationAgent
 - OptimizationAgent
