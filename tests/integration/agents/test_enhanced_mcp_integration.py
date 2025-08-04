@@ -45,10 +45,10 @@ try:
     from bmad.agents.Agent.UXUIDesigner.uxuidesigner import UXUIDesignerAgent
     from bmad.agents.Agent.MobileDeveloper.mobiledeveloper import MobileDeveloperAgent
     
-    # Group 5: Advanced & Specialized Agents (commented out for initial testing)
-    # from bmad.agents.Agent.FullstackDeveloper.fullstackdeveloper import FullstackDeveloperAgent
-    # from bmad.agents.Agent.Orchestrator.orchestrator import OrchestratorAgent
-    # from bmad.agents.Agent.WorkflowAutomator.workflowautomator import WorkflowAutomatorAgent
+    # Group 5: Advanced & Specialized Agents
+    from bmad.agents.Agent.FullstackDeveloper.fullstackdeveloper import FullstackDeveloperAgent
+    from bmad.agents.Agent.Orchestrator.orchestrator import OrchestratorAgent
+    from bmad.agents.Agent.WorkflowAutomator.workflowautomator import WorkflowAutomatorAgent
 except ImportError as e:
     print(f"Import error: {e}")
     print(f"Project root: {project_root}")
@@ -96,8 +96,11 @@ class TestEnhancedMCPIntegration:
             'feedback': FeedbackAgent(),
             'accessibility': AccessibilityAgent(),
             'uxui': UXUIDesignerAgent(),
-            'mobile': MobileDeveloperAgent()
-            # TODO: Add remaining 3 agents when Group 5 imports are uncommented
+            'mobile': MobileDeveloperAgent(),
+            # Group 5: Advanced & Specialized Agents
+            'fullstack': FullstackDeveloperAgent(),
+            'orchestrator': OrchestratorAgent(),
+            'workflow': WorkflowAutomatorAgent()
             # 'fullstack': FullstackDeveloperAgent(),
             # 'uxui': UXUIDesignerAgent(),
             # 'accessibility': AccessibilityAgent(),
