@@ -38,6 +38,13 @@ from bmad.core.mcp import (
     initialize_framework_mcp_integration
 )
 
+# Enhanced MCP Phase 2 imports
+from bmad.core.mcp.enhanced_mcp_integration import (
+    EnhancedMCPIntegration,
+    create_enhanced_mcp_integration
+)
+from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -118,6 +125,23 @@ class AiDeveloperAgent:
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
         self.mcp_enabled = False
         
+        # Enhanced MCP Phase 2 attributes
+        self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_enabled = False
+        
+        # Tracing Integration
+        self.tracer: Optional[BMADTracer] = None
+        self.tracing_enabled = False
+        
+        # Initialize tracer
+        self.tracer = BMADTracer(config=type("Config", (), {
+            "service_name": "AiDeveloper",
+            "service_version": "1.0.0",
+            "environment": "development",
+            "sample_rate": 1.0,
+            "exporters": []
+        })())
+        
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
     
     async def initialize_mcp(self):
@@ -131,6 +155,33 @@ class AiDeveloperAgent:
         except Exception as e:
             logger.warning(f"MCP initialization failed for AiDeveloper: {e}")
             self.mcp_enabled = False
+
+    async def initialize_enhanced_mcp(self):
+        """Initialize enhanced MCP capabilities for Phase 2."""
+        try:
+            self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+            # Check if initialize method exists before calling it
+            if hasattr(self.enhanced_mcp, 'initialize'):
+                await self.enhanced_mcp.initialize()
+            self.enhanced_mcp_enabled = True
+            logger.info("Enhanced MCP initialized successfully")
+        except Exception as e:
+            logger.warning(f"Enhanced MCP initialization failed: {e}")
+            self.enhanced_mcp_enabled = False
+    
+    async def initialize_tracing(self):
+        """Initialize tracing capabilities."""
+        try:
+            if self.tracer and hasattr(self.tracer, 'initialize'):
+                await self.tracer.initialize()
+                self.tracing_enabled = True
+                logger.info("Tracing initialized successfully")
+            else:
+                logger.warning("Tracer not available or missing initialize method")
+                self.tracing_enabled = False
+        except Exception as e:
+            logger.warning(f"Tracing initialization failed: {e}")
+            self.tracing_enabled = False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -223,6 +274,120 @@ class AiDeveloperAgent:
             logger.error(f"Error in AI-specific MCP tools: {e}")
         
         return enhanced_data
+
+    async def use_enhanced_mcp_tools(self, ai_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use enhanced MCP tools voor Phase 2 capabilities."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available, using standard MCP tools")
+            return await self.use_ai_specific_mcp_tools(ai_data)
+        
+        enhanced_data = {}
+        
+        try:
+            # Core enhancement tools
+            core_result = await self.enhanced_mcp.use_enhanced_mcp_tool("core_enhancement", {
+                "agent_type": self.agent_name,
+                "enhancement_level": "advanced",
+                "capabilities": ai_data.get("capabilities", []),
+                "performance_metrics": ai_data.get("performance_metrics", {})
+            })
+            enhanced_data["core_enhancement"] = core_result
+            
+            # AI-specific enhanced tools
+            ai_enhanced_result = await self.use_ai_specific_enhanced_tools(ai_data)
+            enhanced_data.update(ai_enhanced_result)
+            
+            # Tracing integration
+            if self.tracing_enabled:
+                trace_result = await self.trace_ai_operation(ai_data)
+                enhanced_data["tracing"] = trace_result
+            
+            logger.info(f"Enhanced MCP tools used successfully: {len(enhanced_data)} tools")
+            
+        except Exception as e:
+            logger.error(f"Enhanced MCP tools failed: {e}")
+            enhanced_data["error"] = str(e)
+        
+        return enhanced_data
+    
+    async def use_ai_specific_enhanced_tools(self, ai_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use AI-specific enhanced MCP tools."""
+        enhanced_tools = {}
+        
+        try:
+            # Enhanced AI model development
+            if "ai_model_development" in ai_data:
+                model_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_ai_model_development", {
+                    "model_data": ai_data["ai_model_development"],
+                    "development_depth": ai_data.get("development_depth", "comprehensive"),
+                    "include_mlops": ai_data.get("include_mlops", True)
+                })
+                enhanced_tools["enhanced_ai_model_development"] = model_result
+            
+            # Enhanced AI pipeline development
+            if "ai_pipeline_development" in ai_data:
+                pipeline_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_ai_pipeline_development", {
+                    "pipeline_data": ai_data["ai_pipeline_development"],
+                    "pipeline_complexity": ai_data.get("pipeline_complexity", "advanced"),
+                    "include_monitoring": ai_data.get("include_monitoring", True)
+                })
+                enhanced_tools["enhanced_ai_pipeline_development"] = pipeline_result
+            
+            # Enhanced team collaboration
+            if "team_collaboration" in ai_data:
+                collaboration_result = await self.enhanced_mcp.communicate_with_agents(
+                    ["DataEngineer", "BackendDeveloper", "DevOpsInfra", "QualityGuardian"],
+                    {
+                        "type": "ai_development_review",
+                        "content": ai_data["team_collaboration"]
+                    }
+                )
+                enhanced_tools["enhanced_team_collaboration"] = collaboration_result
+            
+            # Enhanced AI model evaluation
+            if "ai_model_evaluation" in ai_data:
+                evaluation_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_ai_model_evaluation", {
+                    "evaluation_data": ai_data["ai_model_evaluation"],
+                    "evaluation_comprehensive": ai_data.get("evaluation_comprehensive", "advanced"),
+                    "include_explainability": ai_data.get("include_explainability", True)
+                })
+                enhanced_tools["enhanced_ai_model_evaluation"] = evaluation_result
+            
+            logger.info(f"AI-specific enhanced tools executed: {list(enhanced_tools.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Error in AI-specific enhanced tools: {e}")
+        
+        return enhanced_tools
+    
+    async def trace_ai_operation(self, operation_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace AI operations."""
+        if not self.tracing_enabled or not self.tracer:
+            return {"tracing": "disabled"}
+        
+        try:
+            trace_data = {
+                "operation_type": "ai_operation",
+                "agent": self.agent_name,
+                "timestamp": datetime.now().isoformat(),
+                "operation_data": operation_data,
+                "performance_metrics": {
+                    "model_count": len(operation_data.get("ai_models", [])),
+                    "experiment_count": len(operation_data.get("experiments", [])),
+                    "evaluation_score": operation_data.get("evaluation_score", 0.0)
+                }
+            }
+            
+            # Add trace to tracer
+            if hasattr(self.tracer, 'add_trace'):
+                await self.tracer.add_trace("ai_operation", trace_data)
+            
+            logger.info(f"AI operation traced: {trace_data['operation_type']}")
+            return trace_data
+            
+        except Exception as e:
+            logger.error(f"Tracing failed: {e}")
+            return {"tracing": "error", "error": str(e)}
 
     def _validate_input(self, value: Any, expected_type: type, param_name: str) -> None:
         """Validate input parameters with type checking."""
@@ -823,8 +988,48 @@ AiDeveloper Agent Commands:
         # Initialize MCP
         await self.initialize_mcp()
         
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing capabilities
+        await self.initialize_tracing()
+        
+        print("🤖 AiDeveloper is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        
         result = await self.collaborate_example()
         return result
+    
+    async def run_async(self):
+        """Run the agent with enhanced MCP and tracing initialization."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing capabilities
+        await self.initialize_tracing()
+        
+        print("🤖 AiDeveloper is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        
+        logger.info("AiDeveloperAgent ready and listening for events...")
+        await self.collaborate_example()
+    
+    @classmethod
+    async def run_agent(cls):
+        """Class method to run the AiDeveloper agent met MCP integration."""
+        agent = cls()
+        await agent.run_async()
+    
+    @classmethod
+    async def run_agent_async(cls):
+        """Class method to run the AiDeveloper agent with enhanced MCP."""
+        agent = cls()
+        await agent.run_async()
 
     # --- ORIGINELE FUNCTIONALITEIT BEHOUDEN ---
     async def build_pipeline(self):
@@ -850,7 +1055,7 @@ AiDeveloper Agent Commands:
                 "performance_targets": {"accuracy": 0.90, "latency": 100}
             }
             
-            mcp_enhanced_data = await self.use_ai_specific_mcp_tools(ai_data)
+            mcp_enhanced_data = await self.use_enhanced_mcp_tools(ai_data)
             
             # Simulate pipeline building
             pipeline_result = {
@@ -1268,7 +1473,9 @@ def main():
                                "show-changelog", "export-report", "test", "collaborate", "run",
                                "show-framework-overview", "show-framework-guidelines", "show-quality-gates",
                                "show-pyramid-strategies", "show-mocking-strategy", "show-workflow-commands",
-                               "show-linting-config", "show-framework-template"])
+                               "show-linting-config", "show-framework-template", "enhanced-collaborate",
+                               "enhanced-security", "enhanced-performance", "trace-operation",
+                               "trace-performance", "trace-error", "tracing-summary"])
     parser.add_argument("--format", choices=["md", "json"], default="md", help="Export format")
     parser.add_argument("--template", help="Framework template name for show-framework-template")
 
@@ -1343,6 +1550,52 @@ def main():
         elif args.command == "run":
             result = asyncio.run(agent.run())
             print(json.dumps(result, indent=2))
+        # Enhanced MCP Phase 2 Commands
+        elif args.command in ["enhanced-collaborate", "enhanced-security", "enhanced-performance", 
+                             "trace-operation", "trace-performance", "trace-error", "tracing-summary"]:
+            # Enhanced MCP commands
+            if args.command == "enhanced-collaborate":
+                result = asyncio.run(agent.enhanced_mcp.communicate_with_agents(
+                    ["DataEngineer", "BackendDeveloper", "DevOpsInfra", "QualityGuardian"], 
+                    {"type": "ai_development_review", "content": {"review_type": "ai_model_development"}}
+                ))
+                print(json.dumps(result, indent=2))
+            elif args.command == "enhanced-security":
+                result = asyncio.run(agent.enhanced_mcp.enhanced_security_validation({
+                    "ai_data": {"ai_models": [], "experiments": [], "pipelines": []},
+                    "security_requirements": ["model_validation", "data_privacy", "access_control"]
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "enhanced-performance":
+                result = asyncio.run(agent.enhanced_mcp.enhanced_performance_optimization({
+                    "ai_data": {"ai_models": [], "experiments": [], "pipelines": []},
+                    "performance_metrics": {"model_accuracy": 91.5, "training_speed": 85.3}
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "trace-operation":
+                result = asyncio.run(agent.trace_ai_operation({
+                    "operation_type": "ai_model_development",
+                    "model_name": "sentiment_classifier",
+                    "ai_models": list(agent.ai_models.keys())
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "trace-performance":
+                result = asyncio.run(agent.trace_ai_operation({
+                    "operation_type": "performance_analysis",
+                    "performance_metrics": {"model_accuracy": 91.5, "training_speed": 85.3}
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "trace-error":
+                result = asyncio.run(agent.trace_ai_operation({
+                    "operation_type": "error_analysis",
+                    "error_data": {"error_type": "model_training", "error_message": "Model training failed"}
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "tracing-summary":
+                print("Tracing Summary for AiDeveloper:")
+                print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+                print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+                print(f"Agent: {agent.agent_name}")
         # Framework template commands
         elif args.command == "show-framework-overview":
             agent.show_framework_overview()

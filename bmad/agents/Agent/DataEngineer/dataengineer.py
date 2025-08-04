@@ -33,6 +33,13 @@ from bmad.core.mcp import (
     initialize_framework_mcp_integration
 )
 
+# Enhanced MCP Phase 2 imports
+from bmad.core.mcp.enhanced_mcp_integration import (
+    EnhancedMCPIntegration,
+    create_enhanced_mcp_integration
+)
+from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -84,6 +91,23 @@ class DataEngineerAgent:
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
         self.mcp_enabled = False
         
+        # Enhanced MCP Phase 2 attributes
+        self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_enabled = False
+        
+        # Tracing Integration
+        self.tracer: Optional[BMADTracer] = None
+        self.tracing_enabled = False
+        
+        # Initialize tracer
+        self.tracer = BMADTracer(config=type("Config", (), {
+            "service_name": "DataEngineer",
+            "service_version": "1.0.0",
+            "environment": "development",
+            "sample_rate": 1.0,
+            "exporters": []
+        })())
+        
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
     
     async def initialize_mcp(self):
@@ -97,6 +121,33 @@ class DataEngineerAgent:
         except Exception as e:
             logger.warning(f"MCP initialization failed: {e}")
             self.mcp_enabled = False
+
+    async def initialize_enhanced_mcp(self):
+        """Initialize enhanced MCP capabilities for Phase 2."""
+        try:
+            self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+            # Check if initialize method exists before calling it
+            if hasattr(self.enhanced_mcp, 'initialize'):
+                await self.enhanced_mcp.initialize()
+            self.enhanced_mcp_enabled = True
+            logger.info("Enhanced MCP initialized successfully")
+        except Exception as e:
+            logger.warning(f"Enhanced MCP initialization failed: {e}")
+            self.enhanced_mcp_enabled = False
+    
+    async def initialize_tracing(self):
+        """Initialize tracing capabilities."""
+        try:
+            if self.tracer and hasattr(self.tracer, 'initialize'):
+                await self.tracer.initialize()
+                self.tracing_enabled = True
+                logger.info("Tracing initialized successfully")
+            else:
+                logger.warning("Tracer not available or missing initialize method")
+                self.tracing_enabled = False
+        except Exception as e:
+            logger.warning(f"Tracing initialization failed: {e}")
+            self.tracing_enabled = False
 
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -164,6 +215,120 @@ class DataEngineerAgent:
             enhanced_data["data_monitoring_alerting"] = monitoring_result
         
         return enhanced_data
+
+    async def use_enhanced_mcp_tools(self, data_engineering_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use enhanced MCP tools voor Phase 2 capabilities."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available, using standard MCP tools")
+            return await self.use_data_specific_mcp_tools(data_engineering_data)
+        
+        enhanced_data = {}
+        
+        try:
+            # Core enhancement tools
+            core_result = await self.enhanced_mcp.use_enhanced_mcp_tool("core_enhancement", {
+                "agent_type": self.agent_name,
+                "enhancement_level": "advanced",
+                "capabilities": data_engineering_data.get("capabilities", []),
+                "performance_metrics": data_engineering_data.get("performance_metrics", {})
+            })
+            enhanced_data["core_enhancement"] = core_result
+            
+            # Data-specific enhanced tools
+            data_enhanced_result = await self.use_data_specific_enhanced_tools(data_engineering_data)
+            enhanced_data.update(data_enhanced_result)
+            
+            # Tracing integration
+            if self.tracing_enabled:
+                trace_result = await self.trace_data_operation(data_engineering_data)
+                enhanced_data["tracing"] = trace_result
+            
+            logger.info(f"Enhanced MCP tools used successfully: {len(enhanced_data)} tools")
+            
+        except Exception as e:
+            logger.error(f"Enhanced MCP tools failed: {e}")
+            enhanced_data["error"] = str(e)
+        
+        return enhanced_data
+    
+    async def use_data_specific_enhanced_tools(self, data_engineering_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use data-specific enhanced MCP tools."""
+        enhanced_tools = {}
+        
+        try:
+            # Enhanced data pipeline development
+            if "data_pipeline_development" in data_engineering_data:
+                pipeline_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_data_pipeline_development", {
+                    "pipeline_data": data_engineering_data["data_pipeline_development"],
+                    "development_depth": data_engineering_data.get("development_depth", "comprehensive"),
+                    "include_monitoring": data_engineering_data.get("include_monitoring", True)
+                })
+                enhanced_tools["enhanced_data_pipeline_development"] = pipeline_result
+            
+            # Enhanced data quality assessment
+            if "data_quality_assessment" in data_engineering_data:
+                quality_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_data_quality_assessment", {
+                    "quality_data": data_engineering_data["data_quality_assessment"],
+                    "assessment_comprehensive": data_engineering_data.get("assessment_comprehensive", "advanced"),
+                    "include_validation": data_engineering_data.get("include_validation", True)
+                })
+                enhanced_tools["enhanced_data_quality_assessment"] = quality_result
+            
+            # Enhanced team collaboration
+            if "team_collaboration" in data_engineering_data:
+                collaboration_result = await self.enhanced_mcp.communicate_with_agents(
+                    ["AiDeveloper", "BackendDeveloper", "DevOpsInfra", "QualityGuardian"],
+                    {
+                        "type": "data_engineering_review",
+                        "content": data_engineering_data["team_collaboration"]
+                    }
+                )
+                enhanced_tools["enhanced_team_collaboration"] = collaboration_result
+            
+            # Enhanced ETL process optimization
+            if "etl_process_optimization" in data_engineering_data:
+                etl_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_etl_process_optimization", {
+                    "etl_data": data_engineering_data["etl_process_optimization"],
+                    "optimization_comprehensive": data_engineering_data.get("optimization_comprehensive", "advanced"),
+                    "include_scaling": data_engineering_data.get("include_scaling", True)
+                })
+                enhanced_tools["enhanced_etl_process_optimization"] = etl_result
+            
+            logger.info(f"Data-specific enhanced tools executed: {list(enhanced_tools.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Error in data-specific enhanced tools: {e}")
+        
+        return enhanced_tools
+    
+    async def trace_data_operation(self, operation_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace data operations."""
+        if not self.tracing_enabled or not self.tracer:
+            return {"tracing": "disabled"}
+        
+        try:
+            trace_data = {
+                "operation_type": "data_operation",
+                "agent": self.agent_name,
+                "timestamp": datetime.now().isoformat(),
+                "operation_data": operation_data,
+                "performance_metrics": {
+                    "pipeline_count": len(operation_data.get("pipelines", [])),
+                    "data_quality_score": operation_data.get("data_quality_score", 0.0),
+                    "etl_performance": operation_data.get("etl_performance", {})
+                }
+            }
+            
+            # Add trace to tracer
+            if hasattr(self.tracer, 'add_trace'):
+                await self.tracer.add_trace("data_operation", trace_data)
+            
+            logger.info(f"Data operation traced: {trace_data['operation_type']}")
+            return trace_data
+            
+        except Exception as e:
+            logger.error(f"Tracing failed: {e}")
+            return {"tracing": "error", "error": str(e)}
 
     def _load_pipeline_history(self):
         """Load pipeline history from data file"""
@@ -466,7 +631,7 @@ Data Engineer Agent Commands:
             "notification_channels": ["slack", "email"]
         }
         
-        enhanced_data = await self.use_data_specific_mcp_tools(data_engineering_data)
+        enhanced_data = await self.use_enhanced_mcp_tools(data_engineering_data)
 
         # Simulate pipeline building
         time.sleep(2)
@@ -775,6 +940,16 @@ Data Engineer Agent Commands:
         # Initialize MCP integration
         await self.initialize_mcp()
         
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing capabilities
+        await self.initialize_tracing()
+        
+        print("📊 DataEngineer is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        
         def sync_handler(event):
             asyncio.run(self.handle_data_quality_check_requested(event))
 
@@ -791,12 +966,35 @@ Data Engineer Agent Commands:
         except KeyboardInterrupt:
             logger.info("DataEngineer agent stopped.")
     
+    async def run_async(self):
+        """Run the agent with enhanced MCP and tracing initialization."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing capabilities
+        await self.initialize_tracing()
+        
+        print("📊 DataEngineer is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        
+        logger.info("DataEngineerAgent ready and listening for events...")
+        await self.collaborate_example()
+    
     @classmethod
     async def run_agent(cls):
         """Class method to run the DataEngineer agent met MCP integration."""
         agent = cls()
-        await agent.initialize_mcp()
-        print("DataEngineer agent started with MCP integration")
+        await agent.run_async()
+    
+    @classmethod
+    async def run_agent_async(cls):
+        """Class method to run the DataEngineer agent with enhanced MCP."""
+        agent = cls()
+        await agent.run_async()
 
 def main():
     parser = argparse.ArgumentParser(description="Data Engineer Agent CLI")
@@ -804,7 +1002,9 @@ def main():
                        choices=["help", "data-quality-check", "explain-pipeline", "build-pipeline",
                                "monitor-pipeline", "show-pipeline-history", "show-quality-history",
                                "show-best-practices", "show-changelog", "export-report", "test",
-                               "collaborate", "run"])
+                               "collaborate", "run", "enhanced-collaborate", "enhanced-security", 
+                               "enhanced-performance", "trace-operation", "trace-performance", 
+                               "trace-error", "tracing-summary"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--data-summary", default="Sample data summary", help="Data summary for quality check")
     parser.add_argument("--pipeline-code", default="Sample ETL pipeline", help="Pipeline code to explain")
@@ -846,6 +1046,52 @@ def main():
             asyncio.run(agent.collaborate_example())
         elif args.command == "run":
             asyncio.run(agent.run())
+        # Enhanced MCP Phase 2 Commands
+        elif args.command in ["enhanced-collaborate", "enhanced-security", "enhanced-performance", 
+                             "trace-operation", "trace-performance", "trace-error", "tracing-summary"]:
+            # Enhanced MCP commands
+            if args.command == "enhanced-collaborate":
+                result = asyncio.run(agent.enhanced_mcp.communicate_with_agents(
+                    ["AiDeveloper", "BackendDeveloper", "DevOpsInfra", "QualityGuardian"], 
+                    {"type": "data_engineering_review", "content": {"review_type": "data_pipeline_development"}}
+                ))
+                print(json.dumps(result, indent=2))
+            elif args.command == "enhanced-security":
+                result = asyncio.run(agent.enhanced_mcp.enhanced_security_validation({
+                    "data_engineering_data": {"pipelines": [], "quality_checks": [], "monitoring": []},
+                    "security_requirements": ["data_validation", "pipeline_security", "monitoring_safety"]
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "enhanced-performance":
+                result = asyncio.run(agent.enhanced_mcp.enhanced_performance_optimization({
+                    "data_engineering_data": {"pipelines": [], "quality_checks": [], "monitoring": []},
+                    "performance_metrics": {"pipeline_speed": 85.5, "quality_score": 92.3}
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "trace-operation":
+                result = asyncio.run(agent.trace_data_operation({
+                    "operation_type": "data_engineering",
+                    "pipeline_name": args.pipeline_name,
+                    "pipelines": list(agent.pipeline_history)
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "trace-performance":
+                result = asyncio.run(agent.trace_data_operation({
+                    "operation_type": "performance_analysis",
+                    "performance_metrics": {"pipeline_speed": 85.5, "quality_score": 92.3}
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "trace-error":
+                result = asyncio.run(agent.trace_data_operation({
+                    "operation_type": "error_analysis",
+                    "error_data": {"error_type": "pipeline_failure", "error_message": "Pipeline failed"}
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "tracing-summary":
+                print("Tracing Summary for DataEngineer:")
+                print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+                print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+                print(f"Agent: {agent.agent_name}")
         else:
             print("Unknown command. Use 'help' to see available commands.")
             sys.exit(1)
