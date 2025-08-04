@@ -39,12 +39,16 @@ Dit document bevat een gefocuste workflow template voor Cursor AI development, g
 - [ ] **Best Practices Guide**: `docs/guides/BEST_PRACTICES_GUIDE.md`
 - [ ] **Relevant Integration Guide**: Check specifieke integration guides
 - [ ] **Test Workflow Guide**: `docs/guides/TEST_WORKFLOW_GUIDE.md`
+- [ ] **MCP Integration Guide**: `docs/guides/MCP_INTEGRATION_GUIDE.md`
+- [ ] **Agent Optimization Guide**: `docs/guides/agent-optimization-guide.md`
 
 #### **2.2 Deployment Files Review**
 - [ ] **Kanban Board**: `docs/deployment/KANBAN_BOARD.md`
 - [ ] **Master Planning**: `docs/deployment/BMAD_MASTER_PLANNING.md`
 - [ ] **Implementation Details**: `docs/deployment/IMPLEMENTATION_DETAILS.md`
 - [ ] **Status Files**: Check relevante status documentatie
+- [ ] **Project Manager**: `bmad/projects/project_manager.py`
+- [ ] **Agent Resources**: `bmad/resources/templates/general/`
 
 #### **2.3 Pattern Identification**
 - [ ] **Bestaande Oplossingen**: Zoek naar vergelijkbare implementaties
@@ -60,18 +64,21 @@ Dit document bevat een gefocuste workflow template voor Cursor AI development, g
 - [ ] **File Structure**: Plan bestandsstructuur wijzigingen
 - [ ] **Integration Points**: Identificeer integratie punten
 - [ ] **Error Handling**: Plan error handling strategie
+- [ ] **Architecture Guide**: `docs/architecture/core-architecture.md`
 
 #### **3.2 Code Implementation**
 - [ ] **Core Implementation**: Implementeer hoofdfunctionaliteit
 - [ ] **Integration Code**: Voeg integratie code toe
 - [ ] **Error Handling**: Implementeer error handling
 - [ ] **Logging**: Voeg logging toe voor debugging
+- [ ] **Code Standards**: Volg `docs/guides/BEST_PRACTICES_GUIDE.md`
 
 #### **3.3 Configuration Updates**
 - [ ] **YAML Configuratie**: Update configuratie bestanden
 - [ ] **CLI Commands**: Voeg nieuwe CLI commands toe
 - [ ] **Environment Variables**: Update environment configuratie
 - [ ] **Dependencies**: Update requirements indien nodig
+- [ ] **CLI Documentation**: `cli/core/base_cli.py`
 
 ### **Fase 4: Testen of Nieuwe Toevoeging/Aanpassing Werkt** 🧪
 **Doel**: Verificeer dat de nieuwe functionaliteit werkt
@@ -81,18 +88,21 @@ Dit document bevat een gefocuste workflow template voor Cursor AI development, g
 - [ ] **CLI Commands**: Test nieuwe CLI commands
 - [ ] **Integration Points**: Test integratie met andere systemen
 - [ ] **Error Scenarios**: Test error handling scenarios
+- [ ] **Regression Testing**: Voer regressie tests uit
 
 #### **4.2 Automated Testing**
 - [ ] **Unit Tests**: Voer bestaande unit tests uit
 - [ ] **Integration Tests**: Voer integration tests uit
 - [ ] **Performance Tests**: Voer performance tests uit
 - [ ] **Regression Tests**: Controleer op regressie
+- [ ] **Test Framework**: `tests/unit/`, `tests/integration/`, `tests/performance/`
 
 #### **4.3 Validation**
 - [ ] **Functional Validation**: Verificeer dat functionaliteit werkt zoals verwacht
 - [ ] **Performance Validation**: Controleer performance impact
 - [ ] **Integration Validation**: Verificeer integratie met andere systemen
 - [ ] **User Experience Validation**: Test vanuit gebruiker perspectief
+- [ ] **Test Results**: Check `allure-results/` voor test rapportages
 
 ### **Fase 5: Test Suite Uitbreiden** 📈
 **Doel**: Zorg voor adequate test coverage
@@ -102,18 +112,21 @@ Dit document bevat een gefocuste workflow template voor Cursor AI development, g
 - [ ] **Gap Identification**: Identificeer test gaps
 - [ ] **Test Strategy**: Bepaal test strategie voor nieuwe functionaliteit
 - [ ] **Test Types**: Bepaal welke test types nodig zijn
+- [ ] **Test Guide**: `docs/guides/TEST_WORKFLOW_GUIDE.md`
 
 #### **5.2 Test Implementation**
 - [ ] **Unit Tests**: Schrijf unit tests voor nieuwe functionaliteit
 - [ ] **Integration Tests**: Schrijf integration tests
 - [ ] **Performance Tests**: Schrijf performance tests indien nodig
 - [ ] **Error Tests**: Test error scenarios
+- [ ] **Test Templates**: `bmad/resources/templates/general/test-snippet.py`
 
 #### **5.3 Test Validation**
 - [ ] **Test Execution**: Voer alle tests uit
 - [ ] **Coverage Verification**: Controleer test coverage
 - [ ] **Test Quality**: Evalueer kwaliteit van tests
 - [ ] **CI Integration**: Zorg dat tests in CI pipeline werken
+- [ ] **Test Configuration**: `pytest.ini`, `pyproject.toml`
 
 ### **Fase 6: Documentatie Bijwerken** 📝
 **Doel**: Houd documentatie up-to-date
@@ -123,18 +136,21 @@ Dit document bevat een gefocuste workflow template voor Cursor AI development, g
 - [ ] **Comments**: Voeg relevante comments toe
 - [ ] **Type Hints**: Update type hints indien nodig
 - [ ] **README Files**: Update README bestanden
+- [ ] **Code Standards**: Volg `docs/guides/BEST_PRACTICES_GUIDE.md`
 
 #### **6.2 Technical Documentation**
 - [ ] **Integration Guides**: Update relevante integration guides
 - [ ] **API Documentation**: Update API documentatie
 - [ ] **Architecture Docs**: Update architectuur documentatie
 - [ ] **Deployment Docs**: Update deployment documentatie
+- [ ] **Integration Docs**: `docs/integrations/`
 
 #### **6.3 User Documentation**
 - [ ] **User Guides**: Update user guides
 - [ ] **CLI Documentation**: Update CLI help en documentatie
 - [ ] **Examples**: Voeg gebruiksvoorbeelden toe
 - [ ] **Troubleshooting**: Update troubleshooting guides
+- [ ] **Main README**: `README.md`
 
 ### **Fase 7: Commit en Push** 🚀
 **Doel**: Version control en deployment
@@ -144,17 +160,20 @@ Dit document bevat een gefocuste workflow template voor Cursor AI development, g
 - [ ] **Test Results**: Verificeer dat alle tests slagen
 - [ ] **Documentation**: Controleer documentatie compleetheid
 - [ ] **Review**: Doe een laatste review van wijzigingen
+- [ ] **Quality Standards**: Volg `docs/guides/BEST_PRACTICES_GUIDE.md`
 
 #### **7.2 Git Operations**
 - [ ] **Stage Changes**: `git add` relevante bestanden
 - [ ] **Commit**: `git commit` met beschrijvende message
 - [ ] **Push**: `git push` naar repository
 - [ ] **Branch Management**: Merge indien nodig
+- [ ] **Git Standards**: Volg project git workflow
 
 #### **7.3 Post-deployment**
 - [ ] **Deployment Verification**: Controleer deployment succes
 - [ ] **Monitoring**: Monitor system performance
 - [ ] **Lessons Learned**: Update lessons learned
+- [ ] **Status Update**: Update `docs/deployment/KANBAN_BOARD.md`
 
 ## 🔧 **Quality Gates**
 
@@ -253,36 +272,49 @@ Deze template kan worden aangepast voor specifieke use cases:
 - [ ] Requirements geanalyseerd
 - [ ] Current state geëvalueerd
 - [ ] Risico's geïdentificeerd
+- [ ] Guide en deployment files geraadpleegd
 
 ### Fase 2: Documentation Review
-- [ ] Lessons learned geraadpleegd
-- [ ] Best practices gecontroleerd
-- [ ] Relevante guides bekeken
+- [ ] Lessons learned geraadpleegd (`docs/guides/LESSONS_LEARNED_GUIDE.md`)
+- [ ] Best practices gecontroleerd (`docs/guides/BEST_PRACTICES_GUIDE.md`)
+- [ ] Relevante guides bekeken (`docs/guides/`)
+- [ ] Kanban board gecontroleerd (`docs/deployment/KANBAN_BOARD.md`)
+- [ ] Master planning geraadpleegd (`docs/deployment/BMAD_MASTER_PLANNING.md`)
 
 ### Fase 3: Implementation
 - [ ] Code geïmplementeerd
 - [ ] Configuratie bijgewerkt
 - [ ] Error handling toegevoegd
+- [ ] Architecture guide geraadpleegd (`docs/architecture/core-architecture.md`)
+- [ ] Code standards gevolgd (`docs/guides/BEST_PRACTICES_GUIDE.md`)
 
 ### Fase 4: Testing
 - [ ] Functionaliteit getest
 - [ ] Tests uitgevoerd
 - [ ] Validatie voltooid
+- [ ] Regressie tests uitgevoerd
+- [ ] Test framework gebruikt (`tests/unit/`, `tests/integration/`, `tests/performance/`)
 
 ### Fase 5: Test Suite
 - [ ] Tests uitgebreid
 - [ ] Coverage gecontroleerd
 - [ ] CI integratie geverifieerd
+- [ ] Test guide geraadpleegd (`docs/guides/TEST_WORKFLOW_GUIDE.md`)
+- [ ] Test templates gebruikt (`bmad/resources/templates/general/test-snippet.py`)
 
 ### Fase 6: Documentation
 - [ ] Code gedocumenteerd
 - [ ] User docs bijgewerkt
 - [ ] Technical docs bijgewerkt
+- [ ] Integration docs bijgewerkt (`docs/integrations/`)
+- [ ] Main README bijgewerkt (`README.md`)
 
 ### Fase 7: Deployment
 - [ ] Pre-commit checks voltooid
 - [ ] Git operations uitgevoerd
 - [ ] Post-deployment geverifieerd
+- [ ] Kanban board bijgewerkt (`docs/deployment/KANBAN_BOARD.md`)
+- [ ] Lessons learned bijgewerkt (`docs/guides/LESSONS_LEARNED_GUIDE.md`)
 ```
 
 ## 🚀 **Cursor AI Specific Features**
