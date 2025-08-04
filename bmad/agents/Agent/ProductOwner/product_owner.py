@@ -77,6 +77,7 @@ class ProductOwnerAgent:
         # Enhanced MCP Phase 2
         self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
         self.enhanced_mcp_enabled = False
+        self.enhanced_mcp_client = None
         
         # Tracing Integration
         self.tracer: Optional[BMADTracer] = None
@@ -120,6 +121,7 @@ class ProductOwnerAgent:
         """Initialize enhanced MCP capabilities for Phase 2."""
         try:
             self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+            self.enhanced_mcp_client = self.enhanced_mcp.mcp_client if self.enhanced_mcp else None
             self.enhanced_mcp_enabled = await self.enhanced_mcp.initialize_enhanced_mcp()
             
             if self.enhanced_mcp_enabled:
