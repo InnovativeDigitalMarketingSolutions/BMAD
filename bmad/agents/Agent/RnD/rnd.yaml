@@ -22,6 +22,26 @@ commands:
   - show-experiment-history: Toon experiment historie
   - changelog: Toon changelog van experimenten
   - test: Test resource completeness
+  - conduct-research: Conduct research
+  - design-experiment: Design experiment
+  - run-experiment: Run experiment
+  - evaluate-results: Evaluate results
+  - generate-innovation: Generate innovation
+  - prototype-solution: Prototype solution
+  - show-research-history: Show research history
+  - show-best-practices: Show best practices
+  - show-changelog: Show changelog
+  - export-report: Export rapport
+  - collaborate: Demonstrate collaboration
+  - run: Run agent met MCP integration
+  # MCP Phase 2 Enhanced Commands
+  - enhanced-collaborate: Enhanced inter-agent communicatie
+  - enhanced-security: Enhanced security validatie
+  - enhanced-performance: Enhanced performance optimalisatie
+  - trace-operation: Trace R&D operations
+  - trace-performance: Get performance metrics
+  - trace-error: Trace error scenarios
+  - tracing-summary: Get tracing summary
 
 dependencies:
   templates:
