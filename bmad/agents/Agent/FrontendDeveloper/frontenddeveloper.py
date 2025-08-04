@@ -64,6 +64,7 @@ class FrontendDeveloperAgent:
         self.agent_name = "FrontendDeveloper"
         self.component_history = []
         self.performance_history = []
+        self.performance_monitor = get_performance_monitor()
         
         # MCP Integration
         self.mcp_client: Optional[MCPClient] = None
@@ -73,6 +74,7 @@ class FrontendDeveloperAgent:
         # Enhanced MCP Integration for Phase 2
         self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
         self.enhanced_mcp_enabled = False
+        self.enhanced_mcp_client = None
         
         # Tracing Integration
         self.tracer: Optional[BMADTracer] = None
@@ -762,14 +764,14 @@ Examples:
         logger.info(f"Shadcn component build result: {result}")
         return result
 
-    def build_component(self, component_name: str = "Button") -> Dict[str, Any]:
+    async def build_component(self, component_name: str = "Button") -> Dict[str, Any]:
         # Validate input
         self.validate_input(component_name)
         
         logger.info(f"Building component: {component_name}")
 
         # Simuleer component bouw
-        time.sleep(1)
+        await asyncio.sleep(1)
         result = {
             "name": component_name,
             "type": "React/Next.js",

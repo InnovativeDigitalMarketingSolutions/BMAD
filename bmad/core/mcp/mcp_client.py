@@ -110,6 +110,11 @@ class MCPClient:
         self.version = MCPVersion.V1_1.value
         self.server_info: Optional[MCPServerInfo] = None
         
+        # Enhanced MCP attributes
+        self.enhanced_enabled = False
+        self.enhanced_capabilities: Dict[str, bool] = {}
+        self.enhanced_mcp_client = None
+        
         # Initialize default tools
         self._initialize_default_tools()
         
@@ -227,6 +232,62 @@ class MCPClient:
             logger.error(f"Failed to connect to MCP server: {e}")
             return False
     
+    async def initialize_enhanced(self) -> bool:
+        """Initialize enhanced MCP capabilities."""
+        try:
+            # Connect to MCP server first
+            if not await self.connect():
+                logger.error("Failed to connect to MCP server for enhanced initialization")
+                return False
+            
+            # Initialize enhanced capabilities
+            self.enhanced_enabled = True
+            self.enhanced_capabilities = {
+                "advanced_tracing": True,
+                "inter_agent_communication": True,
+                "performance_monitoring": True,
+                "security_validation": True,
+                "workflow_orchestration": True
+            }
+            
+            # Set enhanced MCP client reference
+            self.enhanced_mcp_client = self
+            
+            # Register enhanced tools
+            enhanced_tools = [
+                MCPTool(
+                    name="enhanced_trace",
+                    description="Enhanced tracing for distributed systems",
+                    input_schema={"type": "object", "properties": {"operation": {"type": "string"}}},
+                    output_schema={"type": "object", "properties": {"trace_id": {"type": "string"}}},
+                    category="enhanced"
+                ),
+                MCPTool(
+                    name="inter_agent_communicate",
+                    description="Inter-agent communication protocol",
+                    input_schema={"type": "object", "properties": {"message": {"type": "string"}, "target_agent": {"type": "string"}}},
+                    output_schema={"type": "object", "properties": {"response": {"type": "string"}}},
+                    category="enhanced"
+                ),
+                MCPTool(
+                    name="performance_monitor",
+                    description="Performance monitoring and metrics",
+                    input_schema={"type": "object", "properties": {"metric": {"type": "string"}}},
+                    output_schema={"type": "object", "properties": {"value": {"type": "number"}}},
+                    category="enhanced"
+                )
+            ]
+            
+            for tool in enhanced_tools:
+                self.register_tool(tool)
+            
+            logger.info("Enhanced MCP capabilities initialized successfully")
+            return True
+            
+        except Exception as e:
+            logger.error(f"Failed to initialize enhanced MCP capabilities: {e}")
+            return False
+    
     async def disconnect(self) -> bool:
         """Disconnect from MCP server."""
         try:
@@ -339,6 +400,36 @@ class MCPClient:
         except Exception as e:
             logger.error(f"Error updating context {context_id}: {e}")
             return False
+    
+    async def create_enhanced_context(self, 
+                                   user_id: Optional[str] = None,
+                                   agent_id: Optional[str] = None,
+                                   project_id: Optional[str] = None,
+                                   metadata: Optional[Dict[str, Any]] = None) -> MCPContext:
+        """Create enhanced MCP context with additional capabilities."""
+        context_id = str(uuid.uuid4())
+        
+        # Enhanced metadata
+        enhanced_metadata = metadata or {}
+        enhanced_metadata.update({
+            "enhanced_capabilities": True,
+            "tracing_enabled": True,
+            "performance_monitoring": True,
+            "security_validation": True
+        })
+        
+        context = MCPContext(
+            session_id=self.session_id,
+            user_id=user_id,
+            agent_id=agent_id,
+            project_id=project_id,
+            metadata=enhanced_metadata,
+            version=self.version
+        )
+        
+        self.contexts[context_id] = context
+        logger.info(f"Created enhanced MCP context: {context_id}")
+        return context
     
     async def call_tool(self, 
                       tool_name: str,

@@ -15,7 +15,7 @@ from typing import Any, Dict, List, Optional, Union
 from datetime import datetime
 import json
 
-from .mcp_client import MCPClient, MCPContext
+from .mcp_client import MCPClient, MCPContext, MCPTool
 from .framework_integration import FrameworkMCPIntegration
 
 logger = logging.getLogger(__name__)
@@ -89,15 +89,22 @@ class EnhancedMCPIntegration:
     async def _initialize_communication(self):
         """Initialize inter-agent communication capabilities."""
         try:
-            await self.mcp_client.register_tool("agent_communication", {
-                "description": "Enhanced inter-agent communication",
-                "parameters": {
-                    "target_agent": "string",
-                    "message_type": "string",
-                    "message_content": "object",
-                    "communication_mode": "string"
-                }
-            })
+            communication_tool = MCPTool(
+                name="agent_communication",
+                description="Enhanced inter-agent communication",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "target_agent": {"type": "string"},
+                        "message_type": {"type": "string"},
+                        "message_content": {"type": "object"},
+                        "communication_mode": {"type": "string"}
+                    }
+                },
+                output_schema={"type": "object"},
+                category="communication"
+            )
+            self.mcp_client.register_tool(communication_tool)
             logger.info("Inter-agent communication initialized")
         except Exception as e:
             logger.warning(f"Communication initialization failed: {e}")
@@ -105,23 +112,37 @@ class EnhancedMCPIntegration:
     async def _initialize_external_tools(self):
         """Initialize external tool adapter capabilities."""
         try:
-            await self.mcp_client.register_tool("external_tool_discovery", {
-                "description": "Enhanced external tool discovery",
-                "parameters": {
-                    "tool_category": "string",
-                    "integration_type": "string",
-                    "authentication": "object"
-                }
-            })
+            discovery_tool = MCPTool(
+                name="external_tool_discovery",
+                description="Enhanced external tool discovery",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "tool_category": {"type": "string"},
+                        "integration_type": {"type": "string"},
+                        "authentication": {"type": "object"}
+                    }
+                },
+                output_schema={"type": "object"},
+                category="external_tools"
+            )
+            self.mcp_client.register_tool(discovery_tool)
             
-            await self.mcp_client.register_tool("external_tool_execution", {
-                "description": "Enhanced external tool execution",
-                "parameters": {
-                    "tool_name": "string",
-                    "parameters": "object",
-                    "execution_mode": "string"
-                }
-            })
+            execution_tool = MCPTool(
+                name="external_tool_execution",
+                description="Enhanced external tool execution",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "tool_name": {"type": "string"},
+                        "parameters": {"type": "object"},
+                        "execution_mode": {"type": "string"}
+                    }
+                },
+                output_schema={"type": "object"},
+                category="external_tools"
+            )
+            self.mcp_client.register_tool(execution_tool)
             logger.info("External tool adapters initialized")
         except Exception as e:
             logger.warning(f"External tools initialization failed: {e}")
@@ -129,32 +150,53 @@ class EnhancedMCPIntegration:
     async def _initialize_security(self):
         """Initialize security enhancement capabilities."""
         try:
-            await self.mcp_client.register_tool("advanced_authentication", {
-                "description": "Advanced authentication capabilities",
-                "parameters": {
-                    "auth_method": "string",
-                    "security_level": "string",
-                    "compliance": "array"
-                }
-            })
+            auth_tool = MCPTool(
+                name="advanced_authentication",
+                description="Advanced authentication capabilities",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "auth_method": {"type": "string"},
+                        "security_level": {"type": "string"},
+                        "compliance": {"type": "array"}
+                    }
+                },
+                output_schema={"type": "object"},
+                category="security"
+            )
+            self.mcp_client.register_tool(auth_tool)
             
-            await self.mcp_client.register_tool("enhanced_authorization", {
-                "description": "Enhanced authorization capabilities",
-                "parameters": {
-                    "authorization_model": "string",
-                    "permission_granularity": "string",
-                    "audit_trail": "boolean"
-                }
-            })
+            authz_tool = MCPTool(
+                name="enhanced_authorization",
+                description="Enhanced authorization capabilities",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "authorization_model": {"type": "string"},
+                        "permission_granularity": {"type": "string"},
+                        "audit_trail": {"type": "boolean"}
+                    }
+                },
+                output_schema={"type": "object"},
+                category="security"
+            )
+            self.mcp_client.register_tool(authz_tool)
             
-            await self.mcp_client.register_tool("threat_detection", {
-                "description": "Real-time threat detection",
-                "parameters": {
-                    "detection_type": "string",
-                    "threat_indicators": "array",
-                    "response_automation": "boolean"
-                }
-            })
+            threat_tool = MCPTool(
+                name="threat_detection",
+                description="Real-time threat detection",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "detection_type": {"type": "string"},
+                        "threat_indicators": {"type": "array"},
+                        "response_automation": {"type": "boolean"}
+                    }
+                },
+                output_schema={"type": "object"},
+                category="security"
+            )
+            self.mcp_client.register_tool(threat_tool)
             logger.info("Security enhancement initialized")
         except Exception as e:
             logger.warning(f"Security initialization failed: {e}")
@@ -162,32 +204,53 @@ class EnhancedMCPIntegration:
     async def _initialize_performance(self):
         """Initialize performance optimization capabilities."""
         try:
-            await self.mcp_client.register_tool("memory_optimization", {
-                "description": "Intelligent memory optimization",
-                "parameters": {
-                    "optimization_type": "string",
-                    "cache_strategy": "string",
-                    "memory_usage": "object"
-                }
-            })
+            memory_tool = MCPTool(
+                name="memory_optimization",
+                description="Intelligent memory optimization",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "optimization_type": {"type": "string"},
+                        "cache_strategy": {"type": "string"},
+                        "memory_usage": {"type": "object"}
+                    }
+                },
+                output_schema={"type": "object"},
+                category="performance"
+            )
+            self.mcp_client.register_tool(memory_tool)
             
-            await self.mcp_client.register_tool("processing_optimization", {
-                "description": "Parallel processing optimization",
-                "parameters": {
-                    "optimization_type": "string",
-                    "thread_management": "string",
-                    "resource_allocation": "string"
-                }
-            })
+            processing_tool = MCPTool(
+                name="processing_optimization",
+                description="Parallel processing optimization",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "optimization_type": {"type": "string"},
+                        "thread_management": {"type": "string"},
+                        "resource_allocation": {"type": "string"}
+                    }
+                },
+                output_schema={"type": "object"},
+                category="performance"
+            )
+            self.mcp_client.register_tool(processing_tool)
             
-            await self.mcp_client.register_tool("response_time_optimization", {
-                "description": "Response time optimization",
-                "parameters": {
-                    "target_latency": "number",
-                    "optimization_strategy": "string",
-                    "load_balancing": "boolean"
-                }
-            })
+            response_tool = MCPTool(
+                name="response_time_optimization",
+                description="Response time optimization",
+                input_schema={
+                    "type": "object",
+                    "properties": {
+                        "target_latency": {"type": "number"},
+                        "optimization_strategy": {"type": "string"},
+                        "load_balancing": {"type": "boolean"}
+                    }
+                },
+                output_schema={"type": "object"},
+                category="performance"
+            )
+            self.mcp_client.register_tool(response_tool)
             logger.info("Performance optimization initialized")
         except Exception as e:
             logger.warning(f"Performance initialization failed: {e}")

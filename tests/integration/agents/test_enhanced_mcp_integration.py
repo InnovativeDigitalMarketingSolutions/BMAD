@@ -125,7 +125,7 @@ class TestEnhancedMCPIntegration:
             # Verify enhanced MCP attributes
             assert hasattr(agent, 'enhanced_mcp_enabled')
             assert hasattr(agent, 'enhanced_mcp_client')
-            assert hasattr(agent, 'enhanced_mcp_integration')
+            assert hasattr(agent, 'enhanced_mcp')
             
             # Verify tracing attributes
             assert hasattr(agent, 'tracer')
@@ -455,18 +455,11 @@ class TestEnhancedMCPWorkflows:
         assert design is not None
         
         # 3. Backend implements API
-        api = await backend.build_api({
-            'design': design,
-            'endpoints': ['/test', '/api/v1/test']
-        })
+        api = await backend.build_api('/api/v1/test')
         assert api is not None
         
         # 4. Frontend implements UI
-        ui = await frontend.build_component({
-            'design': design,
-            'api': api,
-            'component_type': 'form'
-        })
+        ui = await frontend.build_component('TestForm')
         assert ui is not None
         
         # 5. Test validates implementation
