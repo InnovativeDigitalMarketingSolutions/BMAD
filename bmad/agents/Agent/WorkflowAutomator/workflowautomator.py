@@ -34,6 +34,13 @@ from bmad.core.mcp import (
     initialize_framework_mcp_integration
 )
 
+# Enhanced MCP Phase 2 imports
+from bmad.core.mcp.enhanced_mcp_integration import (
+    EnhancedMCPIntegration,
+    create_enhanced_mcp_integration
+)
+from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -114,6 +121,23 @@ class WorkflowAutomatorAgent:
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
         self.mcp_enabled = False
         
+        # Enhanced MCP Phase 2 attributes
+        self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_enabled = False
+        
+        # Tracing Integration
+        self.tracer: Optional[BMADTracer] = None
+        self.tracing_enabled = False
+        
+        # Initialize tracer
+        self.tracer = BMADTracer(config=type("Config", (), {
+            "service_name": "WorkflowAutomator",
+            "service_version": "1.0.0",
+            "environment": "development",
+            "sample_rate": 1.0,
+            "exporters": []
+        })())
+        
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
         
         # Initialize logger
@@ -158,6 +182,33 @@ class WorkflowAutomatorAgent:
         except Exception as e:
             logger.warning(f"MCP initialization failed for WorkflowAutomator: {e}")
             self.mcp_enabled = False
+
+    async def initialize_enhanced_mcp(self):
+        """Initialize enhanced MCP capabilities for Phase 2."""
+        try:
+            self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+            # Check if initialize method exists before calling it
+            if hasattr(self.enhanced_mcp, 'initialize'):
+                await self.enhanced_mcp.initialize()
+            self.enhanced_mcp_enabled = True
+            logger.info("Enhanced MCP initialized successfully")
+        except Exception as e:
+            logger.warning(f"Enhanced MCP initialization failed: {e}")
+            self.enhanced_mcp_enabled = False
+    
+    async def initialize_tracing(self):
+        """Initialize tracing capabilities."""
+        try:
+            if self.tracer and hasattr(self.tracer, 'initialize'):
+                await self.tracer.initialize()
+                self.tracing_enabled = True
+                logger.info("Tracing initialized successfully")
+            else:
+                logger.warning("Tracer not available or missing initialize method")
+                self.tracing_enabled = False
+        except Exception as e:
+            logger.warning(f"Tracing initialization failed: {e}")
+            self.tracing_enabled = False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -244,6 +295,120 @@ class WorkflowAutomatorAgent:
             logger.error(f"Error in workflow-specific MCP tools: {e}")
         
         return enhanced_data
+
+    async def use_enhanced_mcp_tools(self, workflow_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use enhanced MCP tools voor Phase 2 capabilities."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available, using standard MCP tools")
+            return await self.use_workflow_specific_mcp_tools(workflow_data)
+        
+        enhanced_data = {}
+        
+        try:
+            # Core enhancement tools
+            core_result = await self.enhanced_mcp.use_enhanced_mcp_tool("core_enhancement", {
+                "agent_type": self.agent_name,
+                "enhancement_level": "advanced",
+                "capabilities": workflow_data.get("capabilities", []),
+                "performance_metrics": workflow_data.get("performance_metrics", {})
+            })
+            enhanced_data["core_enhancement"] = core_result
+            
+            # Workflow-specific enhanced tools
+            workflow_enhanced_result = await self.use_workflow_specific_enhanced_tools(workflow_data)
+            enhanced_data.update(workflow_enhanced_result)
+            
+            # Tracing integration
+            if self.tracing_enabled:
+                trace_result = await self.trace_workflow_operation(workflow_data)
+                enhanced_data["tracing"] = trace_result
+            
+            logger.info(f"Enhanced MCP tools used successfully: {len(enhanced_data)} tools")
+            
+        except Exception as e:
+            logger.error(f"Enhanced MCP tools failed: {e}")
+            enhanced_data["error"] = str(e)
+        
+        return enhanced_data
+    
+    async def use_workflow_specific_enhanced_tools(self, workflow_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use workflow-specific enhanced MCP tools."""
+        enhanced_tools = {}
+        
+        try:
+            # Enhanced workflow analysis
+            if "workflow_analysis" in workflow_data:
+                analysis_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_workflow_analysis", {
+                    "workflow_data": workflow_data["workflow_analysis"],
+                    "analysis_depth": workflow_data.get("analysis_depth", "comprehensive"),
+                    "include_performance_prediction": workflow_data.get("include_performance_prediction", True)
+                })
+                enhanced_tools["enhanced_workflow_analysis"] = analysis_result
+            
+            # Enhanced workflow optimization
+            if "workflow_optimization" in workflow_data:
+                optimization_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_workflow_optimization", {
+                    "optimization_data": workflow_data["workflow_optimization"],
+                    "optimization_strategy": workflow_data.get("optimization_strategy", "intelligent"),
+                    "include_ml_optimization": workflow_data.get("include_ml_optimization", True)
+                })
+                enhanced_tools["enhanced_workflow_optimization"] = optimization_result
+            
+            # Enhanced team collaboration
+            if "team_collaboration" in workflow_data:
+                collaboration_result = await self.enhanced_mcp.communicate_with_agents(
+                    ["Orchestrator", "DevOpsInfra", "QualityGuardian", "ReleaseManager"],
+                    {
+                        "type": "workflow_review",
+                        "content": workflow_data["team_collaboration"]
+                    }
+                )
+                enhanced_tools["enhanced_team_collaboration"] = collaboration_result
+            
+            # Enhanced workflow monitoring
+            if "workflow_monitoring" in workflow_data:
+                monitoring_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_workflow_monitoring", {
+                    "monitoring_data": workflow_data["workflow_monitoring"],
+                    "monitoring_intelligence": workflow_data.get("monitoring_intelligence", "advanced"),
+                    "include_predictive_alerts": workflow_data.get("include_predictive_alerts", True)
+                })
+                enhanced_tools["enhanced_workflow_monitoring"] = monitoring_result
+            
+            logger.info(f"Workflow-specific enhanced tools executed: {list(enhanced_tools.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Error in workflow-specific enhanced tools: {e}")
+        
+        return enhanced_tools
+    
+    async def trace_workflow_operation(self, operation_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace workflow operations."""
+        if not self.tracing_enabled or not self.tracer:
+            return {"tracing": "disabled"}
+        
+        try:
+            trace_data = {
+                "operation_type": "workflow_operation",
+                "agent": self.agent_name,
+                "timestamp": datetime.now().isoformat(),
+                "operation_data": operation_data,
+                "performance_metrics": {
+                    "workflow_count": len(operation_data.get("workflows", [])),
+                    "execution_status": operation_data.get("execution_status", "pending"),
+                    "optimization_level": operation_data.get("optimization_level", "basic")
+                }
+            }
+            
+            # Add trace to tracer
+            if hasattr(self.tracer, 'add_trace'):
+                await self.tracer.add_trace("workflow_operation", trace_data)
+            
+            logger.info(f"Workflow operation traced: {trace_data['operation_type']}")
+            return trace_data
+            
+        except Exception as e:
+            logger.error(f"Tracing failed: {e}")
+            return {"tracing": "error", "error": str(e)}
 
     def _validate_input(self, data: Any) -> bool:
         """Validate input data."""
@@ -505,7 +670,7 @@ class WorkflowAutomatorAgent:
                 "recovery_strategy": "auto"
             }
             
-            mcp_enhanced_data = await self.use_workflow_specific_mcp_tools(workflow_data)
+            mcp_enhanced_data = await self.use_enhanced_mcp_tools(workflow_data)
             
             result = {
                 "workflow_id": workflow_id,
@@ -1047,6 +1212,16 @@ class WorkflowAutomatorAgent:
         # Initialize MCP integration
         await self.initialize_mcp()
         
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing capabilities
+        await self.initialize_tracing()
+        
+        print("🤖 WorkflowAutomator is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        
         logger.info(f"Starting {self.agent_name} agent...")
         
         # Subscribe to events
@@ -1068,6 +1243,36 @@ class WorkflowAutomatorAgent:
                 await asyncio.sleep(1)
         except KeyboardInterrupt:
             logger.info(f"{self.agent_name} agent stopped.")
+    
+    async def run_async(self):
+        """Run the agent with enhanced MCP and tracing initialization."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing capabilities
+        await self.initialize_tracing()
+        
+        print("🤖 WorkflowAutomator is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        
+        logger.info(f"{self.agent_name} agent is running and listening for events...")
+        await self.collaborate_example()
+    
+    @classmethod
+    async def run_agent(cls):
+        """Class method to run the WorkflowAutomator agent met MCP integration."""
+        agent = cls()
+        await agent.run_async()
+    
+    @classmethod
+    async def run_agent_async(cls):
+        """Class method to run the WorkflowAutomator agent with enhanced MCP."""
+        agent = cls()
+        await agent.run_async()
 
     def test_resource_completeness(self):
         """Test if all required resources are available."""
@@ -1275,7 +1480,52 @@ def main():
         
         elif args.command == "run":
             asyncio.run(agent.run())
-        
+        # Enhanced MCP Phase 2 Commands
+        elif args.command in ["enhanced-collaborate", "enhanced-security", "enhanced-performance", 
+                             "trace-operation", "trace-performance", "trace-error", "tracing-summary"]:
+            # Enhanced MCP commands
+            if args.command == "enhanced-collaborate":
+                result = asyncio.run(agent.enhanced_mcp.communicate_with_agents(
+                    ["Orchestrator", "DevOpsInfra", "QualityGuardian", "ReleaseManager"], 
+                    {"type": "workflow_review", "content": {"review_type": "workflow_automation"}}
+                ))
+                print(json.dumps(result, indent=2))
+            elif args.command == "enhanced-security":
+                result = asyncio.run(agent.enhanced_mcp.enhanced_security_validation({
+                    "workflow_data": {"workflows": [], "execution_history": [], "performance_metrics": []},
+                    "security_requirements": ["workflow_validation", "access_control", "audit_trail"]
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "enhanced-performance":
+                result = asyncio.run(agent.enhanced_mcp.enhanced_performance_optimization({
+                    "workflow_data": {"workflows": [], "execution_history": [], "performance_metrics": []},
+                    "performance_metrics": {"execution_speed": 85.5, "optimization_efficiency": 92.3}
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "trace-operation":
+                result = asyncio.run(agent.trace_workflow_operation({
+                    "operation_type": "workflow_execution",
+                    "workflow_id": args.workflow_id,
+                    "workflows": list(agent.workflows.keys())
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "trace-performance":
+                result = asyncio.run(agent.trace_workflow_operation({
+                    "operation_type": "performance_analysis",
+                    "performance_metrics": {"execution_speed": 85.5, "optimization_efficiency": 92.3}
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "trace-error":
+                result = asyncio.run(agent.trace_workflow_operation({
+                    "operation_type": "error_analysis",
+                    "error_data": {"error_type": "workflow_execution", "error_message": "Workflow execution failed"}
+                }))
+                print(json.dumps(result, indent=2))
+            elif args.command == "tracing-summary":
+                print("Tracing Summary for WorkflowAutomator:")
+                print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+                print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+                print(f"Agent: {agent.agent_name}")
         else:
             print(f"Unknown command: {args.command}")
             print(agent.show_help())

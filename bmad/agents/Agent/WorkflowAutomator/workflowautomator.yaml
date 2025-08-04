@@ -37,6 +37,16 @@ commands:
   - show-performance-metrics: Toon workflow performance metrics
   - show-automation-stats: Toon automatisering statistieken
   - test: Test resource completeness
+  - run: Run agent met MCP integration
+  - collaborate: Demonstrate collaboration
+  # MCP Phase 2 Enhanced Commands
+  - enhanced-collaborate: Enhanced inter-agent communicatie
+  - enhanced-security: Enhanced security validatie
+  - enhanced-performance: Enhanced performance optimalisatie
+  - trace-operation: Trace workflow operations
+  - trace-performance: Get performance metrics
+  - trace-error: Trace error scenarios
+  - tracing-summary: Get tracing summary
 
 dependencies:
   templates:
