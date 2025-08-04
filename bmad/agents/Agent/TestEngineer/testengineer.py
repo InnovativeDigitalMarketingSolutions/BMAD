@@ -112,6 +112,8 @@ class TestEngineerAgent:
             self.enhanced_mcp_enabled = await self.enhanced_mcp.initialize_enhanced_mcp()
             
             if self.enhanced_mcp_enabled:
+                # Set enhanced MCP client reference
+                self.enhanced_mcp_client = self.mcp_client
                 logger.info("Enhanced MCP capabilities initialized successfully")
             else:
                 logger.warning("Enhanced MCP initialization failed, falling back to standard MCP")
@@ -392,9 +394,13 @@ TestEngineer Agent Commands:
         for i, cov in enumerate(self.coverage_history[-10:], 1):
             print(f"{i}. {cov}")
 
-    async def run_tests(self) -> Dict[str, Any]:
+    async def run_tests(self, test_config: Optional[Dict[str, Any]] = None) -> Dict[str, Any]:
         """Run comprehensive test suite met MCP enhancement."""
         logger.info("Running all tests...")
+        
+        # Use test_config if provided
+        if test_config:
+            logger.info(f"Using test configuration: {test_config}")
         
         # Try MCP-enhanced testing first
         if self.mcp_enabled and self.mcp_client:
@@ -402,7 +408,8 @@ TestEngineer Agent Commands:
                 mcp_result = await self.use_mcp_tool("run_test_suite", {
                     "test_type": "comprehensive",
                     "include_coverage": True,
-                    "parallel_execution": True
+                    "parallel_execution": True,
+                    "test_config": test_config or {}
                 })
                 
                 if mcp_result:

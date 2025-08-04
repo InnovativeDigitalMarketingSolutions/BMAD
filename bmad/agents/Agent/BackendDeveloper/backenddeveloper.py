@@ -123,6 +123,8 @@ class BackendDeveloperAgent:
         # Enhanced MCP Integration for Phase 2
         self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
         self.enhanced_mcp_enabled = False
+        self.enhanced_mcp_client = None
+        self.enhanced_mcp_client = None
         
         # Tracing Integration
         self.tracing_enabled = False
@@ -148,6 +150,8 @@ class BackendDeveloperAgent:
             self.enhanced_mcp_enabled = await self.enhanced_mcp.initialize_enhanced_mcp()
             
             if self.enhanced_mcp_enabled:
+                # Set enhanced MCP client reference
+                self.enhanced_mcp_client = self.mcp_client
                 logger.info("Enhanced MCP capabilities initialized successfully")
             else:
                 logger.warning("Enhanced MCP initialization failed, falling back to standard MCP")

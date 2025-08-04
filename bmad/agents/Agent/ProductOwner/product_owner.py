@@ -322,48 +322,78 @@ Voorbeelden:
   python -m bmad.agents.Agent.ProductOwner.product_owner create-story --input "Dashboard voor agent monitoring"
 """)
 
-    async def create_user_story(self, requirement):
-        """Create a user story based on the requirement met MCP enhancement."""
-        # Input validation
-        if not isinstance(requirement, str):
-            raise TypeError("Requirement must be a string")
-        
-        if not requirement or not requirement.strip():
-            raise ValueError("Requirement must be a non-empty string")
-        
-        # Use MCP tools for enhanced story creation
-        product_data = {
-            "requirement": requirement,
-            "user_type": "end_user",
-            "story_type": "feature",
-            "priority": "medium",
-            "acceptance_criteria": True,
-            "product_name": "BMAD",
-            "vision_type": "strategic",
-            "timeframe": "long_term",
-            "stakeholders": ["developers", "users", "stakeholders"],
-            "backlog_items": [],
-            "prioritization_method": "value_effort",
-            "sprint_planning": True,
-            "refinement": True,
-            "analysis_type": "comprehensive",
-            "engagement_strategy": True,
-            "communication_plan": True
-        }
-        
-        enhanced_data = await self.use_product_specific_mcp_tools(product_data)
-        
-        # Create base story (local fallback if MCP not available)
-        story = create_user_story(requirement)
-        
-        # Add MCP enhanced data if available
-        if enhanced_data:
-            story += "\n\n[MCP Enhanced] - User story enhanced with MCP tools"
-            story += "\n\n🔧 Product Enhancements:"
-            for key, value in enhanced_data.items():
-                story += f"\n- {key}: {value}"
-        
-        return story
+    async def create_user_story(self, story_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Create a user story based on story data with MCP enhancement."""
+        try:
+            # Initialize enhanced MCP if not already done
+            if not self.enhanced_mcp_enabled:
+                await self.initialize_enhanced_mcp()
+            
+            # Extract story data
+            title = story_data.get("title", "Untitled Story")
+            description = story_data.get("description", "")
+            priority = story_data.get("priority", "medium")
+            
+            # Use enhanced MCP tools if available
+            if self.enhanced_mcp_enabled and self.enhanced_mcp:
+                result = await self.use_enhanced_mcp_tools({
+                    "operation": "create_user_story",
+                    "title": title,
+                    "description": description,
+                    "priority": priority,
+                    "acceptance_criteria": True,
+                    "story_type": "feature",
+                    "capabilities": ["story_creation", "acceptance_criteria", "story_prioritization"]
+                })
+                if result:
+                    return result
+            
+            # Fallback to local implementation
+            return await asyncio.to_thread(self._create_user_story_sync, story_data)
+            
+        except Exception as e:
+            logging.error(f"Error in create_user_story: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "story": None
+            }
+
+    def _create_user_story_sync(self, story_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Synchronous fallback for create_user_story."""
+        try:
+            title = story_data.get("title", "Untitled Story")
+            description = story_data.get("description", "")
+            priority = story_data.get("priority", "medium")
+            
+            # Create user story using existing function
+            story_content = create_user_story(description)
+            
+            return {
+                "success": True,
+                "story": {
+                    "title": title,
+                    "description": description,
+                    "priority": priority,
+                    "content": story_content,
+                    "acceptance_criteria": [
+                        f"User can {description.lower()}",
+                        f"System responds appropriately",
+                        f"Error handling is in place"
+                    ],
+                    "story_points": 3,
+                    "timestamp": datetime.now().isoformat()
+                },
+                "status": "completed"
+            }
+            
+        except Exception as e:
+            logging.error(f"Error in _create_user_story_sync: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "story": None
+            }
 
     def show_vision(self):
         """Show the BMAD vision."""
