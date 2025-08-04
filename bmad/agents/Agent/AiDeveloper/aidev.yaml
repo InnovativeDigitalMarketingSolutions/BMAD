@@ -40,6 +40,30 @@ commands:
   - '*model-card' - Generate model card
   - '*prompt-eval' - Evaluate prompts in matrix form
   - '*retrain' - Trigger automatic retraining
+  - '*show-experiment-history' - Show experiment history
+  - '*show-model-history' - Show model history
+  - '*show-best-practices' - Show best practices
+  - '*show-changelog' - Show changelog
+  - '*export-report' - Export report
+  - '*test' - Test resource completeness
+  - '*collaborate' - Demonstrate collaboration
+  - '*run' - Run agent met MCP integration
+  - '*show-framework-overview' - Show framework overview
+  - '*show-framework-guidelines' - Show framework guidelines
+  - '*show-quality-gates' - Show quality gates
+  - '*show-pyramid-strategies' - Show pyramid strategies
+  - '*show-mocking-strategy' - Show mocking strategy
+  - '*show-workflow-commands' - Show workflow commands
+  - '*show-linting-config' - Show linting config
+  - '*show-framework-template' - Show framework template
+  # MCP Phase 2 Enhanced Commands
+  - '*enhanced-collaborate' - Enhanced inter-agent communicatie
+  - '*enhanced-security' - Enhanced security validatie
+  - '*enhanced-performance' - Enhanced performance optimalisatie
+  - '*trace-operation' - Trace AI operations
+  - '*trace-performance' - Get performance metrics
+  - '*trace-error' - Trace error scenarios
+  - '*tracing-summary' - Get tracing summary
 
 dependencies:
   templates:
