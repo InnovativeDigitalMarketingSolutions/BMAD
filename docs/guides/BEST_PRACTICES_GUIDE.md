@@ -1443,3 +1443,71 @@ async def trace_agent_operation(self, operation_data: Dict[str, Any]) -> Dict[st
 - **Collaboration**: Trace sharing tussen agents voor end-to-end debugging
 - **Analytics**: User behavior en interaction pattern analysis
 - **Error Tracking**: Comprehensive error event tracking en analysis 
+
+## 🔧 **Development Workflow & Agreements**
+
+### **1. Documentation Check & Update**
+**Agreement**: Elke keer voordat een bug wordt gefixt, eerst de guide en deploy files inzien
+**Files om in te zien**:
+- `docs/guides/LESSONS_LEARNED_GUIDE.md` (v2.4)
+- `docs/guides/BEST_PRACTICES_GUIDE.md` (v2.4)
+- `docs/guides/MCP_INTEGRATION_GUIDE.md`
+- `docs/guides/TEST_WORKFLOW_GUIDE.md`
+- `docs/deployment/KANBAN_BOARD.md`
+
+### **2. Root Cause Analysis**
+**Agreement**: Altijd eerst een root cause analysis doen voordat een bug fix wordt doorgevoerd
+**Proces**:
+1. Analyseer de error/bug
+2. Check guide en deployment files voor bestaande oplossingen
+3. Kijk of we deze issue al eerder tegengekomen zijn
+4. Pas dezelfde oplossingspatronen toe
+5. Update lessons learned en best practices
+
+### **3. Code Quality Principles**
+**Agreement**: We verwijderen geen code, we breiden uit, verbeteren of vervangen met nieuwe verbeterde versies
+**Motivatie**: Behoud van functionaliteit en kwaliteitsverbetering
+
+### **4. Systematic Fix Patterns**
+**Best Practice**: Gebruik gevestigde patterns voor syntax error fixes
+```python
+# ✅ Trailing Comma Fix Pattern
+with patch('module.function') as mock_func, \
+     patch('module.other_function') as mock_other:
+    # test code
+
+# ✅ Async/Await Fix Pattern
+@pytest.mark.asyncio
+async def test_async_method(self):
+    result = await self.agent.async_method()
+    assert result["status"] == "success"
+
+# ✅ Mock Data Fix Pattern
+read_data="# History\n\n- Item 1\n- Item 2"
+
+# ✅ CLI Test Fix Pattern
+@patch('asyncio.run')
+def test_cli_command(self, mock_asyncio_run):
+    mock_asyncio_run.return_value = {"status": "success"}
+    main()
+```
+
+### **5. Development Workflow**
+1. **Root Cause Analysis**: Altijd eerst analyseren voordat fixes
+2. **Documentation Check**: Check guides voor bestaande oplossingen
+3. **Systematic Approach**: Eén issue tegelijk oplossen
+4. **Quality Focus**: Kwaliteit boven snelheid
+5. **Documentation Update**: Lessons learned en best practices updaten
+
+### **6. Quality Assurance Principles**
+- **Code Quality**: Geen code verwijderen, alleen uitbreiden/verbeteren
+- **Test Coverage**: Behoud van test coverage en kwaliteit
+- **Documentation**: Continue documentatie updates
+- **Lessons Learned**: Robuuste lessons learned en best practices
+- **Systematic Approach**: Duidelijke workflow en afspraken
+
+---
+
+**Document**: `docs/guides/BEST_PRACTICES_GUIDE.md`  
+**Status**: ✅ **COMPLETE** - Enhanced MCP Phase 2 implementation successful  
+**Last Update**: 2025-01-27 
