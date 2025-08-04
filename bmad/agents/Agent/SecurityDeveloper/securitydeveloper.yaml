@@ -24,6 +24,29 @@ commands:
   - show-scan-history: Toon scan historie
   - changelog: Toon changelog van security-incidenten
   - test: Test resource completeness
+  - security-review: Security review van code
+  - summarize-incidents: Samenvatting van incidenten
+  - run-security-scan: Voer security scan uit
+  - vulnerability-assessment: Vulnerability assessment
+  - compliance-check: Compliance check
+  - threat-assessment: Threat assessment
+  - security-recommendations: Security aanbevelingen
+  - export-report: Export rapport
+  - collaborate: Demonstrate collaboration
+  - run: Run agent met MCP integration
+  - initialize-mcp: Initialize MCP client
+  - use-mcp-tool: Use MCP tool met parameters
+  - get-mcp-status: Get MCP integration status
+  - use-security-mcp-tools: Use security-specific MCP tools
+  - check-dependencies: Check agent dependencies
+  # MCP Phase 2 Enhanced Commands
+  - enhanced-collaborate: Enhanced inter-agent communicatie
+  - enhanced-security: Enhanced security validatie
+  - enhanced-performance: Enhanced performance optimalisatie
+  - trace-operation: Trace security operations
+  - trace-performance: Get performance metrics
+  - trace-error: Trace error scenarios
+  - tracing-summary: Get tracing summary
 
 dependencies:
   templates:
