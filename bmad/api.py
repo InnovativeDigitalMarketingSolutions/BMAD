@@ -16,6 +16,9 @@ from bmad.core.enterprise.billing import billing_manager, usage_tracker, subscri
 from bmad.core.enterprise.access_control import feature_flag_manager, access_control_manager
 from bmad.core.enterprise.security import enterprise_security_manager
 
+# JWT Security Integration
+from bmad.core.security.jwt_service import jwt_service
+
 app = Flask(__name__)
 
 orch = OrchestratorAgent()
@@ -53,16 +56,62 @@ def require_auth(f):
             })()
             return f(*args, **kwargs)
         
-        # Production authentication
+        # Production authentication with JWT validation
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
             return jsonify({"error": "Authentication required"}), 401
         
         token = auth_header.split(' ')[1]
-        # TODO: Implement JWT token validation
-        # For now, just check if token exists
         if not token:
             return jsonify({"error": "Invalid token"}), 401
+        
+        # JWT token validation
+        try:
+            payload = jwt_service.verify_access_token(token)
+            if not payload:
+                return jsonify({"error": "Invalid or expired token"}), 401
+            
+            # Extract user information from token
+            user_id = payload.get("sub")
+            email = payload.get("email")
+            tenant_id = payload.get("tenant_id")
+            roles = payload.get("roles", [])
+            permissions = payload.get("permissions", [])
+            
+            # Set user information on request object
+            request.user = type('User', (), {
+                'id': user_id,
+                'email': email,
+                'roles': roles,
+                'permissions': permissions
+            })()
+            request.tenant_id = tenant_id
+            
+            # Log successful authentication
+            enterprise_security_manager.log_audit_event(
+                user_id=user_id,
+                tenant_id=tenant_id,
+                event_type="authentication",
+                resource="api",
+                action="token_validation",
+                details={"endpoint": request.endpoint},
+                ip_address=request.remote_addr,
+                success=True
+            )
+            
+        except Exception as e:
+            # Log failed authentication
+            enterprise_security_manager.log_audit_event(
+                user_id="unknown",
+                tenant_id="unknown",
+                event_type="authentication",
+                resource="api",
+                action="token_validation",
+                details={"error": str(e), "endpoint": request.endpoint},
+                ip_address=request.remote_addr,
+                success=False
+            )
+            return jsonify({"error": "Authentication failed"}), 401
         
         return f(*args, **kwargs)
     decorated_function.__name__ = f.__name__
@@ -76,8 +125,56 @@ def require_permission(permission):
             if os.getenv("DEV_MODE") == "true":
                 return f(*args, **kwargs)
             
-            # TODO: Implement permission checking
-            # For now, just pass through
+            # Permission checking implementation
+            try:
+                # Get user from request (set by require_auth decorator)
+                if not hasattr(request, 'user'):
+                    return jsonify({"error": "Authentication required"}), 401
+                
+                user = request.user
+                user_permissions = getattr(user, 'permissions', [])
+                
+                # Check if user has required permission
+                if permission not in user_permissions and "*" not in user_permissions:
+                    # Log permission denied
+                    enterprise_security_manager.log_audit_event(
+                        user_id=user.id,
+                        tenant_id=getattr(request, 'tenant_id', None),
+                        event_type="authorization",
+                        resource="api",
+                        action="permission_check",
+                        details={"required_permission": permission, "user_permissions": user_permissions, "endpoint": request.endpoint},
+                        ip_address=request.remote_addr,
+                        success=False
+                    )
+                    return jsonify({"error": "Insufficient permissions"}), 403
+                
+                # Log successful permission check
+                enterprise_security_manager.log_audit_event(
+                    user_id=user.id,
+                    tenant_id=getattr(request, 'tenant_id', None),
+                    event_type="authorization",
+                    resource="api",
+                    action="permission_check",
+                    details={"required_permission": permission, "endpoint": request.endpoint},
+                    ip_address=request.remote_addr,
+                    success=True
+                )
+                
+            except Exception as e:
+                # Log permission check error
+                enterprise_security_manager.log_audit_event(
+                    user_id=getattr(request, 'user', type('User', (), {'id': 'unknown'})().id),
+                    tenant_id=getattr(request, 'tenant_id', None),
+                    event_type="authorization",
+                    resource="api",
+                    action="permission_check",
+                    details={"error": str(e), "endpoint": request.endpoint},
+                    ip_address=request.remote_addr,
+                    success=False
+                )
+                return jsonify({"error": "Permission check failed"}), 500
+            
             return f(*args, **kwargs)
         decorated_function.__name__ = f.__name__
         return decorated_function
@@ -273,14 +370,60 @@ def login():
         success=True
     )
     
-    # TODO: Generate JWT token
-    token = "dummy_token"  # Replace with actual JWT generation
+    # Generate JWT token pair
+    try:
+        # Get user roles and permissions
+        user_roles = role_manager.get_user_roles(user.id)
+        user_permissions = permission_manager.get_user_permissions(user.id)
+        
+        # Create token pair
+        token_data = jwt_service.create_token_pair(
+            user_id=user.id,
+            email=user.email,
+            tenant_id=user.tenant_id,
+            roles=[role.name for role in user_roles],
+            permissions=[perm.name for perm in user_permissions]
+        )
+        
+        return jsonify({
+            "user": user.to_dict(),
+            "access_token": token_data["access_token"],
+            "refresh_token": token_data["refresh_token"],
+            "token_type": token_data["token_type"],
+            "expires_in": token_data["expires_in"],
+            "refresh_expires_in": token_data["refresh_expires_in"],
+            "tenant": tenant_manager.get_tenant(user.tenant_id).to_dict() if user.tenant_id else None
+        })
+        
+    except Exception as e:
+        logger.error(f"JWT token generation failed: {e}")
+        return jsonify({"error": "Token generation failed"}), 500
+
+@app.route("/api/auth/refresh", methods=["POST"])
+def refresh_token():
+    """Refresh access token using refresh token."""
+    data = request.json or {}
+    refresh_token = data.get("refresh_token")
     
-    return jsonify({
-        "user": user.to_dict(),
-        "token": token,
-        "tenant": tenant_manager.get_tenant(user.tenant_id).to_dict() if user.tenant_id else None
-    })
+    if not refresh_token:
+        return jsonify({"error": "Refresh token required"}), 400
+    
+    try:
+        # Refresh access token
+        token_data = jwt_service.refresh_access_token(refresh_token)
+        
+        if not token_data:
+            return jsonify({"error": "Invalid or expired refresh token"}), 401
+        
+        return jsonify({
+            "access_token": token_data["access_token"],
+            "token_type": token_data["token_type"],
+            "expires_in": token_data["expires_in"]
+        })
+        
+    except Exception as e:
+        logger.error(f"Token refresh failed: {e}")
+        return jsonify({"error": "Token refresh failed"}), 500
 
 # Billing Routes
 @app.route("/api/billing/plans", methods=["GET"])
