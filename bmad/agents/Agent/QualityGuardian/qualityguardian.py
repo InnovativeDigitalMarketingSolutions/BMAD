@@ -1471,7 +1471,7 @@ Examples:
         """
         try:
             # Get template content
-            template_content = self.framework_manager.get_template(template_name)
+            template_content = self.framework_manager.get_framework_template(template_name)
             if not template_content:
                 return {
                     "success": False,

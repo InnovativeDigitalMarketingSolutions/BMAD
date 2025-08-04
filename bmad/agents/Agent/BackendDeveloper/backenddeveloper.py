@@ -56,7 +56,7 @@ class BackendValidationError(BackendError):
 class BackendDeveloperAgent:
     def __init__(self):
         self.framework_manager = get_framework_templates_manager()
-        self.backend_development_template = self.framework_manager.get_template('backend_development')
+        self.backend_development_template = self.framework_manager.get_framework_template('backend_development')
         self.lessons_learned = []
         
         # Set agent name

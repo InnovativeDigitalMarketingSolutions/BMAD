@@ -12,7 +12,7 @@ from typing import Dict, Any
 # Mock the framework templates manager before importing the agent
 with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_framework_templates_manager') as mock_manager:
     mock_manager.return_value = MagicMock()
-    mock_manager.return_value.get_template.return_value = MagicMock()
+    mock_manager.return_value.get_framework_template.return_value = MagicMock()
     
     from bmad.agents.Agent.BackendDeveloper.backenddeveloper import BackendDeveloperAgent
 
@@ -32,7 +32,7 @@ class TestBackendDeveloperEnhancedMCP:
             
             # Mock all dependencies
             mock_manager.return_value = MagicMock()
-            mock_manager.return_value.get_template.return_value = MagicMock()
+            mock_manager.return_value.get_framework_template.return_value = MagicMock()
             mock_monitor.return_value = MagicMock()
             mock_policy.return_value = MagicMock()
             mock_sprite.return_value = MagicMock()
