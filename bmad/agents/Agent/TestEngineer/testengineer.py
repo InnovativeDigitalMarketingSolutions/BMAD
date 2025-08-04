@@ -25,6 +25,15 @@ from bmad.core.mcp import (
     MCPClient, MCPContext, FrameworkMCPIntegration,
     get_mcp_client, get_framework_mcp_integration, initialize_framework_mcp_integration
 )
+
+# Enhanced MCP Integration for Phase 2
+from bmad.core.mcp.enhanced_mcp_integration import (
+    EnhancedMCPIntegration,
+    create_enhanced_mcp_integration
+)
+
+# Tracing Integration
+from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 from integrations.slack.slack_notify import send_slack_message
 from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
 
@@ -42,6 +51,14 @@ class TestEngineerAgent:
         self.mcp_client: Optional[MCPClient] = None
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
         self.mcp_enabled = False
+        
+        # Enhanced MCP Phase 2
+        self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_enabled = False
+        
+        # Tracing Integration
+        self.tracer: Optional[BMADTracer] = None
+        self.tracing_enabled = False
 
         self.agent_name = "TestEngineerAgent"
         self.monitor = get_performance_monitor()
@@ -79,7 +96,7 @@ class TestEngineerAgent:
     async def initialize_mcp(self):
         """Initialize MCP client and integration."""
         try:
-            self.mcp_client = await get_mcp_client()
+            self.mcp_client = get_mcp_client()  # Remove await - this is a sync function
             self.mcp_integration = get_framework_mcp_integration()
             await initialize_framework_mcp_integration()
             self.mcp_enabled = True
@@ -87,6 +104,42 @@ class TestEngineerAgent:
         except Exception as e:
             logger.warning(f"MCP initialization failed: {e}")
             self.mcp_enabled = False
+    
+    async def initialize_enhanced_mcp(self):
+        """Initialize enhanced MCP capabilities for Phase 2."""
+        try:
+            self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+            self.enhanced_mcp_enabled = await self.enhanced_mcp.initialize_enhanced_mcp()
+            
+            if self.enhanced_mcp_enabled:
+                logger.info("Enhanced MCP capabilities initialized successfully")
+            else:
+                logger.warning("Enhanced MCP initialization failed, falling back to standard MCP")
+        except Exception as e:
+            logger.warning(f"Enhanced MCP initialization failed: {e}")
+            self.enhanced_mcp_enabled = False
+    
+    async def initialize_tracing(self):
+        """Initialize tracing capabilities."""
+        try:
+            self.tracer = BMADTracer(config=type("Config", (), {
+                "service_name": f"{self.agent_name}",
+                "environment": "development",
+                "tracing_level": "detailed"
+            })())
+            self.tracing_enabled = await self.tracer.initialize()
+            
+            if self.tracing_enabled:
+                logger.info("Tracing capabilities initialized successfully")
+                await self.tracer.setup_agent_specific_tracing({
+                    "agent_name": self.agent_name,
+                    "tracing_level": "detailed",
+                    "performance_tracking": True,
+                    "error_tracking": True
+                })
+        except Exception as e:
+            logger.warning(f"Tracing initialization failed: {e}")
+            self.tracing_enabled = False
 
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -95,9 +148,16 @@ class TestEngineerAgent:
             return None
         
         try:
-            result = await self.mcp_client.execute_tool(tool_name, parameters)
-            logger.info(f"MCP tool {tool_name} executed successfully")
-            return result
+            # Create a context for the tool call
+            context = await self.mcp_client.create_context(agent_id=self.agent_name)
+            response = await self.mcp_client.call_tool(tool_name, parameters, context)
+            
+            if response.success:
+                logger.info(f"MCP tool {tool_name} executed successfully")
+                return response.data
+            else:
+                logger.error(f"MCP tool {tool_name} failed: {response.error}")
+                return None
         except Exception as e:
             logger.error(f"MCP tool {tool_name} execution failed: {e}")
             return None
@@ -147,6 +207,96 @@ class TestEngineerAgent:
             enhanced_data["test_reporting"] = report_result
         
         return enhanced_data
+    
+    async def use_enhanced_mcp_tools(self, test_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use enhanced MCP tools voor Phase 2 capabilities."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available, using standard MCP tools")
+            return await self.use_test_specific_mcp_tools(test_data)
+        
+        enhanced_data = {}
+        
+        try:
+            # Core enhancement tools
+            core_result = await self.enhanced_mcp.use_enhanced_mcp_tool("core_enhancement", {
+                "agent_type": self.agent_name,
+                "enhancement_level": "advanced",
+                "capabilities": test_data.get("capabilities", []),
+                "performance_metrics": test_data.get("performance_metrics", {})
+            })
+            if core_result:
+                enhanced_data["core_enhancement"] = core_result
+            
+            # Test-specific enhancement tools
+            specific_result = await self.use_test_specific_enhanced_tools(test_data)
+            if specific_result:
+                enhanced_data.update(specific_result)
+            
+        except Exception as e:
+            logger.error(f"Error in enhanced MCP tools: {e}")
+        
+        return enhanced_data
+    
+    async def use_test_specific_enhanced_tools(self, test_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use test-specific enhanced MCP tools."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {}
+        
+        enhanced_data = {}
+        
+        try:
+            # Enhanced test execution
+            enhanced_test_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_test_execution", {
+                "component_name": test_data.get("component_name", ""),
+                "test_type": test_data.get("test_type", "unit"),
+                "enhancement_level": "advanced",
+                "parallel_execution": test_data.get("parallel_execution", True),
+                "intelligent_retry": test_data.get("intelligent_retry", True)
+            })
+            if enhanced_test_result:
+                enhanced_data["enhanced_test_execution"] = enhanced_test_result
+            
+            # Enhanced coverage analysis
+            enhanced_coverage_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_coverage_analysis", {
+                "component_name": test_data.get("component_name", ""),
+                "coverage_type": test_data.get("coverage_type", "comprehensive"),
+                "enhancement_level": "advanced",
+                "predictive_analysis": test_data.get("predictive_analysis", True),
+                "trend_analysis": test_data.get("trend_analysis", True)
+            })
+            if enhanced_coverage_result:
+                enhanced_data["enhanced_coverage_analysis"] = enhanced_coverage_result
+            
+            # Enhanced performance optimization
+            enhanced_performance_result = await self.enhanced_mcp.enhanced_performance_optimization({
+                "agent_type": "test_engineer",
+                "test_data": test_data,
+                "optimization_targets": ["execution_time", "memory_usage", "coverage_accuracy"]
+            })
+            if enhanced_performance_result:
+                enhanced_data["enhanced_performance_optimization"] = enhanced_performance_result
+            
+        except Exception as e:
+            logger.error(f"Error in test-specific enhanced tools: {e}")
+        
+        return enhanced_data
+    
+    async def trace_test_operation(self, operation_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace test-specific operations."""
+        if not self.tracing_enabled or not self.tracer:
+            return {}
+        
+        try:
+            trace_result = await self.tracer.trace_agent_operation({
+                "operation_type": operation_data.get("type", "test_execution"),
+                "agent_name": self.agent_name,
+                "performance_metrics": operation_data.get("performance_metrics", {}),
+                "timestamp": datetime.now().isoformat()
+            })
+            return trace_result
+        except Exception as e:
+            logger.error(f"Test operation tracing failed: {e}")
+            return {}
 
     def _load_test_history(self):
         try:
@@ -555,9 +705,15 @@ def test_{component_name.lower()}_e2e():
             return error_result
 
     async def run(self):
-        """Main event loop for the agent met MCP integration."""
+        """Main event loop for the agent met complete integration."""
         # Initialize MCP integration
         await self.initialize_mcp()
+        
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing capabilities
+        await self.initialize_tracing()
         
         def sync_handler(event):
             asyncio.run(self.handle_test_generation_requested(event))
@@ -567,9 +723,11 @@ def test_{component_name.lower()}_e2e():
         
         subscribe("test_generation_requested", sync_handler)
         subscribe("tests_requested", lambda event: asyncio.run(async_handler(event)))
-        logger.info("TestEngineerAgent ready and listening for events...")
+        logger.info("TestEngineerAgent ready with enhanced MCP and tracing capabilities...")
         print("🎯 TestEngineer Agent is running...")
         print("Listening for events: test_generation_requested, tests_requested")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
         print("Press Ctrl+C to stop")
         
         try:
@@ -589,7 +747,9 @@ def main():
     parser.add_argument("command", nargs="?", default="help",
                        choices=["help", "run-tests", "show-coverage", "show-test-history",
                                "show-best-practices", "show-changelog", "export-report",
-                               "test", "collaborate", "run"])
+                               "test", "collaborate", "run",
+                               "enhanced-collaborate", "enhanced-security", "enhanced-performance",
+                               "trace-operation", "trace-performance", "trace-error", "tracing-summary"])
     parser.add_argument("--format", choices=["md", "json"], default="md", help="Export format")
     args = parser.parse_args()
     agent = TestEngineerAgent()
@@ -613,6 +773,49 @@ def main():
         agent.collaborate_example()
     elif args.command == "run":
         asyncio.run(agent.run())
+    # Enhanced MCP commands
+    elif args.command == "enhanced-collaborate":
+        result = asyncio.run(agent.enhanced_mcp.communicate_with_agents(
+            ["BackendDeveloper", "FrontendDeveloper"], 
+            {"type": "test_coordination", "content": {"test_phase": "integration"}}
+        ))
+        print(json.dumps(result, indent=2))
+    elif args.command == "enhanced-security":
+        result = asyncio.run(agent.enhanced_mcp.enhanced_security_validation({
+            "auth_method": "multi_factor",
+            "security_level": "enterprise",
+            "compliance": ["gdpr", "sox", "iso27001"]
+        }))
+        print(json.dumps(result, indent=2))
+    elif args.command == "enhanced-performance":
+        result = asyncio.run(agent.enhanced_mcp.enhanced_performance_optimization({
+            "target_latency": 50,
+            "optimization_strategy": "predictive_caching",
+            "load_balancing": True
+        }))
+        print(json.dumps(result, indent=2))
+    # Tracing commands
+    elif args.command == "trace-operation":
+        result = asyncio.run(agent.trace_test_operation({
+            "type": "test_execution",
+            "performance_metrics": {"execution_time": 2.5, "memory_usage": "150MB"}
+        }))
+        print(json.dumps(result, indent=2))
+    elif args.command == "trace-performance":
+        performance_summary = agent.enhanced_mcp.get_performance_summary()
+        print(json.dumps(performance_summary, indent=2))
+    elif args.command == "trace-error":
+        result = asyncio.run(agent.trace_test_operation({
+            "type": "test_error",
+            "performance_metrics": {"error_count": 1, "error_type": "assertion_failure"}
+        }))
+        print(json.dumps(result, indent=2))
+    elif args.command == "tracing-summary":
+        communication_summary = agent.enhanced_mcp.get_communication_summary()
+        print(json.dumps(communication_summary, indent=2))
+    else:
+        print("Unknown command. Use 'help' to see available commands.")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

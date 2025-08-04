@@ -45,75 +45,70 @@
 
 ## 🔄 **MCP Integration Status**
 
-### **✅ Completed (7/23)**
-- TestEngineer
-- FrontendDeveloper  
-- Architect
-- ProductOwner
-- Scrummaster
-- SecurityDeveloper
-- DevOpsInfra
+📋 **Voor gedetailleerde Enhanced MCP Integration status en planning, zie:**
+- `docs/deployment/KANBAN_BOARD.md` - MCP Phase 2: Agent Enhancement sectie
+- `docs/guides/MCP_PHASE2_WORKFLOW_GUIDE.md` - Enhanced MCP workflow guide
 
-### **❌ Pending (16/23)**
-- BackendDeveloper
-- FullstackDeveloper
-- MobileDeveloper
-- AiDeveloper
-- UXUIDesigner
-- AccessibilityAgent
-- QualityGuardian
-- ReleaseManager
-- DataEngineer
-- DocumentationAgent
-- FeedbackAgent
-- Orchestrator
-- WorkflowAutomator
-- StrategiePartner
-- Retrospective
-- RnD
+**Huidige Status**: 6/23 agents hebben Enhanced MCP + Tracing integration
 
-## 🎯 **Agent Responsibilities**
+## 🚀 **Quick Reference**
 
-### **Development Focus**
-- **FrontendDeveloper**: React/Next.js, Shadcn/ui, accessibility
-- **BackendDeveloper**: APIs, databases, server logic
-- **FullstackDeveloper**: End-to-end solutions
-- **MobileDeveloper**: Mobile apps, cross-platform
-- **AiDeveloper**: AI/ML, data science
+### **CLI Commands**
+```bash
+# Toon alle beschikbare agents
+python3 bmad.py help
 
-### **Design & Architecture**
-- **Architect**: System design, architecture patterns
-- **UXUIDesigner**: User experience, interface design
-- **AccessibilityAgent**: WCAG compliance, inclusive design
+# Agent-specifieke help
+python3 bmad.py <agent-name> help
 
-### **Quality & Testing**
-- **TestEngineer**: Test automation, QA strategies
-- **QualityGuardian**: Quality standards, best practices
+# Voorbeelden
+python3 bmad.py backend build-api
+python3 bmad.py frontend create-component
+python3 bmad.py test run-tests
+```
 
-### **Project Management**
-- **ProductOwner**: Product vision, user stories
-- **Scrummaster**: Agile management, team coordination
-- **ReleaseManager**: Release coordination, deployment
+### **Agent File Locations**
+- **Agent Files**: `bmad/agents/Agent/<AgentName>/`
+- **Test Files**: `tests/unit/agents/test_<agentname>.py`
+- **Templates**: `bmad/resources/templates/<agentname>/`
+- **Data**: `bmad/resources/data/<agentname>/`
 
-### **Infrastructure**
-- **DevOpsInfra**: CI/CD, infrastructure, deployment
-- **DataEngineer**: Data pipelines, ETL, data architecture
+## 🎯 **Agent Capabilities Overview**
 
-### **Security**
-- **SecurityDeveloper**: Security analysis, compliance
+### **Development & Architecture**
+- **FrontendDeveloper**: React/Next.js, Shadcn/ui, component development
+- **BackendDeveloper**: API development, database design, server-side logic
+- **FullstackDeveloper**: End-to-end solutions, full-stack development
+- **MobileDeveloper**: Mobile app development, cross-platform solutions
+- **Architect**: Software architecture, system design, API design
+- **UXUIDesigner**: User experience design, interface design, usability
+- **AccessibilityAgent**: WCAG compliance, inclusive design, accessibility testing
 
-### **Documentation**
-- **DocumentationAgent**: Technical docs, guides
-- **FeedbackAgent**: Feedback analysis, improvements
+### **Quality & Security**
+- **TestEngineer**: Test automation, quality assurance, testing strategies
+- **QualityGuardian**: Quality management, standards enforcement, best practices
+- **SecurityDeveloper**: Security analysis, vulnerability assessment, compliance
 
-### **Process Management**
-- **Orchestrator**: Workflow coordination
-- **WorkflowAutomator**: Process automation
-- **Retrospective**: Process improvement
+### **Project & Process Management**
+- **ProductOwner**: Product management, user stories, backlog management
+- **Scrummaster**: Agile project management, sprint planning, team coordination
+- **ReleaseManager**: Release management, deployment coordination, version control
+- **Orchestrator**: Workflow orchestration, process coordination, automation
+- **WorkflowAutomator**: Process automation, workflow optimization, efficiency
+- **Retrospective**: Process improvement, lessons learned, team retrospectives
 
-### **Strategy**
-- **StrategiePartner**: Strategic planning
-- **RnD**: Research, innovation
+### **Infrastructure & Data**
+- **DevOpsInfra**: Infrastructure management, CI/CD pipelines, deployment
+- **DataEngineer**: Data pipeline development, ETL processes, data architecture
+
+### **Documentation & Communication**
+- **DocumentationAgent**: Technical documentation, user guides, API docs
+- **FeedbackAgent**: Feedback collection, sentiment analysis, improvement tracking
+
+### **Strategy & Innovation**
+- **StrategiePartner**: Strategic planning, business alignment, innovation
+- **RnD**: Research and development, experimentation, innovation
+- **AiDeveloper**: AI/ML development, model integration, data science
 
 ## 🔗 **Inter-Agent Communication**
 
@@ -122,14 +117,28 @@ Alle agents communiceren via:
 - **Supabase Context**: Shared state management
 - **MCP Integration**: Enhanced tool sharing (in progress)
 
+## 📚 **Development Resources**
+
+### **Guides & Documentation**
+- **MCP Integration**: `docs/guides/MCP_INTEGRATION_GUIDE.md`
+- **Enhanced MCP Workflow**: `docs/guides/MCP_PHASE2_WORKFLOW_GUIDE.md`
+- **Best Practices**: `docs/guides/BEST_PRACTICES_GUIDE.md`
+- **Development Workflow**: `docs/guides/DEVELOPMENT_WORKFLOW_GUIDE.md`
+- **Agent Optimization**: `docs/guides/agent-optimization-guide.md`
+
+### **Project Management**
+- **Kanban Board**: `docs/deployment/KANBAN_BOARD.md`
+- **Master Planning**: `docs/deployment/BMAD_MASTER_PLANNING.md`
+- **Implementation Details**: `docs/deployment/IMPLEMENTATION_DETAILS.md`
+
 ## 📊 **Integration Progress**
 
-- **Total Agents**: 23
-- **MCP Integrated**: 7 (30.4%)
-- **Pending Integration**: 16 (69.6%)
-- **Target Completion**: 100% MCP integration
+📋 **Voor gedetailleerde Enhanced MCP Integration progress, zie:**
+- `docs/deployment/KANBAN_BOARD.md` - MCP Phase 2: Agent Enhancement sectie
+
+**Huidige Status**: 6/23 agents (26.1%) hebben Enhanced MCP + Tracing integration
 
 ---
 
-**Last Updated**: January 2025
-**Next Review**: After each agent MCP integration 
+**Last Updated**: August 2025
+**Next Review**: After each agent Enhanced MCP integration 

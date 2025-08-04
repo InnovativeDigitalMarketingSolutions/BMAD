@@ -25,6 +25,22 @@ commands:
   - show-quality-history: Toon data kwaliteit historie
   - changelog: Toon changelog van data pipelines
   - test: Test resource completeness
+  - data-quality-check: Check data quality
+  - explain-pipeline: Explain pipeline
+  - monitor-pipeline: Monitor pipeline
+  - show-best-practices: Show best practices
+  - show-changelog: Show changelog
+  - export-report: Export rapport
+  - collaborate: Demonstrate collaboration
+  - run: Run agent met MCP integration
+  # MCP Phase 2 Enhanced Commands
+  - enhanced-collaborate: Enhanced inter-agent communicatie
+  - enhanced-security: Enhanced security validatie
+  - enhanced-performance: Enhanced performance optimalisatie
+  - trace-operation: Trace data operations
+  - trace-performance: Get performance metrics
+  - trace-error: Trace error scenarios
+  - tracing-summary: Get tracing summary
 
 dependencies:
   templates:

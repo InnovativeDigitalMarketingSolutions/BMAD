@@ -22,6 +22,24 @@ commands:
   - show-retro-history: Toon retro historie
   - changelog: Toon changelog van retrospectives
   - test: Test resource completeness
+  - conduct-retrospective: Conduct retrospective
+  - analyze-feedback: Analyze feedback
+  - create-action-plan: Create action plan
+  - track-improvements: Track improvements
+  - show-action-history: Show action history
+  - show-best-practices: Show best practices
+  - show-changelog: Show changelog
+  - export-report: Export rapport
+  - collaborate: Demonstrate collaboration
+  - run: Run agent met MCP integration
+  # MCP Phase 2 Enhanced Commands
+  - enhanced-collaborate: Enhanced inter-agent communicatie
+  - enhanced-security: Enhanced security validatie
+  - enhanced-performance: Enhanced performance optimalisatie
+  - trace-operation: Trace retrospective operations
+  - trace-performance: Get performance metrics
+  - trace-error: Trace error scenarios
+  - tracing-summary: Get tracing summary
 
 dependencies:
   templates:

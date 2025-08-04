@@ -33,6 +33,13 @@ from bmad.core.mcp import (
     initialize_framework_mcp_integration
 )
 
+# Enhanced MCP Phase 2 imports
+from bmad.core.mcp.enhanced_mcp_integration import (
+    EnhancedMCPIntegration,
+    create_enhanced_mcp_integration
+)
+from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
@@ -80,12 +87,29 @@ class RnDAgent:
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
         self.mcp_enabled = False
         
+        # Enhanced MCP Phase 2 attributes
+        self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_enabled = False
+        
+        # Tracing Integration
+        self.tracer: Optional[BMADTracer] = None
+        self.tracing_enabled = False
+        
+        # Initialize tracer
+        self.tracer = BMADTracer(config=type("Config", (), {
+            "service_name": "RnD",
+            "service_version": "1.0.0",
+            "environment": "development",
+            "sample_rate": 1.0,
+            "exporters": []
+        })())
+        
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
 
     async def initialize_mcp(self):
         """Initialize MCP client voor enhanced research and development capabilities."""
         try:
-            self.mcp_client = await get_mcp_client()
+            self.mcp_client = get_mcp_client()  # Remove await - this is a sync function
             self.mcp_integration = get_framework_mcp_integration()
             await initialize_framework_mcp_integration()
             self.mcp_enabled = True
@@ -93,17 +117,51 @@ class RnDAgent:
         except Exception as e:
             logger.warning(f"MCP initialization failed for RnD: {e}")
             self.mcp_enabled = False
+
+    async def initialize_enhanced_mcp(self):
+        """Initialize enhanced MCP capabilities for Phase 2."""
+        try:
+            self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+            # Check if initialize method exists before calling it
+            if hasattr(self.enhanced_mcp, 'initialize'):
+                await self.enhanced_mcp.initialize()
+            self.enhanced_mcp_enabled = True
+            logger.info("Enhanced MCP initialized successfully")
+        except Exception as e:
+            logger.warning(f"Enhanced MCP initialization failed: {e}")
+            self.enhanced_mcp_enabled = False
+    
+    async def initialize_tracing(self):
+        """Initialize tracing capabilities."""
+        try:
+            if self.tracer and hasattr(self.tracer, 'initialize'):
+                await self.tracer.initialize()
+                self.tracing_enabled = True
+                logger.info("Tracing initialized successfully")
+            else:
+                logger.warning("Tracer not available or missing initialize method")
+                self.tracing_enabled = False
+        except Exception as e:
+            logger.warning(f"Tracing initialization failed: {e}")
+            self.tracing_enabled = False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """Use MCP tool voor enhanced research and development functionality."""
+        """Use MCP tool voor enhanced functionality."""
         if not self.mcp_enabled or not self.mcp_client:
-            logger.warning("MCP not available, using local research and development tools")
+            logger.warning("MCP not available, using local tools")
             return None
         
         try:
-            result = await self.mcp_client.execute_tool(tool_name, parameters)
-            logger.info(f"MCP tool {tool_name} executed successfully")
-            return result
+            # Create a context for the tool call
+            context = await self.mcp_client.create_context(agent_id=self.agent_name)
+            response = await self.mcp_client.call_tool(tool_name, parameters, context)
+            
+            if response.success:
+                logger.info(f"MCP tool {tool_name} executed successfully")
+                return response.data
+            else:
+                logger.error(f"MCP tool {tool_name} failed: {response.error}")
+                return None
         except Exception as e:
             logger.error(f"MCP tool {tool_name} execution failed: {e}")
             return None
@@ -171,6 +229,120 @@ class RnDAgent:
             logger.error(f"Error in R&D-specific MCP tools: {e}")
         
         return enhanced_data
+
+    async def use_enhanced_mcp_tools(self, rnd_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use enhanced MCP tools voor Phase 2 capabilities."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available, using standard MCP tools")
+            return await self.use_rnd_specific_mcp_tools(rnd_data)
+        
+        enhanced_data = {}
+        
+        try:
+            # Core enhancement tools
+            core_result = await self.enhanced_mcp.use_enhanced_mcp_tool("core_enhancement", {
+                "agent_type": self.agent_name,
+                "enhancement_level": "advanced",
+                "capabilities": rnd_data.get("capabilities", []),
+                "performance_metrics": rnd_data.get("performance_metrics", {})
+            })
+            enhanced_data["core_enhancement"] = core_result
+            
+            # R&D-specific enhanced tools
+            rnd_enhanced_result = await self.use_rnd_specific_enhanced_tools(rnd_data)
+            enhanced_data.update(rnd_enhanced_result)
+            
+            # Tracing integration
+            if self.tracing_enabled:
+                trace_result = await self.trace_rnd_operation(rnd_data)
+                enhanced_data["tracing"] = trace_result
+            
+            logger.info(f"Enhanced MCP tools used successfully: {len(enhanced_data)} tools")
+            
+        except Exception as e:
+            logger.error(f"Enhanced MCP tools failed: {e}")
+            enhanced_data["error"] = str(e)
+        
+        return enhanced_data
+    
+    async def use_rnd_specific_enhanced_tools(self, rnd_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use R&D-specific enhanced MCP tools."""
+        enhanced_tools = {}
+        
+        try:
+            # Enhanced research analysis
+            if "research_analysis" in rnd_data:
+                research_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_research_analysis", {
+                    "research_data": rnd_data["research_analysis"],
+                    "analysis_depth": rnd_data.get("analysis_depth", "comprehensive"),
+                    "include_insights": rnd_data.get("include_insights", True)
+                })
+                enhanced_tools["enhanced_research_analysis"] = research_result
+            
+            # Enhanced experiment design
+            if "experiment_design" in rnd_data:
+                experiment_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_experiment_design", {
+                    "experiment_data": rnd_data["experiment_design"],
+                    "design_comprehensive": rnd_data.get("design_comprehensive", "advanced"),
+                    "include_validation": rnd_data.get("include_validation", True)
+                })
+                enhanced_tools["enhanced_experiment_design"] = experiment_result
+            
+            # Enhanced team collaboration
+            if "team_collaboration" in rnd_data:
+                collaboration_result = await self.enhanced_mcp.communicate_with_agents(
+                    ["AiDeveloper", "Architect", "DataEngineer", "QualityGuardian"],
+                    {
+                        "type": "rnd_review",
+                        "content": rnd_data["team_collaboration"]
+                    }
+                )
+                enhanced_tools["enhanced_team_collaboration"] = collaboration_result
+            
+            # Enhanced innovation generation
+            if "innovation_generation" in rnd_data:
+                innovation_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_innovation_generation", {
+                    "innovation_data": rnd_data["innovation_generation"],
+                    "generation_comprehensive": rnd_data.get("generation_comprehensive", "advanced"),
+                    "include_evaluation": rnd_data.get("include_evaluation", True)
+                })
+                enhanced_tools["enhanced_innovation_generation"] = innovation_result
+            
+            logger.info(f"R&D-specific enhanced tools executed: {list(enhanced_tools.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Error in R&D-specific enhanced tools: {e}")
+        
+        return enhanced_tools
+    
+    async def trace_rnd_operation(self, operation_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace R&D operations."""
+        if not self.tracing_enabled or not self.tracer:
+            return {"tracing": "disabled"}
+        
+        try:
+            trace_data = {
+                "operation_type": "rnd_operation",
+                "agent": self.agent_name,
+                "timestamp": datetime.now().isoformat(),
+                "operation_data": operation_data,
+                "performance_metrics": {
+                    "experiment_count": len(operation_data.get("experiments", [])),
+                    "research_count": len(operation_data.get("research", [])),
+                    "innovation_score": operation_data.get("innovation_score", 0.0)
+                }
+            }
+            
+            # Add trace to tracer
+            if hasattr(self.tracer, 'add_trace'):
+                await self.tracer.add_trace("rnd_operation", trace_data)
+            
+            logger.info(f"R&D operation traced: {trace_data['operation_type']}")
+            return trace_data
+            
+        except Exception as e:
+            logger.error(f"Tracing failed: {e}")
+            return {"tracing": "error", "error": str(e)}
 
     def _load_experiment_history(self):
         """Load experiment history from data file"""
@@ -392,7 +564,7 @@ RnD Agent Commands:
             "analysis_type": "rnd"
         }
         
-        mcp_enhanced_data = await self.use_rnd_specific_mcp_tools(rnd_data)
+        mcp_enhanced_data = await self.use_enhanced_mcp_tools(rnd_data)
         
         # Integrate MCP enhanced data
         if mcp_enhanced_data:
@@ -1059,10 +1231,50 @@ RnD Agent Commands:
         # Initialize MCP integration
         await self.initialize_mcp()
         
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing capabilities
+        await self.initialize_tracing()
+        
+        print("🔬 RnD is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        
         subscribe("experiment_completed", self.handle_experiment_completed)
         logger.info("RnDAgent ready and listening for events...")
         print("[RnDAgent] Ready and listening for events...")
         await self.collaborate_example()
+    
+    async def run_async(self):
+        """Run the agent with enhanced MCP and tracing initialization."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing capabilities
+        await self.initialize_tracing()
+        
+        print("🔬 RnD is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        
+        logger.info("RnDAgent ready and listening for events...")
+        await self.collaborate_example()
+    
+    @classmethod
+    async def run_agent(cls):
+        """Class method to run the RnD agent met MCP integration."""
+        agent = cls()
+        await agent.run_async()
+    
+    @classmethod
+    async def run_agent_async(cls):
+        """Class method to run the RnD agent with enhanced MCP."""
+        agent = cls()
+        await agent.run_async()
 
 def main():
     import asyncio
@@ -1072,7 +1284,9 @@ def main():
                        choices=["help", "conduct-research", "design-experiment", "run-experiment",
                                "evaluate-results", "generate-innovation", "prototype-solution",
                                "show-experiment-history", "show-research-history", "show-best-practices",
-                               "show-changelog", "export-report", "test", "collaborate", "run"])
+                               "show-changelog", "export-report", "test", "collaborate", "run", 
+                               "enhanced-collaborate", "enhanced-security", "enhanced-performance", 
+                               "trace-operation", "trace-performance", "trace-error", "tracing-summary"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--research-topic", default="AI-powered automation", help="Research topic")
     parser.add_argument("--research-type", default="Technology Research", help="Research type")
@@ -1124,10 +1338,55 @@ def main():
         asyncio.run(agent.collaborate_example())
     elif args.command == "run":
         asyncio.run(agent.run())
+    # Enhanced MCP Phase 2 Commands
+    elif args.command in ["enhanced-collaborate", "enhanced-security", "enhanced-performance", 
+                         "trace-operation", "trace-performance", "trace-error", "tracing-summary"]:
+        # Enhanced MCP commands
+        if args.command == "enhanced-collaborate":
+            result = asyncio.run(agent.enhanced_mcp.communicate_with_agents(
+                ["AiDeveloper", "Architect", "DataEngineer", "QualityGuardian"], 
+                {"type": "rnd_review", "content": {"review_type": "research_analysis"}}
+            ))
+            print(json.dumps(result, indent=2))
+        elif args.command == "enhanced-security":
+            result = asyncio.run(agent.enhanced_mcp.enhanced_security_validation({
+                "rnd_data": {"experiments": [], "research": [], "innovations": []},
+                "security_requirements": ["experiment_validation", "research_safety", "innovation_security"]
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "enhanced-performance":
+            result = asyncio.run(agent.enhanced_mcp.enhanced_performance_optimization({
+                "rnd_data": {"experiments": [], "research": [], "innovations": []},
+                "performance_metrics": {"research_speed": 85.5, "experiment_accuracy": 92.3}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-operation":
+            result = asyncio.run(agent.trace_rnd_operation({
+                "operation_type": "research_analysis",
+                "experiment_name": args.experiment_name,
+                "experiments": list(agent.experiment_history)
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-performance":
+            result = asyncio.run(agent.trace_rnd_operation({
+                "operation_type": "performance_analysis",
+                "performance_metrics": {"research_speed": 85.5, "experiment_accuracy": 92.3}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-error":
+            result = asyncio.run(agent.trace_rnd_operation({
+                "operation_type": "error_analysis",
+                "error_data": {"error_type": "experiment_failure", "error_message": "Experiment failed"}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "tracing-summary":
+            print("Tracing Summary for RnD:")
+            print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+            print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+            print(f"Agent: {agent.agent_name}")
     else:
         print("Unknown command. Use 'help' to see available commands.")
         sys.exit(1)
-        return
 
 if __name__ == "__main__":
     main()

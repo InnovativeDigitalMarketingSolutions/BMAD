@@ -122,12 +122,20 @@ class QualityGuardianAgent:
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
         self.mcp_enabled = False
         
+        # Enhanced MCP Integration
+        self.enhanced_mcp = None
+        self.enhanced_mcp_enabled = False
+        
+        # Tracing Integration
+        self.tracer = None
+        self.tracing_enabled = False
+        
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
     
     async def initialize_mcp(self):
         """Initialize MCP client voor enhanced quality assurance capabilities."""
         try:
-            self.mcp_client = await get_mcp_client()
+            self.mcp_client = get_mcp_client()  # Remove await - this is a sync function
             self.mcp_integration = get_framework_mcp_integration()
             await initialize_framework_mcp_integration()
             self.mcp_enabled = True
@@ -135,6 +143,28 @@ class QualityGuardianAgent:
         except Exception as e:
             logger.warning(f"MCP initialization failed for QualityGuardian: {e}")
             self.mcp_enabled = False
+
+    async def initialize_enhanced_mcp(self):
+        """Initialize enhanced MCP voor Phase 2 capabilities."""
+        try:
+            from bmad.core.mcp import get_enhanced_mcp_client
+            self.enhanced_mcp = await get_enhanced_mcp_client()
+            self.enhanced_mcp_enabled = True
+            logger.info("Enhanced MCP Integration initialized for QualityGuardian")
+        except Exception as e:
+            logger.warning(f"Enhanced MCP initialization failed for QualityGuardian: {e}")
+            self.enhanced_mcp_enabled = False
+
+    async def initialize_tracing(self):
+        """Initialize tracing voor quality assurance monitoring."""
+        try:
+            from bmad.core.tracing import get_tracer
+            self.tracer = await get_tracer()
+            self.tracing_enabled = True
+            logger.info("Tracing initialized for QualityGuardian")
+        except Exception as e:
+            logger.warning(f"Tracing initialization failed for QualityGuardian: {e}")
+            self.tracing_enabled = False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced quality assurance functionality."""
@@ -143,9 +173,16 @@ class QualityGuardianAgent:
             return None
         
         try:
-            result = await self.mcp_client.execute_tool(tool_name, parameters)
-            logger.info(f"MCP tool {tool_name} executed successfully")
-            return result
+            # Create a context for the tool call
+            context = await self.mcp_client.create_context(agent_id=self.agent_name)
+            response = await self.mcp_client.call_tool(tool_name, parameters, context)
+            
+            if response.success:
+                logger.info(f"MCP tool {tool_name} executed successfully")
+                return response.data
+            else:
+                logger.error(f"MCP tool {tool_name} failed: {response.error}")
+                return None
         except Exception as e:
             logger.error(f"MCP tool {tool_name} execution failed: {e}")
             return None
@@ -200,6 +237,147 @@ class QualityGuardianAgent:
             logger.error(f"Error in quality-specific MCP tools: {e}")
         
         return enhanced_data
+
+    async def use_enhanced_mcp_tools(self, agent_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use enhanced MCP tools voor Phase 2 capabilities."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available, using standard MCP tools")
+            return await self.use_quality_specific_mcp_tools(agent_data)
+        
+        enhanced_data = {}
+        
+        # Core enhancement tools
+        core_result = await self.enhanced_mcp.use_enhanced_mcp_tool("core_enhancement", {
+            "agent_type": self.agent_name,
+            "enhancement_level": "advanced",
+            "capabilities": agent_data.get("capabilities", []),
+            "performance_metrics": agent_data.get("performance_metrics", {})
+        })
+        if core_result:
+            enhanced_data["core_enhancement"] = core_result
+        
+        # Quality-specific enhancement tools
+        specific_result = await self.use_quality_specific_enhanced_tools(agent_data)
+        if specific_result:
+            enhanced_data.update(specific_result)
+        
+        return enhanced_data
+
+    async def use_quality_specific_enhanced_tools(self, quality_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use quality-specific enhanced MCP tools."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {}
+        
+        enhanced_data = {}
+        
+        # Quality gate enhancement
+        gate_result = await self.enhanced_mcp.use_enhanced_mcp_tool("quality_gate_enhancement", {
+            "quality_metrics": quality_data.get("quality_metrics", {}),
+            "thresholds": quality_data.get("thresholds", {}),
+            "deployment_check": quality_data.get("deployment_check", False),
+            "analysis_type": "comprehensive"
+        })
+        if gate_result:
+            enhanced_data["quality_gate_enhancement"] = gate_result
+        
+        # Code quality enhancement
+        code_result = await self.enhanced_mcp.use_enhanced_mcp_tool("code_quality_enhancement", {
+            "code_path": quality_data.get("code_path", ""),
+            "quality_metrics": quality_data.get("quality_metrics", {}),
+            "analysis_type": "comprehensive",
+            "optimization_target": "quality"
+        })
+        if code_result:
+            enhanced_data["code_quality_enhancement"] = code_result
+        
+        # Security enhancement
+        security_result = await self.enhanced_mcp.use_enhanced_mcp_tool("security_enhancement", {
+            "files": quality_data.get("files", ""),
+            "security_scan_type": quality_data.get("security_scan_type", "comprehensive"),
+            "vulnerability_check": True,
+            "compliance_check": True
+        })
+        if security_result:
+            enhanced_data["security_enhancement"] = security_result
+        
+        return enhanced_data
+
+    async def trace_quality_gate_check(self, gate_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace quality gate check process."""
+        if not self.tracing_enabled or not self.tracer:
+            logger.warning("Tracing not available for quality gate check")
+            return {}
+        
+        try:
+            trace_result = await self.tracer.trace_quality_gate_check({
+                "deployment_check": gate_data.get("deployment_check", False),
+                "quality_metrics": gate_data.get("quality_metrics", {}),
+                "thresholds": gate_data.get("thresholds", {}),
+                "gate_results": gate_data.get("gate_results", {}),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info(f"Quality gate check traced: {gate_data.get('deployment_check', False)}")
+            return trace_result
+            
+        except Exception as e:
+            logger.error(f"Quality gate check tracing failed: {e}")
+            return {}
+
+    async def trace_code_quality_analysis(self, analysis_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace code quality analysis process."""
+        if not self.tracing_enabled or not self.tracer:
+            logger.warning("Tracing not available for code quality analysis")
+            return {}
+        
+        try:
+            trace_result = await self.tracer.trace_code_quality_analysis({
+                "code_path": analysis_data.get("code_path", ""),
+                "quality_metrics": analysis_data.get("quality_metrics", {}),
+                "analysis_type": analysis_data.get("analysis_type", "comprehensive"),
+                "findings": analysis_data.get("findings", {}),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info(f"Code quality analysis traced: {analysis_data.get('code_path', 'unknown')}")
+            return trace_result
+            
+        except Exception as e:
+            logger.error(f"Code quality analysis tracing failed: {e}")
+            return {}
+
+    async def trace_security_scan(self, scan_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace security scan process."""
+        if not self.tracing_enabled or not self.tracer:
+            logger.warning("Tracing not available for security scan")
+            return {}
+        
+        try:
+            trace_result = await self.tracer.trace_security_scan({
+                "files": scan_data.get("files", ""),
+                "scan_type": scan_data.get("scan_type", "comprehensive"),
+                "vulnerabilities": scan_data.get("vulnerabilities", []),
+                "security_score": scan_data.get("security_score", 0),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info(f"Security scan traced: {scan_data.get('files', 'unknown')}")
+            return trace_result
+            
+        except Exception as e:
+            logger.error(f"Security scan tracing failed: {e}")
+            return {}
+
+    def get_tracing_summary(self) -> Dict[str, Any]:
+        """Get tracing summary for the agent."""
+        if not self.tracing_enabled or not self.tracer:
+            return {}
+        
+        try:
+            return self.tracer.get_tracing_summary()
+        except Exception as e:
+            logger.error(f"Failed to get tracing summary: {e}")
+            return {}
 
     def _validate_input(self, value: Any, expected_type: type, param_name: str) -> None:
         """Validate input parameters with type checking."""
@@ -585,81 +763,139 @@ Examples:
             raise QualityError(f"Failed to analyze performance: {e}")
 
     async def quality_gate_check(self, deployment: bool = False) -> Dict[str, Any]:
-        """Check quality gates with comprehensive validation and error handling."""
+        """Check quality gates with enhanced MCP and tracing capabilities."""
+        
+        # Initialize enhanced MCP and tracing if not already done
+        if not self.enhanced_mcp_enabled:
+            await self.initialize_enhanced_mcp()
+        if not self.tracing_enabled:
+            await self.initialize_tracing()
+        
         try:
             self._validate_input(deployment, bool, "deployment")
             
-            logger.info(f"Checking quality gates (deployment: {deployment})")
+            logger.info(f"Checking quality gates with enhanced MCP and tracing (deployment: {deployment})")
 
-            # Simulate quality gate check process
-            time.sleep(1)
-            
-            # Simulate quality metrics
-            code_quality_score = 85
-            test_coverage = 82.5
-            security_score = 92
-            performance_score = 87
-            
-            # Check against thresholds
-            quality_gates = {
-                "code_quality": code_quality_score >= self.quality_thresholds["code_coverage"],
-                "test_coverage": test_coverage >= self.quality_thresholds["code_coverage"],
-                "security": security_score >= self.quality_thresholds["security_score"],
-                "performance": performance_score >= self.quality_thresholds["performance_score"]
+            # Enhanced quality gate configuration
+            quality_config = {
+                "deployment_check": deployment,
+                "analysis_type": "comprehensive",
+                "quality_thresholds": self.quality_thresholds,
+                "monitoring_config": {
+                    "real_time_monitoring": True,
+                    "alerting": True,
+                    "metrics_collection": True,
+                    "performance_tracking": True
+                },
+                "security_config": {
+                    "vulnerability_scanning": True,
+                    "compliance_checking": True,
+                    "security_policy_enforcement": True
+                },
+                "performance_config": {
+                    "response_time_tracking": True,
+                    "memory_usage_monitoring": True,
+                    "resource_optimization": True
+                }
             }
-            
-            all_gates_passed = all(quality_gates.values())
-            
-            # Try MCP-enhanced quality gate check first
-            if self.mcp_enabled and self.mcp_client:
+
+            # Simulate quality gate check process with enhanced steps
+            quality_steps = [
+                "Initializing quality gate check",
+                "Running code quality analysis",
+                "Checking test coverage",
+                "Performing security scan",
+                "Analyzing performance metrics",
+                "Validating against thresholds",
+                "Generating quality report",
+                "Finalizing quality assessment"
+            ]
+
+            # Enhanced MCP quality gate check with tracing
+            result = None
+            trace_data = {}
+
+            # Try enhanced MCP quality gate check first
+            if self.enhanced_mcp_enabled and self.enhanced_mcp:
                 try:
+                    print("  🔧 Using enhanced MCP for quality gate check...")
+                    
+                    # Use enhanced MCP tools for comprehensive quality gate check
+                    enhanced_result = await self.use_enhanced_mcp_tools({
+                        "deployment_check": deployment,
+                        "quality_config": quality_config,
+                        "quality_steps": quality_steps,
+                        "capabilities": ["quality_gate_enhancement", "code_quality_enhancement", "security_enhancement"],
+                        "performance_metrics": {"target_check_time": "3s", "target_accuracy": "99%"}
+                    })
+                    
+                    if enhanced_result:
+                        logger.info("Enhanced MCP quality gate check completed")
+                        result = enhanced_result.get("quality_gate_enhancement", {})
+                        result["enhanced_mcp_used"] = True
+                        result["enhancements"] = enhanced_result
+                    else:
+                        logger.warning("Enhanced MCP quality gate check failed, falling back to standard MCP")
+                        result = None
+                        
+                except Exception as e:
+                    logger.warning(f"Enhanced MCP quality gate check failed: {e}, falling back to standard MCP")
+                    result = None
+
+            # Fallback to standard MCP if enhanced MCP failed
+            if not result and self.mcp_enabled and self.mcp_client:
+                try:
+                    print("  🔧 Using standard MCP for quality gate check...")
+                    
                     mcp_result = await self.use_mcp_tool("quality_gate_check", {
                         "deployment": deployment,
                         "quality_metrics": {
-                            "code_quality_score": code_quality_score,
-                            "test_coverage": test_coverage,
-                            "security_score": security_score,
-                            "performance_score": performance_score
+                            "code_quality_score": 85,
+                            "test_coverage": 82.5,
+                            "security_score": 92,
+                            "performance_score": 87
                         },
                         "thresholds": self.quality_thresholds,
-                        "include_analysis": True
+                        "include_analysis": True,
+                        "quality_config": quality_config
                     })
                     
                     if mcp_result:
-                        logger.info("MCP-enhanced quality gate check completed")
+                        logger.info("Standard MCP-enhanced quality gate check completed")
                         result = mcp_result.get("quality_gate_result", {})
                         result["mcp_enhanced"] = True
                     else:
-                        logger.warning("MCP quality gate check failed, using local quality gate check")
-                        result = {
-                            "deployment": deployment,
-                            "all_gates_passed": all_gates_passed,
-                            "quality_gates": quality_gates,
-                            "metrics": {
-                                "code_quality_score": code_quality_score,
-                                "test_coverage": test_coverage,
-                                "security_score": security_score,
-                                "performance_score": performance_score
-                            },
-                            "timestamp": datetime.now().isoformat(),
-                            "agent": "QualityGuardianAgent"
-                        }
+                        logger.warning("Standard MCP quality gate check failed, using local quality gate check")
+                        result = None
+                        
                 except Exception as e:
-                    logger.warning(f"MCP quality gate check failed: {e}, using local quality gate check")
-                    result = {
-                        "deployment": deployment,
-                        "all_gates_passed": all_gates_passed,
-                        "quality_gates": quality_gates,
-                        "metrics": {
-                            "code_quality_score": code_quality_score,
-                            "test_coverage": test_coverage,
-                            "security_score": security_score,
-                            "performance_score": performance_score
-                        },
-                        "timestamp": datetime.now().isoformat(),
-                        "agent": "QualityGuardianAgent"
-                    }
-            else:
+                    logger.warning(f"Standard MCP quality gate check failed: {e}, using local quality gate check")
+                    result = None
+
+            # Local quality gate check as final fallback
+            if not result:
+                print("  🔧 Using local quality gate check process...")
+                
+                for step in quality_steps:
+                    print(f"    📋 {step}")
+                    time.sleep(0.3)  # Simulate processing time
+                
+                # Simulate quality metrics
+                code_quality_score = 85
+                test_coverage = 82.5
+                security_score = 92
+                performance_score = 87
+                
+                # Check against thresholds
+                quality_gates = {
+                    "code_quality": code_quality_score >= self.quality_thresholds["code_coverage"],
+                    "test_coverage": test_coverage >= self.quality_thresholds["code_coverage"],
+                    "security": security_score >= self.quality_thresholds["security_score"],
+                    "performance": performance_score >= self.quality_thresholds["performance_score"]
+                }
+                
+                all_gates_passed = all(quality_gates.values())
+                
                 result = {
                     "deployment": deployment,
                     "all_gates_passed": all_gates_passed,
@@ -670,10 +906,32 @@ Examples:
                         "security_score": security_score,
                         "performance_score": performance_score
                     },
+                    "quality_config": quality_config,
                     "timestamp": datetime.now().isoformat(),
-                    "agent": "QualityGuardianAgent"
+                    "agent": "QualityGuardianAgent",
+                    "quality_check_method": "local"
                 }
-            
+
+            # Enhanced tracing for quality gate check process
+            if self.tracing_enabled:
+                try:
+                    print("  📊 Tracing quality gate check process...")
+                    trace_data = await self.trace_quality_gate_check({
+                        "deployment_check": deployment,
+                        "quality_metrics": result.get("metrics", {}),
+                        "thresholds": self.quality_thresholds,
+                        "gate_results": result.get("quality_gates", {}),
+                        "quality_config": quality_config,
+                        "quality_result": result
+                    })
+                    
+                    if trace_data:
+                        result["tracing_data"] = trace_data
+                        logger.info("Quality gate check tracing completed")
+                        
+                except Exception as e:
+                    logger.warning(f"Quality gate check tracing failed: {e}")
+
             # Use quality-specific MCP tools for additional enhancement
             if self.mcp_enabled:
                 try:
@@ -681,11 +939,12 @@ Examples:
                         "code_path": "./",
                         "files": "*.py",
                         "component": "main",
-                        "quality_metrics": result["metrics"],
+                        "quality_metrics": result.get("metrics", {}),
                         "thresholds": self.quality_thresholds,
                         "deployment_check": deployment,
                         "security_scan_type": "comprehensive",
-                        "performance_metrics": {"response_time": 245, "memory_usage": 45.2}
+                        "performance_metrics": {"response_time": 245, "memory_usage": 45.2},
+                        "quality_config": quality_config
                     }
                     quality_enhanced = await self.use_quality_specific_mcp_tools(quality_data)
                     if quality_enhanced:
@@ -693,27 +952,58 @@ Examples:
                 except Exception as e:
                     logger.warning(f"Quality-specific MCP tools failed: {e}")
 
-            # Update metrics
-            if all_gates_passed:
-                self.performance_metrics["quality_gates_passed"] += 1
-            else:
-                self.performance_metrics["quality_gates_failed"] += 1
+            # Record in history with enhanced information
+            quality_record = f"Quality gate check completed at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} with enhanced MCP and tracing"
+            self.quality_history.append(quality_record)
+            self._save_quality_history()
 
-            self._record_quality_metric("quality_gate_check_success", 95, "%")
+            # Log performance metrics
+            try:
+                self.monitor._record_metric("QualityGuardian", MetricType.SUCCESS_RATE, 95, "%")
+                self.monitor._record_metric("QualityGuardian", MetricType.QUALITY_SCORE, result.get("metrics", {}).get("code_quality_score", 85), "%")
+            except AttributeError:
+                logger.info("Performance metrics recording not available")
 
-            logger.info(f"Quality gate check result: {result}")
-            return result
+            print(f"✅ Quality gate check completed successfully with enhanced capabilities!")
 
-            # Update metrics
-            if all_gates_passed:
-                self.performance_metrics["quality_gates_passed"] += 1
-            else:
-                self.performance_metrics["quality_gates_failed"] += 1
+            # Determine quality check method used
+            quality_check_method = "local"
+            if result.get("enhanced_mcp_used"):
+                quality_check_method = "enhanced_mcp"
+            elif result.get("mcp_enhanced"):
+                quality_check_method = "standard_mcp"
 
-            self._record_quality_metric("quality_gate_check_success", 95, "%")
+            # Prepare final result with all enhancements
+            final_result = {
+                "deployment": deployment,
+                "all_gates_passed": result.get("all_gates_passed", True),
+                "quality_gates": result.get("quality_gates", {}),
+                "metrics": result.get("metrics", {}),
+                "quality_config": quality_config,
+                "timestamp": datetime.now().isoformat(),
+                "agent": "QualityGuardianAgent",
+                "quality_check_method": quality_check_method,
+                "enhanced_capabilities": {
+                    "enhanced_mcp_used": self.enhanced_mcp_enabled,
+                    "tracing_enabled": self.tracing_enabled,
+                    "quality_enhancements": "quality_enhancements" in result,
+                    "tracing_data": "tracing_data" in result
+                }
+            }
 
-            logger.info(f"Quality gate check result: {result}")
-            return result
+            # Add tracing data if available
+            if "tracing_data" in result:
+                final_result["tracing_data"] = result["tracing_data"]
+
+            # Add quality enhancements if available
+            if "quality_enhancements" in result:
+                final_result["quality_enhancements"] = result["quality_enhancements"]
+
+            # Add enhancements if available
+            if "enhancements" in result:
+                final_result["enhancements"] = result["enhancements"]
+
+            return final_result
             
         except QualityValidationError as e:
             logger.error(f"Validation error checking quality gates: {e}")

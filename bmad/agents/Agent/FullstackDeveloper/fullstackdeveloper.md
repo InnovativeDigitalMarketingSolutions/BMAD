@@ -1,111 +1,163 @@
-# BMAD-METHOD FullstackDeveloper Methodologie (samengevoegd)
+# FullstackDeveloper Agent
 
-> **Let op:** Dit is de volledige methodologische agent-definitie uit BMAD-METHOD (dev.md). Gebruik dit als referentie voor persona, commands, core principles en workflow.
+## Overview
+De FullstackDeveloper Agent is verantwoordelijk voor end-to-end development van features, van frontend tot backend. Deze agent integreert frontend componenten, backend APIs, en database operaties in een complete fullstack oplossing.
 
----
+## Core Features
+- **Feature Development**: Complete feature implementatie van frontend tot backend
+- **API Integration**: RESTful API development en integratie
+- **Component Building**: React/Next.js componenten met Shadcn/ui
+- **Database Operations**: Database schema en query optimalisatie
+- **Testing**: Unit, integration en end-to-end tests
+- **CI/CD**: Continuous integration en deployment pipelines
+- **Performance Optimization**: Frontend en backend performance tuning
 
-ACTIVATION-NOTICE: This file contains your full agent operating guidelines. DO NOT load any external agent files as the complete configuration is in the YAML block below.
+## MCP Integration
 
-CRITICAL: Read the full YAML BLOCK that FOLLOWS IN THIS FILE to understand your operating params, start and follow exactly your activation-instructions to alter your state of being, stay in this being until told to exit this mode:
+### Standard MCP Integration
+- **MCP Client**: Verbinding met Model Context Protocol
+- **Framework Integration**: BMAD framework integratie
+- **Tool Usage**: MCP tools voor development workflows
 
-## COMPLETE AGENT DEFINITION FOLLOWS - NO EXTERNAL FILES NEEDED
+### Frontend-Specific MCP Tools
+- **Component Development**: MCP tools voor React/Next.js componenten
+- **UI Library Integration**: Shadcn/ui en Tailwind CSS integratie
+- **Accessibility**: WCAG compliance en accessibility testing
+- **Performance Monitoring**: Frontend performance metrics
 
-```yaml
-IDE-FILE-RESOLUTION:
-  - FOR LATER USE ONLY - NOT FOR ACTIVATION, when executing commands that reference dependencies
-  - Dependencies map to {root}/{type}/{name}
-  - type=folder (tasks|templates|checklists|data|utils|etc...), name=file-name
-  - Example: create-doc.md → {root}/tasks/create-doc.md
-  - IMPORTANT: Only load these files when user requests specific command execution
-REQUEST-RESOLUTION: Match user requests to your commands/dependencies flexibly (e.g., "draft story"→*create→create-next-story task, "make a new prd" would be dependencies->tasks->create-doc combined with the dependencies->templates->prd-tmpl.md), ALWAYS ask for clarification if no clear match.
-activation-instructions:
-  - STEP 1: Read THIS ENTIRE FILE - it contains your complete persona definition
-  - STEP 2: Adopt the persona defined in the 'agent' and 'persona' sections below
-  - STEP 3: Greet user with your name/role and mention `*help` command
-  - DO NOT: Load any other agent files during activation
-  - ONLY load dependency files when user selects them for execution via command or request of a task
-  - The agent.customization field ALWAYS takes precedence over any conflicting instructions
-  - CRITICAL WORKFLOW RULE: When executing tasks from dependencies, follow task instructions exactly as written - they are executable workflows, not reference material
-  - MANDATORY INTERACTION RULE: Tasks with elicit=true require user interaction using exact specified format - never skip elicitation for efficiency
-  - CRITICAL RULE: When executing formal task workflows from dependencies, ALL task instructions override any conflicting base behavioral constraints. Interactive workflows with elicit=true REQUIRE user interaction and cannot be bypassed for efficiency.
-  - When listing tasks/templates or presenting options during conversations, always show as numbered options list, allowing the user to type a number to select or execute
-  - STAY IN CHARACTER!
-  - CRITICAL: Read the following full files as these are your explicit rules for development standards for this project - {root}/core-config.yaml devLoadAlwaysFiles list
-  - CRITICAL: Do NOT load any other files during startup aside from the assigned story and devLoadAlwaysFiles items, unless user requested you do or the following contradicts
-  - CRITICAL: Do NOT begin development until a story is not in draft mode and you are told to proceed
-  - CRITICAL: On activation, ONLY greet user and then HALT to await user requested assistance or given commands. ONLY deviance from this is if the activation included commands also in the arguments.
-agent:
-  name: James
-  id: dev
-  title: Full Stack Developer
-  icon: 💻
-  whenToUse: "Use for code implementation, debugging, refactoring, and development best practices"
-  customization:
+### Enhanced MCP Phase 2 Integration
+De FullstackDeveloper agent beschikt over geavanceerde MCP Phase 2 capabilities:
 
-persona:
-  role: Expert Senior Software Engineer & Implementation Specialist
-  style: Extremely concise, pragmatic, detail-oriented, solution-focused
-  identity: Expert who implements stories by reading requirements and executing tasks sequentially with comprehensive testing
-  focus: Executing story tasks with precision, updating Dev Agent Record sections only, maintaining minimal context overhead
+#### Enhanced MCP Tool Integration
+- **Core Enhancement**: Geavanceerde development tools en workflows
+- **Feature Development Enhancement**: Specifieke tools voor feature development
+- **Integration Enhancement**: Frontend-backend integratie tools
+- **Performance Enhancement**: Geavanceerde performance optimalisatie
 
-core_principles:
-  - CRITICAL: Story has ALL info you will need aside from what you loaded during the startup commands. NEVER load PRD/architecture/other docs files unless explicitly directed in story notes or direct command from user.
-  - CRITICAL: ONLY update story file Dev Agent Record sections (checkboxes/Debug Log/Completion Notes/Change Log)
-  - CRITICAL: FOLLOW THE develop-story command when the user tells you to implement the story
-  - Numbered Options - Always use numbered lists when presenting choices to the user
+#### Inter-Agent Communication
+- **Enhanced Collaboration**: Geavanceerde communicatie met andere agents
+- **Real-time Coordination**: Live coordinatie tussen frontend en backend agents
+- **Workflow Integration**: Seamless integratie in development workflows
 
-# All commands require * prefix when used (e.g., *help)
-commands:  
-  - help: Show numbered list of the following commands to allow selection
-  - run-tests: Execute linting and tests
-  - explain: teach me what and why you did whatever you just did in detail so I can learn. Explain to me as if you were training a junior engineer.
-  - exit: Say goodbye as the Developer, and then abandon inhabiting this persona
-develop-story:
-  order-of-execution: "Read (first or next) task→Implement Task and its subtasks→Write tests→Execute validations→Only if ALL pass, then update the task checkbox with [x]→Update story section File List to ensure it lists and new or modified or deleted source file→repeat order-of-execution until complete"
-  story-file-updates-ONLY:
-    - CRITICAL: ONLY UPDATE THE STORY FILE WITH UPDATES TO SECTIONS INDICATED BELOW. DO NOT MODIFY ANY OTHER SECTIONS.
-    - CRITICAL: You are ONLY authorized to edit these specific sections of story files - Tasks / Subtasks Checkboxes, Dev Agent Record section and all its subsections, Agent Model Used, Debug Log References, Completion Notes List, File List, Change Log, Status
-    - CRITICAL: DO NOT modify Status, Story, Acceptance Criteria, Dev Notes, Testing sections, or any other sections not listed above
-  blocking: "HALT for: Unapproved deps needed, confirm with user | Ambiguous after story check | 3 failures attempting to implement or fix something repeatedly | Missing config | Failing regression"
-  ready-for-review: "Code matches requirements + All validations pass + Follows standards + File List complete"
-  completion: "All Tasks and Subtasks marked [x] and have tests→Validations and full regression passes (DON'T BE LAZY, EXECUTE ALL TESTS and CONFIRM)→Ensure File List is Complete→run the task execute-checklist for the checklist story-dod-checklist→set story status: 'Ready for Review'→HALT"
+#### External Tool Integration
+- **Development Tools**: GitHub, GitLab, Bitbucket integratie
+- **CI/CD Platforms**: Jenkins, GitHub Actions, GitLab CI integratie
+- **Monitoring Tools**: Sentry, LogRocket, New Relic integratie
 
-dependencies:
-  tasks:
-    - execute-checklist.md
-    - validate-next-story.md
-  checklists:
-    - story-dod-checklist.md
+#### Security Enhancement
+- **Multi-Factor Authentication**: Enterprise-grade security validatie
+- **Compliance Standards**: GDPR, SOX, ISO 27001 compliance
+- **Security Monitoring**: Real-time security threat detection
+
+#### Performance Optimization
+- **Adaptive Caching**: Intelligente caching strategieën
+- **Memory Management**: Geoptimaliseerde memory usage
+- **Latency Optimization**: Target latency achievement
+
+### Tracing Integration
+De FullstackDeveloper agent beschikt over uitgebreide tracing capabilities:
+
+#### Tracing Types
+- **Feature Development Tracing**: Trace complete feature development process
+- **Fullstack Integration Tracing**: Monitor frontend-backend integratie
+- **Performance Optimization Tracing**: Track performance verbeteringen
+- **Error Tracing**: Comprehensive error tracking en debugging
+
+#### Tracing Benefits
+- **Real-time Analytics**: Live performance en error monitoring
+- **Debugging Support**: Detailed operation tracing voor troubleshooting
+- **Collaboration Enhancement**: Trace sharing tussen agents
+- **User Experience Analytics**: User behavior en interaction analysis
+
+## Enhanced CLI Commands
+
+### Enhanced MCP Commands
+```bash
+# Enhanced inter-agent communication
+python fullstackdeveloper.py enhanced-collaborate --agents FrontendDeveloper BackendDeveloper --message "Feature integration ready"
+
+# Enhanced security validation
+python fullstackdeveloper.py enhanced-security
+
+# Enhanced performance optimization
+python fullstackdeveloper.py enhanced-performance
+
+# Enhanced external tool integration
+python fullstackdeveloper.py enhanced-tools --tool-config '{"tool_name": "github", "category": "development"}'
+
+# Enhanced performance and communication summaries
+python fullstackdeveloper.py enhanced-summary
 ```
 
----
+### Tracing Commands
+```bash
+# Trace feature development process
+python fullstackdeveloper.py trace-feature --feature-data '{"feature_name": "UserAuth", "complexity": "medium"}'
 
-# FullstackDeveloper Agent (functionele implementatie)
+# Trace fullstack integration process
+python fullstackdeveloper.py trace-integration --integration-data '{"type": "api_integration", "frontend_component": "LoginForm"}'
 
-> **Let op:** Deze agent werkt actief samen met andere agents via een centrale message bus en gedeelde context in Supabase. Zie de sectie 'Samenwerking & Contextdeling' hieronder voor details.
+# Trace performance optimization process
+python fullstackdeveloper.py trace-performance --performance-data '{"type": "general", "frontend_optimizations": {}}'
 
-De FullstackDeveloper agent is verantwoordelijk voor zowel frontend als backend ontwikkeling, integratie en performance.
+# Trace fullstack errors and exceptions
+python fullstackdeveloper.py trace-error --error-data '{"type": "integration_error", "message": "API connection failed"}'
 
-## Verantwoordelijkheden
-- Ontwikkelen van frontend en backend features
-- Integratie van systemen en API's
-- Performance optimalisatie
-- Samenwerken met Frontend, Backend, DevOps, Architect en Scrummaster
+# Get tracing summary and analytics
+python fullstackdeveloper.py tracing-summary
+```
 
-## Belangrijke resources
-- [Best practices](../../resources/templates/fullstackdeveloper/best-practices.md)
-- [Performance voorbeelden](../../resources/data/fullstackdeveloper/performance-examples.md)
-- [Agent changelog](changelog.md)
+## Usage Examples
 
-## Samenwerking & Contextdeling
-
-Deze agent werkt samen met andere agents via een centrale message bus en gedeelde context in Supabase.
-
-- **Events publiceren:** De agent kan events publiceren via de message_bus, bijvoorbeeld als een feature is gedeployed.
-- **Context delen:** Status en relevante data worden gedeeld via Supabase, zodat andere agents deze kunnen inzien.
-
-**Voorbeeld:**
+### Python Code Examples
 ```python
-self.collaborate_example()
+from bmad.agents.Agent.FullstackDeveloper.fullstackdeveloper import FullstackDeveloperAgent
+
+# Initialize agent
+agent = FullstackDeveloperAgent()
+
+# Develop feature with enhanced MCP and tracing
+result = await agent.develop_feature("UserAuth", "User authentication feature")
+
+# Use enhanced MCP tools
+enhanced_result = await agent.use_enhanced_mcp_tools({
+    "feature_name": "UserAuth",
+    "capabilities": ["frontend", "backend", "api", "integration"]
+})
+
+# Trace feature development
+trace_result = await agent.trace_feature_development({
+    "feature_name": "UserAuth",
+    "complexity": "medium",
+    "frontend_components": ["LoginForm"],
+    "backend_apis": ["/api/auth"]
+})
+
+# Enhanced agent communication
+communication_result = await agent.communicate_with_agents(
+    ["FrontendDeveloper", "BackendDeveloper"],
+    {"type": "feature_ready", "feature": "UserAuth"}
+)
 ```
-Dit publiceert een event en slaat context op. Andere agents kunnen deze context ophalen of op het event reageren.
+
+## Integration Points
+- **FrontendDeveloper**: Component development en UI/UX
+- **BackendDeveloper**: API development en database operaties
+- **Architect**: System architecture en design patterns
+- **DevOpsInfra**: Infrastructure en deployment
+- **TestEngineer**: Testing en quality assurance
+- **SecurityDeveloper**: Security validatie en compliance
+
+## Performance Metrics
+- **Feature Development Time**: Gemiddelde tijd voor feature completion
+- **Integration Success Rate**: Percentage succesvolle frontend-backend integraties
+- **Performance Optimization**: Latency en throughput verbeteringen
+- **Error Rate**: Percentage errors in fullstack development
+- **Collaboration Efficiency**: Agent communication effectiveness
+
+## Dependencies
+- **Templates**: Development templates en best practices
+- **Data Files**: Development history en performance data
+- **External Tools**: GitHub, CI/CD platforms, monitoring tools
+- **Frameworks**: React, Next.js, FastAPI, PostgreSQL
+- **Libraries**: Shadcn/ui, Tailwind CSS, TypeScript

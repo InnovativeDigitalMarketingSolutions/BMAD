@@ -26,7 +26,20 @@ commands:
   - rollback-release: Voer rollback uit indien nodig
   - show-release-history: Toon release historie
   - show-rollback-history: Toon rollback historie
+  - show-best-practices: Show best practices
+  - show-changelog: Show changelog
+  - export-report: Export rapport
   - test: Test resource completeness
+  - collaborate: Demonstrate collaboration
+  - run: Run agent met MCP integration
+  # MCP Phase 2 Enhanced Commands
+  - enhanced-collaborate: Enhanced inter-agent communicatie
+  - enhanced-security: Enhanced security validatie
+  - enhanced-performance: Enhanced performance optimalisatie
+  - trace-operation: Trace release operations
+  - trace-performance: Get performance metrics
+  - trace-error: Trace error scenarios
+  - tracing-summary: Get tracing summary
 
 dependencies:
   templates:

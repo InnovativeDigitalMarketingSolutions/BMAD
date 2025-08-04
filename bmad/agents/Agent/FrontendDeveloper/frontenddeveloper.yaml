@@ -19,10 +19,33 @@ persona:
 commands:
   - help: Toon beschikbare Frontend Developer commando's
   - build-component: Bouw of update component
+  - build-shadcn-component: Bouw Shadcn/ui component
   - run-accessibility-check: Voer accessibility check uit
   - show-component-history: Toon component historie
-  - changelog: Toon changelog van componenten
+  - show-performance: Toon performance metrics
+  - show-best-practices: Toon best practices
+  - show-changelog: Toon changelog van componenten
+  - export-component: Export component (md, json)
   - test: Test resource completeness
+  - collaborate: Demonstrate collaboration met andere agents
+  - run: Run agent met MCP integration
+  - initialize-mcp: Initialize MCP client
+  - use-mcp-tool: Use MCP tool met parameters
+  - get-mcp-status: Get MCP integration status
+  - use-frontend-mcp-tools: Use frontend-specific MCP tools
+  - check-dependencies: Check agent dependencies
+  # MCP Phase 2 Enhanced Commands
+  - enhanced-collaborate: Enhanced inter-agent communicatie
+  - enhanced-security: Enhanced security validatie
+  - enhanced-performance: Enhanced performance optimalisatie
+  - enhanced-tools: Enhanced externe tool integratie
+  - enhanced-summary: Overzicht enhanced prestaties & communicatie
+  # Tracing Commands
+  - trace-component: Trace component development process
+  - trace-interaction: Trace user interactions en behavior
+  - trace-performance: Trace frontend performance metrics
+  - trace-error: Trace frontend errors en exceptions
+  - tracing-summary: Get tracing summary en analytics
 
 dependencies:
   templates:
@@ -37,3 +60,39 @@ dependencies:
     - resources/data/frontenddeveloper/component-changelog.md
     - resources/data/frontenddeveloper/component-history.md
     - resources/data/frontenddeveloper/performance-history.md
+
+capabilities:
+  - component_development
+  - accessibility_testing
+  - performance_optimization
+  - design_system_integration
+  - figma_integration
+  - mcp_integration
+  - enhanced_mcp_capabilities
+  - inter_agent_communication
+  - external_tool_integration
+  - security_validation
+
+frameworks:
+  - React
+  - Next.js
+  - Shadcn/ui
+  - Tailwind CSS
+  - TypeScript
+
+integrations:
+  - BackendDeveloper
+  - UXUIDesigner
+  - AccessibilityAgent
+  - QualityGuardian
+  - Figma
+  - Jest
+  - Cypress
+
+enhanced_features:
+  - enhanced_mcp_tool_integration
+  - frontend_specific_enhanced_tools
+  - inter_agent_communication
+  - external_tool_adapters
+  - enhanced_security_validation
+  - enhanced_performance_optimization

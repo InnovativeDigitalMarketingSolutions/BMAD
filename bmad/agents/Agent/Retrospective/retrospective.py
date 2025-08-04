@@ -33,6 +33,13 @@ from bmad.core.mcp import (
     initialize_framework_mcp_integration
 )
 
+# Enhanced MCP Phase 2 imports
+from bmad.core.mcp.enhanced_mcp_integration import (
+    EnhancedMCPIntegration,
+    create_enhanced_mcp_integration
+)
+from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -71,13 +78,30 @@ class RetrospectiveAgent:
         self.mcp_client: Optional[MCPClient] = None
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
         self.mcp_enabled = False
-
+        
+        # Enhanced MCP Phase 2 attributes
+        self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_enabled = False
+        
+        # Tracing Integration
+        self.tracer: Optional[BMADTracer] = None
+        self.tracing_enabled = False
+        
+        # Initialize tracer
+        self.tracer = BMADTracer(config=type("Config", (), {
+            "service_name": "Retrospective",
+            "service_version": "1.0.0",
+            "environment": "development",
+            "sample_rate": 1.0,
+            "exporters": []
+        })())
+        
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
 
     async def initialize_mcp(self):
         """Initialize MCP client and integration."""
         try:
-            self.mcp_client = await get_mcp_client()
+            self.mcp_client = get_mcp_client()  # Remove await - this is a sync function
             self.mcp_integration = get_framework_mcp_integration()
             await initialize_framework_mcp_integration()
             self.mcp_enabled = True
@@ -86,6 +110,33 @@ class RetrospectiveAgent:
             logger.warning(f"MCP initialization failed: {e}")
             self.mcp_enabled = False
 
+    async def initialize_enhanced_mcp(self):
+        """Initialize enhanced MCP capabilities for Phase 2."""
+        try:
+            self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+            # Check if initialize method exists before calling it
+            if hasattr(self.enhanced_mcp, 'initialize'):
+                await self.enhanced_mcp.initialize()
+            self.enhanced_mcp_enabled = True
+            logger.info("Enhanced MCP initialized successfully")
+        except Exception as e:
+            logger.warning(f"Enhanced MCP initialization failed: {e}")
+            self.enhanced_mcp_enabled = False
+    
+    async def initialize_tracing(self):
+        """Initialize tracing capabilities."""
+        try:
+            if self.tracer and hasattr(self.tracer, 'initialize'):
+                await self.tracer.initialize()
+                self.tracing_enabled = True
+                logger.info("Tracing initialized successfully")
+            else:
+                logger.warning("Tracer not available or missing initialize method")
+                self.tracing_enabled = False
+        except Exception as e:
+            logger.warning(f"Tracing initialization failed: {e}")
+            self.tracing_enabled = False
+
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
         if not self.mcp_enabled or not self.mcp_client:
@@ -93,9 +144,16 @@ class RetrospectiveAgent:
             return None
         
         try:
-            result = await self.mcp_client.execute_tool(tool_name, parameters)
-            logger.info(f"MCP tool {tool_name} executed successfully")
-            return result
+            # Create a context for the tool call
+            context = await self.mcp_client.create_context(agent_id=self.agent_name)
+            response = await self.mcp_client.call_tool(tool_name, parameters, context)
+            
+            if response.success:
+                logger.info(f"MCP tool {tool_name} executed successfully")
+                return response.data
+            else:
+                logger.error(f"MCP tool {tool_name} failed: {response.error}")
+                return None
         except Exception as e:
             logger.error(f"MCP tool {tool_name} execution failed: {e}")
             return None
@@ -145,6 +203,120 @@ class RetrospectiveAgent:
             enhanced_data["feedback_analysis"] = feedback_result
         
         return enhanced_data
+
+    async def use_enhanced_mcp_tools(self, retro_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use enhanced MCP tools voor Phase 2 capabilities."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available, using standard MCP tools")
+            return await self.use_retrospective_specific_mcp_tools(retro_data)
+        
+        enhanced_data = {}
+        
+        try:
+            # Core enhancement tools
+            core_result = await self.enhanced_mcp.use_enhanced_mcp_tool("core_enhancement", {
+                "agent_type": self.agent_name,
+                "enhancement_level": "advanced",
+                "capabilities": retro_data.get("capabilities", []),
+                "performance_metrics": retro_data.get("performance_metrics", {})
+            })
+            enhanced_data["core_enhancement"] = core_result
+            
+            # Retrospective-specific enhanced tools
+            retro_enhanced_result = await self.use_retrospective_specific_enhanced_tools(retro_data)
+            enhanced_data.update(retro_enhanced_result)
+            
+            # Tracing integration
+            if self.tracing_enabled:
+                trace_result = await self.trace_retrospective_operation(retro_data)
+                enhanced_data["tracing"] = trace_result
+            
+            logger.info(f"Enhanced MCP tools used successfully: {len(enhanced_data)} tools")
+            
+        except Exception as e:
+            logger.error(f"Enhanced MCP tools failed: {e}")
+            enhanced_data["error"] = str(e)
+        
+        return enhanced_data
+    
+    async def use_retrospective_specific_enhanced_tools(self, retro_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use retrospective-specific enhanced MCP tools."""
+        enhanced_tools = {}
+        
+        try:
+            # Enhanced retrospective analysis
+            if "retrospective_analysis" in retro_data:
+                analysis_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_retrospective_analysis", {
+                    "analysis_data": retro_data["retrospective_analysis"],
+                    "analysis_depth": retro_data.get("analysis_depth", "comprehensive"),
+                    "include_sentiment": retro_data.get("include_sentiment", True)
+                })
+                enhanced_tools["enhanced_retrospective_analysis"] = analysis_result
+            
+            # Enhanced action plan generation
+            if "action_plan_generation" in retro_data:
+                action_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_action_plan_generation", {
+                    "action_data": retro_data["action_plan_generation"],
+                    "planning_comprehensive": retro_data.get("planning_comprehensive", "advanced"),
+                    "include_tracking": retro_data.get("include_tracking", True)
+                })
+                enhanced_tools["enhanced_action_plan_generation"] = action_result
+            
+            # Enhanced team collaboration
+            if "team_collaboration" in retro_data:
+                collaboration_result = await self.enhanced_mcp.communicate_with_agents(
+                    ["Scrummaster", "ProductOwner", "QualityGuardian", "FeedbackAgent"],
+                    {
+                        "type": "retrospective_review",
+                        "content": retro_data["team_collaboration"]
+                    }
+                )
+                enhanced_tools["enhanced_team_collaboration"] = collaboration_result
+            
+            # Enhanced feedback analysis
+            if "feedback_analysis" in retro_data:
+                feedback_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_feedback_analysis", {
+                    "feedback_data": retro_data["feedback_analysis"],
+                    "analysis_comprehensive": retro_data.get("analysis_comprehensive", "advanced"),
+                    "include_insights": retro_data.get("include_insights", True)
+                })
+                enhanced_tools["enhanced_feedback_analysis"] = feedback_result
+            
+            logger.info(f"Retrospective-specific enhanced tools executed: {list(enhanced_tools.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Error in retrospective-specific enhanced tools: {e}")
+        
+        return enhanced_tools
+    
+    async def trace_retrospective_operation(self, operation_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace retrospective operations."""
+        if not self.tracing_enabled or not self.tracer:
+            return {"tracing": "disabled"}
+        
+        try:
+            trace_data = {
+                "operation_type": "retrospective_operation",
+                "agent": self.agent_name,
+                "timestamp": datetime.now().isoformat(),
+                "operation_data": operation_data,
+                "performance_metrics": {
+                    "retrospective_count": len(operation_data.get("retrospectives", [])),
+                    "action_count": len(operation_data.get("actions", [])),
+                    "feedback_score": operation_data.get("feedback_score", 0.0)
+                }
+            }
+            
+            # Add trace to tracer
+            if hasattr(self.tracer, 'add_trace'):
+                await self.tracer.add_trace("retrospective_operation", trace_data)
+            
+            logger.info(f"Retrospective operation traced: {trace_data['operation_type']}")
+            return trace_data
+            
+        except Exception as e:
+            logger.error(f"Tracing failed: {e}")
+            return {"tracing": "error", "error": str(e)}
 
     def _load_retro_history(self):
         """Load retrospective history from data file"""
@@ -327,7 +499,7 @@ Retrospective Agent Commands:
             "historical_data": {"previous_retros": len(self.retro_history)}
         }
         
-        enhanced_data = await self.use_retrospective_specific_mcp_tools(retro_data)
+        enhanced_data = await self.use_enhanced_mcp_tools(retro_data)
 
         # Simulate retrospective process
         time.sleep(2)
@@ -1017,13 +1189,18 @@ Retrospective Agent Commands:
         """Run the agent and listen for events met MCP integration."""
         # Initialize MCP integration
         await self.initialize_mcp()
+        await self.initialize_enhanced_mcp()
+        await self.initialize_tracing()
+        
+        print("🔄 Retrospective is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
         
         subscribe("retro_feedback", self.on_retro_feedback)
         subscribe("generate_actions", self.on_generate_actions)
         subscribe("feedback_sentiment_analyzed", self.on_feedback_sentiment_analyzed)
 
         logger.info("RetrospectiveAgent ready and listening for events...")
-        print("🔄 Retrospective Agent is running...")
         print("Listening for events: retro_feedback, generate_actions, feedback_sentiment_analyzed")
         print("Press Ctrl+C to stop")
         
@@ -1032,12 +1209,36 @@ Retrospective Agent Commands:
                 await asyncio.sleep(1)
         except KeyboardInterrupt:
             print("\n🛑 Retrospective Agent stopped.")
-
+    
+    async def run_async(self):
+        """Run the agent with enhanced MCP and tracing initialization."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing capabilities
+        await self.initialize_tracing()
+        
+        print("🔄 Retrospective is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        
+        logger.info("RetrospectiveAgent ready and listening for events...")
+        await self.collaborate_example()
+    
     @classmethod
     async def run_agent(cls):
         """Class method to run the Retrospective agent met MCP integration."""
         agent = cls()
         await agent.run()
+    
+    @classmethod
+    async def run_agent_async(cls):
+        """Class method to run the Retrospective agent with enhanced MCP."""
+        agent = cls()
+        await agent.run_async()
 
 def main():
     parser = argparse.ArgumentParser(description="Retrospective Agent CLI")
@@ -1045,7 +1246,9 @@ def main():
                        choices=["help", "conduct-retrospective", "analyze-feedback", "create-action-plan",
                                "track-improvements", "show-retro-history", "show-action-history",
                                "show-best-practices", "show-changelog", "export-report", "test",
-                               "collaborate", "run"])
+                               "collaborate", "run", "enhanced-collaborate", "enhanced-security", 
+                               "enhanced-performance", "trace-operation", "trace-performance", 
+                               "trace-error", "tracing-summary"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--sprint-name", default="Sprint 15", help="Sprint name for retrospective")
     parser.add_argument("--team-size", type=int, default=8, help="Team size for retrospective")
@@ -1085,6 +1288,55 @@ def main():
         agent.collaborate_example()
     elif args.command == "run":
         asyncio.run(agent.run())
+    # Enhanced MCP Phase 2 Commands
+    elif args.command in ["enhanced-collaborate", "enhanced-security", "enhanced-performance", 
+                         "trace-operation", "trace-performance", "trace-error", "tracing-summary"]:
+        # Enhanced MCP commands
+        if args.command == "enhanced-collaborate":
+            result = asyncio.run(agent.enhanced_mcp.communicate_with_agents(
+                ["Scrummaster", "ProductOwner", "QualityGuardian", "FeedbackAgent"], 
+                {"type": "retrospective_review", "content": {"review_type": "retrospective_analysis"}}
+            ))
+            print(json.dumps(result, indent=2))
+        elif args.command == "enhanced-security":
+            result = asyncio.run(agent.enhanced_mcp.enhanced_security_validation({
+                "retrospective_data": {"retrospectives": [], "actions": [], "feedback": []},
+                "security_requirements": ["feedback_validation", "action_tracking", "improvement_safety"]
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "enhanced-performance":
+            result = asyncio.run(agent.enhanced_mcp.enhanced_performance_optimization({
+                "retrospective_data": {"retrospectives": [], "actions": [], "feedback": []},
+                "performance_metrics": {"feedback_analysis_speed": 85.5, "action_generation_accuracy": 92.3}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-operation":
+            result = asyncio.run(agent.trace_retrospective_operation({
+                "operation_type": "retrospective_analysis",
+                "sprint_name": args.sprint_name,
+                "retrospectives": list(agent.retro_history)
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-performance":
+            result = asyncio.run(agent.trace_retrospective_operation({
+                "operation_type": "performance_analysis",
+                "performance_metrics": {"feedback_analysis_speed": 85.5, "action_generation_accuracy": 92.3}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-error":
+            result = asyncio.run(agent.trace_retrospective_operation({
+                "operation_type": "error_analysis",
+                "error_data": {"error_type": "retrospective_failure", "error_message": "Retrospective analysis failed"}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "tracing-summary":
+            print("Tracing Summary for Retrospective:")
+            print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+            print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+            print(f"Agent: {agent.agent_name}")
+    else:
+        print("Unknown command. Use 'help' to see available commands.")
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()

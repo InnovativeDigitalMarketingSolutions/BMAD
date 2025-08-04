@@ -23,9 +23,9 @@ class TestStrategiePartnerAgent:
     @pytest.fixture
     def agent(self):
         """Create a StrategiePartnerAgent instance for testing."""
-        with patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_performance_monitor'),
-             patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_advanced_policy_engine'),
-             patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_sprite_library'),
+        with patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_performance_monitor'), \
+             patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_advanced_policy_engine'), \
+             patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_sprite_library'), \
              patch('bmad.agents.Agent.StrategiePartner.strategiepartner.BMADTracer'):
             return StrategiePartnerAgent()
 
@@ -85,7 +85,7 @@ class TestStrategiePartnerAgent:
         # Clear existing history first
         agent.strategy_history = []
         mock_exists.return_value = True
-        mock_open.return_value.__enter__.return_value.read.return_value = "# Strategy Historynn- Strategy 1 completedn- Strategy 2 in progress"
+        mock_open.return_value.__enter__.return_value.read.return_value = "# Strategy History\n\n- Strategy 1 completed\n- Strategy 2 in progress"
         
         agent._load_strategy_history()
         assert len(agent.strategy_history) == 2
@@ -129,7 +129,7 @@ class TestStrategiePartnerAgent:
     @pytest.mark.asyncio
     async def test_show_resource_success(self, agent, capsys):
         """Test resource display with valid resource type."""
-        with patch('builtins.open', create=True) as mock_open,
+        with patch('builtins.open', create=True) as mock_open, \
              patch('pathlib.Path.exists', return_value=True):
             mock_open.return_value.__enter__.return_value.read.return_value = "Strategy planning content"
             agent.show_resource("strategy-planning")
@@ -372,15 +372,15 @@ class TestStrategiePartnerAgent:
     async def test_collaborate_example_success(self, mock_publish, agent):
         """Test successful collaboration example."""
         import asyncio
-        with patch.object(agent, 'develop_strategy') as mock_develop, 
-             patch.object(agent, 'analyze_market') as mock_analyze, 
-             patch.object(agent, 'competitive_analysis') as mock_competitive, 
-             patch.object(agent, 'assess_risks') as mock_risks, 
-             patch.object(agent, 'stakeholder_analysis') as mock_stakeholder, 
-             patch.object(agent, 'create_roadmap') as mock_roadmap, 
-             patch.object(agent, 'calculate_roi') as mock_roi, 
+        with patch.object(agent, 'develop_strategy') as mock_develop, \
+             patch.object(agent, 'analyze_market') as mock_analyze, \
+             patch.object(agent, 'competitive_analysis') as mock_competitive, \
+             patch.object(agent, 'assess_risks') as mock_risks, \
+             patch.object(agent, 'stakeholder_analysis') as mock_stakeholder, \
+             patch.object(agent, 'create_roadmap') as mock_roadmap, \
+             patch.object(agent, 'calculate_roi') as mock_roi, \
              patch.object(agent, 'business_model_canvas') as mock_canvas:
-            asyncio.run(agent.collaborate_example())
+            await agent.collaborate_example()
             
             mock_publish.assert_called()
             mock_develop.assert_called()
@@ -397,7 +397,7 @@ class TestStrategiePartnerAgent:
         """Test successful alignment check completion handling."""
         event = {"strategy": "Test Strategy", "status": "aligned"}
         
-        with patch.object(agent.monitor, 'log_metric') as mock_log, 
+        with patch.object(agent.monitor, 'log_metric') as mock_log, \
              patch.object(agent.policy_engine, 'evaluate_policy') as mock_policy:
             agent.handle_alignment_check_completed(event)
             
@@ -721,9 +721,9 @@ class TestStrategiePartnerAgentCLI:
     @pytest.fixture
     def agent(self):
         """Create a StrategiePartnerAgent instance for CLI testing."""
-        with patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_performance_monitor'),
-             patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_advanced_policy_engine'),
-             patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_sprite_library'),
+        with patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_performance_monitor'), \
+             patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_advanced_policy_engine'), \
+             patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_sprite_library'), \
              patch('bmad.agents.Agent.StrategiePartner.strategiepartner.BMADTracer'):
             return StrategiePartnerAgent()
 
@@ -981,9 +981,9 @@ class TestStrategiePartnerAgentIntegration:
     @pytest.fixture
     def agent(self):
         """Create a StrategiePartnerAgent instance for integration testing."""
-        with patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_performance_monitor'),
-             patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_advanced_policy_engine'),
-             patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_sprite_library'),
+        with patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_performance_monitor'), \
+             patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_advanced_policy_engine'), \
+             patch('bmad.agents.Agent.StrategiePartner.strategiepartner.get_sprite_library'), \
              patch('bmad.agents.Agent.StrategiePartner.strategiepartner.BMADTracer'):
             return StrategiePartnerAgent()
 
@@ -998,37 +998,37 @@ class TestStrategiePartnerAgentIntegration:
 
         # Analyze market
         initial_market_count = len(agent.market_data)
-        market_result = await agent.analyze_market("Technology")
+        market_result = agent.analyze_market("Technology")
         assert market_result["sector"] == "Technology"
         assert len(agent.market_data) == initial_market_count + 1
 
         # Competitive analysis
         initial_competitive_count = len(agent.competitive_data)
-        competitive_result = await agent.competitive_analysis("Main Competitor")
+        competitive_result = agent.competitive_analysis("Main Competitor")
         assert competitive_result["competitor"] == "Main Competitor"
         assert len(agent.competitive_data) == initial_competitive_count + 1
 
         # Risk assessment
         initial_risk_count = len(agent.risk_register)
-        risk_result = await agent.assess_risks("Digital Transformation")
+        risk_result = agent.assess_risks("Digital Transformation")
         assert risk_result["strategy"] == "Digital Transformation"
         assert len(agent.risk_register) == initial_risk_count + 1
 
         # Stakeholder analysis
-        stakeholder_result = await agent.stakeholder_analysis("Digital Transformation Project")
+        stakeholder_result = agent.stakeholder_analysis("Digital Transformation Project")
         assert stakeholder_result["project"] == "Digital Transformation Project"
 
         # Create roadmap
-        roadmap_result = await agent.create_roadmap("Digital Transformation Strategy")
+        roadmap_result = agent.create_roadmap("Digital Transformation Strategy")
         assert roadmap_result["strategy"] == "Digital Transformation Strategy"
 
         # Calculate ROI
-        roi_result = await agent.calculate_roi("Digital Transformation Strategy")
+        roi_result = agent.calculate_roi("Digital Transformation Strategy")
         assert roi_result["strategy"] == "Digital Transformation Strategy"
         assert "roi_percentage" in roi_result
 
         # Business model canvas
-        canvas_result = await agent.business_model_canvas()
+        canvas_result = agent.business_model_canvas()
         assert "key_partners" in canvas_result
         assert "value_propositions" in canvas_result
 
@@ -1092,7 +1092,7 @@ class TestStrategiePartnerAgentIntegration:
         """Test complete idea validation workflow."""
         # Step 1: Validate initial idea
         initial_idea = "A mobile app for task management"
-        validation_result = await agent.validate_idea(initial_idea)
+        validation_result = agent.validate_idea(initial_idea)
         
         assert validation_result["validation_status"] in ["needs_refinement", "ready_for_development"]
         assert validation_result["completeness_score"] >= 0
@@ -1106,7 +1106,7 @@ class TestStrategiePartnerAgentIntegration:
                 "value_proposition": "Improved productivity and organization"
             }
             
-            refinement_result = await agent.refine_idea(initial_idea, refinement_data)
+            refinement_result = agent.refine_idea(initial_idea, refinement_data)
             assert refinement_result["improvement_score"] > 0
             assert "refined_validation" in refinement_result
             
@@ -1143,7 +1143,8 @@ class TestStrategiePartnerAgentIntegration:
         result = agent.validate_idea(complete_idea)
         assert result["completeness_score"] >= 70
 
-    def test_epic_creation_validation_rules(self, agent):
+    @pytest.mark.asyncio
+    async def test_epic_creation_validation_rules(self, agent):
         """Test epic creation validation rules."""
         # Test with non-validated idea
         invalid_idea = {
@@ -1161,7 +1162,7 @@ class TestStrategiePartnerAgentIntegration:
             "completeness_score": 85.0
         }
         
-        epic_result = await agent.create_epic_from_idea(valid_idea)
+        epic_result = agent.create_epic_from_idea(valid_idea)
         assert epic_result["epic"]["epic_name"].startswith("Epic:")
         assert len(epic_result["product_backlog_items"]) == 4
         assert epic_result["priority"] in ["high", "medium", "low"]

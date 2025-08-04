@@ -35,6 +35,12 @@ from bmad.core.mcp import (
     initialize_framework_mcp_integration
 )
 
+# Enhanced MCP Integration for Phase 2
+from bmad.core.mcp.enhanced_mcp_integration import (
+    EnhancedMCPIntegration,
+    create_enhanced_mcp_integration
+)
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -113,13 +119,20 @@ class BackendDeveloperAgent:
         self.mcp_client: Optional[MCPClient] = None
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
         self.mcp_enabled = False
+        
+        # Enhanced MCP Integration for Phase 2
+        self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_enabled = False
+        
+        # Tracing Integration
+        self.tracing_enabled = False
 
-        logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+        logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration en enhanced capabilities")
 
     async def initialize_mcp(self):
         """Initialize MCP client and integration."""
         try:
-            self.mcp_client = await get_mcp_client()
+            self.mcp_client = get_mcp_client()  # Remove await - this is a sync function
             self.mcp_integration = get_framework_mcp_integration()
             await initialize_framework_mcp_integration()
             self.mcp_enabled = True
@@ -128,6 +141,44 @@ class BackendDeveloperAgent:
             logger.warning(f"MCP initialization failed: {e}")
             self.mcp_enabled = False
 
+    async def initialize_enhanced_mcp(self):
+        """Initialize enhanced MCP capabilities for Phase 2."""
+        try:
+            self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+            self.enhanced_mcp_enabled = await self.enhanced_mcp.initialize_enhanced_mcp()
+            
+            if self.enhanced_mcp_enabled:
+                logger.info("Enhanced MCP capabilities initialized successfully")
+            else:
+                logger.warning("Enhanced MCP initialization failed, falling back to standard MCP")
+                
+        except Exception as e:
+            logger.warning(f"Enhanced MCP initialization failed for BackendDeveloper: {e}")
+            self.enhanced_mcp_enabled = False
+
+    async def initialize_tracing(self):
+        """Initialize tracing capabilities for backend development."""
+        try:
+            self.tracing_enabled = await self.tracer.initialize()
+            
+            if self.tracing_enabled:
+                logger.info("Tracing capabilities initialized successfully for BackendDeveloper")
+                # Set up backend-specific tracing spans
+                await self.tracer.setup_backend_tracing({
+                    "agent_name": self.agent_name,
+                    "tracing_level": "detailed",
+                    "performance_tracking": True,
+                    "api_tracking": True,
+                    "database_tracking": True,
+                    "error_tracking": True
+                })
+            else:
+                logger.warning("Tracing initialization failed, continuing without tracing")
+                
+        except Exception as e:
+            logger.warning(f"Tracing initialization failed for BackendDeveloper: {e}")
+            self.tracing_enabled = False
+
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
         if not self.mcp_enabled or not self.mcp_client:
@@ -135,9 +186,16 @@ class BackendDeveloperAgent:
             return None
         
         try:
-            result = await self.mcp_client.execute_tool(tool_name, parameters)
-            logger.info(f"MCP tool {tool_name} executed successfully")
-            return result
+            # Create a context for the tool call
+            context = await self.mcp_client.create_context(agent_id=self.agent_name)
+            response = await self.mcp_client.call_tool(tool_name, parameters, context)
+            
+            if response.success:
+                logger.info(f"MCP tool {tool_name} executed successfully")
+                return response.data
+            else:
+                logger.error(f"MCP tool {tool_name} failed: {response.error}")
+                return None
         except Exception as e:
             logger.error(f"MCP tool {tool_name} execution failed: {e}")
             return None
@@ -188,6 +246,233 @@ class BackendDeveloperAgent:
         
         return enhanced_data
     
+    async def use_enhanced_mcp_tools(self, agent_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use enhanced MCP tools voor Phase 2 capabilities."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available, using standard MCP tools")
+            return await self.use_backend_specific_mcp_tools(agent_data)
+        
+        enhanced_data = {}
+        
+        # Core enhancement tools
+        core_result = await self.enhanced_mcp.use_enhanced_mcp_tool("core_enhancement", {
+            "agent_type": self.agent_name,
+            "enhancement_level": "advanced",
+            "capabilities": agent_data.get("capabilities", []),
+            "performance_metrics": agent_data.get("performance_metrics", {})
+        })
+        if core_result:
+            enhanced_data["core_enhancement"] = core_result
+        
+        # Backend-specific enhancement tools
+        backend_result = await self.use_backend_specific_enhanced_tools(agent_data)
+        if backend_result:
+            enhanced_data.update(backend_result)
+        
+        return enhanced_data
+    
+    async def use_backend_specific_enhanced_tools(self, backend_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use backend-specific enhanced MCP tools."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {}
+        
+        enhanced_data = {}
+        
+        # Enhanced API development
+        api_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_api_development", {
+            "endpoint": backend_data.get("endpoint", ""),
+            "method": backend_data.get("method", "GET"),
+            "framework": backend_data.get("framework", "fastapi"),
+            "development_type": "advanced",
+            "optimization_level": "comprehensive"
+        })
+        if api_result:
+            enhanced_data["enhanced_api_development"] = api_result
+        
+        # Enhanced database design
+        db_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_database_design", {
+            "database_type": backend_data.get("database_type", "postgresql"),
+            "schema_requirements": backend_data.get("schema_requirements", {}),
+            "design_type": "advanced_optimized",
+            "scalability": backend_data.get("scalability", "enterprise"),
+            "performance_optimization": True
+        })
+        if db_result:
+            enhanced_data["enhanced_database_design"] = db_result
+        
+        # Enhanced security implementation
+        security_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_security_implementation", {
+            "security_level": backend_data.get("security_level", "enterprise"),
+            "authentication": backend_data.get("authentication", "multi_factor"),
+            "authorization": backend_data.get("authorization", "fine_grained"),
+            "compliance": backend_data.get("compliance", ["gdpr", "sox", "iso27001"]),
+            "threat_detection": True
+        })
+        if security_result:
+            enhanced_data["enhanced_security_implementation"] = security_result
+        
+        # Enhanced performance optimization
+        performance_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_performance_optimization", {
+            "performance_metrics": backend_data.get("performance_metrics", {}),
+            "optimization_type": "advanced_comprehensive",
+            "target_latency": backend_data.get("target_latency", 50),
+            "scaling_strategy": backend_data.get("scaling_strategy", "intelligent"),
+            "predictive_optimization": True
+        })
+        if performance_result:
+            enhanced_data["enhanced_performance_optimization"] = performance_result
+        
+        return enhanced_data
+    
+    async def communicate_with_agents(self, target_agents: List[str], message: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhanced inter-agent communication via MCP."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available for agent communication")
+            return {}
+        
+        return await self.enhanced_mcp.communicate_with_agents(target_agents, message)
+    
+    async def use_external_tools(self, tool_config: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhanced external tool integration via MCP adapters."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available for external tools")
+            return {}
+        
+        return await self.enhanced_mcp.use_external_tools(tool_config)
+    
+    async def enhanced_security_validation(self, security_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhanced security validation and controls."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available for security validation")
+            return {}
+        
+        return await self.enhanced_mcp.enhanced_security_validation(security_data)
+    
+    async def enhanced_performance_optimization(self, performance_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Enhanced performance optimization for agents."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available for performance optimization")
+            return {}
+        
+        return await self.enhanced_mcp.enhanced_performance_optimization(performance_data)
+    
+    def get_enhanced_performance_summary(self) -> Dict[str, Any]:
+        """Get enhanced performance summary for the agent."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {}
+        
+        return self.enhanced_mcp.get_performance_summary()
+    
+    def get_enhanced_communication_summary(self) -> Dict[str, Any]:
+        """Get enhanced communication summary for the agent."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            return {}
+        
+        return self.enhanced_mcp.get_communication_summary()
+    
+    async def trace_api_development(self, api_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace API development process."""
+        if not self.tracing_enabled or not self.tracer:
+            logger.warning("Tracing not available for API development")
+            return {}
+        
+        try:
+            trace_result = await self.tracer.trace_api_development({
+                "endpoint": api_data.get("endpoint", ""),
+                "method": api_data.get("method", "GET"),
+                "framework": api_data.get("framework", "fastapi"),
+                "performance_metrics": api_data.get("performance_metrics", {}),
+                "security_metrics": api_data.get("security_metrics", {}),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info(f"API development traced: {api_data.get('endpoint', 'unknown')}")
+            return trace_result
+            
+        except Exception as e:
+            logger.error(f"API development tracing failed: {e}")
+            return {}
+    
+    async def trace_database_operation(self, db_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace database operations."""
+        if not self.tracing_enabled or not self.tracer:
+            logger.warning("Tracing not available for database operations")
+            return {}
+        
+        try:
+            trace_result = await self.tracer.trace_database_operation({
+                "operation_type": db_data.get("type", "query"),
+                "table_name": db_data.get("table", ""),
+                "query_complexity": db_data.get("complexity", "simple"),
+                "execution_time": db_data.get("execution_time", 0),
+                "rows_affected": db_data.get("rows_affected", 0),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info(f"Database operation traced: {db_data.get('type', 'unknown')}")
+            return trace_result
+            
+        except Exception as e:
+            logger.error(f"Database operation tracing failed: {e}")
+            return {}
+    
+    async def trace_api_deployment(self, deployment_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace API deployment process."""
+        if not self.tracing_enabled or not self.tracer:
+            logger.warning("Tracing not available for API deployment")
+            return {}
+        
+        try:
+            trace_result = await self.tracer.trace_api_deployment({
+                "endpoint": deployment_data.get("endpoint", ""),
+                "environment": deployment_data.get("environment", "development"),
+                "deployment_type": deployment_data.get("type", "manual"),
+                "performance_impact": deployment_data.get("performance_impact", {}),
+                "security_validation": deployment_data.get("security_validation", {}),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info(f"API deployment traced: {deployment_data.get('endpoint', 'unknown')}")
+            return trace_result
+            
+        except Exception as e:
+            logger.error(f"API deployment tracing failed: {e}")
+            return {}
+    
+    async def trace_backend_error(self, error_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace backend errors and exceptions."""
+        if not self.tracing_enabled or not self.tracer:
+            logger.warning("Tracing not available for backend errors")
+            return {}
+        
+        try:
+            trace_result = await self.tracer.trace_backend_error({
+                "error_type": error_data.get("type", "unknown"),
+                "error_message": error_data.get("message", ""),
+                "endpoint": error_data.get("endpoint", ""),
+                "stack_trace": error_data.get("stack_trace", ""),
+                "user_context": error_data.get("user_context", {}),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            logger.info(f"Backend error traced: {error_data.get('type', 'unknown')}")
+            return trace_result
+            
+        except Exception as e:
+            logger.error(f"Backend error tracing failed: {e}")
+            return {}
+    
+    def get_tracing_summary(self) -> Dict[str, Any]:
+        """Get tracing summary for the agent."""
+        if not self.tracing_enabled or not self.tracer:
+            return {}
+        
+        try:
+            return self.tracer.get_tracing_summary()
+        except Exception as e:
+            logger.error(f"Failed to get tracing summary: {e}")
+            return {}
+
     def _validate_input(self, value: Any, expected_type: type, param_name: str) -> None:
         """Validate input parameters with type checking."""
         if not isinstance(value, expected_type):
@@ -357,6 +642,32 @@ BackendDeveloper Agent Commands:
   test                    - Test resource completeness
   collaborate             - Demonstrate collaboration with other agents
   run                     - Start the agent in event listening mode
+
+Enhanced MCP Phase 2 Commands:
+  enhanced-collaborate    - Enhanced inter-agent communication
+  enhanced-security       - Enhanced security validation
+  enhanced-performance    - Enhanced performance optimization
+  enhanced-tools          - Enhanced external tool integration
+  enhanced-summary        - Show enhanced performance and communication summaries
+
+Tracing Commands:
+  trace-api               - Trace API development process
+  trace-database          - Trace database operations
+  trace-deployment        - Trace API deployment process
+  trace-error             - Trace backend errors and exceptions
+  tracing-summary         - Get tracing summary and analytics
+
+Enhanced Command Examples:
+  enhanced-collaborate --agents FrontendDeveloper TestEngineer --message "API ready for testing"
+  enhanced-security
+  enhanced-performance
+  enhanced-tools --tool-config '{"tool_name": "github", "category": "development"}'
+  enhanced-summary
+  trace-api --api-data '{"endpoint": "/api/v1/users", "method": "GET", "framework": "fastapi"}'
+  trace-database --db-data '{"type": "query", "table": "users", "complexity": "simple"}'
+  trace-deployment --deployment-data '{"endpoint": "/api/v1/users", "environment": "production"}'
+  trace-error --error-data '{"type": "validation_error", "message": "Invalid input"}'
+  tracing-summary
         """
         print(help_text)
 
@@ -456,7 +767,7 @@ BackendDeveloper Agent Commands:
                 "scaling_strategy": "horizontal"
             }
             
-            enhanced_data = await self.use_backend_specific_mcp_tools(backend_data)
+            enhanced_data = await self.use_enhanced_mcp_tools(backend_data)
 
             # Simulate API building process
             time.sleep(2)
@@ -524,6 +835,22 @@ BackendDeveloper Agent Commands:
             if enhanced_data:
                 result["mcp_enhanced_data"] = enhanced_data
                 result["mcp_enhanced"] = True
+
+            # Trace API development process
+            if self.tracing_enabled and self.tracer:
+                try:
+                    trace_result = await self.trace_api_development({
+                        "endpoint": endpoint,
+                        "method": "GET",
+                        "framework": "fastapi",
+                        "performance_metrics": result.get("performance_config", {}),
+                        "security_metrics": result.get("security_config", {})
+                    })
+                    if trace_result:
+                        result["tracing_data"] = trace_result
+                        result["tracing_enabled"] = True
+                except Exception as e:
+                    logger.warning(f"API development tracing failed: {e}")
 
             # Add to history
             api_entry = f"{result['timestamp']}: {result['method']} {endpoint} - Status: {result['status']}"
@@ -824,6 +1151,12 @@ BackendDeveloper Agent Commands:
         # Initialize MCP integration
         await self.initialize_mcp()
         
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing capabilities for backend development
+        await self.initialize_tracing()
+
         def sync_handler(event):
             asyncio.run(self.handle_api_change_completed(event))
 
@@ -836,8 +1169,9 @@ BackendDeveloper Agent Commands:
         subscribe("api_deployment_requested", self.handle_api_deployment_requested)
 
         logger.info("BackendDeveloperAgent ready and listening for events...")
-        print("🔧 BackendDeveloper Agent is running...")
+        print("🔧 BackendDeveloper Agent is running with enhanced MCP capabilities...")
         print("Listening for events: api_change_completed, api_change_requested, api_deployment_completed, api_deployment_requested")
+        print("Enhanced MCP capabilities: Inter-agent communication, External tools, Security validation, Performance optimization")
         print("Press Ctrl+C to stop")
         
         try:
@@ -858,9 +1192,18 @@ def main():
     parser.add_argument("command", nargs="?", default="help",
                        choices=["help", "build-api", "deploy-api", "show-api-history", "show-performance",
                                "show-deployment-history", "show-best-practices", "show-changelog", "export-api",
-                               "test", "collaborate", "run"])
+                               "test", "collaborate", "run", "enhanced-collaborate", "enhanced-security", 
+                               "enhanced-performance", "enhanced-tools", "enhanced-summary",
+                               "trace-api", "trace-database", "trace-deployment", "trace-error", "tracing-summary"])
     parser.add_argument("--endpoint", default="/api/v1/users", help="API endpoint")
     parser.add_argument("--format", choices=["md", "json", "yaml", "html"], default="md", help="Export format")
+    parser.add_argument("--agents", nargs="+", help="Target agents for collaboration")
+    parser.add_argument("--message", help="Message for agent communication")
+    parser.add_argument("--tool-config", help="External tool configuration (JSON)")
+    parser.add_argument("--api-data", help="API data for tracing (JSON)")
+    parser.add_argument("--db-data", help="Database data for tracing (JSON)")
+    parser.add_argument("--deployment-data", help="Deployment data for tracing (JSON)")
+    parser.add_argument("--error-data", help="Error data for tracing (JSON)")
 
     args = parser.parse_args()
 
@@ -895,6 +1238,97 @@ def main():
                 print("Resource completeness test failed!")
         elif args.command == "collaborate":
             agent.collaborate_example()
+        elif args.command == "enhanced-collaborate":
+            if not args.agents or not args.message:
+                print("Error: --agents and --message are required for enhanced collaboration")
+                sys.exit(1)
+            message = {"type": "collaboration", "content": {"message": args.message}}
+            result = asyncio.run(agent.communicate_with_agents(args.agents, message))
+            print(f"Enhanced collaboration result: {result}")
+        elif args.command == "enhanced-security":
+            security_data = {
+                "auth_method": "multi_factor",
+                "security_level": "enterprise",
+                "compliance": ["gdpr", "sox", "iso27001"],
+                "model": "rbac",
+                "indicators": ["suspicious_activity", "unauthorized_access"]
+            }
+            result = asyncio.run(agent.enhanced_security_validation(security_data))
+            print(f"Enhanced security validation result: {result}")
+        elif args.command == "enhanced-performance":
+            performance_data = {
+                "cache_strategy": "adaptive",
+                "memory_usage": {"current": 50, "peak": 80},
+                "target_latency": 50
+            }
+            result = asyncio.run(agent.enhanced_performance_optimization(performance_data))
+            print(f"Enhanced performance optimization result: {result}")
+        elif args.command == "enhanced-tools":
+            if not args.tool_config:
+                print("Error: --tool-config is required for enhanced tools")
+                sys.exit(1)
+            try:
+                tool_config = json.loads(args.tool_config)
+                result = asyncio.run(agent.use_external_tools(tool_config))
+                print(f"Enhanced external tools result: {result}")
+            except json.JSONDecodeError:
+                print("Error: Invalid JSON in --tool-config")
+                sys.exit(1)
+        elif args.command == "enhanced-summary":
+            performance_summary = agent.get_enhanced_performance_summary()
+            communication_summary = agent.get_enhanced_communication_summary()
+            print("Enhanced Performance Summary:")
+            print(json.dumps(performance_summary, indent=2))
+            print("\nEnhanced Communication Summary:")
+            print(json.dumps(communication_summary, indent=2))
+        elif args.command == "trace-api":
+            if not args.api_data:
+                print("Error: --api-data is required for trace-api command")
+                sys.exit(1)
+            try:
+                api_data = json.loads(args.api_data)
+                result = asyncio.run(agent.trace_api_development(api_data))
+                print(f"API tracing result: {result}")
+            except json.JSONDecodeError:
+                print("Error: Invalid JSON in --api-data")
+                sys.exit(1)
+        elif args.command == "trace-database":
+            if not args.db_data:
+                print("Error: --db-data is required for trace-database command")
+                sys.exit(1)
+            try:
+                db_data = json.loads(args.db_data)
+                result = asyncio.run(agent.trace_database_operation(db_data))
+                print(f"Database tracing result: {result}")
+            except json.JSONDecodeError:
+                print("Error: Invalid JSON in --db-data")
+                sys.exit(1)
+        elif args.command == "trace-deployment":
+            if not args.deployment_data:
+                print("Error: --deployment-data is required for trace-deployment command")
+                sys.exit(1)
+            try:
+                deployment_data = json.loads(args.deployment_data)
+                result = asyncio.run(agent.trace_api_deployment(deployment_data))
+                print(f"Deployment tracing result: {result}")
+            except json.JSONDecodeError:
+                print("Error: Invalid JSON in --deployment-data")
+                sys.exit(1)
+        elif args.command == "trace-error":
+            if not args.error_data:
+                print("Error: --error-data is required for trace-error command")
+                sys.exit(1)
+            try:
+                error_data = json.loads(args.error_data)
+                result = asyncio.run(agent.trace_backend_error(error_data))
+                print(f"Error tracing result: {result}")
+            except json.JSONDecodeError:
+                print("Error: Invalid JSON in --error-data")
+                sys.exit(1)
+        elif args.command == "tracing-summary":
+            tracing_summary = agent.get_tracing_summary()
+            print("Tracing Summary:")
+            print(json.dumps(tracing_summary, indent=2))
         elif args.command == "run":
             asyncio.run(agent.run())
         else:

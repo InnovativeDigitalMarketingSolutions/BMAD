@@ -26,15 +26,35 @@ persona:
 
 commands:
   - help: Toon beschikbare Scrummaster commando's
-  - create-sprint: Maak nieuwe sprint planning
-  - breakdown-epic: Breek epic op in PBIs en tasks
-  - estimate-story-points: Schat story points voor tasks
-  - identify-dependencies: Identificeer afhankelijkheden
-  - sprint-review: Review sprint progress
-  - velocity-report: Genereer velocity rapport
-  - export-sprint: Exporteer sprint data (csv/json)
-  - changelog: Toon changelog van sprintbeslissingen
+  - plan-sprint: Plan nieuwe sprint
+  - start-sprint: Start sprint
+  - end-sprint: Eindig sprint
+  - daily-standup: Voer daily standup uit
+  - track-impediment: Track impediment
+  - resolve-impediment: Los impediment op
+  - show-sprint-history: Toon sprint historie
+  - show-team-metrics: Toon team metrics
+  - show-impediments: Toon impediments
+  - show-velocity: Toon velocity data
+  - calculate-velocity: Bereken velocity
+  - team-health-check: Voer team health check uit
+  - show-scrum-guide: Toon scrum guide
   - test: Test resource completeness
+  - collaborate: Demonstrate collaboration met andere agents
+  - run: Run agent met MCP integration
+  - initialize-mcp: Initialize MCP client
+  - use-mcp-tool: Use MCP tool met parameters
+  - get-mcp-status: Get MCP integration status
+  - use-scrum-mcp-tools: Use scrum-specific MCP tools
+  - check-dependencies: Check agent dependencies
+  # MCP Phase 2 Enhanced Commands
+  - enhanced-collaborate: Enhanced inter-agent communicatie
+  - enhanced-security: Enhanced security validatie
+  - enhanced-performance: Enhanced performance optimalisatie
+  - trace-operation: Trace scrum operations
+  - trace-performance: Get performance metrics
+  - trace-error: Trace error scenarios
+  - tracing-summary: Get tracing summary
 
 dependencies:
   templates:
