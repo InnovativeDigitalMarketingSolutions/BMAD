@@ -34,6 +34,13 @@ from bmad.core.mcp import (
     initialize_framework_mcp_integration
 )
 
+# Enhanced MCP Phase 2 imports
+from bmad.core.mcp.enhanced_mcp_integration import (
+    EnhancedMCPIntegration,
+    create_enhanced_mcp_integration
+)
+from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -91,6 +98,23 @@ class FeedbackAgent:
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
         self.mcp_enabled = False
         
+        # Enhanced MCP Phase 2 attributes
+        self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_enabled = False
+        
+        # Tracing Integration
+        self.tracer: Optional[BMADTracer] = None
+        self.tracing_enabled = False
+        
+        # Initialize tracer
+        self.tracer = BMADTracer(config=type("Config", (), {
+            "service_name": "FeedbackAgent",
+            "service_version": "1.0.0",
+            "environment": "development",
+            "sample_rate": 1.0,
+            "exporters": []
+        })())
+        
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
     
     async def initialize_mcp(self):
@@ -104,6 +128,33 @@ class FeedbackAgent:
         except Exception as e:
             logger.warning(f"MCP initialization failed for FeedbackAgent: {e}")
             self.mcp_enabled = False
+
+    async def initialize_enhanced_mcp(self):
+        """Initialize enhanced MCP capabilities for Phase 2."""
+        try:
+            self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+            # Check if initialize method exists before calling it
+            if hasattr(self.enhanced_mcp, 'initialize'):
+                await self.enhanced_mcp.initialize()
+            self.enhanced_mcp_enabled = True
+            logger.info("Enhanced MCP initialized successfully")
+        except Exception as e:
+            logger.warning(f"Enhanced MCP initialization failed: {e}")
+            self.enhanced_mcp_enabled = False
+    
+    async def initialize_tracing(self):
+        """Initialize tracing capabilities."""
+        try:
+            if self.tracer and hasattr(self.tracer, 'initialize'):
+                await self.tracer.initialize()
+                self.tracing_enabled = True
+                logger.info("Tracing initialized successfully")
+            else:
+                logger.warning("Tracer not available or missing initialize method")
+                self.tracing_enabled = False
+        except Exception as e:
+            logger.warning(f"Tracing initialization failed: {e}")
+            self.tracing_enabled = False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -180,6 +231,120 @@ class FeedbackAgent:
             logger.error(f"Error in feedback-specific MCP tools: {e}")
         
         return enhanced_data
+
+    async def use_enhanced_mcp_tools(self, feedback_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use enhanced MCP tools voor Phase 2 capabilities."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available, using standard MCP tools")
+            return await self.use_feedback_specific_mcp_tools(feedback_data)
+        
+        enhanced_data = {}
+        
+        try:
+            # Core enhancement tools
+            core_result = await self.enhanced_mcp.use_enhanced_mcp_tool("core_enhancement", {
+                "agent_type": self.agent_name,
+                "enhancement_level": "advanced",
+                "capabilities": feedback_data.get("capabilities", []),
+                "performance_metrics": feedback_data.get("performance_metrics", {})
+            })
+            enhanced_data["core_enhancement"] = core_result
+            
+            # Feedback-specific enhanced tools
+            feedback_enhanced_result = await self.use_feedback_specific_enhanced_tools(feedback_data)
+            enhanced_data.update(feedback_enhanced_result)
+            
+            # Tracing integration
+            if self.tracing_enabled:
+                trace_result = await self.trace_feedback_operation(feedback_data)
+                enhanced_data["tracing"] = trace_result
+            
+            logger.info(f"Enhanced MCP tools used successfully: {len(enhanced_data)} tools")
+            
+        except Exception as e:
+            logger.error(f"Enhanced MCP tools failed: {e}")
+            enhanced_data["error"] = str(e)
+        
+        return enhanced_data
+    
+    async def use_feedback_specific_enhanced_tools(self, feedback_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use feedback-specific enhanced MCP tools."""
+        enhanced_tools = {}
+        
+        try:
+            # Enhanced feedback collection
+            if "feedback_collection" in feedback_data:
+                collection_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_feedback_collection", {
+                    "feedback_data": feedback_data["feedback_collection"],
+                    "collection_depth": feedback_data.get("collection_depth", "comprehensive"),
+                    "include_context": feedback_data.get("include_context", True)
+                })
+                enhanced_tools["enhanced_feedback_collection"] = collection_result
+            
+            # Enhanced sentiment analysis
+            if "sentiment_analysis" in feedback_data:
+                sentiment_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_sentiment_analysis", {
+                    "sentiment_data": feedback_data["sentiment_analysis"],
+                    "analysis_complexity": feedback_data.get("analysis_complexity", "advanced"),
+                    "include_emotion_detection": feedback_data.get("include_emotion_detection", True)
+                })
+                enhanced_tools["enhanced_sentiment_analysis"] = sentiment_result
+            
+            # Enhanced team collaboration
+            if "team_collaboration" in feedback_data:
+                collaboration_result = await self.enhanced_mcp.communicate_with_agents(
+                    ["ProductOwner", "UXUIDesigner", "QualityGuardian", "Retrospective"],
+                    {
+                        "type": "feedback_review",
+                        "content": feedback_data["team_collaboration"]
+                    }
+                )
+                enhanced_tools["enhanced_team_collaboration"] = collaboration_result
+            
+            # Enhanced trend analysis
+            if "trend_analysis" in feedback_data:
+                trend_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_trend_analysis", {
+                    "trend_data": feedback_data["trend_analysis"],
+                    "analysis_period": feedback_data.get("analysis_period", "comprehensive"),
+                    "include_predictions": feedback_data.get("include_predictions", True)
+                })
+                enhanced_tools["enhanced_trend_analysis"] = trend_result
+            
+            logger.info(f"Feedback-specific enhanced tools executed: {list(enhanced_tools.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Error in feedback-specific enhanced tools: {e}")
+        
+        return enhanced_tools
+    
+    async def trace_feedback_operation(self, operation_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace feedback operations."""
+        if not self.tracing_enabled or not self.tracer:
+            return {"tracing": "disabled"}
+        
+        try:
+            trace_data = {
+                "operation_type": "feedback_operation",
+                "agent": self.agent_name,
+                "timestamp": datetime.now().isoformat(),
+                "operation_data": operation_data,
+                "performance_metrics": {
+                    "feedback_count": len(operation_data.get("feedback_list", [])),
+                    "sentiment_score": operation_data.get("sentiment_score", 0.0),
+                    "trend_analysis": len(operation_data.get("trend_data", {}))
+                }
+            }
+            
+            # Add trace to tracer
+            if hasattr(self.tracer, 'add_trace'):
+                await self.tracer.add_trace("feedback_operation", trace_data)
+            
+            logger.info(f"Feedback operation traced: {trace_data['operation_type']}")
+            return trace_data
+            
+        except Exception as e:
+            logger.error(f"Tracing failed: {e}")
+            return {"tracing": "error", "error": str(e)}
 
     def _load_feedback_history(self):
         """Load feedback history from data file"""
@@ -1374,6 +1539,16 @@ Examples:
         # Initialize MCP integration
         await self.initialize_mcp()
         
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing capabilities
+        await self.initialize_tracing()
+        
+        print("💬 FeedbackAgent is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        
         subscribe("feedback_received", self.on_feedback_received)
         subscribe("summarize_feedback", self.on_summarize_feedback)
         subscribe("retro_planned", self.handle_retro_planned)
@@ -1381,6 +1556,36 @@ Examples:
 
         logger.info("FeedbackAgent ready and listening for events...")
         await self.collaborate_example()
+    
+    async def run_async(self):
+        """Run the agent with enhanced MCP and tracing initialization."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing capabilities
+        await self.initialize_tracing()
+        
+        print("💬 FeedbackAgent is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        
+        logger.info("FeedbackAgent ready and listening for events...")
+        await self.collaborate_example()
+    
+    @classmethod
+    async def run_agent(cls):
+        """Class method to run the FeedbackAgent agent met MCP integration."""
+        agent = cls()
+        await agent.run_async()
+    
+    @classmethod
+    async def run_agent_async(cls):
+        """Class method to run the FeedbackAgent agent with enhanced MCP."""
+        agent = cls()
+        await agent.run_async()
 
 import asyncio
 
@@ -1391,7 +1596,11 @@ def main():
                                "generate-insights", "track-trends", "show-feedback-history", "show-sentiment-history",
                                "show-best-practices", "show-changelog", "export-report", "test",
                                "collaborate", "run", "collect-template-feedback", "analyze-template-trends",
-                               "suggest-template-improvements", "get-template-quality-report"])
+                               "suggest-template-improvements", "get-template-quality-report", "initialize-mcp", 
+                               "use-mcp-tool", "get-mcp-status", "use-feedback-mcp-tools", 
+                               "check-dependencies", "enhanced-collaborate", "enhanced-security", 
+                               "enhanced-performance", "trace-operation", "trace-performance", 
+                               "trace-error", "tracing-summary"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--feedback-text", default="The new dashboard is much more user-friendly", help="Feedback text to analyze")
     parser.add_argument("--source", default="User Survey", help="Feedback source")
@@ -1459,6 +1668,55 @@ def main():
     elif args.command == "get-template-quality-report":
         result = agent.get_template_quality_report(args.template_name)
         print(json.dumps(result, indent=2))
+    # Enhanced MCP Phase 2 Commands
+    elif args.command in ["enhanced-collaborate", "enhanced-security", "enhanced-performance", 
+                         "trace-operation", "trace-performance", "trace-error", "tracing-summary"]:
+        # Enhanced MCP commands
+        if args.command == "enhanced-collaborate":
+            result = asyncio.run(agent.enhanced_mcp.communicate_with_agents(
+                ["ProductOwner", "UXUIDesigner", "QualityGuardian", "Retrospective"], 
+                {"type": "feedback_review", "content": {"review_type": "feedback_analysis"}}
+            ))
+            print(json.dumps(result, indent=2))
+        elif args.command == "enhanced-security":
+            result = asyncio.run(agent.enhanced_mcp.enhanced_security_validation({
+                "feedback_data": {"feedback_list": [], "sentiment_data": [], "trend_data": []},
+                "security_requirements": ["data_privacy", "access_control", "audit_trail"]
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "enhanced-performance":
+            result = asyncio.run(agent.enhanced_mcp.enhanced_performance_optimization({
+                "feedback_data": {"feedback_list": [], "sentiment_data": [], "trend_data": []},
+                "performance_metrics": {"analysis_speed": 85.5, "sentiment_accuracy": 92.3}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-operation":
+            result = asyncio.run(agent.trace_feedback_operation({
+                "operation_type": "feedback_analysis",
+                "feedback_text": args.feedback_text,
+                "feedback_list": args.feedback_list or []
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-performance":
+            result = asyncio.run(agent.trace_feedback_operation({
+                "operation_type": "performance_analysis",
+                "performance_metrics": {"analysis_speed": 85.5, "sentiment_accuracy": 92.3}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-error":
+            result = asyncio.run(agent.trace_feedback_operation({
+                "operation_type": "error_analysis",
+                "error_data": {"error_type": "feedback_analysis", "error_message": "Feedback analysis failed"}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "tracing-summary":
+            print("Tracing Summary for FeedbackAgent:")
+            print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+            print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+            print(f"Agent: {agent.agent_name}")
+    else:
+        print(f"Unknown command: {args.command}")
+        agent.show_help()
 
 if __name__ == "__main__":
     main()
