@@ -30,6 +30,9 @@ opentelemetry-exporter-otlp-proto-http>=1.15.0
 # We'll use the Python client for OPA integration
 # opa-client>=0.1.0  # Temporarily disabled - using direct HTTP calls
 
+# JWT Authentication
+PyJWT>=2.8.0
+
 # Performance & Caching
 redis>=4.5.0
 aiohttp>=3.8.0
