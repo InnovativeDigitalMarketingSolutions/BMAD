@@ -8,6 +8,7 @@ import asyncio
 import json
 import sys
 import os
+import pytest
 from pathlib import Path
 
 # Add project root to path
@@ -62,6 +63,7 @@ class QualityTestAgent(MCPAgentMixin):
         })
         return result
 
+@pytest.mark.asyncio
 async def test_agent_mixin_quality():
     """Test MCP Agent Mixin quality solutions."""
     print("🧪 Testing MCP Agent Mixin Quality Solutions...")
@@ -104,6 +106,7 @@ async def test_agent_mixin_quality():
         print(f"❌ Agent Mixin Quality test failed: {e}")
         return False
 
+@pytest.mark.asyncio
 async def test_dependency_manager_quality():
     """Test Dependency Manager quality solutions."""
     print("\n🧪 Testing Dependency Manager Quality Solutions...")
@@ -140,6 +143,7 @@ async def test_dependency_manager_quality():
         print(f"❌ Dependency Manager Quality test failed: {e}")
         return False
 
+@pytest.mark.asyncio
 async def test_frontend_developer_quality():
     """Test FrontendDeveloper agent with quality solutions."""
     print("\n🧪 Testing FrontendDeveloper Agent Quality Solutions...")
@@ -226,6 +230,7 @@ async def test_frontend_developer_quality():
         print(f"❌ FrontendDeveloper Quality test failed: {e}")
         return False
 
+@pytest.mark.asyncio
 async def test_mcp_workflow_quality():
     """Test complete MCP workflow with quality solutions."""
     print("\n🧪 Testing Complete MCP Workflow Quality...")
@@ -275,6 +280,7 @@ async def test_mcp_workflow_quality():
         print(f"❌ MCP Workflow Quality test failed: {e}")
         return False
 
+@pytest.mark.asyncio
 async def test_backward_compatibility():
     """Test backward compatibility with existing functionality."""
     print("\n🧪 Testing Backward Compatibility...")

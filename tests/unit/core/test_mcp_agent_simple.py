@@ -7,9 +7,10 @@ Testing agent MCP integration without external dependencies
 import asyncio
 import sys
 import os
+import pytest
 
 # Add project root to path
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), ".")))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../../../../..')))
 
 from bmad.core.mcp import (
     MCPClient,
@@ -112,6 +113,7 @@ class SimpleAgent:
         
         return result
 
+@pytest.mark.asyncio
 async def test_simple_agent_integration():
     """Test SimpleAgent MCP Integration."""
     print("🧪 Testing SimpleAgent MCP Integration...")

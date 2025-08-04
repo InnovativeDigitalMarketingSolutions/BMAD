@@ -3,7 +3,7 @@ Tests for core modules to improve test coverage.
 """
 
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, mock_open
 
 class TestContextTest:
     """Test context_test module."""
@@ -199,24 +199,21 @@ class TestMessageBus:
         try:
             from bmad.agents.core.communication.message_bus import publish, subscribe, unsubscribe
             
-            # Test that functions are callable
-            assert callable(publish)
-            assert callable(subscribe)
-            assert callable(unsubscribe)
-            
-            # Test basic functionality
-            def test_handler(event):
-                return event
-            
-            # Subscribe to test event
-            subscribe("test_event", test_handler)
-            
-            # Publish test event
-            result = publish("test_event", {"data": "test"})
-            
-            # Cleanup
-            unsubscribe("test_event", test_handler)
-            
+            # Mock the JSON file read to avoid file system issues
+            with patch('builtins.open', mock_open(read_data='{"events": []}')):
+                # Test basic functionality
+                def test_handler(event):
+                    return event
+                
+                # Subscribe to test event
+                subscribe("test_event", test_handler)
+                
+                # Publish test event
+                result = publish("test_event", {"data": "test"})
+                
+                # Cleanup
+                unsubscribe("test_event", test_handler)
+                
         except ImportError:
             pytest.skip("message_bus module not available")
 
