@@ -151,6 +151,81 @@ tests/e2e/:
   - Implement critical path testing
   - Add performance regression tests
 
+### **Phase 2.5: Coverage Improvement & Warnings Fix (Week 2.5)**
+
+#### **Priority 1: Core Module Coverage Improvement**
+**Huidige Status**: 48% coverage (1619/3134 lines)
+**Target**: >90% coverage voor core modules
+
+**Coverage Analyse per Module**:
+- ✅ `bmad/core/security/__init__.py`: 100% (3/3 lines)
+- ✅ `bmad/core/security/jwt_service.py`: 98% (111/113 lines)
+- ⚠️ `bmad/core/security/permission_service.py`: 79% (139/175 lines)
+- ⚠️ `bmad/core/mcp/framework_integration.py`: 69% (116/167 lines)
+- ⚠️ `bmad/core/mcp/mcp_client.py`: 57% (186/329 lines)
+- ❌ `bmad/core/mcp/tool_registry.py`: 48% (121/253 lines)
+- ❌ `bmad/core/mcp/enhanced_mcp_integration.py`: 15% (27/184 lines)
+
+**Coverage Verbetering Plan**:
+- [ ] **MCP Enhanced Integration Tests** (15% → 70%)
+  - Add tests voor enhanced MCP agent integration
+  - Test MCP workflow patterns
+  - Test agent mixin functionality
+  - Test dependency management
+
+- [ ] **Tool Registry Tests** (48% → 80%)
+  - Add comprehensive tool registration tests
+  - Test tool search functionality
+  - Test tool validation
+  - Test registry statistics
+
+- [ ] **MCP Client Tests** (57% → 80%)
+  - Add connection management tests
+  - Test message handling
+  - Test context management
+  - Test error handling
+
+- [ ] **Permission Service Tests** (79% → 90%)
+  - Add edge case permission tests
+  - Test tenant isolation
+  - Test audit logging
+  - Test permission caching
+
+#### **Priority 2: Warnings Resolution**
+**Huidige Status**: 212 warnings
+**Target**: <50 warnings
+
+**Warnings Categorisering**:
+1. **Deprecation Warnings** (Google Protobuf): 2 warnings
+   - `google._upb._message.MessageMapContainer` deprecation
+   - `google._upb._message.ScalarMapContainer` deprecation
+
+2. **Pytest Warnings** (3 warnings):
+   - Unknown pytest.mark.integration
+   - TestDependencyVisibility constructor issue
+   - aiohttp connector deprecation
+
+3. **Code Deprecation Warnings** (207 warnings):
+   - `datetime.datetime.utcnow()` deprecation in MCP modules
+   - Multiple files affected
+
+**Warnings Fix Plan**:
+- [ ] **Register Custom Pytest Marks**
+  - Add `pytest.ini` configuration voor integration mark
+  - Fix test class constructor issues
+  - Update pytest configuration
+
+- [ ] **Update Deprecated Code**
+  - Replace `datetime.utcnow()` with `datetime.now(datetime.UTC)`
+  - Update MCP framework integration
+  - Update MCP client code
+  - Update tool registry code
+
+- [ ] **External Dependencies**
+  - Update Google Protobuf dependencies
+  - Update aiohttp configuration
+  - Suppress unavoidable deprecation warnings
+
 ### **Phase 3: Documentation & Deployment (Week 3)**
 
 #### **Priority 1: Documentation Updates**
@@ -198,6 +273,16 @@ tests/e2e/:
 - [ ] 0 integration test failures
 - [ ] Complete E2E test suite
 - [ ] Full regression test coverage
+- [ ] **Core module coverage >90%**
+- [ ] **Warnings reduced to <50**
+
+### **Coverage & Quality**
+- [ ] Core module test coverage >90%
+- [ ] MCP integration coverage >70%
+- [ ] Security module coverage >95%
+- [ ] Warnings reduced by >75%
+- [ ] No critical deprecation warnings
+- [ ] Pytest configuration optimized
 
 ### **Documentation**
 - [ ] All documentation up-to-date
@@ -238,6 +323,10 @@ tests/e2e/:
 ### **Week 2: Test Coverage**
 - **Days 1-3**: Fix unit and integration test failures
 - **Days 4-5**: Implement E2E and regression tests
+
+### **Week 2.5: Coverage Improvement & Warnings Fix**
+- **Days 1-3**: Core module coverage improvement
+- **Days 4-5**: Warnings resolution
 
 ### **Week 3: Documentation & Deployment**
 - **Days 1-2**: Documentation updates

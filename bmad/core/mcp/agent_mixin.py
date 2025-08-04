@@ -8,7 +8,7 @@ import asyncio
 import logging
 from typing import Dict, List, Optional, Any, Union
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
 from .mcp_client import MCPClient, MCPContext, MCPResponse
 from .framework_integration import FrameworkMCPIntegration, get_framework_mcp_integration
@@ -111,7 +111,7 @@ class MCPAgentMixin:
         Returns:
             bool: True if initialization successful, False otherwise
         """
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         
         try:
             # Update config if provided
@@ -148,7 +148,7 @@ class MCPAgentMixin:
             
             # Track performance
             self.mcp_performance_metrics["initialization_time"] = (
-                datetime.utcnow() - start_time
+                datetime.now(timezone.utc) - start_time
             ).total_seconds()
             
             logger.info(f"MCP initialized successfully for agent: {self.mcp_config.agent_name}")
@@ -182,7 +182,7 @@ class MCPAgentMixin:
             logger.warning(f"MCP not available for agent: {self.mcp_config.agent_name}")
             return None
         
-        start_time = datetime.utcnow()
+        start_time = datetime.now(timezone.utc)
         self.mcp_performance_metrics["tool_executions"] += 1
         
         try:
@@ -194,7 +194,7 @@ class MCPAgentMixin:
                 metadata={
                     "tool_name": tool_name,
                     "agent_type": self.mcp_config.agent_type,
-                    "execution_timestamp": datetime.utcnow().isoformat()
+                    "execution_timestamp": datetime.now(timezone.utc).isoformat()
                 }
             )
             
@@ -202,8 +202,8 @@ class MCPAgentMixin:
             response = await self.mcp_integration.call_framework_tool(tool_name, parameters, context)
             
             # Track performance
-            execution_time = (datetime.utcnow() - start_time).total_seconds()
-            self.mcp_performance_metrics["last_execution"] = datetime.utcnow()
+            execution_time = (datetime.now(timezone.utc) - start_time).total_seconds()
+            self.mcp_performance_metrics["last_execution"] = datetime.now(timezone.utc)
             
             if response.success:
                 self.mcp_performance_metrics["successful_executions"] += 1
@@ -275,7 +275,7 @@ class MCPAgentMixin:
             "error_handling": self.mcp_config.error_handling,
             "performance_metrics": self.mcp_performance_metrics.copy(),
             "available_tools": self._get_available_tools(),
-            "last_updated": datetime.utcnow().isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat()
         }
     
     def _get_available_tools(self) -> List[str]:
@@ -307,7 +307,7 @@ class MCPAgentMixin:
         result = {
             "operation": operation_name,
             "agent": self.mcp_config.agent_name,
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "data": operation_data,
             "mcp_enhanced": False
         }

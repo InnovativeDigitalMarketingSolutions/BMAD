@@ -8,7 +8,7 @@ import importlib
 import logging
 from typing import Dict, List, Optional, Any, Union, Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
 logger = logging.getLogger(__name__)
 
@@ -131,7 +131,7 @@ class DependencyManager:
                 module = importlib.import_module(dep_name)
                 self._loaded_modules[dep_name] = module
                 dep_info.loaded = True
-                dep_info.load_time = datetime.utcnow()
+                dep_info.load_time = datetime.now(timezone.utc)
                 logger.debug(f"Loaded required dependency: {dep_name}")
             except ImportError as e:
                 dep_info.error_message = str(e)
@@ -162,7 +162,7 @@ class DependencyManager:
             module = importlib.import_module(module_name)
             self._loaded_modules[module_name] = module
             dep_info.loaded = True
-            dep_info.load_time = datetime.utcnow()
+            dep_info.load_time = datetime.now(timezone.utc)
             
             logger.debug(f"Lazy loaded optional dependency: {module_name}")
             return module
@@ -338,7 +338,7 @@ class DependencyManager:
             "missing_optional": missing_optional,
             "load_success_rate": (loaded_deps / total_deps) * 100 if total_deps > 0 else 0,
             "dependency_details": self._dependency_info.copy(),
-            "last_updated": datetime.utcnow().isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat()
         }
     
     def safe_import(self, module_name: str, fallback_value: Any = None) -> Any:

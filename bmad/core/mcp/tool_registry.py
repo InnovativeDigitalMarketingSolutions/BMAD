@@ -9,7 +9,7 @@ import json
 import logging
 from typing import Dict, List, Optional, Any, Callable, Union
 from dataclasses import dataclass, asdict
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 import uuid
 
@@ -92,8 +92,8 @@ class MCPToolRegistry:
                     author="BMAD System",
                     tags=[],
                     dependencies=[],
-                    created_at=datetime.utcnow(),
-                    updated_at=datetime.utcnow()
+                    created_at=datetime.now(timezone.utc),
+                    updated_at=datetime.now(timezone.utc)
                 )
             
             # Update categories
@@ -222,7 +222,7 @@ class MCPToolRegistry:
                 logger.warning(f"Tool not found: {tool_name}")
                 return False
             
-            metadata.updated_at = datetime.utcnow()
+            metadata.updated_at = datetime.now(timezone.utc)
             self.metadata[tool_name] = metadata
             
             logger.info(f"Updated metadata for tool: {tool_name}")
@@ -289,7 +289,7 @@ class MCPToolRegistry:
             
             metadata = self.metadata[tool_name]
             metadata.usage_count += 1
-            metadata.last_used = datetime.utcnow()
+            metadata.last_used = datetime.now(timezone.utc)
             
             # Update success rate
             if metadata.usage_count == 1:
@@ -332,7 +332,7 @@ class MCPToolRegistry:
                 "metadata": {},
                 "categories": self.categories,
                 "tags": self.tags,
-                "exported_at": datetime.utcnow().isoformat()
+                "exported_at": datetime.now(timezone.utc).isoformat()
             }
             
             # Export tools
@@ -412,7 +412,7 @@ class MCPToolRegistry:
             "categories": category_stats,
             "total_tags": len(self.tags),
             "most_popular_tools": self.get_popular_tools(5),
-            "last_updated": datetime.utcnow().isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat()
         }
 
 def get_mcp_tool_registry() -> MCPToolRegistry:

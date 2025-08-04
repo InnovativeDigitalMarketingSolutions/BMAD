@@ -11,7 +11,7 @@ import uuid
 from typing import Dict, List, Optional, Any, Union, Callable
 from pathlib import Path
 from dataclasses import dataclass, asdict
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 logger = logging.getLogger(__name__)
@@ -54,7 +54,7 @@ class MCPContext:
         if self.metadata is None:
             self.metadata = {}
         if self.timestamp is None:
-            self.timestamp = datetime.utcnow()
+            self.timestamp = datetime.now(timezone.utc)
 
 @dataclass
 class MCPRequest:
@@ -68,7 +68,7 @@ class MCPRequest:
     
     def __post_init__(self):
         if self.timestamp is None:
-            self.timestamp = datetime.utcnow()
+            self.timestamp = datetime.now(timezone.utc)
 
 @dataclass
 class MCPResponse:
@@ -85,7 +85,7 @@ class MCPResponse:
         if self.metadata is None:
             self.metadata = {}
         if self.timestamp is None:
-            self.timestamp = datetime.utcnow()
+            self.timestamp = datetime.now(timezone.utc)
 
 @dataclass
 class MCPServerInfo:
@@ -390,7 +390,7 @@ class MCPClient:
         try:
             if context_id in self.contexts:
                 self.contexts[context_id].metadata.update(metadata)
-                self.contexts[context_id].timestamp = datetime.utcnow()
+                self.contexts[context_id].timestamp = datetime.now(timezone.utc)
                 logger.info(f"Updated MCP context: {context_id}")
                 return True
             else:
@@ -549,7 +549,7 @@ class MCPClient:
                         "tool_name": tool.name,
                         "category": tool.category,
                         "version": tool.version,
-                        "execution_time": datetime.utcnow().isoformat()
+                        "execution_time": datetime.now(timezone.utc).isoformat()
                     }
                 }
             else:
@@ -730,7 +730,7 @@ class MCPClient:
             "responses_count": len(self.responses),
             "server_info": asdict(self.server_info) if self.server_info else None,
             "tool_categories": list(set(tool.category for tool in self.tools.values())),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.now(timezone.utc).isoformat()
         }
 
 def get_mcp_client(config: Optional[Dict[str, Any]] = None) -> MCPClient:
