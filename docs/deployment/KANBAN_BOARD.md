@@ -98,6 +98,28 @@
 
 ## 🎯 **NEXT PHASE - Priority 1** 🚀
 
+### **Extended Agent Testing - All 23 Agents** 📈 **PLANNED**
+- **Status**: PLANNED - Ready for implementation
+- **Scope**: Uitbreiden Enhanced MCP Integration tests naar alle 23 agents
+- **Current Coverage**: 5/23 agents (18/18 tests passing)
+- **Target Coverage**: 23/23 agents (100% coverage)
+- **Approach**: Gefaseerde implementatie met bewezen patterns
+- **Agent Groups**:
+  - ✅ **Group 1**: Core Development Agents (COMPLETED)
+  - 📋 **Group 2**: Operations & Infrastructure Agents (PLANNED)
+  - 📋 **Group 3**: Business & Strategy Agents (PLANNED)
+  - 📋 **Group 4**: Support & Specialized Agents (PLANNED)
+  - 📋 **Group 5**: Advanced & Specialized Agents (PLANNED)
+- **Success Criteria**: 
+  - 23/23 agents met Enhanced MCP Integration tests
+  - >80% test coverage voor alle agents
+  - >95% test success rate
+  - <10% performance impact
+- **Estimated Time**: 48-72 uur (12-18 uur per agent groep)
+- **Dependencies**: Enhanced MCP Integration patterns (COMPLETED)
+- **Documentation**: `docs/guides/EXTENDED_AGENT_TESTING_WORKFLOW.md`
+- **Quality Focus**: Robuuste en future-proof implementaties
+
 ### **Project Documentation Updates** 📚 🔥 **NEW HIGH PRIORITY**
 - **Status**: TO DO - Update project documentation na MCP Phase 2 completion
 - **Scope**: Update alle project documentatie om enhanced MCP Phase 2 te reflecteren
