@@ -200,6 +200,8 @@ def test_regression_verification():
 5. **Error Handling**: MCP failures mogen geen crashes veroorzaken
 6. **Test Fix Automation**: Systematische aanpak voor het fixen van syntax errors in test files
 7. **Quality Over Speed**: Kwalitatieve oplossingen boven snelle hacks
+8. **Integration Completeness**: Alle integraties volledig implementeren voordat nieuwe features worden toegevoegd
+9. **Implementation Verification**: Na elke implementatie een complete verificatie uitvoeren
 
 ### **FeedbackAgent Agent Success Story (Januari 2025)**
 
