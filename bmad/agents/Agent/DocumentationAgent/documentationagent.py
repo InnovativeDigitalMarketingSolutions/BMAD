@@ -44,6 +44,13 @@ from bmad.core.mcp import (
     initialize_framework_mcp_integration
 )
 
+# Enhanced MCP Phase 2 imports
+from bmad.core.mcp.enhanced_mcp_integration import (
+    EnhancedMCPIntegration,
+    create_enhanced_mcp_integration
+)
+from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
+
 load_dotenv()
 
 # Configure logging
@@ -90,6 +97,23 @@ class DocumentationAgent:
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
         self.mcp_enabled = False
         
+        # Enhanced MCP Phase 2 attributes
+        self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_enabled = False
+        
+        # Tracing Integration
+        self.tracer: Optional[BMADTracer] = None
+        self.tracing_enabled = False
+        
+        # Initialize tracer
+        self.tracer = BMADTracer(config=type("Config", (), {
+            "service_name": "DocumentationAgent",
+            "service_version": "1.0.0",
+            "environment": "development",
+            "sample_rate": 1.0,
+            "exporters": []
+        })())
+        
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
     
     async def initialize_mcp(self):
@@ -103,6 +127,33 @@ class DocumentationAgent:
         except Exception as e:
             logger.warning(f"MCP initialization failed for DocumentationAgent: {e}")
             self.mcp_enabled = False
+
+    async def initialize_enhanced_mcp(self):
+        """Initialize enhanced MCP capabilities for Phase 2."""
+        try:
+            self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+            # Check if initialize method exists before calling it
+            if hasattr(self.enhanced_mcp, 'initialize'):
+                await self.enhanced_mcp.initialize()
+            self.enhanced_mcp_enabled = True
+            logger.info("Enhanced MCP initialized successfully")
+        except Exception as e:
+            logger.warning(f"Enhanced MCP initialization failed: {e}")
+            self.enhanced_mcp_enabled = False
+    
+    async def initialize_tracing(self):
+        """Initialize tracing capabilities."""
+        try:
+            if self.tracer and hasattr(self.tracer, 'initialize'):
+                await self.tracer.initialize()
+                self.tracing_enabled = True
+                logger.info("Tracing initialized successfully")
+            else:
+                logger.warning("Tracer not available or missing initialize method")
+                self.tracing_enabled = False
+        except Exception as e:
+            logger.warning(f"Tracing initialization failed: {e}")
+            self.tracing_enabled = False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -178,6 +229,120 @@ class DocumentationAgent:
             logger.error(f"Error in documentation-specific MCP tools: {e}")
         
         return enhanced_data
+
+    async def use_enhanced_mcp_tools(self, doc_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use enhanced MCP tools voor Phase 2 capabilities."""
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+            logger.warning("Enhanced MCP not available, using standard MCP tools")
+            return await self.use_documentation_specific_mcp_tools(doc_data)
+        
+        enhanced_data = {}
+        
+        try:
+            # Core enhancement tools
+            core_result = await self.enhanced_mcp.use_enhanced_mcp_tool("core_enhancement", {
+                "agent_type": self.agent_name,
+                "enhancement_level": "advanced",
+                "capabilities": doc_data.get("capabilities", []),
+                "performance_metrics": doc_data.get("performance_metrics", {})
+            })
+            enhanced_data["core_enhancement"] = core_result
+            
+            # Documentation-specific enhanced tools
+            doc_enhanced_result = await self.use_documentation_specific_enhanced_tools(doc_data)
+            enhanced_data.update(doc_enhanced_result)
+            
+            # Tracing integration
+            if self.tracing_enabled:
+                trace_result = await self.trace_documentation_operation(doc_data)
+                enhanced_data["tracing"] = trace_result
+            
+            logger.info(f"Enhanced MCP tools used successfully: {len(enhanced_data)} tools")
+            
+        except Exception as e:
+            logger.error(f"Enhanced MCP tools failed: {e}")
+            enhanced_data["error"] = str(e)
+        
+        return enhanced_data
+    
+    async def use_documentation_specific_enhanced_tools(self, doc_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Use documentation-specific enhanced MCP tools."""
+        enhanced_tools = {}
+        
+        try:
+            # Enhanced API documentation generation
+            if "api_documentation" in doc_data:
+                api_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_api_documentation", {
+                    "api_data": doc_data["api_documentation"],
+                    "documentation_depth": doc_data.get("documentation_depth", "comprehensive"),
+                    "include_examples": doc_data.get("include_examples", True)
+                })
+                enhanced_tools["enhanced_api_documentation"] = api_result
+            
+            # Enhanced user guide generation
+            if "user_guide" in doc_data:
+                guide_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_user_guide", {
+                    "guide_data": doc_data["user_guide"],
+                    "guide_complexity": doc_data.get("guide_complexity", "comprehensive"),
+                    "include_screenshots": doc_data.get("include_screenshots", True)
+                })
+                enhanced_tools["enhanced_user_guide"] = guide_result
+            
+            # Enhanced team collaboration
+            if "team_collaboration" in doc_data:
+                collaboration_result = await self.enhanced_mcp.communicate_with_agents(
+                    ["UXUIDesigner", "FrontendDeveloper", "BackendDeveloper", "ProductOwner"],
+                    {
+                        "type": "documentation_review",
+                        "content": doc_data["team_collaboration"]
+                    }
+                )
+                enhanced_tools["enhanced_team_collaboration"] = collaboration_result
+            
+            # Enhanced technical documentation
+            if "technical_documentation" in doc_data:
+                tech_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_technical_documentation", {
+                    "tech_data": doc_data["technical_documentation"],
+                    "documentation_style": doc_data.get("documentation_style", "detailed"),
+                    "include_architecture": doc_data.get("include_architecture", True)
+                })
+                enhanced_tools["enhanced_technical_documentation"] = tech_result
+            
+            logger.info(f"Documentation-specific enhanced tools executed: {list(enhanced_tools.keys())}")
+            
+        except Exception as e:
+            logger.error(f"Error in documentation-specific enhanced tools: {e}")
+        
+        return enhanced_tools
+    
+    async def trace_documentation_operation(self, operation_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace documentation operations."""
+        if not self.tracing_enabled or not self.tracer:
+            return {"tracing": "disabled"}
+        
+        try:
+            trace_data = {
+                "operation_type": "documentation_operation",
+                "agent": self.agent_name,
+                "timestamp": datetime.now().isoformat(),
+                "operation_data": operation_data,
+                "performance_metrics": {
+                    "documentation_complexity": len(operation_data.get("documentation_sections", [])),
+                    "api_endpoints": len(operation_data.get("api_endpoints", [])),
+                    "technical_depth": operation_data.get("technical_depth", "basic")
+                }
+            }
+            
+            # Add trace to tracer
+            if hasattr(self.tracer, 'add_trace'):
+                await self.tracer.add_trace("documentation_operation", trace_data)
+            
+            logger.info(f"Documentation operation traced: {trace_data['operation_type']}")
+            return trace_data
+            
+        except Exception as e:
+            logger.error(f"Tracing failed: {e}")
+            return {"tracing": "error", "error": str(e)}
 
     def _load_docs_history(self):
         """Load documentation history from data file"""
@@ -770,9 +935,49 @@ DocumentationAgent Commands:
         # Initialize MCP integration
         await self.initialize_mcp()
         
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing capabilities
+        await self.initialize_tracing()
+        
+        print("📚 DocumentationAgent is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        
         logger.info("DocumentationAgent ready and listening for events...")
         print("[DocumentationAgent] Ready and listening for events...")
         await self.collaborate_example()
+    
+    async def run_async(self):
+        """Run the agent with enhanced MCP and tracing initialization."""
+        # Initialize MCP integration
+        await self.initialize_mcp()
+        
+        # Initialize enhanced MCP capabilities for Phase 2
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing capabilities
+        await self.initialize_tracing()
+        
+        print("📚 DocumentationAgent is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        
+        logger.info("DocumentationAgent ready and listening for events...")
+        await self.collaborate_example()
+    
+    @classmethod
+    async def run_agent(cls):
+        """Class method to run the DocumentationAgent agent met MCP integration."""
+        agent = cls()
+        await agent.run_async()
+    
+    @classmethod
+    async def run_agent_async(cls):
+        """Class method to run the DocumentationAgent agent with enhanced MCP."""
+        agent = cls()
+        await agent.run_async()
 
 # Global functions for Figma documentation
 def document_figma_ui(figma_file_id: str) -> Dict:
@@ -1166,7 +1371,11 @@ def main():
                        choices=["help", "summarize-changelogs", "document-figma", "create-api-docs",
                                "create-user-guide", "create-technical-docs", "show-docs-history",
                                "show-figma-history", "show-best-practices", "show-changelog",
-                               "export-report", "test", "collaborate", "run"])
+                               "export-report", "test", "collaborate", "run", "initialize-mcp", 
+                               "use-mcp-tool", "get-mcp-status", "use-documentation-mcp-tools", 
+                               "check-dependencies", "enhanced-collaborate", "enhanced-security", 
+                               "enhanced-performance", "trace-operation", "trace-performance", 
+                               "trace-error", "tracing-summary"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--figma-file-id", help="Figma file ID for documentation")
     parser.add_argument("--api-name", default="BMAD API", help="API name for documentation")
@@ -1216,6 +1425,55 @@ def main():
         asyncio.run(agent.collaborate_example())
     elif args.command == "run":
         asyncio.run(agent.run())
+    # Enhanced MCP Phase 2 Commands
+    elif args.command in ["enhanced-collaborate", "enhanced-security", "enhanced-performance", 
+                         "trace-operation", "trace-performance", "trace-error", "tracing-summary"]:
+        # Enhanced MCP commands
+        if args.command == "enhanced-collaborate":
+            result = asyncio.run(agent.enhanced_mcp.communicate_with_agents(
+                ["UXUIDesigner", "FrontendDeveloper", "BackendDeveloper", "ProductOwner"], 
+                {"type": "documentation_review", "content": {"review_type": "documentation_generation"}}
+            ))
+            print(json.dumps(result, indent=2))
+        elif args.command == "enhanced-security":
+            result = asyncio.run(agent.enhanced_mcp.enhanced_security_validation({
+                "documentation_data": {"api_docs": [], "user_guides": [], "technical_docs": []},
+                "security_requirements": ["content_validation", "access_control", "audit_trail"]
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "enhanced-performance":
+            result = asyncio.run(agent.enhanced_mcp.enhanced_performance_optimization({
+                "documentation_data": {"api_docs": [], "user_guides": [], "technical_docs": []},
+                "performance_metrics": {"generation_speed": 85.5, "content_quality": 92.3}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-operation":
+            result = asyncio.run(agent.trace_documentation_operation({
+                "operation_type": "documentation_generation",
+                "api_name": args.api_name,
+                "documentation_sections": ["api_docs", "user_guides", "technical_docs"]
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-performance":
+            result = asyncio.run(agent.trace_documentation_operation({
+                "operation_type": "performance_analysis",
+                "performance_metrics": {"generation_speed": 85.5, "content_quality": 92.3}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-error":
+            result = asyncio.run(agent.trace_documentation_operation({
+                "operation_type": "error_analysis",
+                "error_data": {"error_type": "documentation_generation", "error_message": "Documentation generation failed"}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "tracing-summary":
+            print("Tracing Summary for DocumentationAgent:")
+            print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+            print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+            print(f"Agent: {agent.agent_name}")
+    else:
+        print(f"Unknown command: {args.command}")
+        agent.show_help()
 
 if __name__ == "__main__":
     main()

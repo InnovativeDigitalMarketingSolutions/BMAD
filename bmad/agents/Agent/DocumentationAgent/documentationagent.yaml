@@ -22,6 +22,29 @@ commands:
   - show-docs-history: Toon documentatie historie
   - changelog: Toon changelog van documentatie
   - test: Test resource completeness
+  - summarize-changelogs: Samenvatting van changelogs
+  - document-figma: Documenteer Figma UI
+  - create-api-docs: Maak API documentatie
+  - create-user-guide: Maak gebruikershandleiding
+  - create-technical-docs: Maak technische documentatie
+  - show-figma-history: Toon Figma documentatie historie
+  - show-best-practices: Show best practices
+  - export-report: Export rapport
+  - collaborate: Demonstrate collaboration
+  - run: Run agent met MCP integration
+  - initialize-mcp: Initialize MCP client
+  - use-mcp-tool: Use MCP tool met parameters
+  - get-mcp-status: Get MCP integration status
+  - use-documentation-mcp-tools: Use documentation-specific MCP tools
+  - check-dependencies: Check agent dependencies
+  # MCP Phase 2 Enhanced Commands
+  - enhanced-collaborate: Enhanced inter-agent communicatie
+  - enhanced-security: Enhanced security validatie
+  - enhanced-performance: Enhanced performance optimalisatie
+  - trace-operation: Trace documentation operations
+  - trace-performance: Get performance metrics
+  - trace-error: Trace error scenarios
+  - tracing-summary: Get tracing summary
 
 dependencies:
   templates:
