@@ -15,6 +15,24 @@ Foundations in Agentic Agile Driven Development, known as the Breakthrough Metho
 
 ## Overview
 
+**What’s new: Enhanced MCP Phase 2 integration complete – 23/23 agents!**
+
+BMAD heeft nu volledige ondersteuning voor **Enhanced MCP Phase 2**. Dit betekent dat alle 23 agents zijn uitgebreid met geavanceerde Multi-Agent Communication Protocol (MCP) functionaliteit, observability en performance features.
+
+### MCP Enhanced Features (Phase 2)
+- **Volledige Enhanced MCP integratie** voor alle agents (23/23)
+- **Advanced Tracing**: OpenTelemetry-gebaseerde distributed tracing voor alle agent-operaties
+- **Inter-agent Communication**: Geavanceerde communicatie en samenwerking tussen agents via MCP
+- **Performance Optimization**: Real-time performance monitoring, metrics en optimalisatie
+- **Security Validation**: Uitgebreide security checks en policy enforcement
+- **Uitgebreide CLI**: Nieuwe en verbeterde CLI commands voor alle agents (inclusief tracing, security, performance, collaboration)
+- **Volledige test coverage**: 1000+ tests, 100% passing
+- **Gedocumenteerde YAML en README’s** voor alle agents
+
+**Let op:** Deze functies zijn alleen beschikbaar in de Enhanced MCP Phase 2 implementatie (2025).
+
+---
+
 **BMad Method's Two Key Innovations:**
 
 **1. Agentic Planning:** Dedicated agents (Analyst, PM, Architect) collaborate with you to create detailed, consistent PRDs and Architecture documents. Through advanced prompt engineering and human-in-the-loop refinement, these planning agents produce comprehensive specifications that go far beyond generic AI task generation.

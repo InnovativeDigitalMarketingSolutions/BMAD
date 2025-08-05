@@ -1,7 +1,23 @@
 import os
 import sys
+import logging
+from datetime import datetime, timedelta
 
 from flask import Flask, jsonify, redirect, request, send_from_directory
+from flask_cors import CORS
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler('bmad_api.log')
+    ]
+)
+logger = logging.getLogger(__name__)
 
 # Add the project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -16,7 +32,85 @@ from bmad.core.enterprise.billing import billing_manager, usage_tracker, subscri
 from bmad.core.enterprise.access_control import feature_flag_manager, access_control_manager
 from bmad.core.enterprise.security import enterprise_security_manager
 
+# JWT Security Integration
+from bmad.core.security.jwt_service import jwt_service
+from bmad.core.security.permission_service import (
+    permission_service,
+    require_permission_enhanced,
+    require_any_permission,
+    require_all_permissions,
+    require_role,
+    require_any_role
+)
+
 app = Flask(__name__)
+
+# Security headers and CORS configuration
+CORS(app, origins=os.getenv("ALLOWED_ORIGINS", "*").split(","))
+
+# Rate limiting configuration
+limiter = Limiter(
+    app=app,
+    key_func=get_remote_address,
+    default_limits=["200 per day", "50 per hour"],
+    storage_uri="memory://"
+)
+
+# Security headers middleware
+@app.after_request
+def add_security_headers(response):
+    """Add security headers to all responses."""
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
+    response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
+    response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
+    return response
+
+# Global error handling
+@app.errorhandler(400)
+def bad_request(error):
+    """Handle 400 Bad Request errors."""
+    logger.warning(f"Bad request: {error}")
+    return jsonify({"error": "Bad request", "message": str(error)}), 400
+
+@app.errorhandler(401)
+def unauthorized(error):
+    """Handle 401 Unauthorized errors."""
+    logger.warning(f"Unauthorized access: {error}")
+    return jsonify({"error": "Unauthorized", "message": "Authentication required"}), 401
+
+@app.errorhandler(403)
+def forbidden(error):
+    """Handle 403 Forbidden errors."""
+    logger.warning(f"Forbidden access: {error}")
+    return jsonify({"error": "Forbidden", "message": "Insufficient permissions"}), 403
+
+@app.errorhandler(404)
+def not_found(error):
+    """Handle 404 Not Found errors."""
+    logger.info(f"Resource not found: {error}")
+    return jsonify({"error": "Not found", "message": "Resource not found"}), 404
+
+@app.errorhandler(429)
+def too_many_requests(error):
+    """Handle 429 Too Many Requests errors."""
+    logger.warning(f"Rate limit exceeded: {error}")
+    return jsonify({"error": "Too many requests", "message": "Rate limit exceeded"}), 429
+
+@app.errorhandler(500)
+def internal_error(error):
+    """Handle 500 Internal Server Error."""
+    logger.error(f"Internal server error: {error}")
+    return jsonify({"error": "Internal server error", "message": "An unexpected error occurred"}), 500
+
+@app.errorhandler(Exception)
+def handle_exception(error):
+    """Handle all unhandled exceptions."""
+    logger.error(f"Unhandled exception: {error}", exc_info=True)
+    return jsonify({"error": "Internal server error", "message": "An unexpected error occurred"}), 500
 
 orch = OrchestratorAgent()
 
@@ -53,16 +147,62 @@ def require_auth(f):
             })()
             return f(*args, **kwargs)
         
-        # Production authentication
+        # Production authentication with JWT validation
         auth_header = request.headers.get('Authorization')
         if not auth_header or not auth_header.startswith('Bearer '):
             return jsonify({"error": "Authentication required"}), 401
         
         token = auth_header.split(' ')[1]
-        # TODO: Implement JWT token validation
-        # For now, just check if token exists
         if not token:
             return jsonify({"error": "Invalid token"}), 401
+        
+        # JWT token validation
+        try:
+            payload = jwt_service.verify_access_token(token)
+            if not payload:
+                return jsonify({"error": "Invalid or expired token"}), 401
+            
+            # Extract user information from token
+            user_id = payload.get("sub")
+            email = payload.get("email")
+            tenant_id = payload.get("tenant_id")
+            roles = payload.get("roles", [])
+            permissions = payload.get("permissions", [])
+            
+            # Set user information on request object
+            request.user = type('User', (), {
+                'id': user_id,
+                'email': email,
+                'roles': roles,
+                'permissions': permissions
+            })()
+            request.tenant_id = tenant_id
+            
+            # Log successful authentication
+            enterprise_security_manager.log_audit_event(
+                user_id=user_id,
+                tenant_id=tenant_id,
+                event_type="authentication",
+                resource="api",
+                action="token_validation",
+                details={"endpoint": request.endpoint},
+                ip_address=request.remote_addr,
+                success=True
+            )
+            
+        except Exception as e:
+            # Log failed authentication
+            enterprise_security_manager.log_audit_event(
+                user_id="unknown",
+                tenant_id="unknown",
+                event_type="authentication",
+                resource="api",
+                action="token_validation",
+                details={"error": str(e), "endpoint": request.endpoint},
+                ip_address=request.remote_addr,
+                success=False
+            )
+            return jsonify({"error": "Authentication failed"}), 401
         
         return f(*args, **kwargs)
     decorated_function.__name__ = f.__name__
@@ -76,8 +216,56 @@ def require_permission(permission):
             if os.getenv("DEV_MODE") == "true":
                 return f(*args, **kwargs)
             
-            # TODO: Implement permission checking
-            # For now, just pass through
+            # Permission checking implementation
+            try:
+                # Get user from request (set by require_auth decorator)
+                if not hasattr(request, 'user'):
+                    return jsonify({"error": "Authentication required"}), 401
+                
+                user = request.user
+                user_permissions = getattr(user, 'permissions', [])
+                
+                # Check if user has required permission
+                if permission not in user_permissions and "*" not in user_permissions:
+                    # Log permission denied
+                    enterprise_security_manager.log_audit_event(
+                        user_id=user.id,
+                        tenant_id=getattr(request, 'tenant_id', None),
+                        event_type="authorization",
+                        resource="api",
+                        action="permission_check",
+                        details={"required_permission": permission, "user_permissions": user_permissions, "endpoint": request.endpoint},
+                        ip_address=request.remote_addr,
+                        success=False
+                    )
+                    return jsonify({"error": "Insufficient permissions"}), 403
+                
+                # Log successful permission check
+                enterprise_security_manager.log_audit_event(
+                    user_id=user.id,
+                    tenant_id=getattr(request, 'tenant_id', None),
+                    event_type="authorization",
+                    resource="api",
+                    action="permission_check",
+                    details={"required_permission": permission, "endpoint": request.endpoint},
+                    ip_address=request.remote_addr,
+                    success=True
+                )
+                
+            except Exception as e:
+                # Log permission check error
+                enterprise_security_manager.log_audit_event(
+                    user_id=getattr(request, 'user', type('User', (), {'id': 'unknown'})().id),
+                    tenant_id=getattr(request, 'tenant_id', None),
+                    event_type="authorization",
+                    resource="api",
+                    action="permission_check",
+                    details={"error": str(e), "endpoint": request.endpoint},
+                    ip_address=request.remote_addr,
+                    success=False
+                )
+                return jsonify({"error": "Permission check failed"}), 500
+            
             return f(*args, **kwargs)
         decorated_function.__name__ = f.__name__
         return decorated_function
@@ -86,11 +274,11 @@ def require_permission(permission):
 # Existing routes
 @app.route("/orchestrator/start-workflow", methods=["POST"])
 @require_auth
-@require_permission("execute_workflows")
+@require_permission_enhanced("execute_workflows", tenant_aware=True)
 def start_workflow():
     data = request.json or {}
     workflow = data.get("workflow")
-    data.get("parameters", {})
+    
     if not workflow:
         return jsonify({"error": "workflow is required"}), 400
     
@@ -98,8 +286,11 @@ def start_workflow():
     tenant_id = get_tenant_from_request()
     if tenant_id:
         tenant = tenant_manager.get_tenant(tenant_id)
-        if tenant and not tenant_manager.check_limit("max_workflows", 1):  # TODO: Get actual count
-            return jsonify({"error": "Workflow limit exceeded"}), 403
+        if tenant:
+            # Get actual workflow count for tenant
+            current_workflows = orch.get_tenant_workflow_count(tenant_id)
+            if not tenant_manager.check_limit("max_workflows", current_workflows + 1):
+                return jsonify({"error": "Workflow limit exceeded"}), 403
     
     orch.start_workflow(workflow)
     return jsonify({"status": "started", "workflow": workflow})
@@ -123,7 +314,7 @@ def orchestrator_metrics():
 
 @app.route("/agent/<agent_name>/command", methods=["POST"])
 @require_auth
-@require_permission("execute_agents")
+@require_permission_enhanced("execute_agents", tenant_aware=True)
 def agent_command(agent_name):
     data = request.json or {}
     command = data.get("command")
@@ -132,8 +323,11 @@ def agent_command(agent_name):
     tenant_id = get_tenant_from_request()
     if tenant_id:
         tenant = tenant_manager.get_tenant(tenant_id)
-        if tenant and not tenant_manager.check_limit("max_agents", 1):  # TODO: Get actual count
-            return jsonify({"error": "Agent limit exceeded"}), 403
+        if tenant:
+            # Get actual agent count for tenant
+            current_agents = orch.get_tenant_agent_count(tenant_id)
+            if not tenant_manager.check_limit("max_agents", current_agents + 1):
+                return jsonify({"error": "Agent limit exceeded"}), 403
     
     # Stub: publiceer event op message bus of roep agent direct aan
     # Voorbeeld: publish(f"{agent_name}_command", {"command": command})
@@ -273,14 +467,60 @@ def login():
         success=True
     )
     
-    # TODO: Generate JWT token
-    token = "dummy_token"  # Replace with actual JWT generation
+    # Generate JWT token pair
+    try:
+        # Get user roles and permissions
+        user_roles = role_manager.get_user_roles(user.id)
+        user_permissions = permission_manager.get_user_permissions(user.id)
+        
+        # Create token pair
+        token_data = jwt_service.create_token_pair(
+            user_id=user.id,
+            email=user.email,
+            tenant_id=user.tenant_id,
+            roles=[role.name for role in user_roles],
+            permissions=[perm.name for perm in user_permissions]
+        )
+        
+        return jsonify({
+            "user": user.to_dict(),
+            "access_token": token_data["access_token"],
+            "refresh_token": token_data["refresh_token"],
+            "token_type": token_data["token_type"],
+            "expires_in": token_data["expires_in"],
+            "refresh_expires_in": token_data["refresh_expires_in"],
+            "tenant": tenant_manager.get_tenant(user.tenant_id).to_dict() if user.tenant_id else None
+        })
+        
+    except Exception as e:
+        logger.error(f"JWT token generation failed: {e}")
+        return jsonify({"error": "Token generation failed"}), 500
+
+@app.route("/api/auth/refresh", methods=["POST"])
+def refresh_token():
+    """Refresh access token using refresh token."""
+    data = request.json or {}
+    refresh_token = data.get("refresh_token")
     
-    return jsonify({
-        "user": user.to_dict(),
-        "token": token,
-        "tenant": tenant_manager.get_tenant(user.tenant_id).to_dict() if user.tenant_id else None
-    })
+    if not refresh_token:
+        return jsonify({"error": "Refresh token required"}), 400
+    
+    try:
+        # Refresh access token
+        token_data = jwt_service.refresh_access_token(refresh_token)
+        
+        if not token_data:
+            return jsonify({"error": "Invalid or expired refresh token"}), 401
+        
+        return jsonify({
+            "access_token": token_data["access_token"],
+            "token_type": token_data["token_type"],
+            "expires_in": token_data["expires_in"]
+        })
+        
+    except Exception as e:
+        logger.error(f"Token refresh failed: {e}")
+        return jsonify({"error": "Token refresh failed"}), 500
 
 # Billing Routes
 @app.route("/api/billing/plans", methods=["GET"])
@@ -316,8 +556,18 @@ def get_usage():
     for metric in metrics:
         if period == "current_month":
             usage_data[metric] = usage_tracker.get_current_month_usage(tenant_id, metric)
+        elif period == "current_quarter":
+            usage_data[metric] = usage_tracker.get_current_quarter_usage(tenant_id, metric)
+        elif period == "current_year":
+            usage_data[metric] = usage_tracker.get_current_year_usage(tenant_id, metric)
+        elif period == "last_month":
+            usage_data[metric] = usage_tracker.get_last_month_usage(tenant_id, metric)
+        elif period == "last_quarter":
+            usage_data[metric] = usage_tracker.get_last_quarter_usage(tenant_id, metric)
+        elif period == "last_year":
+            usage_data[metric] = usage_tracker.get_last_year_usage(tenant_id, metric)
         else:
-            # TODO: Implement period-based usage
+            # Default to current month for unknown periods
             usage_data[metric] = usage_tracker.get_current_month_usage(tenant_id, metric)
     
     return jsonify(usage_data)

@@ -428,6 +428,20 @@ class RoleManager:
     def list_roles(self) -> List[Role]:
         """List all roles."""
         return list(self.roles.values())
+    
+    def get_user_roles(self, user_id: str) -> List[Role]:
+        """Get all roles for a user."""
+        user = self.user_manager.get_user(user_id)
+        if not user:
+            return []
+        
+        roles = []
+        for role_id in user.role_ids:
+            role = self.get_role(role_id)
+            if role:
+                roles.append(role)
+        
+        return roles
 
 
 class PermissionManager:
@@ -465,6 +479,38 @@ class PermissionManager:
         """Check if user has all of the specified permissions."""
         user_permissions = self.get_user_permissions(user_id)
         return all(perm in user_permissions for perm in permissions)
+    
+    def get_user_roles(self, user_id: str) -> List[Role]:
+        """Get all roles for a user."""
+        return self.role_manager.get_user_roles(user_id)
+    
+    def has_role(self, user_id: str, role_name: str) -> bool:
+        """Check if user has specific role."""
+        user_roles = self.get_user_roles(user_id)
+        return any(role.name == role_name for role in user_roles)
+    
+    def has_any_role(self, user_id: str, role_names: List[str]) -> bool:
+        """Check if user has any of the specified roles."""
+        user_roles = self.get_user_roles(user_id)
+        return any(role.name in role_names for role in user_roles)
+    
+    def has_all_roles(self, user_id: str, role_names: List[str]) -> bool:
+        """Check if user has all of the specified roles."""
+        user_roles = self.get_user_roles(user_id)
+        user_role_names = [role.name for role in user_roles]
+        return all(role_name in user_role_names for role_name in role_names)
+    
+    def get_user_permissions_by_tenant(self, user_id: str, tenant_id: str) -> Set[str]:
+        """Get user permissions filtered by tenant."""
+        user = self.user_manager.get_user(user_id)
+        if not user or user.tenant_id != tenant_id:
+            return set()
+        
+        return self.get_user_permissions(user_id)
+    
+    def check_tenant_permission(self, user_id: str, tenant_id: str, permission: str) -> bool:
+        """Check if user has permission in specific tenant."""
+        return permission in self.get_user_permissions_by_tenant(user_id, tenant_id)
 
 
 # Global instances

@@ -206,7 +206,6 @@ class TestMessageBusGetEvents:
             assert events == []
     
     @pytest.mark.asyncio
-    async @pytest.mark.asyncio
     async def test_get_events_with_data(self, temp_context_file):
         """Test getting events with data."""
         # Create some test events
@@ -287,7 +286,6 @@ class TestMessageBusClearEvents:
         assert context["events"] == []
     
     @pytest.mark.asyncio
-    async @pytest.mark.asyncio
     async def test_clear_events_with_data(self, temp_context_file):
         """Test clearing events with existing data."""
         # Add some events first
@@ -335,8 +333,6 @@ class TestMessageBusIntegration:
     """Integration tests for message bus."""
     
     @pytest.mark.asyncio
-    async @pytest.mark.asyncio
-    async @pytest.mark.asyncio
     async def test_full_workflow(self, temp_context_file, reset_subscribers):
         """Test complete message bus workflow."""
         # Subscribe to events

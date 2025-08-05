@@ -24,6 +24,9 @@ from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_e
 from integrations.slack.slack_notify import send_slack_message
 from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
 
+# Tracing Integration
+from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
+
 # MCP Integration
 from bmad.core.mcp import (
     MCPClient,
@@ -125,9 +128,10 @@ class QualityGuardianAgent:
         # Enhanced MCP Integration
         self.enhanced_mcp = None
         self.enhanced_mcp_enabled = False
+        self.enhanced_mcp_client = None
         
         # Tracing Integration
-        self.tracer = None
+        self.tracer: Optional[BMADTracer] = None
         self.tracing_enabled = False
         
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
@@ -147,10 +151,16 @@ class QualityGuardianAgent:
     async def initialize_enhanced_mcp(self):
         """Initialize enhanced MCP voor Phase 2 capabilities."""
         try:
-            from bmad.core.mcp import get_enhanced_mcp_client
-            self.enhanced_mcp = await get_enhanced_mcp_client()
-            self.enhanced_mcp_enabled = True
-            logger.info("Enhanced MCP Integration initialized for QualityGuardian")
+            from bmad.core.mcp import create_enhanced_mcp_integration
+            self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
+            self.enhanced_mcp_enabled = await self.enhanced_mcp.initialize_enhanced_mcp()
+            self.enhanced_mcp_client = self.enhanced_mcp
+            
+            if self.enhanced_mcp_enabled:
+                logger.info("Enhanced MCP capabilities initialized successfully for QualityGuardian")
+            else:
+                logger.warning("Enhanced MCP initialization failed, falling back to standard MCP")
+                
         except Exception as e:
             logger.warning(f"Enhanced MCP initialization failed for QualityGuardian: {e}")
             self.enhanced_mcp_enabled = False
@@ -158,8 +168,11 @@ class QualityGuardianAgent:
     async def initialize_tracing(self):
         """Initialize tracing voor quality assurance monitoring."""
         try:
-            from bmad.core.tracing import get_tracer
-            self.tracer = await get_tracer()
+            self.tracer = BMADTracer(config=type("Config", (), {
+                "service_name": self.agent_name,
+                "service_version": "1.0.0",
+                "environment": "development"
+            })())
             self.tracing_enabled = True
             logger.info("Tracing initialized for QualityGuardian")
         except Exception as e:
@@ -597,6 +610,86 @@ Examples:
             logger.error(f"Error analyzing code quality: {e}")
             self._record_quality_metric("code_quality_analysis_error", 5, "%")
             raise QualityError(f"Failed to analyze code quality: {e}")
+
+    async def validate_quality(self, validation_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Validate quality based on validation data."""
+        try:
+            # Initialize enhanced MCP if not already done
+            if not self.enhanced_mcp_enabled:
+                await self.initialize_enhanced_mcp()
+            
+            # Use enhanced MCP tools if available
+            if self.enhanced_mcp_enabled and self.enhanced_mcp:
+                result = await self.use_enhanced_mcp_tools({
+                    "operation": "validate_quality",
+                    "validation_data": validation_data,
+                    "quality_checks": validation_data.get("quality_checks", []),
+                    "thresholds": validation_data.get("thresholds", {}),
+                    "capabilities": ["quality_validation", "standards_enforcement", "quality_reporting"]
+                })
+                if result:
+                    return result
+            
+            # Fallback to local implementation
+            return await asyncio.to_thread(self._validate_quality_sync, validation_data)
+            
+        except Exception as e:
+            logging.error(f"Error in validate_quality: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "validation": None
+            }
+
+    def _validate_quality_sync(self, validation_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Synchronous fallback for validate_quality."""
+        try:
+            quality_checks = validation_data.get("quality_checks", [])
+            thresholds = validation_data.get("thresholds", {})
+            
+            # Perform quality validation
+            validation_results = {}
+            overall_score = 0
+            total_checks = len(quality_checks)
+            
+            for check in quality_checks:
+                check_name = check.get("name", "unknown")
+                check_value = check.get("value", 0)
+                check_threshold = thresholds.get(check_name, 80)
+                
+                passed = check_value >= check_threshold
+                validation_results[check_name] = {
+                    "value": check_value,
+                    "threshold": check_threshold,
+                    "passed": passed,
+                    "status": "PASS" if passed else "FAIL"
+                }
+                
+                if passed:
+                    overall_score += 1
+            
+            overall_percentage = (overall_score / total_checks * 100) if total_checks > 0 else 0
+            
+            return {
+                "success": True,
+                "validation": {
+                    "overall_score": overall_percentage,
+                    "total_checks": total_checks,
+                    "passed_checks": overall_score,
+                    "failed_checks": total_checks - overall_score,
+                    "validation_results": validation_results,
+                    "timestamp": datetime.now().isoformat()
+                },
+                "status": "completed"
+            }
+            
+        except Exception as e:
+            logging.error(f"Error in _validate_quality_sync: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "validation": None
+            }
 
     def monitor_test_coverage(self, threshold: int = 80) -> Dict[str, Any]:
         """Monitor test coverage with comprehensive validation and error handling."""
@@ -1471,7 +1564,7 @@ Examples:
         """
         try:
             # Get template content
-            template_content = self.framework_manager.get_template(template_name)
+            template_content = self.framework_manager.get_framework_template(template_name)
             if not template_content:
                 return {
                     "success": False,

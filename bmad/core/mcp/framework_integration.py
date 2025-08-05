@@ -9,7 +9,7 @@ import json
 import logging
 from typing import Dict, List, Optional, Any, Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 from .mcp_client import MCPClient, MCPTool, MCPContext, MCPResponse
@@ -298,8 +298,8 @@ class FrameworkMCPIntegration:
                     author="BMAD Framework",
                     tags=[framework_tool.framework_type.value, "framework", "mcp"],
                     dependencies=framework_tool.dependencies,
-                    created_at=datetime.utcnow(),
-                    updated_at=datetime.utcnow()
+                    created_at=datetime.now(timezone.utc),
+                    updated_at=datetime.now(timezone.utc)
                 )
                 
                 self.tool_registry.register_tool(mcp_tool, framework_tool.handler, metadata)
@@ -546,7 +546,7 @@ This documentation was automatically generated from the source code.
 {output_format}
 
 ## Generated At
-{datetime.utcnow().isoformat()}
+{datetime.now(timezone.utc).isoformat()}
 """
             
             return {
@@ -555,9 +555,9 @@ This documentation was automatically generated from the source code.
                 "metadata": {
                     "format": output_format,
                     "source_length": len(source),
-                    "generation_time": datetime.utcnow().isoformat()
+                    "generation_time": datetime.now(timezone.utc).isoformat()
                 },
-                "generated_at": datetime.utcnow().isoformat()
+                "generated_at": datetime.now(timezone.utc).isoformat()
             }
             
         except Exception as e:
@@ -566,7 +566,7 @@ This documentation was automatically generated from the source code.
                 "documentation": "",
                 "sections": [],
                 "metadata": {},
-                "generated_at": datetime.utcnow().isoformat()
+                "generated_at": datetime.now(timezone.utc).isoformat()
             }
     
     async def _execute_performance_monitor(self, parameters: Dict[str, Any], context: MCPContext) -> Dict[str, Any]:
@@ -626,7 +626,7 @@ This documentation was automatically generated from the source code.
             "tool_registry_available": self.tool_registry is not None,
             "framework_tools_count": len(self.framework_tools),
             "framework_types": [ft.value for ft in FrameworkType],
-            "last_updated": datetime.utcnow().isoformat()
+            "last_updated": datetime.now(timezone.utc).isoformat()
         }
 
 def get_framework_mcp_integration() -> FrameworkMCPIntegration:

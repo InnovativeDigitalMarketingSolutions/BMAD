@@ -96,6 +96,7 @@ class FullstackDeveloperAgent:
         # Enhanced MCP Integration for Phase 2
         self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
         self.enhanced_mcp_enabled = False
+        self.enhanced_mcp_client = None
         
         # Tracing Integration
         self.tracer: Optional[BMADTracer] = None

@@ -88,6 +88,7 @@ class ArchitectAgent:
         # Enhanced MCP Phase 2
         self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
         self.enhanced_mcp_enabled = False
+        self.enhanced_mcp_client = None
         
         # Tracing Integration
         self.tracer: Optional[BMADTracer] = None
@@ -149,6 +150,10 @@ class ArchitectAgent:
             if hasattr(self.enhanced_mcp, 'initialize'):
                 await self.enhanced_mcp.initialize()
             self.enhanced_mcp_enabled = True
+            
+            # Set enhanced MCP client reference
+            self.enhanced_mcp_client = self.mcp_client
+            
             logging.info("Enhanced MCP initialized successfully")
         except Exception as e:
             logging.warning(f"Enhanced MCP initialization failed: {e}")
@@ -615,6 +620,81 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
         print(result)
         print("=" * 60)
         return {"design": result, "status": "completed"}
+
+    async def design_architecture(self, requirements: Dict[str, Any]) -> Dict[str, Any]:
+        """Design software architecture based on requirements."""
+        try:
+            # Initialize enhanced MCP if not already done
+            if not self.enhanced_mcp_enabled:
+                await self.initialize_enhanced_mcp()
+            
+            # Use enhanced MCP tools if available
+            if self.enhanced_mcp_enabled and self.enhanced_mcp:
+                result = await self.use_enhanced_mcp_tools({
+                    "operation": "design_architecture",
+                    "requirements": requirements,
+                    "constraints": requirements.get("constraints", []),
+                    "patterns": requirements.get("patterns", []),
+                    "scale": requirements.get("scale", "medium")
+                })
+                if result:
+                    return result
+            
+            # Fallback to local implementation
+            return await asyncio.to_thread(self._design_architecture_sync, requirements)
+            
+        except Exception as e:
+            logging.error(f"Error in design_architecture: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "architecture": None
+            }
+
+    def _design_architecture_sync(self, requirements: Dict[str, Any]) -> Dict[str, Any]:
+        """Synchronous fallback for design_architecture."""
+        try:
+            prompt = f"""
+            Design a comprehensive software architecture based on the following requirements:
+            
+            Requirements: {requirements.get('requirements', {})}
+            Constraints: {requirements.get('constraints', [])}
+            Scale: {requirements.get('scale', 'medium')}
+            
+            Please provide:
+            1. System Architecture Overview
+            2. Component Design
+            3. Data Flow Design
+            4. Security Considerations
+            5. Performance Considerations
+            6. Scalability Strategy
+            7. Technology Recommendations
+            8. Implementation Roadmap
+            
+            Make the design practical and implementable.
+            """
+            
+            result = ask_openai(prompt)
+            
+            return {
+                "success": True,
+                "architecture": {
+                    "overview": result,
+                    "components": requirements.get("requirements", {}),
+                    "constraints": requirements.get("constraints", []),
+                    "scale": requirements.get("scale", "medium"),
+                    "timestamp": datetime.now().isoformat()
+                },
+                "status": "completed"
+            }
+            
+        except Exception as e:
+            logging.error(f"Error in _design_architecture_sync: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "architecture": None
+            }
 
     async def tech_stack(self):
         """Evalueer de frontend tech stack."""

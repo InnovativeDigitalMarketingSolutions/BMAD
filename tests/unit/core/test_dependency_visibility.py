@@ -19,7 +19,8 @@ from bmad.core.mcp.agent_mixin import MCPAgentMixin, MCPAgentConfig, create_mcp_
 class TestDependencyVisibility:
     """Test class for dependency visibility functionality."""
     
-    def __init__(self):
+    def setup_method(self):
+        """Setup method for each test."""
         self.test_results = []
     
     def test_dependency_manager_warnings(self):
