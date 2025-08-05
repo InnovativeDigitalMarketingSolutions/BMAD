@@ -1,35 +1,5 @@
 # Impediment Log
 
-- 2025-08-03T16:57:23.482978: Impediment 1 - Technical debt issue
-- 2025-08-03T16:57:23.498659: Impediment 1 - Technical debt issue
-- 2025-08-03T16:57:23.499794: Impediment 1 resolved
-- 2025-08-03T16:57:26.620746: Impediment 1 - Technical issue
-- 2025-08-03T16:57:26.622225: Impediment 1 resolved
-- 2025-08-03T17:01:33.947125: Impediment 1 - Technical debt issue
-- 2025-08-03T17:01:33.952657: Impediment 1 - Technical debt issue
-- 2025-08-03T17:01:33.953220: Impediment 1 resolved
-- 2025-08-03T17:01:37.046092: Impediment 1 - Technical issue
-- 2025-08-03T17:01:37.047446: Impediment 1 resolved
-- 2025-08-03T20:57:21.123647: Impediment 1 - Technical debt issue
-- 2025-08-03T20:57:21.128819: Impediment 1 - Technical debt issue
-- 2025-08-03T20:57:21.129618: Impediment 1 resolved
-- 2025-08-03T20:57:24.239595: Impediment 1 - Technical issue
-- 2025-08-03T20:57:24.241257: Impediment 1 resolved
-- 2025-08-03T21:11:15.355322: Impediment 1 - Technical debt issue
-- 2025-08-03T21:11:15.359478: Impediment 1 - Technical debt issue
-- 2025-08-03T21:11:15.359805: Impediment 1 resolved
-- 2025-08-03T21:11:18.508763: Impediment 1 - Technical issue
-- 2025-08-03T21:11:18.509615: Impediment 1 resolved
-- 2025-08-03T21:11:55.147525: Impediment 1 - Technical debt issue
-- 2025-08-03T21:11:55.151515: Impediment 1 - Technical debt issue
-- 2025-08-03T21:11:55.152003: Impediment 1 resolved
-- 2025-08-03T21:11:58.222116: Impediment 1 - Technical issue
-- 2025-08-03T21:11:58.222380: Impediment 1 resolved
-- 2025-08-04T13:10:35.391221: Impediment 1 - Technical debt issue
-- 2025-08-04T13:10:35.396392: Impediment 1 - Technical debt issue
-- 2025-08-04T13:10:35.397067: Impediment 1 resolved
-- 2025-08-04T13:10:38.479650: Impediment 1 - Technical issue
-- 2025-08-04T13:10:38.480279: Impediment 1 resolved
 - 2025-08-04T15:25:23.206899: Impediment 1 - Technical debt issue
 - 2025-08-04T15:25:23.212413: Impediment 1 - Technical debt issue
 - 2025-08-04T15:25:23.213065: Impediment 1 resolved
@@ -50,3 +20,33 @@
 - 2025-08-05T07:53:11.907588: Impediment 1 resolved
 - 2025-08-05T07:53:14.976983: Impediment 1 - Technical issue
 - 2025-08-05T07:53:14.977740: Impediment 1 resolved
+- 2025-08-05T09:53:17.542283: Impediment 1 - Technical debt issue
+- 2025-08-05T09:53:17.547990: Impediment 1 - Technical debt issue
+- 2025-08-05T09:53:17.548608: Impediment 1 resolved
+- 2025-08-05T09:53:20.630593: Impediment 1 - Technical issue
+- 2025-08-05T09:53:20.631803: Impediment 1 resolved
+- 2025-08-05T09:58:22.376694: Impediment 1 - Technical debt issue
+- 2025-08-05T09:58:22.381561: Impediment 1 - Technical debt issue
+- 2025-08-05T09:58:22.382074: Impediment 1 resolved
+- 2025-08-05T09:58:25.449883: Impediment 1 - Technical issue
+- 2025-08-05T09:58:25.450711: Impediment 1 resolved
+- 2025-08-05T10:01:58.161575: Impediment 1 - Technical debt issue
+- 2025-08-05T10:01:58.165747: Impediment 1 - Technical debt issue
+- 2025-08-05T10:01:58.166280: Impediment 1 resolved
+- 2025-08-05T10:02:01.235024: Impediment 1 - Technical issue
+- 2025-08-05T10:02:01.235590: Impediment 1 resolved
+- 2025-08-05T10:05:53.767927: Impediment 1 - Technical debt issue
+- 2025-08-05T10:05:53.772770: Impediment 1 - Technical debt issue
+- 2025-08-05T10:05:53.773324: Impediment 1 resolved
+- 2025-08-05T10:05:56.842594: Impediment 1 - Technical issue
+- 2025-08-05T10:05:56.844370: Impediment 1 resolved
+- 2025-08-05T10:18:35.017975: Impediment 1 - Technical debt issue
+- 2025-08-05T10:18:35.033674: Impediment 1 - Technical debt issue
+- 2025-08-05T10:18:35.035829: Impediment 1 resolved
+- 2025-08-05T10:18:38.107305: Impediment 1 - Technical issue
+- 2025-08-05T10:18:38.107852: Impediment 1 resolved
+- 2025-08-05T10:23:26.023256: Impediment 1 - Technical debt issue
+- 2025-08-05T10:23:26.029066: Impediment 1 - Technical debt issue
+- 2025-08-05T10:23:26.029799: Impediment 1 resolved
+- 2025-08-05T10:23:29.125444: Impediment 1 - Technical issue
+- 2025-08-05T10:23:29.126244: Impediment 1 resolved

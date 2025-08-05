@@ -26,14 +26,20 @@ Deze guide beschrijft de gestandaardiseerde workflow voor het implementeren van 
 - Error Handling
 
 ⚠️ HIGH (Week 2):
-- Fix 151 test failures
+- Fix 151 test failures → 26 remaining failures
 - Complete E2E test suites
 - Implement regression tests
 
 📚 MEDIUM (Week 3):
+- Fix remaining 26 test failures (CRITICAL)
 - Documentation updates
 - Production readiness
 - Quality assurance
+
+🚨 CRITICAL (Week 3-4):
+- JSON decode errors (8 failures)
+- Agent test failures (12 failures)
+- Dev mode test failures (6 failures)
 ```
 
 ---
