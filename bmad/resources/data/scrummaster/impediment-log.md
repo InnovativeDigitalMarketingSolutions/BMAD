@@ -1,10 +1,5 @@
 # Impediment Log
 
-- 2025-08-04T15:25:23.206899: Impediment 1 - Technical debt issue
-- 2025-08-04T15:25:23.212413: Impediment 1 - Technical debt issue
-- 2025-08-04T15:25:23.213065: Impediment 1 resolved
-- 2025-08-04T15:25:26.296388: Impediment 1 - Technical issue
-- 2025-08-04T15:25:26.296956: Impediment 1 resolved
 - 2025-08-04T15:28:57.196434: Impediment 1 - Technical debt issue
 - 2025-08-04T15:28:57.202436: Impediment 1 - Technical debt issue
 - 2025-08-04T15:28:57.203154: Impediment 1 resolved
@@ -50,3 +45,8 @@
 - 2025-08-05T10:23:26.029799: Impediment 1 resolved
 - 2025-08-05T10:23:29.125444: Impediment 1 - Technical issue
 - 2025-08-05T10:23:29.126244: Impediment 1 resolved
+- 2025-08-05T11:17:59.247326: Impediment 1 - Technical debt issue
+- 2025-08-05T11:17:59.252689: Impediment 1 - Technical debt issue
+- 2025-08-05T11:17:59.253564: Impediment 1 resolved
+- 2025-08-05T11:18:02.355887: Impediment 1 - Technical issue
+- 2025-08-05T11:18:02.356349: Impediment 1 resolved
