@@ -325,6 +325,95 @@ class IntegratedWorkflowCLI:
         print("\n" + "=" * 50)
         print("✅ Integration testing completed!")
 
+    async def test_llm_integration(self, prompt: str, model: str):
+        """Test LLM integration with OpenRouter."""
+        try:
+            if not self.orchestrator.openrouter_client:
+                raise Exception("OpenRouter client not configured")
+
+            from integrations.openrouter.openrouter_client import LLMConfig
+
+            config = LLMConfig(
+                model=model,
+                provider="openai",
+                max_tokens=100,
+                temperature=0.1
+            )
+
+            response = await self.orchestrator.openrouter_client.generate_response(
+                prompt=prompt,
+                strategy_name="development",
+                context={},
+                config=config
+            )
+
+            return {
+                "content": response.content,
+                "cost": response.cost,
+                "duration": response.duration
+            }
+        except Exception as e:
+            raise Exception(f"LLM integration failed: {e}")
+
+    async def test_tracing_integration(self):
+        """Test OpenTelemetry tracing integration."""
+        try:
+            if not self.orchestrator.tracer:
+                raise Exception("Tracer not configured")
+
+            from integrations.opentelemetry.opentelemetry_tracing import TraceLevel
+            
+            with self.orchestrator.tracer.start_span("test.span", level=TraceLevel.DETAILED) as span:
+                if span:
+                    span.set_attribute("test.attribute", "test_value")
+                    return {"status": "success", "span_id": span.get_span_context().span_id}
+                else:
+                    return {"status": "failed", "error": "No span created"}
+        except Exception as e:
+            return {"status": "failed", "error": str(e)}
+
+    async def execute_langgraph_workflow(self, workflow_name: str, input_data: dict):
+        """Execute a LangGraph workflow."""
+        try:
+            if not self.orchestrator.langgraph_orchestrator:
+                raise Exception("LangGraph orchestrator not configured")
+
+            result = await self.orchestrator.langgraph_orchestrator.execute_workflow(
+                workflow_name=workflow_name,
+                input_data=input_data
+            )
+
+            return {
+                "status": "success",
+                "result": result,
+                "workflow_name": workflow_name
+            }
+        except Exception as e:
+            return {"status": "failed", "error": str(e)}
+
+    async def execute_integration_workflow(self, workflow_name: str, context: dict):
+        """Execute a complete integration workflow."""
+        try:
+            # Execute the workflow using the orchestrator
+            result = await self.orchestrator.execute_workflow(
+                workflow_name=workflow_name,
+                context=context
+            )
+
+            return {
+                "status": "success",
+                "result": result,
+                "workflow_name": workflow_name,
+                "context": context
+            }
+        except Exception as e:
+            return {"status": "failed", "error": str(e)}
+
+    @property
+    def tracer(self):
+        """Get the tracer instance."""
+        return self.orchestrator.tracer
+
     async def show_agent_config(self, agent_name: str):
         """Show configuration for a specific agent."""
         config = self.orchestrator.get_agent_config(agent_name)
