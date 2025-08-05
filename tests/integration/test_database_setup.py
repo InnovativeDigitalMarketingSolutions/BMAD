@@ -11,6 +11,9 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+import pytest
+
+@pytest.mark.asyncio
 async def test_database_connection():
     """Test database connection and verify tables exist."""
     
@@ -85,6 +88,7 @@ async def test_database_connection():
         print(f"❌ Error testing database connection: {str(e)}")
         return False
 
+@pytest.mark.asyncio
 async def test_microservices_config():
     """Test microservices configuration."""
     
