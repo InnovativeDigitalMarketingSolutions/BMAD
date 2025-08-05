@@ -1,4 +1,4 @@
-from test_helpers import run_orchestrator_command
+from .test_helpers import run_orchestrator_command
 from unittest.mock import patch, MagicMock
 
 def test_orchestrator_hitl_timeout():

@@ -2,7 +2,7 @@ import pytest
 import threading
 import time
 from bmad.agents.core.communication.message_bus import subscribe, publish
-from test_helpers import run_orchestrator_command
+from .test_helpers import run_orchestrator_command
 import os
 
 @pytest.mark.skipif(os.getenv("CI") == "true", reason="Handmatige test, niet geschikt voor CI")
