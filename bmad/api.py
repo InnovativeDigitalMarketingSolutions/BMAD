@@ -42,6 +42,16 @@ from bmad.core.security.permission_service import (
     require_role,
     require_any_role
 )
+from bmad.core.resilience.circuit_breaker import (
+    get_external_api_circuit_breaker,
+    get_database_circuit_breaker,
+    CircuitBreakerOpenError
+)
+from bmad.core.resilience.error_handler import (
+    error_handler,
+    handle_errors,
+    safe_execute
+)
 
 app = Flask(__name__)
 
@@ -105,6 +115,16 @@ def internal_error(error):
     """Handle 500 Internal Server Error."""
     logger.error(f"Internal server error: {error}")
     return jsonify({"error": "Internal server error", "message": "An unexpected error occurred"}), 500
+
+@app.errorhandler(CircuitBreakerOpenError)
+def circuit_breaker_open(error):
+    """Handle circuit breaker open errors."""
+    logger.warning(f"Circuit breaker open: {error}")
+    return jsonify({
+        "error": "Service temporarily unavailable", 
+        "message": "The service is currently experiencing issues. Please try again later.",
+        "retry_after": 60
+    }), 503
 
 @app.errorhandler(Exception)
 def handle_exception(error):
@@ -627,6 +647,51 @@ def test_ping():
 @app.route("/test/echo", methods=["POST"])
 def test_echo():
     return jsonify(request.json or {})
+
+@app.route("/health/circuit-breakers", methods=["GET"])
+@require_auth
+@require_permission("view_analytics")
+def circuit_breaker_health():
+    """Get circuit breaker health status."""
+    from bmad.core.resilience.circuit_breaker import get_all_circuit_breakers
+    
+    stats = get_all_circuit_breakers()
+    overall_health = "healthy"
+    
+    # Check if any circuit breakers are open
+    open_circuits = [name for name, data in stats.items() if data["state"] == "OPEN"]
+    if open_circuits:
+        overall_health = "degraded"
+    
+    return jsonify({
+        "status": overall_health,
+        "circuit_breakers": stats,
+        "open_circuits": open_circuits,
+        "total_circuits": len(stats)
+    })
+
+@app.route("/health/error-handling", methods=["GET"])
+@require_auth
+@require_permission("view_analytics")
+def error_handling_health():
+    """Get error handling health status."""
+    stats = error_handler.get_error_statistics()
+    
+    # Determine overall health based on error counts
+    total_errors = stats["total_errors"]
+    if total_errors == 0:
+        overall_health = "healthy"
+    elif total_errors < 10:
+        overall_health = "warning"
+    else:
+        overall_health = "degraded"
+    
+    return jsonify({
+        "status": overall_health,
+        "error_statistics": stats,
+        "total_errors": total_errors,
+        "error_categories": list(stats["error_counts"].keys())
+    })
 
 @app.route("/swagger-ui/<path:filename>")
 def swagger_ui_static(filename):
