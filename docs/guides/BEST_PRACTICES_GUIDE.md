@@ -2736,3 +2736,163 @@ assert mock_integration.register_event_handler.call_count == 5  # Test geen echt
 - ✅ Inter-agent communication werkt
 - ✅ Tests valideren echte functionaliteit
 - ✅ Async functies zijn correct geïmplementeerd
+
+## FullstackDeveloper Agent - Quality-First Implementation Best Practices (Augustus 2025)
+
+### Core Implementation Principles
+
+#### 1. **Resource Paths Implementation**
+**Principle**: Always implement proper resource paths (data_paths and template_paths) in agent initialization.
+```python
+def __init__(self):
+    # Core services initialization
+    self.framework_manager = get_framework_templates_manager()
+    self.monitor = get_performance_monitor()
+    self.policy_engine = get_advanced_policy_engine()
+    self.sprite_library = get_sprite_library()
+    
+    # Resource paths - CRITICAL for file operations
+    self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
+    self.template_paths = {
+        "best-practices": self.resource_base / "templates/fullstackdeveloper/best-practices.md",
+        "shadcn-component": self.resource_base / "templates/fullstackdeveloper/shadcn-component.md",
+        "api-template": self.resource_base / "templates/fullstackdeveloper/api-template.md",
+        "frontend-template": self.resource_base / "templates/fullstackdeveloper/frontend-template.md",
+        "integration-template": self.resource_base / "templates/fullstackdeveloper/integration-template.md"
+    }
+    self.data_paths = {
+        "history": self.resource_base / "data/fullstackdeveloper/development-history.md",
+        "feedback": self.resource_base / "data/fullstackdeveloper/performance-history.md",
+        "changelog": self.resource_base / "data/fullstackdeveloper/changelog.md",
+        "api-history": self.resource_base / "data/fullstackdeveloper/api-history.md",
+        "frontend-history": self.resource_base / "data/fullstackdeveloper/frontend-history.md",
+        "integration-history": self.resource_base / "data/fullstackdeveloper/integration-history.md"
+    }
+```
+
+#### 2. **Test Expectation Alignment**
+**Principle**: Update test expectations when implementation improves, don't degrade implementation.
+```python
+# GOOD: Update test to expect improved output
+def test_test_resource_completeness(self, mock_exists, agent, capsys):
+    """Test test_resource_completeness method."""
+    agent.test_resource_completeness()
+    captured = capsys.readouterr()
+    assert "FullstackDeveloper Agent - Resource Completeness Test" in captured.out
+
+# BAD: Don't change implementation to match outdated test expectations
+# def test_test_resource_completeness(self, mock_exists, agent, capsys):
+#     assert "Testing resource completeness" in captured.out  # Old expectation
+```
+
+#### 3. **File Operation Error Handling**
+**Principle**: Maintain graceful error handling for file operations even with proper paths.
+```python
+def _load_development_history(self):
+    try:
+        if self.data_paths["history"].exists():
+            with open(self.data_paths["history"]) as f:
+                content = f.read()
+                lines = content.split("\n")
+                for line in lines:
+                    if line.strip().startswith("- "):
+                        self.development_history.append(line.strip()[2:])
+    except Exception as e:
+        logger.warning(f"Could not load development history: {e}")
+        # Continue execution, don't fail the entire agent initialization
+```
+
+#### 4. **Backward Compatibility**
+**Principle**: Add new functionality without breaking existing features.
+```python
+# GOOD: Extend existing functionality
+def __init__(self):
+    # Existing initialization
+    self.framework_manager = get_framework_templates_manager()
+    self.agent_name = "FullstackDeveloper"
+    
+    # NEW: Add resource paths without removing existing code
+    self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
+    self.template_paths = {...}
+    self.data_paths = {...}
+    
+    # Existing code continues to work
+    self.development_history = []
+    self.performance_history = []
+```
+
+#### 5. **Resource Organization**
+**Principle**: Organize resources in a structured way with clear separation.
+```
+bmad/resources/
+├── templates/
+│   └── fullstackdeveloper/
+│       ├── best-practices.md
+│       ├── shadcn-component.md
+│       ├── api-template.md
+│       ├── frontend-template.md
+│       └── integration-template.md
+└── data/
+    └── fullstackdeveloper/
+        ├── development-history.md
+        ├── performance-history.md
+        ├── changelog.md
+        ├── api-history.md
+        ├── frontend-history.md
+        └── integration-history.md
+```
+
+#### 6. **Quality-First Test Resolution**
+**Principle**: Use failing tests as a guide to improve implementation quality.
+```python
+# Process for resolving test failures:
+# 1. Identify what tests expect
+# 2. Analyze if expectations are reasonable
+# 3. Implement missing functionality if expectations are valid
+# 4. Update test expectations if implementation improves
+# 5. Verify tests pass with real behavior
+
+# Example: Test expects file operations to work
+def test_load_development_history_success(self, mock_exists, mock_file, agent):
+    """Test successful development history loading."""
+    agent._load_development_history()
+    assert len(agent.development_history) >= 2  # Expects real functionality
+```
+
+#### 7. **Comprehensive Test Coverage**
+**Principle**: Ensure all agent functionality is properly tested.
+```python
+# Test categories for complete coverage:
+# 1. Unit tests - Core functionality
+# 2. Message Bus Integration tests - Inter-agent communication
+# 3. CLI Message Bus tests - Command-line interface
+# 4. File operation tests - Resource management
+# 5. Error handling tests - Graceful failure scenarios
+
+# Target: 95/95 tests passing (100% coverage)
+```
+
+#### 8. **Documentation Maintenance Compliance**
+**Principle**: Follow the Agent Documentation Maintenance workflow for all changes.
+```python
+# Required documentation updates:
+# 1. Changelog update with detailed entry
+# 2. Agent .md file update with new capabilities
+# 3. YAML configuration update if needed
+# 4. Agents overview update with new status
+# 5. Project documentation sync (Kanban board, etc.)
+
+# Example changelog entry:
+"""
+## [2025-08-06] Quality-First Implementation Complete - 95/95 Tests Passing (100%)
+### Added
+- **Resource Paths Implementation**: data_paths en template_paths attributen toegevoegd
+- **Enhanced Test Coverage**: Volledige test coverage bereikt met 95/95 tests passing
+### Enhanced
+- **Development History Loading**: _load_development_history() werkt nu correct
+- **File Operations**: Alle file operations werken nu correct met proper path resolution
+### Technical
+- **Path Configuration**: Resource base path geconfigureerd
+- **Backward Compatibility**: Alle bestaande functionaliteit behouden
+"""
+```
