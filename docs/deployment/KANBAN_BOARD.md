@@ -38,6 +38,14 @@
 - [x] **Quality Guide** - Message Bus Integration Quality Standards toegevoegd
 - [x] **Agent Optimization Guide** - Message Bus Integration Quality Standards toegevoegd
 - [x] **Workflow Compliance Analysis** - Volledige analyse van ontbrekende workflow stappen
+- [x] **Agent Documentation Maintenance Guide** - Nieuwe guide voor documentatie maintenance
+- [x] **MCP Phase 2 Workflow Guide** - Uitgebreid met Agent Documentation Maintenance sectie
+
+#### **Agent Documentation Maintenance - VOLTOOID** ✅
+- [x] **FrontendDeveloper Documentation** - Changelog, .md file, en agents-overview bijgewerkt
+- [x] **BackendDeveloper Documentation** - Changelog, .md file, en agents-overview bijgewerkt
+- [x] **Agents Overview** - Workflow Compliance Status sectie toegevoegd
+- [x] **Documentation Standards** - Verplichte documentatie maintenance workflow gedefinieerd
 
 ### 🔄 **IN PROGRESS TASKS**
 
@@ -52,6 +60,7 @@
   - Performance metrics tracking
   - Resource validation geïmplementeerd
   - Quality-first approach toegepast
+  - **Documentation**: ✅ Volledig up-to-date (changelog, .md, agents-overview)
 
 - **BackendDeveloper Agent** - ✅ **FULLY COMPLIANT**
   - 89/89 tests passing (100% coverage)
@@ -60,6 +69,7 @@
   - Performance metrics en history tracking
   - Resource validation geïmplementeerd
   - Quality-first approach toegepast
+  - **Documentation**: ✅ Volledig up-to-date (changelog, .md, agents-overview)
 
 **🔄 In Progress:**
 - **FullstackDeveloper Agent** - Workflow compliance implementatie gestart
@@ -87,6 +97,22 @@
 - **AccessibilityAgent Agent** - Workflow compliance implementatie
 
 ### 📋 **BACKLOG TASKS**
+
+#### **Agent Documentation Maintenance (Priority 1)** 📋
+**Verplichte documentatie updates voor alle agents na elke wijziging:**
+
+**Documentatie Maintenance Checklist:**
+- [ ] **Changelog Update** - Nieuwe entry met datum en details
+- [ ] **Agent .md File Update** - Volledige documentatie update
+- [ ] **YAML Configuration Update** - Configuratie update indien nodig
+- [ ] **Agents Overview Update** - Status en progress update
+- [ ] **Project Documentation Sync** - Alle project docs synchroniseren
+
+**Compliance Monitoring:**
+- [ ] **Pre-Commit Check** - Controleer documentatie updates voor commit
+- [ ] **Post-Commit Review** - Review documentatie na commit
+- [ ] **Regular Audits** - Regelmatige audits van documentatie compleetheid
+- [ ] **Progress Tracking** - Track documentatie compliance in project metrics
 
 #### **Integration Testing Phase (Priority 2)**
 - [ ] **Begin Integration Testing** - Comprehensive testing van alle agents
