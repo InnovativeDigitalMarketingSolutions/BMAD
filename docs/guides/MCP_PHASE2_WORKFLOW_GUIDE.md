@@ -44,27 +44,45 @@ Deze guide beschrijft de gestandaardiseerde workflow voor het implementeren van 
 - [ ] **Lessons Learned**: Update lessons learned guide met nieuwe ervaringen
 - [ ] **Integration Report**: Maak gedetailleerd integratie rapport
 
-### 7. Agent Documentation Maintenance
-- [ ] **Changelog Update**: Voeg nieuwe changelog entry toe met datum en details
-  - [ ] **Added Section**: Nieuwe features en functionaliteit
-  - [ ] **Enhanced Section**: Verbeterde bestaande functionaliteit
-  - [ ] **Technical Section**: Technische implementatie details
-- [ ] **Agent .md File Update**: Update agent documentatie met nieuwe capabilities
-  - [ ] **Overview Section**: Update agent beschrijving en features
-  - [ ] **MCP Integration Section**: Documenteer MCP capabilities
-  - [ ] **CLI Commands Section**: Update met nieuwe commands en voorbeelden
-  - [ ] **Usage Examples**: Praktische voorbeelden voor nieuwe functionaliteit
-- [ ] **YAML Configuration Update**: Update agent YAML configuratie
-  - [ ] **Commands Section**: Voeg nieuwe commands toe met beschrijvingen
-  - [ ] **Dependencies Section**: Update dependencies indien nodig
-- [ ] **Agents Overview Update**: Update agents-overview.md
-  - [ ] **Message Bus Integration Status**: Update status voor specifieke agent
-  - [ ] **Workflow Compliance Status**: Update compliance status
-  - [ ] **Progress Metrics**: Update overall project progress
-- [ ] **Project Documentation Sync**: Synchroniseer alle project documentatie
-  - [ ] **Kanban Board**: Update progress en status
-  - [ ] **Integration Reports**: Update relevante rapporten
-  - [ ] **Best Practices**: Voeg nieuwe lessons learned toe
+### 7. Agent Documentation Maintenance (VERPLICHT)
+**CRITICAL**: Deze stap is verplicht volgens de Agent Documentation Maintenance workflow.
+
+#### 7.1 Changelog Update (VERPLICHT)
+- [ ] **Nieuwe Entry**: Voeg nieuwe changelog entry toe met datum (YYYY-MM-DD)
+- [ ] **Added Section**: Documenteer alle nieuwe features en functionaliteit
+- [ ] **Enhanced Section**: Documenteer verbeterde bestaande functionaliteit
+- [ ] **Technical Section**: Documenteer technische implementatie details
+- [ ] **Impact Metrics**: Voeg test coverage en performance metrics toe
+
+#### 7.2 Agent .md File Update (VERPLICHT)
+- [ ] **Status Update**: Update agent status (FULLY COMPLIANT, etc.)
+- [ ] **Overview Section**: Update agent beschrijving en core features
+- [ ] **Quality-First Section**: Documenteer quality-first implementation details
+- [ ] **Test Coverage**: Documenteer test coverage en quality metrics
+- [ ] **Event Handlers**: Documenteer event handlers met echte functionaliteit
+- [ ] **Resource Management**: Documenteer resource paths en template management
+- [ ] **CLI Extension**: Documenteer CLI commands en Message Bus integration
+- [ ] **MCP Integration**: Documenteer MCP capabilities en tools
+- [ ] **Usage Examples**: Praktische voorbeelden voor alle features
+- [ ] **Integration Points**: Beschrijving van inter-agent communicatie
+
+#### 7.3 YAML Configuration Update (VERPLICHT)
+- [ ] **Commands Section**: Alle commands met korte beschrijvingen
+- [ ] **Dependencies Section**: Volledige dependency lijst
+- [ ] **Persona Section**: Agent persona en core principles
+- [ ] **Customization Section**: Agent-specifieke customization details
+
+#### 7.4 Agents Overview Update (VERPLICHT)
+- [ ] **Status Update**: Update agent status naar FULLY COMPLIANT indien van toepassing
+- [ ] **Quality Metrics**: Voeg test coverage en quality metrics toe
+- [ ] **Features Update**: Update agent features en capabilities
+- [ ] **Progress Metrics**: Update overall project progress
+
+#### 7.5 Project Documentation Sync (VERPLICHT)
+- [ ] **Kanban Board**: Update progress en status in KANBAN_BOARD.md
+- [ ] **Lessons Learned**: Voeg nieuwe lessons learned toe aan LESSONS_LEARNED_GUIDE.md
+- [ ] **Best Practices**: Voeg nieuwe best practices toe aan BEST_PRACTICES_GUIDE.md
+- [ ] **Integration Reports**: Update relevante rapporten indien nodig
 
 ### 8. Quality Assurance
 - [ ] **Test Execution**: Voer alle nieuwe tests uit (24-25 tests)
@@ -136,21 +154,30 @@ Deze guide beschrijft de gestandaardiseerde workflow voor het implementeren van 
 - [ ] **Workflow Guides**: Update workflow guides indien nodig
 
 ## Success Criteria
-- ✅ Alle 24-25 nieuwe tests passing
+- ✅ Alle tests passing (95+ tests voor quality-first agents)
 - ✅ Alle bestaande tests passing (geen regressies)
 - ✅ Resource completeness test successful
 - ✅ CLI commands functioneel en gedocumenteerd
-- ✅ Documentatie volledig bijgewerkt
-- ✅ Agent documentatie volledig gesynchroniseerd
-- ✅ Changelog bijgewerkt met gedetailleerde entry
-- ✅ Project documentatie gesynchroniseerd
+- ✅ Quality-first implementation met echte functionaliteit
+- ✅ Resource paths correct geïmplementeerd (data_paths, template_paths)
+- ✅ Event handlers met echte functionaliteit (geen mock-only)
+- ✅ Documentatie volledig bijgewerkt volgens Agent Documentation Maintenance workflow
+- ✅ Changelog bijgewerkt met gedetailleerde entry (datum, categorieën, details)
+- ✅ Agent .md file bijgewerkt met status en quality-first details
+- ✅ Agents overview bijgewerkt met nieuwe status en metrics
+- ✅ Lessons learned en best practices bijgewerkt
+- ✅ Kanban board gesynchroniseerd
 - ✅ Commit en push succesvol
 - ✅ Progress bijgewerkt in project documentatie
 
 ## Workflow Compliance
 **CRITICAL**: Deze workflow moet strikt gevolgd worden voor elke agent enhancement. Afwijkingen van deze workflow zijn niet toegestaan zonder expliciete toestemming van de gebruiker.
 
-**DOCUMENTATION COMPLIANCE**: Agent documentatie updates zijn verplicht en moeten altijd worden uitgevoerd na elke agent wijziging.
+**DOCUMENTATION COMPLIANCE**: Agent documentatie updates zijn verplicht en moeten altijd worden uitgevoerd na elke agent wijziging volgens de Agent Documentation Maintenance workflow.
+
+**QUALITY-FIRST COMPLIANCE**: Implementeer altijd echte functionaliteit in plaats van test aanpassingen. Gebruik failing tests als guide voor implementation improvements.
+
+**RESOURCE PATHS COMPLIANCE**: Implementeer altijd proper resource paths (data_paths en template_paths) in agent initialization voor correcte file operations.
 
 ## Reference Documents
 - MCP Integration Guide: `docs/guides/MCP_INTEGRATION_GUIDE.md`
