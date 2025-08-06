@@ -159,6 +159,29 @@ class EventTypes:
     WORKFLOW_FAILED = "workflow_failed"
     WORKFLOW_OPTIMIZATION_REQUESTED = "workflow_optimization_requested"
     WORKFLOW_OPTIMIZATION_COMPLETED = "workflow_optimization_completed"
+    WORKFLOW_EXECUTION_REQUESTED = "workflow_execution_requested"
+    WORKFLOW_EXECUTION_STARTED = "workflow_execution_started"
+    WORKFLOW_EXECUTION_COMPLETED = "workflow_execution_completed"
+    WORKFLOW_MONITORING_REQUESTED = "workflow_monitoring_requested"
+    WORKFLOW_MONITORING_COMPLETED = "workflow_monitoring_completed"
+    
+    # Orchestration Events
+    ORCHESTRATION_STARTED = "orchestration_started"
+    ORCHESTRATION_COMPLETED = "orchestration_completed"
+    ORCHESTRATION_FAILED = "orchestration_failed"
+    
+    # HITL Events
+    HITL_DECISION = "hitl_decision"
+    HITL_REQUESTED = "hitl_requested"
+    
+    # Idea Events
+    IDEA_VALIDATION_REQUESTED = "idea_validation_requested"
+    IDEA_REFINEMENT_REQUESTED = "idea_refinement_requested"
+    EPIC_CREATION_REQUESTED = "epic_creation_requested"
+    
+    # Feedback Events (additional)
+    FEEDBACK_RECEIVED = "feedback_received"
+    PIPELINE_ADVICE_REQUESTED = "pipeline_advice_requested"
 
 # Event categories for easier management
 EVENT_CATEGORIES = {
@@ -213,6 +236,8 @@ EVENT_CATEGORIES = {
         EventTypes.FEEDBACK_TREND_DETECTED,
         EventTypes.IMPROVEMENT_SUGGESTED,
         EventTypes.SENTIMENT_ANALYSIS_COMPLETED,
+        EventTypes.FEEDBACK_RECEIVED,
+        EventTypes.PIPELINE_ADVICE_REQUESTED,
     ],
     "documentation": [
         EventTypes.DOCUMENTATION_REQUESTED,
@@ -314,6 +339,25 @@ EVENT_CATEGORIES = {
         EventTypes.WORKFLOW_FAILED,
         EventTypes.WORKFLOW_OPTIMIZATION_REQUESTED,
         EventTypes.WORKFLOW_OPTIMIZATION_COMPLETED,
+        EventTypes.WORKFLOW_EXECUTION_REQUESTED,
+        EventTypes.WORKFLOW_EXECUTION_STARTED,
+        EventTypes.WORKFLOW_EXECUTION_COMPLETED,
+        EventTypes.WORKFLOW_MONITORING_REQUESTED,
+        EventTypes.WORKFLOW_MONITORING_COMPLETED,
+    ],
+    "orchestration": [
+        EventTypes.ORCHESTRATION_STARTED,
+        EventTypes.ORCHESTRATION_COMPLETED,
+        EventTypes.ORCHESTRATION_FAILED,
+    ],
+    "hitl": [
+        EventTypes.HITL_DECISION,
+        EventTypes.HITL_REQUESTED,
+    ],
+    "ideas": [
+        EventTypes.IDEA_VALIDATION_REQUESTED,
+        EventTypes.IDEA_REFINEMENT_REQUESTED,
+        EventTypes.EPIC_CREATION_REQUESTED,
     ]
 }
 

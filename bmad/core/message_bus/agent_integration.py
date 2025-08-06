@@ -98,6 +98,33 @@ class AgentMessageBusIntegration:
                 self.subscribed_events.append(event_type)
                 logger.info(f"✅ {self.agent_name} subscribed to {event_type}")
             return success
+        except Exception as e:
+            logger.error(f"❌ Failed to subscribe to {event_type}: {e}")
+            return False
+
+    async def subscribe_to_event_category(self, category: str) -> bool:
+        """
+        Subscribe to all events in a specific category
+        
+        Args:
+            category: Event category to subscribe to
+            
+        Returns:
+            bool: Success status
+        """
+        try:
+            events = get_events_by_category(category)
+            success_count = 0
+            for event_type in events:
+                success = await self.subscribe_to_event(event_type)
+                if success:
+                    success_count += 1
+            
+            logger.info(f"✅ {self.agent_name} subscribed to {success_count}/{len(events)} events in category '{category}'")
+            return success_count > 0
+        except Exception as e:
+            logger.error(f"❌ Failed to subscribe to category {category}: {e}")
+            return False
             
         except Exception as e:
             logger.error(f"❌ Failed to subscribe to {event_type}: {e}")
