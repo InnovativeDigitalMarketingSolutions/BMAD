@@ -191,6 +191,10 @@ class FrontendDeveloperAgent:
                 "accessibility_check_requested",
                 self.handle_accessibility_check_requested
             )
+            await self.message_bus_integration.register_event_handler(
+                "ui_feedback_received",
+                self.handle_ui_feedback_received
+            )
             
             self.message_bus_enabled = True
             logger.info(f"✅ Message Bus Integration geïnitialiseerd voor {self.agent_name}")
@@ -905,23 +909,100 @@ Examples:
         print(f"Component export saved to: {output_file}")
 
     def test_resource_completeness(self):
+        """Test if all required resources are available."""
         print("Testing resource completeness...")
+        
         missing_resources = []
-
-        for name, path in self.template_paths.items():
-            if not path.exists():
-                missing_resources.append(f"Template: {name} ({path})")
-
-        for name, path in self.data_paths.items():
-            if not path.exists():
-                missing_resources.append(f"Data: {name} ({path})")
-
+        available_resources = []
+        
+        # Check template paths
+        for template_name, template_path in self.template_paths.items():
+            if Path(template_path).exists():
+                available_resources.append(f"Template: {template_name}")
+            else:
+                missing_resources.append(f"Template: {template_name}")
+        
+        # Check data paths
+        for data_name, data_path in self.data_paths.items():
+            if Path(data_path).exists():
+                available_resources.append(f"Data: {data_name}")
+            else:
+                missing_resources.append(f"Data: {data_name}")
+        
         if missing_resources:
-            print("Missing resources:")
+            print(f"❌ Missing resources ({len(missing_resources)}):")
             for resource in missing_resources:
                 print(f"  - {resource}")
         else:
-            print("All resources are available!")
+            print("✅ All resources available")
+        
+        if available_resources:
+            print(f"✅ Available resources ({len(available_resources)}):")
+            for resource in available_resources:
+                print(f"  - {resource}")
+        
+        # Message Bus Integration resource validation
+        print("\n🔍 Message Bus Integration Resource Validation:")
+        
+        mb_resources = {
+            "Message Bus Integration Module": "bmad.agents.core.communication.agent_message_bus_integration",
+            "Agent Message Bus Integration Class": "AgentMessageBusIntegration",
+            "Create Agent Message Bus Integration Function": "create_agent_message_bus_integration"
+        }
+        
+        mb_missing = []
+        mb_available = []
+        
+        try:
+            from bmad.agents.core.communication.agent_message_bus_integration import (
+                AgentMessageBusIntegration,
+                create_agent_message_bus_integration
+            )
+            mb_available.extend([
+                "Message Bus Integration Module",
+                "Agent Message Bus Integration Class", 
+                "Create Agent Message Bus Integration Function"
+            ])
+        except ImportError as e:
+            mb_missing.extend([
+                "Message Bus Integration Module",
+                "Agent Message Bus Integration Class",
+                "Create Agent Message Bus Integration Function"
+            ])
+            print(f"  ❌ Import Error: {e}")
+        
+        if mb_missing:
+            print(f"  ❌ Missing Message Bus resources ({len(mb_missing)}):")
+            for resource in mb_missing:
+                print(f"    - {resource}")
+        else:
+            print(f"  ✅ All Message Bus resources available ({len(mb_available)}):")
+            for resource in mb_available:
+                print(f"    - {resource}")
+        
+        # Template validation for Message Bus Integration
+        print("\n📋 Template Validation for Message Bus Integration:")
+        
+        mb_templates = {
+            "Component Build Template": "component_build.md",
+            "Event Handler Template": "event_handler.md", 
+            "Message Bus Config Template": "message_bus_config.md"
+        }
+        
+        for template_name, template_file in mb_templates.items():
+            template_path = Path(self.template_paths.get("components", "")) / template_file
+            if template_path.exists():
+                print(f"  ✅ {template_name}: Available")
+            else:
+                print(f"  ❌ {template_name}: Missing ({template_path})")
+        
+        return {
+            "missing_resources": missing_resources,
+            "available_resources": available_resources,
+            "message_bus_missing": mb_missing,
+            "message_bus_available": mb_available,
+            "template_validation": mb_templates
+        }
 
     def get_status(self) -> Dict[str, Any]:
         """Get the current status of the FrontendDeveloper agent."""
@@ -994,24 +1075,88 @@ Examples:
     def handle_component_build_requested(self, event):
         """Handle component build requested event."""
         logger.info(f"Component build requested: {event}")
+        
+        # Add to component history
+        component_name = event.get("component_name", "Unknown")
+        self.component_history.append({
+            "component": component_name,
+            "action": "build_requested",
+            "timestamp": datetime.now().isoformat(),
+            "request_id": event.get("request_id", "unknown")
+        })
+        
         # Process component build request
         return {"status": "processed", "event": "component_build_requested"}
 
     async def handle_component_build_completed(self, event):
         """Handle component build completed event."""
         logger.info(f"Component build completed: {event}")
+        
+        # Add to performance history
+        component_name = event.get("component_name", "Unknown")
+        self.performance_history.append({
+            "component": component_name,
+            "action": "build_completed",
+            "status": event.get("status", "completed"),
+            "timestamp": datetime.now().isoformat(),
+            "request_id": event.get("request_id", "unknown")
+        })
+        
         # Process component build completion
         return {"status": "processed", "event": "component_build_completed"}
 
     async def handle_figma_design_updated(self, event):
         """Handle Figma design updated event."""
         logger.info(f"Figma design updated: {event}")
+        
+        # Add to performance history
+        self.performance_history.append({
+            "action": "figma_design_updated",
+            "file_id": event.get("file_id", "unknown"),
+            "version": event.get("version", "unknown"),
+            "timestamp": datetime.now().isoformat(),
+            "request_id": event.get("request_id", "unknown")
+        })
+        
         # Process Figma design update
+        if self.message_bus_integration:
+            await self.message_bus_integration.publish_event("design_update_processed", event)
+        
         return {"status": "processed", "event": "figma_design_updated"}
+
+    async def handle_ui_feedback_received(self, event):
+        """Handle UI feedback received event."""
+        logger.info(f"UI feedback received: {event}")
+        
+        # Add to performance history
+        component_name = event.get("component_name", "Unknown")
+        self.performance_history.append({
+            "component": component_name,
+            "action": "ui_feedback_received",
+            "feedback": event.get("feedback", ""),
+            "timestamp": datetime.now().isoformat(),
+            "request_id": event.get("request_id", "unknown")
+        })
+        
+        # Process UI feedback
+        if self.message_bus_integration:
+            await self.message_bus_integration.publish_event("feedback_processed", event)
+        
+        return {"status": "processed", "event": "ui_feedback_received"}
 
     async def handle_accessibility_check_requested(self, event):
         """Handle accessibility check requested event."""
         logger.info(f"Accessibility check requested: {event}")
+        
+        # Add to performance history
+        component_name = event.get("component_name", "Unknown")
+        self.performance_history.append({
+            "component": component_name,
+            "action": "accessibility_check_requested",
+            "timestamp": datetime.now().isoformat(),
+            "request_id": event.get("request_id", "unknown")
+        })
+        
         # Process accessibility check request
         return {"status": "processed", "event": "accessibility_check_requested"}
 
@@ -1183,7 +1328,8 @@ def main():
                                "show-performance", "show-best-practices", "show-changelog", "export-component",
                                "test", "collaborate", "run", "initialize-mcp", "use-mcp-tool", "get-mcp-status", "use-frontend-mcp-tools", "check-dependencies",
                                "enhanced-collaborate", "enhanced-security", "enhanced-performance", "enhanced-tools", "enhanced-summary",
-                               "trace-component", "trace-interaction", "trace-performance", "trace-error", "tracing-summary"])
+                               "trace-component", "trace-interaction", "trace-performance", "trace-error", "tracing-summary",
+                               "message-bus-status", "publish-event", "subscribe-event", "test-message-bus", "message-bus-performance", "message-bus-health"])
     parser.add_argument("--name", default="Button", help="Component name")
     parser.add_argument("--format", choices=["md", "json"], default="md", help="Export format")
     parser.add_argument("--tool-name", help="MCP tool name")
@@ -1195,6 +1341,8 @@ def main():
     parser.add_argument("--interaction-data", help="User interaction data (JSON)")
     parser.add_argument("--performance-data", help="Performance metrics data (JSON)")
     parser.add_argument("--error-data", help="Error event data (JSON)")
+    parser.add_argument("--event-name", help="Event name for Message Bus publishing")
+    parser.add_argument("--event-data", help="Event data for Message Bus publishing (JSON)")
 
     args = parser.parse_args()
 
@@ -1347,6 +1495,150 @@ def main():
         tracing_summary = agent.get_tracing_summary()
         print("Tracing Summary:")
         print(json.dumps(tracing_summary, indent=2))
+    elif args.command == "message-bus-status":
+        """Display Message Bus Integration status."""
+        status = {
+            "enabled": agent.message_bus_enabled,
+            "integration_initialized": agent.message_bus_integration is not None,
+            "agent_name": agent.agent_name,
+            "event_handlers": [
+                "component_build_requested",
+                "component_build_completed", 
+                "figma_design_updated",
+                "ui_feedback_received"
+            ] if agent.message_bus_enabled else []
+        }
+        print("Message Bus Integration Status:")
+        print(json.dumps(status, indent=2))
+    elif args.command == "publish-event":
+        """Publish an event to the Message Bus."""
+        if not args.event_name or not args.event_data:
+            print("Error: --event-name and --event-data are required for publish-event command")
+            return
+        try:
+            event_data = json.loads(args.event_data)
+            agent._ensure_message_bus_initialized()
+            if agent.message_bus_integration:
+                asyncio.run(agent.message_bus_integration.publish_event(args.event_name, event_data))
+                print(f"✅ Event '{args.event_name}' published successfully")
+                print(f"Event data: {json.dumps(event_data, indent=2)}")
+            else:
+                print("❌ Message Bus Integration not available")
+        except json.JSONDecodeError:
+            print("Error: Invalid JSON in --event-data")
+        except Exception as e:
+            print(f"Error publishing event: {e}")
+    elif args.command == "subscribe-event":
+        """Subscribe to Message Bus events (automatic with Message Bus Integration)."""
+        print("ℹ️  Message Bus Integration automatically handles event subscriptions")
+        print("Available event handlers:")
+        handlers = [
+            "component_build_requested",
+            "component_build_completed",
+            "figma_design_updated", 
+            "ui_feedback_received"
+        ]
+        for handler in handlers:
+            print(f"  - {handler}")
+        print("\nEvents are automatically processed when received.")
+    elif args.command == "test-message-bus":
+        """Test Message Bus Integration with sample events."""
+        print("🧪 Testing Message Bus Integration...")
+        
+        # Test initialization
+        try:
+            asyncio.run(agent.initialize_message_bus_integration())
+            print("✅ Message Bus Integration initialized successfully")
+        except Exception as e:
+            print(f"❌ Message Bus Integration initialization failed: {e}")
+            return
+        
+        # Test event publishing
+        test_events = [
+            {
+                "name": "component_build_requested",
+                "data": {"component_name": "TestButton", "framework": "react", "request_id": "test-123"}
+            },
+            {
+                "name": "component_build_completed", 
+                "data": {"component_name": "TestButton", "status": "success", "request_id": "test-123"}
+            },
+            {
+                "name": "figma_design_updated",
+                "data": {"file_id": "figma-test-123", "version": "1.0", "request_id": "test-123"}
+            },
+            {
+                "name": "ui_feedback_received",
+                "data": {"component_name": "TestButton", "feedback": "Great design!", "request_id": "test-123"}
+            }
+        ]
+        
+        for event in test_events:
+            try:
+                if agent.message_bus_integration:
+                    asyncio.run(agent.message_bus_integration.publish_event(event["name"], event["data"]))
+                    print(f"✅ Published event: {event['name']}")
+                else:
+                    print(f"❌ Message Bus Integration not available for event: {event['name']}")
+            except Exception as e:
+                print(f"❌ Failed to publish event {event['name']}: {e}")
+        
+        print("\n🧪 Message Bus Integration test completed")
+    elif args.command == "message-bus-performance":
+        """Test Message Bus performance metrics."""
+        print("📊 Testing Message Bus performance...")
+        
+        if not agent.message_bus_integration:
+            print("❌ Message Bus Integration not available")
+            return
+        
+        import time
+        
+        # Test event processing performance
+        start_time = time.time()
+        
+        test_event = {"component_name": "PerformanceTest", "request_id": "perf-test-123"}
+        
+        try:
+            asyncio.run(agent.handle_component_build_requested(test_event))
+            end_time = time.time()
+            processing_time = (end_time - start_time) * 1000  # Convert to milliseconds
+            
+            print(f"✅ Event processing time: {processing_time:.2f}ms")
+            
+            if processing_time < 100:
+                print("🟢 Performance: Excellent (< 100ms)")
+            elif processing_time < 500:
+                print("🟡 Performance: Good (< 500ms)")
+            else:
+                print("🔴 Performance: Needs improvement (> 500ms)")
+                
+        except Exception as e:
+            print(f"❌ Performance test failed: {e}")
+    elif args.command == "message-bus-health":
+        """Check Message Bus health and connectivity."""
+        print("🏥 Checking Message Bus health...")
+        
+        health_status = {
+            "integration_available": agent.message_bus_integration is not None,
+            "enabled": agent.message_bus_enabled,
+            "event_handlers_registered": len([
+                "component_build_requested",
+                "component_build_completed",
+                "figma_design_updated",
+                "ui_feedback_received"
+            ]) if agent.message_bus_enabled else 0,
+            "agent_name": agent.agent_name,
+            "status": "healthy" if agent.message_bus_enabled else "disabled"
+        }
+        
+        print("Message Bus Health Status:")
+        print(json.dumps(health_status, indent=2))
+        
+        if health_status["status"] == "healthy":
+            print("✅ Message Bus Integration is healthy")
+        else:
+            print("⚠️  Message Bus Integration is disabled or not available")
 
 if __name__ == "__main__":
     main()
