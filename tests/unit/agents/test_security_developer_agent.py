@@ -443,16 +443,126 @@ class TestSecurityDeveloperAgent:
 
     def test_handle_security_scan_requested(self, agent):
         """Test handle_security_scan_requested method."""
-        event = {"target": "application"}
-        agent.handle_security_scan_requested(event)
+        event = {"target": "application", "scan_type": "comprehensive"}
+        result = agent.handle_security_scan_requested(event)
+        
+        # Verify the result
+        assert result["status"] == "processed"
+        assert result["event"] == "security_scan_requested"
+        
+        # Verify scan history was updated
+        assert len(agent.scan_history) > 0
+        assert agent.scan_history[-1]["action"] == "security_scan_requested"
+        assert agent.scan_history[-1]["target"] == "application"
+        assert agent.scan_history[-1]["scan_type"] == "comprehensive"
+        
+        # Verify performance metrics were updated
+        assert agent.performance_metrics["total_security_scans"] == 1
 
     @patch('bmad.agents.core.policy.advanced_policy_engine.AdvancedPolicyEngine.evaluate_policy')
-    def test_handle_security_scan_completed(self, mock_evaluate_policy, agent):
+    @pytest.mark.asyncio
+    async def test_handle_security_scan_completed(self, mock_evaluate_policy, agent):
         """Test handle_security_scan_completed method."""
-        event = {"scan_result": "test"}
+        event = {
+            "target": "application",
+            "vulnerabilities_found": 3,
+            "severity_level": "medium"
+        }
         mock_evaluate_policy.return_value = True
-        import asyncio
-        asyncio.run(agent.handle_security_scan_completed(event))
+        
+        result = await agent.handle_security_scan_completed(event)
+        
+        # Verify the result
+        assert result["status"] == "processed"
+        assert result["event"] == "security_scan_completed"
+        
+        # Verify scan history was updated
+        assert len(agent.scan_history) > 0
+        assert agent.scan_history[-1]["action"] == "security_scan_completed"
+        assert agent.scan_history[-1]["target"] == "application"
+        assert agent.scan_history[-1]["vulnerabilities_found"] == 3
+        assert agent.scan_history[-1]["severity_level"] == "medium"
+        
+        # Verify performance metrics were updated
+        assert agent.performance_metrics["total_scans_completed"] == 1
+        assert agent.performance_metrics["total_vulnerabilities_found"] == 3
+
+    @pytest.mark.asyncio
+    async def test_handle_vulnerability_detected(self, agent):
+        """Test handle_vulnerability_detected method."""
+        event = {
+            "vulnerability_data": {
+                "id": "CVE-2023-1234",
+                "severity": "high",
+                "description": "SQL injection vulnerability",
+                "cvss_vector": "CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H"
+            }
+        }
+        
+        result = await agent.handle_vulnerability_detected(event)
+        
+        # Verify the result
+        assert result["status"] == "processed"
+        assert result["event"] == "vulnerability_detected"
+        assert "cvss_score" in result
+        assert "threat_level" in result
+        assert "recommendations" in result
+        
+        # Verify scan history was updated
+        assert len(agent.scan_history) > 0
+        assert agent.scan_history[-1]["action"] == "vulnerability_detected"
+        assert agent.scan_history[-1]["vulnerability_id"] == "CVE-2023-1234"
+        assert "cvss_score" in agent.scan_history[-1]
+        assert "threat_level" in agent.scan_history[-1]
+        
+        # Verify performance metrics were updated
+        assert agent.performance_metrics["total_vulnerabilities_detected"] == 1
+
+    @pytest.mark.asyncio
+    async def test_handle_vulnerability_detected_error(self, agent):
+        """Test handle_vulnerability_detected method with error."""
+        event = {
+            "vulnerability_data": {}  # Empty data to trigger error
+        }
+        
+        result = await agent.handle_vulnerability_detected(event)
+        
+        # Verify error result
+        assert result["status"] == "error"
+        assert result["event"] == "vulnerability_detected"
+        assert "error" in result
+        
+        # Verify scan history was updated with error
+        assert len(agent.scan_history) > 0
+        assert agent.scan_history[-1]["action"] == "vulnerability_detected"
+        assert agent.scan_history[-1]["status"] == "error"
+        assert "error" in agent.scan_history[-1]
+
+    @pytest.mark.asyncio
+    async def test_handle_security_incident_reported(self, agent):
+        """Test handle_security_incident_reported method."""
+        event = {
+            "incident_type": "data_breach",
+            "severity": "high",
+            "description": "Unauthorized access detected"
+        }
+        
+        result = await agent.handle_security_incident_reported(event)
+        
+        # Verify the result
+        assert result["status"] == "processed"
+        assert result["event"] == "security_incident_reported"
+        
+        # Verify incident history was updated
+        assert len(agent.incident_history) > 0
+        assert agent.incident_history[-1]["action"] == "security_incident_reported"
+        assert agent.incident_history[-1]["incident_type"] == "data_breach"
+        assert agent.incident_history[-1]["severity"] == "high"
+        assert agent.incident_history[-1]["description"] == "Unauthorized access detected"
+        
+        # Verify performance metrics were updated
+        assert agent.performance_metrics["total_security_incidents"] == 1
+        assert agent.performance_metrics["high_severity_incidents"] == 1
 
     def test_run(self, agent):
         """Test run method."""
