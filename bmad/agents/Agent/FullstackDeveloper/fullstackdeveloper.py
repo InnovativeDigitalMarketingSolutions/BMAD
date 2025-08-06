@@ -94,6 +94,24 @@ class FullstackDeveloperAgent:
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
 
+        # Resource paths
+        self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
+        self.template_paths = {
+            "best-practices": self.resource_base / "templates/fullstackdeveloper/best-practices.md",
+            "shadcn-component": self.resource_base / "templates/fullstackdeveloper/shadcn-component.md",
+            "api-template": self.resource_base / "templates/fullstackdeveloper/api-template.md",
+            "frontend-template": self.resource_base / "templates/fullstackdeveloper/frontend-template.md",
+            "integration-template": self.resource_base / "templates/fullstackdeveloper/integration-template.md"
+        }
+        self.data_paths = {
+            "history": self.resource_base / "data/fullstackdeveloper/development-history.md",
+            "feedback": self.resource_base / "data/fullstackdeveloper/performance-history.md",
+            "changelog": self.resource_base / "data/fullstackdeveloper/changelog.md",
+            "api-history": self.resource_base / "data/fullstackdeveloper/api-history.md",
+            "frontend-history": self.resource_base / "data/fullstackdeveloper/frontend-history.md",
+            "integration-history": self.resource_base / "data/fullstackdeveloper/integration-history.md"
+        }
+
         # MCP Integration
         self.mcp_client: Optional[MCPClient] = None
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None

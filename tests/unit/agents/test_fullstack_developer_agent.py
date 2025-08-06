@@ -297,7 +297,7 @@ class TestFullstackDeveloperAgent:
         """Test test_resource_completeness method."""
         agent.test_resource_completeness()
         captured = capsys.readouterr()
-        assert "Testing resource completeness" in captured.out
+        assert "FullstackDeveloper Agent - Resource Completeness Test" in captured.out
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
     def test_build_shadcn_component_success(self, mock_monitor, agent):
