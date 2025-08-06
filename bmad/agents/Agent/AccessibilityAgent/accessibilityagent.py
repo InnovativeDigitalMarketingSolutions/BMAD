@@ -1160,10 +1160,11 @@ Message Bus Integration Commands:
         try:
             # Perform validation based on event data
             validation_result = await self.validate_aria(event.get("component_code", ""))
-            await publish("accessibility_validation_completed", {
-                "request_id": event.get("request_id"),
-                "result": validation_result
-            })
+            if self.message_bus_integration:
+                await self.message_bus_integration.publish_event("accessibility_validation_completed", {
+                    "request_id": event.get("request_id"),
+                    "result": validation_result
+                })
         except Exception as e:
             logger.error(f"Error handling validation request: {e}")
 
@@ -1173,10 +1174,11 @@ Message Bus Integration Commands:
         try:
             # Generate improvement recommendations
             improvement_report = self.generate_improvement_report()
-            await publish("accessibility_improvement_completed", {
-                "request_id": event.get("request_id"),
-                "report": improvement_report
-            })
+            if self.message_bus_integration:
+                await self.message_bus_integration.publish_event("accessibility_improvement_completed", {
+                    "request_id": event.get("request_id"),
+                    "report": improvement_report
+                })
         except Exception as e:
             logger.error(f"Error handling improvement request: {e}")
 
@@ -1199,12 +1201,6 @@ Message Bus Integration Commands:
         print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
         print("Message Bus: Enabled" if self.message_bus_enabled else "Message Bus: Disabled")
         
-        def sync_handler(event):
-            asyncio.run(self.handle_audit_completed(event))
-
-        subscribe("accessibility_audit_completed", sync_handler)
-        subscribe("accessibility_audit_requested", self.handle_audit_requested)
-
         logger.info("AccessibilityAgent ready and listening for events...")
         await self.collaborate_example()
 
