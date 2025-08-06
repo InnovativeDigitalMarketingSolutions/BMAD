@@ -37,7 +37,7 @@ Handleidingen, best practices en development guides:
 - **[Integration Requirements](guides/INTEGRATION_REQUIREMENTS.md)** - Integration requirements
 - **[Contributing](guides/CONTRIBUTING.md)** - Contributing met pull requests
 - **[Test Workflow Guide](guides/TEST_WORKFLOW_GUIDE.md)** - Test workflow
-- **[Testing Strategy](guides/TESTING_STRATEGY.md)** - Testing strategie
+- **[Test Workflow Guide](guides/TEST_WORKFLOW_GUIDE.md)** - Testing strategie en workflow
 - **[Versioning and Releases](guides/VERSIONING_AND_RELEASES.md)** - Versioning en releases
 
 ### **🔗 Integrations**

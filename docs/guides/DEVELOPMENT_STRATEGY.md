@@ -288,6 +288,6 @@ Door kwaliteit voorop te stellen en code behoud te garanderen, krijgen we:
 ## Referenties
 
 - [DEVELOPMENT_WORKFLOW_GUIDE.md](./DEVELOPMENT_WORKFLOW_GUIDE.md) - Praktische development implementatie
-- [TESTING_STRATEGY.md](./TESTING_STRATEGY.md) - Test strategie en filosofie
+- [TEST_WORKFLOW_GUIDE.md](./TEST_WORKFLOW_GUIDE.md) - Test strategie, workflow en filosofie
 - [DEVELOPMENT_QUALITY_GUIDE.md](./DEVELOPMENT_QUALITY_GUIDE.md) - Development quality best practices
 - [CONTRIBUTING.md](./CONTRIBUTING.md) - Contributing guidelines 
