@@ -40,6 +40,12 @@ from bmad.core.mcp.enhanced_mcp_integration import (
 )
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 
+# Message Bus Integration
+from bmad.agents.core.communication.agent_message_bus_integration import (
+    AgentMessageBusIntegration,
+    create_agent_message_bus_integration
+)
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -100,6 +106,10 @@ class DataEngineerAgent:
         self.tracer: Optional[BMADTracer] = None
         self.tracing_enabled = False
         
+        # Message Bus Integration
+        self.message_bus_integration: Optional[AgentMessageBusIntegration] = None
+        self.message_bus_enabled = False
+        
         # Initialize tracer
         self.tracer = BMADTracer(config=type("Config", (), {
             "service_name": "DataEngineer",
@@ -150,6 +160,39 @@ class DataEngineerAgent:
         except Exception as e:
             logger.warning(f"Tracing initialization failed: {e}")
             self.tracing_enabled = False
+
+    async def initialize_message_bus_integration(self):
+        """Initialize Message Bus Integration for the agent."""
+        try:
+            self.message_bus_integration = create_agent_message_bus_integration(
+                agent_name=self.agent_name,
+                agent_instance=self
+            )
+            
+            # Register event handlers for data-specific events
+            await self.message_bus_integration.register_event_handler(
+                "data_quality_check_requested", 
+                self.handle_data_quality_check_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "explain_pipeline_requested", 
+                self.handle_explain_pipeline
+            )
+            await self.message_bus_integration.register_event_handler(
+                "data_pipeline_build_requested",
+                self.handle_pipeline_build_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "data_monitoring_requested",
+                self.handle_monitoring_requested
+            )
+            
+            self.message_bus_enabled = True
+            logger.info(f"✅ Message Bus Integration geïnitialiseerd voor {self.agent_name}")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Fout bij initialiseren van Message Bus Integration voor {self.agent_name}: {e}")
+            return False
 
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -420,6 +463,21 @@ Data Engineer Agent Commands:
   export-report [format]  - Export pipeline report (format: md, csv, json)
   test                    - Test resource completeness
   collaborate             - Demonstrate collaboration with other agents
+
+Enhanced MCP Phase 2 Commands:
+  enhanced-collaborate    - Enhanced collaboration with other agents
+  enhanced-security       - Enhanced security features
+  enhanced-performance    - Enhanced performance monitoring
+  trace-operation         - Trace data operation
+  trace-performance       - Trace performance metrics
+  trace-error             - Trace error handling
+  tracing-summary         - Show tracing summary
+
+Message Bus Integration Commands:
+  initialize-message-bus  - Initialize Message Bus Integration
+  message-bus-status      - Show Message Bus Integration status
+  publish-event           - Publish data event
+  subscribe-event         - Subscribe to data events
         """
         print(help_text)
 
@@ -937,6 +995,44 @@ Data Engineer Agent Commands:
         pipeline_code = event.get("pipeline_code", "Sample ETL pipeline")
         self.explain_pipeline(pipeline_code)
 
+    async def handle_pipeline_build_requested(self, event):
+        """Handle data pipeline build requested event."""
+        logger.info(f"Data pipeline build requested: {event}")
+        try:
+            # Perform pipeline build based on event data
+            pipeline_name = event.get("pipeline_name", "ETL Pipeline")
+            pipeline_type = event.get("pipeline_type", "etl")
+            
+            # Simulate pipeline build
+            build_result = await self.build_pipeline(pipeline_name)
+            
+            await publish("data_pipeline_build_completed", {
+                "request_id": event.get("request_id"),
+                "pipeline_name": pipeline_name,
+                "result": build_result
+            })
+        except Exception as e:
+            logger.error(f"Error handling pipeline build request: {e}")
+
+    async def handle_monitoring_requested(self, event):
+        """Handle data monitoring requested event."""
+        logger.info(f"Data monitoring requested: {event}")
+        try:
+            # Perform data monitoring based on event data
+            pipeline_id = event.get("pipeline_id", "pipeline_001")
+            monitoring_type = event.get("monitoring_type", "performance")
+            
+            # Simulate monitoring
+            monitoring_result = self.monitor_pipeline(pipeline_id)
+            
+            await publish("data_monitoring_completed", {
+                "request_id": event.get("request_id"),
+                "pipeline_id": pipeline_id,
+                "result": monitoring_result
+            })
+        except Exception as e:
+            logger.error(f"Error handling monitoring request: {e}")
+
     async def run(self):
         """Run the agent and listen for events met MCP integration."""
         # Initialize MCP integration
@@ -948,9 +1044,13 @@ Data Engineer Agent Commands:
         # Initialize tracing capabilities
         await self.initialize_tracing()
         
+        # Initialize Message Bus Integration
+        await self.initialize_message_bus_integration()
+        
         print("📊 DataEngineer is running...")
         print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
         print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        print("Message Bus: Enabled" if self.message_bus_enabled else "Message Bus: Disabled")
         
         def sync_handler(event):
             asyncio.run(self.handle_data_quality_check_requested(event))
@@ -979,9 +1079,13 @@ Data Engineer Agent Commands:
         # Initialize tracing capabilities
         await self.initialize_tracing()
         
+        # Initialize Message Bus Integration
+        await self.initialize_message_bus_integration()
+        
         print("📊 DataEngineer is running...")
         print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
         print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        print("Message Bus: Enabled" if self.message_bus_enabled else "Message Bus: Disabled")
         
         logger.info("DataEngineerAgent ready and listening for events...")
         await self.collaborate_example()
@@ -1006,7 +1110,8 @@ def main():
                                "show-best-practices", "show-changelog", "export-report", "test",
                                "collaborate", "run", "enhanced-collaborate", "enhanced-security", 
                                "enhanced-performance", "trace-operation", "trace-performance", 
-                               "trace-error", "tracing-summary"])
+                               "trace-error", "tracing-summary",
+                               "initialize-message-bus", "message-bus-status", "publish-event", "subscribe-event"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--data-summary", default="Sample data summary", help="Data summary for quality check")
     parser.add_argument("--pipeline-code", default="Sample ETL pipeline", help="Pipeline code to explain")
@@ -1094,6 +1199,23 @@ def main():
                 print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
                 print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
                 print(f"Agent: {agent.agent_name}")
+        # Message Bus Integration Commands
+        elif args.command == "initialize-message-bus":
+            result = asyncio.run(agent.initialize_message_bus_integration())
+            print(f"Message Bus Integration: {'Enabled' if result else 'Failed'}")
+        elif args.command == "message-bus-status":
+            print(f"Message Bus Integration: {'Enabled' if agent.message_bus_enabled else 'Disabled'}")
+        elif args.command == "publish-event":
+            # Example: publish data quality check requested event
+            event_data = {"data_summary": "Sample data", "request_id": "test-123"}
+            asyncio.run(publish("data_quality_check_requested", event_data))
+            print(f"Published event: data_quality_check_requested with data: {event_data}")
+        elif args.command == "subscribe-event":
+            # Example: subscribe to data events
+            def event_handler(event):
+                print(f"Received event: {event}")
+            subscribe("data_quality_check_completed", event_handler)
+            print("Subscribed to data_quality_check_completed events")
         else:
             print("Unknown command. Use 'help' to see available commands.")
             sys.exit(1)
