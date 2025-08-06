@@ -68,7 +68,13 @@ Deze guide beschrijft de gestandaardiseerde workflow voor het implementeren van 
 
 #### 7.3 YAML Configuration Update (VERPLICHT)
 - [ ] **Commands Section**: Alle commands met korte beschrijvingen
+  - [ ] **New Commands**: Voeg alle nieuw geïmplementeerde commands toe
+  - [ ] **Message Bus Commands**: Voeg Message Bus commands toe (message-bus-status, publish-event, etc.)
+  - [ ] **Enhanced MCP Commands**: Voeg Enhanced MCP Phase 2 commands toe
+  - [ ] **Command Descriptions**: Korte Nederlandse beschrijving voor elk command
 - [ ] **Dependencies Section**: Volledige dependency lijst
+  - [ ] **Template Dependencies**: Update template paths voor nieuwe commands
+  - [ ] **Data Dependencies**: Update data file dependencies
 - [ ] **Persona Section**: Agent persona en core principles
 - [ ] **Customization Section**: Agent-specifieke customization details
 
