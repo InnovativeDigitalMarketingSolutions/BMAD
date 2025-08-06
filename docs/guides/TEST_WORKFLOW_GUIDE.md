@@ -4,12 +4,12 @@
 
 Dit document beschrijft de verplichte test workflow voor alle nieuwe functionaliteit en uitbreidingen in het BMAD systeem. Het doel is om ervoor te zorgen dat alle code kwalitatief is geïmplementeerd en goed getest wordt.
 
-**Voor test strategie en filosofie, zie**: `TESTING_STRATEGY.md`  
+**Deze guide bevat complete test strategie en workflow implementatie**  
 **Voor quality assurance, zie**: `QUALITY_GUIDE.md`
 
 ## Test Pyramid Implementatie
 
-Volg de test pyramid strategie zoals beschreven in `TESTING_STRATEGY.md`:
+Volg de test pyramid strategie:
 
 ```
     🔺 E2E Tests (weinig, volledige workflows)
@@ -29,7 +29,7 @@ Volg de test pyramid strategie zoals beschreven in `TESTING_STRATEGY.md`:
 - [ ] **Analyse**: Root cause analysis uitvoeren voor bugs
 - [ ] **Planning**: Test strategie bepalen (unit, integration, e2e)
 - [ ] **Review**: Bestaande guide files raadplegen voor best practices
-- [ ] **Strategy Review**: Bekijk `TESTING_STRATEGY.md` voor test type keuze
+- [ ] **Strategy Review**: Gebruik Test Pyramid Strategy voor test type keuze
 
 ### Tijdens implementatie:
 
@@ -37,7 +37,7 @@ Volg de test pyramid strategie zoals beschreven in `TESTING_STRATEGY.md`:
 - [ ] **Integration Tests**: Schrijven voor API endpoints
 - [ ] **Mocking**: Gebruik AsyncMock voor async functies
 - [ ] **Validation**: Test edge cases en error scenarios
-- [ ] **Pragmatic Mocking**: Volg mocking strategie uit `TESTING_STRATEGY.md`
+- [ ] **Pragmatic Mocking**: Gebruik Test Pyramid mocking strategie
 
 ### Na implementatie:
 
@@ -511,7 +511,7 @@ Deze test workflow zorgt ervoor dat:
 
 ## Referenties
 
-- [TESTING_STRATEGY.md](./TESTING_STRATEGY.md) - Test strategie en filosofie
+- [AGENT_ENHANCEMENT_WORKFLOW.md](./AGENT_ENHANCEMENT_WORKFLOW.md) - Complete agent enhancement en testing workflow
 - [CLI_TESTING_COMPLETE_REPORT.md](../reports/CLI_TESTING_COMPLETE_REPORT.md) - CLI testing success case
 - [CLI_TEST_FAILURES_ANALYSIS.md](../reports/CLI_TEST_FAILURES_ANALYSIS.md) - Test failure analysis
 - [BMAD_MASTER_PLANNING.md](../deployment/BMAD_MASTER_PLANNING.md) - Master planning met test strategie 
@@ -675,3 +675,98 @@ def handle_event(self, event):
 - ✅ Performance tracking wordt getest
 - ✅ Component history wordt gevalideerd
 - ✅ Inter-agent communication wordt getest 
+
+## Quality Gates voor Agent Testing
+
+### Minimum Kwaliteitseisen
+- **Test Coverage**: Minimum 80% test coverage voor nieuwe agent features
+- **Test Success Rate**: 100% target voor agent enhancement implementations  
+- **Performance Impact**: Maximum 10% performance degradation na enhancement
+- **Integration Success**: 100% integration success rate met Message Bus en MCP
+
+### Performance Metrics Monitoring
+- **Test Execution Time**: <30 seconden voor complete agent test suite
+- **MCP Initialization Time**: <5 seconden voor MCP client initialization
+- **Memory Usage**: Geen significante memory leaks tijdens test execution
+- **Event Handler Response Time**: <2 seconden voor event processing
+
+### Quality Indicators
+#### ✅ Excellent Quality
+- 100% test success rate
+- >90% code coverage  
+- 0 linting errors
+- Complete documentation
+- Proper async implementation
+- Graceful fallback mechanisms
+
+#### ⚠️ Good Quality  
+- >95% test success rate
+- >70% code coverage
+- <5 linting errors
+- Basic documentation
+- Functional async implementation
+
+#### ❌ Poor Quality
+- <90% test success rate
+- <70% code coverage
+- >10 linting errors
+- Missing documentation
+- Broken async implementation
+
+## Test Pyramid Strategy 
+
+### Test Distribution
+```
+    🔺 E2E Tests (weinig, volledige workflows)
+   🔺🔺 Integration Tests (gemiddeld, echte dependencies)  
+🔺🔺🔺 Unit Tests (veel, gemockt)
+```
+
+### Test Execution Strategy
+
+#### Development Workflow
+```bash
+# Dagelijks: Alleen unit tests (snelle feedback)
+pytest tests/unit/ -v
+
+# Voor commits: Unit + snelle integration tests
+pytest tests/unit/ tests/integration/ -m "not slow" -v
+
+# Voor releases: Alle tests
+pytest tests/ -v --run-integration
+```
+
+#### CI/CD Pipeline
+```yaml
+# Stage 1: Unit Tests (altijd)
+- name: Unit Tests
+  run: pytest tests/unit/ --cov=bmad
+
+# Stage 2: Integration Tests (op staging)
+- name: Integration Tests
+  run: pytest tests/integration/ --run-integration
+
+# Stage 3: E2E Tests (voor releases)
+- name: E2E Tests
+  run: pytest tests/e2e/ --run-e2e
+```
+
+### Unit Tests (Basis - 70% van alle tests)
+- **Doel**: Test individuele componenten in isolatie
+- **Snelheid**: Milliseconden per test
+- **Mocking**: Extensief gebruik van mocks voor dependencies
+- **Coverage**: >90% voor kritieke agent functionality
+
+### Integration Tests (Middenlaag - 20% van alle tests)
+- **Doel**: Test samenwerking tussen componenten
+- **Snelheid**: Seconden per test
+- **Dependencies**: Echte services (database, Message Bus)
+- **Coverage**: Kritieke agent workflows en Message Bus integratie
+
+### E2E Tests (Top - 10% van alle tests)
+- **Doel**: Test complete user journeys
+- **Snelheid**: Minuten per test
+- **Scope**: Volledige agent workflows met alle dependencies
+- **Wanneer**: Major releases, architectuur wijzigingen
+
+## Agent Enhancement Testing Pattern 

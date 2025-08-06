@@ -22,7 +22,7 @@ Dit document consolideert alle planning documenten tot één master roadmap voor
 - `docs/reports/enterprise-features-implementation-report.md` - Complete enterprise features report
 - `docs/deployment/MICROSERVICES_IMPLEMENTATION_STATUS.md` - Detailed microservices status
 - `docs/guides/TEST_WORKFLOW_GUIDE.md` - Comprehensive test workflow guide
-- `docs/guides/TESTING_STRATEGY.md` - Complete testing strategy guide
+- `docs/guides/TEST_WORKFLOW_GUIDE.md` - Complete testing strategy en workflow guide
 - `docs/reports/CLI_TESTING_COMPLETE_REPORT.md` - CLI testing implementation report
 - `docs/reports/CLI_TEST_FAILURES_ANALYSIS.md` - CLI test failure analysis
 - Service-specific README files for all implemented services

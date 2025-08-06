@@ -126,6 +126,87 @@ Deze guide beschrijft de gestandaardiseerde workflow voor het implementeren van 
 
 **STOP POINT**: Ga NIET verder naar volgende agent totdat huidige agent 100% compliant is.
 
+## Success Metrics & Quality Indicators
+
+### Test Quality Metrics
+- **Test Success Rate**: 100% target (alle tests moeten slagen)
+- **Test Coverage**: >90% voor kritieke componenten, >70% voor algemene componenten  
+- **Async Test Coverage**: 100% van async methodes hebben `@pytest.mark.asyncio` tests
+
+### Code Quality Metrics
+- **Linting Score**: 0 errors (flake8 compliant)
+- **Documentation Coverage**: 100% van enhancement methods gedocumenteerd
+- **Type Safety**: Proper type hints voor alle nieuwe methods
+
+### Enhancement Implementation Metrics
+- **Event Handler Coverage**: Minimaal 6 agent-specifieke event handlers
+- **CLI Command Coverage**: Alle enhanced features beschikbaar via CLI
+- **Performance Metrics**: 12+ agent-specifieke performance KPIs
+- **Error Handling**: Robust error recovery en fallback mechanisms
+
+### Integration Quality Metrics
+- **MCP Tool Integration**: Agent-specifieke enhanced tools geïmplementeerd
+- **Message Bus Integration**: Real-time event publishing en subscription
+- **Tracing Integration**: Comprehensive operation tracing en monitoring
+- **Documentation Maintenance**: Changelog, agents-overview, en kanban board bijgewerkt
+
+## Common Issues & Troubleshooting
+
+### Quick Reference
+| Issue | Solution | Fix |
+|-------|----------|-----|
+| `TypeError: 'coroutine' object is not subscriptable` | Add `@pytest.mark.asyncio` and `await` | Maak test async |
+| `ValueError: a coroutine was expected, got <MagicMock>` | Use `AsyncMock` for async methods | Vervang Mock met AsyncMock |
+| `SyntaxError: 'await' outside async function` | Make method async | Voeg `async def` toe |
+| `SystemExit: 1` in CLI tests | Fix async mocking in CLI | Mock `asyncio.run()` |
+| Test failures na enhancement | Root cause analysis vereist | Gebruik Quality-First approach |
+
+### Async Issues Prevention
+- **Always use AsyncMock** voor async method mocking
+- **Add @pytest.mark.asyncio** voor async test methods  
+- **Use await** bij async method calls in tests
+- **Mock asyncio.run()** in CLI tests met async calls
+
+### Quality-First Problem Solving
+1. **Identify Root Cause**: Analyseer de werkelijke oorzaak, niet alleen symptomen
+2. **Consult Successful Agents**: Bekijk hoe andere FULLY COMPLIANT agents het oplossen
+3. **Apply Systematic Solution**: Implementeer complete oplossing, geen quick fixes
+4. **Test Thoroughly**: Verifieer dat oplossing geen nieuwe problemen introduceert
+5. **Document Learning**: Update troubleshooting knowledge voor future agents
+
+## 🚫 Critical DO NOT Rules
+
+### **NEVER Remove Code Without Analysis**
+```python
+# ❌ VERKEERD - Willekeurige code verwijdering
+def test_function():
+    # Alle test code weggehaald om test te laten slagen
+    pass
+```
+
+### **NEVER Over-Mock Critical Components**
+```python
+# ❌ VERKEERD - Over-mocking breaks real functionality
+sys.modules['flask'] = MagicMock()
+sys.modules['flask.request'] = MagicMock()
+# Dit breekt echte functionaliteit
+```
+
+### **NEVER Adjust Assertions Without Root Cause Analysis**
+```python
+# ❌ VERKEERD - Assertion aanpassing zonder analyse
+assert result == "willekeurige_waarde"  # Zonder te begrijpen waarom
+```
+
+### **ALWAYS Apply Quality-First Principles**
+- ✅ **Extend Don't Replace**: Voeg functionaliteit toe, vervang niet
+- ✅ **Root Cause Analysis**: Begrijp het werkelijke probleem
+- ✅ **Test Preservation**: Behoud bestaande test logica
+- ✅ **Documentation**: Document alle changes en learnings
+- ✅ **Verification**: Test thoroughly na elke change
+
+## Workflow Stappen
+
 ### 9. Commit and Push
 - [ ] **Comprehensive Commit**: Gedetailleerde commit message met alle wijzigingen
 - [ ] **Push to Repository**: Push naar GitHub branch
