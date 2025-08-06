@@ -344,6 +344,130 @@ def update_context(self, key, value, layer=None):
 
 ---
 
+## Message Bus Integration Quality Standards
+
+### **Quality-First Message Bus Implementation** 🚀
+
+**Core Principle**: Implementeer Message Bus Integration met focus op echte functionaliteit en kwaliteit, niet alleen test coverage.
+
+#### **Event Handler Quality Standards**
+
+**✅ DO**: Implementeer echte functionaliteit in event handlers
+```python
+# ✅ CORRECT: Event Handler met echte functionaliteit
+def handle_component_build_requested(self, event):
+    """Handle component build requested event."""
+    logger.info(f"Component build requested: {event}")
+    
+    # ECHTE FUNCTIONALITEIT: Component history tracking
+    component_name = event.get("component_name", "Unknown")
+    self.component_history.append({
+        "component": component_name,
+        "action": "build_requested",
+        "timestamp": datetime.now().isoformat(),
+        "request_id": event.get("request_id", "unknown")
+    })
+    
+    return {"status": "processed", "event": "component_build_requested"}
+```
+
+**❌ DON'T**: Implementeer alleen mock functionaliteit
+```python
+# ❌ INCORRECT: Mock-only event handler
+def handle_component_build_requested(self, event):
+    """Handle component build requested event."""
+    logger.info(f"Component build requested: {event}")
+    # GEEN ECHTE FUNCTIONALITEIT
+    return {"status": "processed", "event": "component_build_requested"}
+```
+
+#### **Performance Tracking Standards**
+
+**✅ DO**: Implementeer echte performance tracking
+```python
+# ✅ CORRECT: Performance tracking in event handlers
+async def handle_component_build_completed(self, event):
+    """Handle component build completed event."""
+    logger.info(f"Component build completed: {event}")
+    
+    # ECHTE FUNCTIONALITEIT: Performance tracking
+    component_name = event.get("component_name", "Unknown")
+    self.performance_history.append({
+        "component": component_name,
+        "action": "build_completed",
+        "status": event.get("status", "completed"),
+        "timestamp": datetime.now().isoformat(),
+        "request_id": event.get("request_id", "unknown")
+    })
+    
+    return {"status": "processed", "event": "component_build_completed"}
+```
+
+#### **Async Implementation Standards**
+
+**✅ DO**: Gebruik correcte async mocks in tests
+```python
+# ✅ CORRECT: Async mock voor tests
+async def async_register_handler(event_type, handler):
+    """Async mock for event handler registration."""
+    return True
+
+mock_integration.register_event_handler = async_register_handler
+```
+
+**❌ DON'T**: Gebruik incorrecte async mocks
+```python
+# ❌ INCORRECT: MagicMock voor async functies
+mock_integration.register_event_handler = MagicMock()  # Werkt niet voor async
+```
+
+#### **Test Quality Standards**
+
+**✅ DO**: Test echte functionaliteit
+```python
+# ✅ CORRECT: Test echte functionaliteit
+@pytest.mark.asyncio
+async def test_message_bus_integration_config(self):
+    """Test Message Bus Integration configuration."""
+    agent = FrontendDeveloperAgent()
+    
+    with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.create_agent_message_bus_integration') as mock_create:
+        mock_integration = MagicMock()
+        async def async_register_handler(event_type, handler):
+            return True
+        mock_integration.register_event_handler = async_register_handler
+        mock_create.return_value = mock_integration
+        
+        await agent.initialize_message_bus_integration()
+        
+        # Test echte functionaliteit
+        assert agent.message_bus_enabled is True
+```
+
+**❌ DON'T**: Test alleen mock calls
+```python
+# ❌ INCORRECT: Test alleen mock calls
+assert mock_integration.register_event_handler.call_count == 5  # Test geen echte functionaliteit
+```
+
+#### **Quality Validation Checklist**
+
+- [ ] **Event Handlers**: Hebben echte functionaliteit, niet alleen logging
+- [ ] **Performance Tracking**: Elke actie wordt getrackt in performance history
+- [ ] **Component History**: Component-gerelateerde acties updaten component history
+- [ ] **Event Publishing**: Event handlers publiceren events naar andere agents
+- [ ] **Test Validation**: Tests valideren echte functionaliteit, niet alleen mocks
+- [ ] **Async Correctness**: Alle async functies zijn correct async geïmplementeerd
+
+#### **Success Metrics**
+
+- ✅ Event handlers hebben echte functionaliteit
+- ✅ Performance history wordt correct bijgewerkt
+- ✅ Component history wordt correct getrackt
+- ✅ Inter-agent communication werkt
+- ✅ Tests valideren echte functionaliteit
+- ✅ Async functies zijn correct geïmplementeerd
+
 **Document Status**: Active  
 **Last Updated**: 27 januari 2025  
 **Next Review**: Weekly during development  
