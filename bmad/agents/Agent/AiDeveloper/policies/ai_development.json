@@ -1,0 +1,50 @@
+{
+  "policy_id": "ai_development",
+  "policy_name": "AI Development Policy",
+  "policy_type": "security_policies",
+  "version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "ai_safety_check",
+      "rule_name": "AI Safety Check",
+      "policy_type": "security_policies",
+      "conditions": [
+        {
+          "condition_id": "bias_check",
+          "condition_type": "context_based",
+          "parameters": {
+            "bias_detection": true,
+            "explainability": true,
+            "data_privacy": true
+          },
+          "description": "AI safety requirements",
+          "severity": "critical",
+          "enabled": true
+        }
+      ],
+      "actions": [
+        "allow",
+        "audit"
+      ],
+      "priority": 250,
+      "enabled": true,
+      "description": "AI development safety requirements",
+      "metadata": {}
+    }
+  ],
+  "parent_policy": null,
+  "inheritance_rules": {},
+  "status": "active",
+  "created_at": "2025-08-06T13:46:21.967317",
+  "updated_at": "2025-08-06T13:46:21.967318",
+  "expires_at": null,
+  "metadata": {
+    "category": "ai",
+    "tags": [
+      "ai",
+      "safety",
+      "bias",
+      "privacy"
+    ]
+  }
+}

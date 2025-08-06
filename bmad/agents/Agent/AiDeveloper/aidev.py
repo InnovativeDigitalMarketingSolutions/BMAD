@@ -45,6 +45,12 @@ from bmad.core.mcp.enhanced_mcp_integration import (
 )
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 
+# Message Bus Integration
+from bmad.agents.core.communication.agent_message_bus_integration import (
+    AgentMessageBusIntegration,
+    create_agent_message_bus_integration
+)
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -134,6 +140,10 @@ class AiDeveloperAgent:
         self.tracer: Optional[BMADTracer] = None
         self.tracing_enabled = False
         
+        # Message Bus Integration
+        self.message_bus_integration: Optional[AgentMessageBusIntegration] = None
+        self.message_bus_enabled = False
+        
         # Initialize tracer
         self.tracer = BMADTracer(config=type("Config", (), {
             "service_name": "AiDeveloper",
@@ -184,6 +194,39 @@ class AiDeveloperAgent:
         except Exception as e:
             logger.warning(f"Tracing initialization failed: {e}")
             self.tracing_enabled = False
+
+    async def initialize_message_bus_integration(self):
+        """Initialize Message Bus Integration for the agent."""
+        try:
+            self.message_bus_integration = create_agent_message_bus_integration(
+                agent_name=self.agent_name,
+                agent_instance=self
+            )
+            
+            # Register event handlers for AI-specific events
+            await self.message_bus_integration.register_event_handler(
+                "ai_development_requested", 
+                self.handle_ai_development_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "ai_development_completed", 
+                self.handle_ai_development_completed
+            )
+            await self.message_bus_integration.register_event_handler(
+                "ai_model_training_requested",
+                self.handle_model_training_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "ai_evaluation_requested",
+                self.handle_evaluation_requested
+            )
+            
+            self.message_bus_enabled = True
+            logger.info(f"✅ Message Bus Integration geïnitialiseerd voor {self.agent_name}")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Fout bij initialiseren van Message Bus Integration voor {self.agent_name}: {e}")
+            return False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -588,6 +631,21 @@ AiDeveloper Agent Commands:
   export-report [format]  - Export report (md, json)
   test                    - Test resource completeness
   collaborate             - Demonstrate collaboration
+
+Enhanced MCP Phase 2 Commands:
+  enhanced-collaborate    - Enhanced collaboration with other agents
+  enhanced-security       - Enhanced security features
+  enhanced-performance    - Enhanced performance monitoring
+  trace-operation         - Trace AI operation
+  trace-performance       - Trace performance metrics
+  trace-error             - Trace error handling
+  tracing-summary         - Show tracing summary
+
+Message Bus Integration Commands:
+  initialize-message-bus  - Initialize Message Bus Integration
+  message-bus-status      - Show Message Bus Integration status
+  publish-event           - Publish AI event
+  subscribe-event         - Subscribe to AI events
   
   🎯 FRAMEWORK TEMPLATES:
   show-framework-overview - Show complete framework overview
@@ -978,6 +1036,53 @@ AiDeveloper Agent Commands:
         except Exception as e:
             logger.error(f"Policy evaluation failed: {e}")
 
+    async def handle_model_training_requested(self, event):
+        """Handle AI model training requested event."""
+        logger.info(f"AI model training requested: {event}")
+        try:
+            # Perform model training based on event data
+            model_name = event.get("model_name", "default_model")
+            training_data = event.get("training_data", {})
+            
+            # Simulate model training
+            training_result = {
+                "model_name": model_name,
+                "status": "training_completed",
+                "accuracy": 0.95,
+                "training_time": "2.5 hours"
+            }
+            
+            await publish("ai_model_training_completed", {
+                "request_id": event.get("request_id"),
+                "result": training_result
+            })
+        except Exception as e:
+            logger.error(f"Error handling model training request: {e}")
+
+    async def handle_evaluation_requested(self, event):
+        """Handle AI evaluation requested event."""
+        logger.info(f"AI evaluation requested: {event}")
+        try:
+            # Perform AI evaluation based on event data
+            model_name = event.get("model_name", "default_model")
+            evaluation_metrics = event.get("evaluation_metrics", {})
+            
+            # Simulate evaluation
+            evaluation_result = {
+                "model_name": model_name,
+                "accuracy": 0.94,
+                "precision": 0.92,
+                "recall": 0.89,
+                "f1_score": 0.90
+            }
+            
+            await publish("ai_evaluation_completed", {
+                "request_id": event.get("request_id"),
+                "result": evaluation_result
+            })
+        except Exception as e:
+            logger.error(f"Error handling evaluation request: {e}")
+
     async def run(self):
         def sync_handler(event):
             asyncio.run(self.handle_ai_development_completed(event))
@@ -996,9 +1101,13 @@ AiDeveloper Agent Commands:
         # Initialize tracing capabilities
         await self.initialize_tracing()
         
+        # Initialize Message Bus Integration
+        await self.initialize_message_bus_integration()
+        
         print("🤖 AiDeveloper is running...")
         print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
         print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        print("Message Bus: Enabled" if self.message_bus_enabled else "Message Bus: Disabled")
         
         result = await self.collaborate_example()
         return result
@@ -1014,9 +1123,13 @@ AiDeveloper Agent Commands:
         # Initialize tracing capabilities
         await self.initialize_tracing()
         
+        # Initialize Message Bus Integration
+        await self.initialize_message_bus_integration()
+        
         print("🤖 AiDeveloper is running...")
         print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
         print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        print("Message Bus: Enabled" if self.message_bus_enabled else "Message Bus: Disabled")
         
         logger.info("AiDeveloperAgent ready and listening for events...")
         await self.collaborate_example()
@@ -1477,7 +1590,8 @@ def main():
                                "show-pyramid-strategies", "show-mocking-strategy", "show-workflow-commands",
                                "show-linting-config", "show-framework-template", "enhanced-collaborate",
                                "enhanced-security", "enhanced-performance", "trace-operation",
-                               "trace-performance", "trace-error", "tracing-summary"])
+                               "trace-performance", "trace-error", "tracing-summary",
+                               "initialize-message-bus", "message-bus-status", "publish-event", "subscribe-event"])
     parser.add_argument("--format", choices=["md", "json"], default="md", help="Export format")
     parser.add_argument("--template", help="Framework template name for show-framework-template")
 
@@ -1598,6 +1712,23 @@ def main():
                 print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
                 print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
                 print(f"Agent: {agent.agent_name}")
+        # Message Bus Integration Commands
+        elif args.command == "initialize-message-bus":
+            result = asyncio.run(agent.initialize_message_bus_integration())
+            print(f"Message Bus Integration: {'Enabled' if result else 'Failed'}")
+        elif args.command == "message-bus-status":
+            print(f"Message Bus Integration: {'Enabled' if agent.message_bus_enabled else 'Disabled'}")
+        elif args.command == "publish-event":
+            # Example: publish AI development requested event
+            event_data = {"task": "AI Model Training", "request_id": "test-123"}
+            asyncio.run(publish("ai_development_requested", event_data))
+            print(f"Published event: ai_development_requested with data: {event_data}")
+        elif args.command == "subscribe-event":
+            # Example: subscribe to AI events
+            def event_handler(event):
+                print(f"Received event: {event}")
+            subscribe("ai_development_completed", event_handler)
+            print("Subscribed to ai_development_completed events")
         # Framework template commands
         elif args.command == "show-framework-overview":
             agent.show_framework_overview()
