@@ -128,6 +128,16 @@
 - **Events**: `accessibility_audit_completed`, `wcag_compliance_checked`
 - **Enhanced MCP Phase 2**: ✅ Volledig geïmplementeerd met advanced tracing en collaboration
 
+#### **Scrummaster**
+- **Rol**: Agile project management en sprint facilitation
+- **Verantwoordelijkheden**: Sprint planning, daily standups, impediment tracking, team velocity, retrospectives, backlog refinement
+- **CLI Commando's**: `plan-sprint`, `start-sprint`, `end-sprint`, `daily-standup`, `track-impediment`, `resolve-impediment`, `calculate-velocity`, `team-health-check`, `message-bus-status`, `performance-metrics`, `help` (35+ totaal)
+- **Events**: `sprint_planning_requested`, `daily_standup_requested`, `impediment_reported`, `retrospective_requested`, `team_health_check_requested`, `backlog_refinement_requested`
+- **Enhanced MCP Phase 2**: ✅ Volledig geïmplementeerd met advanced tracing en collaboration
+- **✅ Status**: FULLY COMPLIANT - 65/65 tests passing (100% coverage)
+- **Quality-First Implementation**: 6 scrum-specific event handlers met echte functionaliteit, 12 scrum performance metrics, 6 Message Bus CLI commands, complete sprint lifecycle management
+- **YAML Compliance**: Alle Message Bus commands geïmplementeerd en gedocumenteerd
+
 #### **DocumentationAgent**
 - **Rol**: Documentatie en kennisdeling
 - **Verantwoordelijkheden**: Documentation generation, knowledge management, onboarding
@@ -235,6 +245,7 @@ python3 <agent>.py tracing-summary         # Get tracing summary
 | DataEngineer | ✅ | ✅ | ✅ | ✅ | ✅ |
 | UXUIDesigner | ✅ | ✅ | ✅ | ✅ | ✅ |
 | AccessibilityAgent | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Scrummaster | ✅ | ✅ | ✅ | ✅ | ✅ |
 | DocumentationAgent | ✅ | ✅ | ✅ | ✅ | ✅ |
 | DevOpsInfra | ✅ | ✅ | ✅ | ✅ | ✅ |
 | ReleaseManager | ✅ | ✅ | ✅ | ✅ | ✅ |

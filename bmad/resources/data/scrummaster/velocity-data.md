@@ -1,11 +1,5 @@
 # Velocity Data
 
-- 2025-08-03T15:27:54.770856: Velocity calculated - Average: 16.333333333333332
-- 2025-08-03T15:27:59.881821: Velocity calculated - Average: 16.333333333333332
-- 2025-08-03T15:33:13.821983: Velocity calculated - Average: 16.333333333333332
-- 2025-08-03T15:33:18.929915: Velocity calculated - Average: 16.333333333333332
-- 2025-08-03T15:37:55.747784: Velocity calculated - Average: 16.333333333333332
-- 2025-08-03T15:38:00.844441: Velocity calculated - Average: 16.333333333333332
 - 2025-08-03T15:48:02.352631: Velocity calculated - Average: 16.333333333333332
 - 2025-08-03T15:48:07.455389: Velocity calculated - Average: 16.333333333333332
 - 2025-08-03T16:42:58.978090: Velocity calculated - Average: 16.333333333333332
@@ -50,3 +44,9 @@
 - 2025-08-06T08:52:08.876727: Velocity calculated - Average: 16.333333333333332
 - 2025-08-06T08:57:42.661762: Velocity calculated - Average: 16.333333333333332
 - 2025-08-06T08:57:47.733078: Velocity calculated - Average: 16.333333333333332
+- 2025-08-06T18:53:14.756280: Velocity calculated - Average: 16.333333333333332
+- 2025-08-06T18:53:19.963418: Velocity calculated - Average: 16.333333333333332
+- 2025-08-06T18:55:51.990342: Velocity calculated - Average: 16.333333333333332
+- 2025-08-06T18:55:57.065083: Velocity calculated - Average: 16.333333333333332
+- 2025-08-06T18:58:45.872764: Velocity calculated - Average: 16.333333333333332
+- 2025-08-06T18:58:50.941990: Velocity calculated - Average: 16.333333333333332
