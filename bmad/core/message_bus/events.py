@@ -27,6 +27,7 @@ class EventTypes:
     # Development Events
     API_DESIGN_REQUESTED = "api_design_requested"
     API_DESIGN_COMPLETED = "api_design_completed"
+    API_DESIGN_FAILED = "api_design_failed"
     COMPONENT_BUILD_REQUESTED = "component_build_requested"
     COMPONENT_BUILD_COMPLETED = "component_build_completed"
     BACKEND_BUILD_REQUESTED = "backend_build_requested"
@@ -202,6 +203,58 @@ class EventTypes:
     FEEDBACK_PROCESSED = "feedback_processed"
     FEEDBACK_PROCESSING_FAILED = "feedback_processing_failed"
     PIPELINE_ADVICE_REQUESTED = "pipeline_advice_requested"
+    
+    # Architecture Events
+    ARCHITECTURE_DESIGN_REQUESTED = "architecture_design_requested"
+    ARCHITECTURE_DESIGN_COMPLETED = "architecture_design_completed"
+    ARCHITECTURE_DESIGN_FAILED = "architecture_design_failed"
+    SYSTEM_ARCHITECTURE_REVIEW_REQUESTED = "system_architecture_review_requested"
+    SYSTEM_ARCHITECTURE_REVIEW_COMPLETED = "system_architecture_review_completed"
+    SYSTEM_ARCHITECTURE_REVIEW_FAILED = "system_architecture_review_failed"
+    API_ARCHITECTURE_DESIGN_REQUESTED = "api_architecture_design_requested"
+    API_ARCHITECTURE_DESIGN_COMPLETED = "api_architecture_design_completed"
+    API_ARCHITECTURE_DESIGN_FAILED = "api_architecture_design_failed"
+    DATABASE_ARCHITECTURE_DESIGN_REQUESTED = "database_architecture_design_requested"
+    DATABASE_ARCHITECTURE_DESIGN_COMPLETED = "database_architecture_design_completed"
+    DATABASE_ARCHITECTURE_DESIGN_FAILED = "database_architecture_design_failed"
+    MICROSERVICES_ARCHITECTURE_REQUESTED = "microservices_architecture_requested"
+    MICROSERVICES_ARCHITECTURE_COMPLETED = "microservices_architecture_completed"
+    MICROSERVICES_ARCHITECTURE_FAILED = "microservices_architecture_failed"
+    SCALABILITY_ANALYSIS_REQUESTED = "scalability_analysis_requested"
+    SCALABILITY_ANALYSIS_COMPLETED = "scalability_analysis_completed"
+    SCALABILITY_ANALYSIS_FAILED = "scalability_analysis_failed"
+    PERFORMANCE_ARCHITECTURE_REVIEW_REQUESTED = "performance_architecture_review_requested"
+    PERFORMANCE_ARCHITECTURE_REVIEW_COMPLETED = "performance_architecture_review_completed"
+    PERFORMANCE_ARCHITECTURE_REVIEW_FAILED = "performance_architecture_review_failed"
+    SECURITY_ARCHITECTURE_REVIEW_REQUESTED = "security_architecture_review_requested"
+    SECURITY_ARCHITECTURE_REVIEW_COMPLETED = "security_architecture_review_completed"
+    SECURITY_ARCHITECTURE_REVIEW_FAILED = "security_architecture_review_failed"
+    ARCHITECTURE_DECISION_RECORD_REQUESTED = "architecture_decision_record_requested"
+    ARCHITECTURE_DECISION_RECORD_CREATED = "architecture_decision_record_created"
+    ARCHITECTURE_DECISION_RECORD_FAILED = "architecture_decision_record_failed"
+    TECHNICAL_DEBT_ANALYSIS_REQUESTED = "technical_debt_analysis_requested"
+    TECHNICAL_DEBT_ANALYSIS_COMPLETED = "technical_debt_analysis_completed"
+    TECHNICAL_DEBT_ANALYSIS_FAILED = "technical_debt_analysis_failed"
+    ARCHITECTURE_PATTERN_RECOMMENDATION_REQUESTED = "architecture_pattern_recommendation_requested"
+    ARCHITECTURE_PATTERN_RECOMMENDATION_COMPLETED = "architecture_pattern_recommendation_completed"
+    ARCHITECTURE_PATTERN_RECOMMENDATION_FAILED = "architecture_pattern_recommendation_failed"
+    
+    # System Design Events
+    SYSTEM_DESIGN_REQUESTED = "system_design_requested"
+    SYSTEM_DESIGN_COMPLETED = "system_design_completed"
+    SYSTEM_DESIGN_FAILED = "system_design_failed"
+    ARCHITECTURE_REVIEW_REQUESTED = "architecture_review_requested"
+    ARCHITECTURE_REVIEW_COMPLETED = "architecture_review_completed"
+    ARCHITECTURE_REVIEW_FAILED = "architecture_review_failed"
+    
+    # Tech Stack Events
+    TECH_STACK_EVALUATION_REQUESTED = "tech_stack_evaluation_requested"
+    TECH_STACK_EVALUATION_COMPLETED = "tech_stack_evaluation_completed"
+    TECH_STACK_EVALUATION_FAILED = "tech_stack_evaluation_failed"
+    
+    # Pipeline Events
+    PIPELINE_ADVICE_COMPLETED = "pipeline_advice_completed"
+    PIPELINE_ADVICE_FAILED = "pipeline_advice_failed"
 
 # Event categories for easier management
 EVENT_CATEGORIES = {
@@ -404,6 +457,54 @@ EVENT_CATEGORIES = {
         EventTypes.IDEA_VALIDATION_REQUESTED,
         EventTypes.IDEA_REFINEMENT_REQUESTED,
         EventTypes.EPIC_CREATION_REQUESTED,
+    ],
+    "architecture": [
+        EventTypes.ARCHITECTURE_DESIGN_REQUESTED,
+        EventTypes.ARCHITECTURE_DESIGN_COMPLETED,
+        EventTypes.ARCHITECTURE_DESIGN_FAILED,
+        EventTypes.SYSTEM_ARCHITECTURE_REVIEW_REQUESTED,
+        EventTypes.SYSTEM_ARCHITECTURE_REVIEW_COMPLETED,
+        EventTypes.SYSTEM_ARCHITECTURE_REVIEW_FAILED,
+        EventTypes.API_ARCHITECTURE_DESIGN_REQUESTED,
+        EventTypes.API_ARCHITECTURE_DESIGN_COMPLETED,
+        EventTypes.API_ARCHITECTURE_DESIGN_FAILED,
+        EventTypes.DATABASE_ARCHITECTURE_DESIGN_REQUESTED,
+        EventTypes.DATABASE_ARCHITECTURE_DESIGN_COMPLETED,
+        EventTypes.DATABASE_ARCHITECTURE_DESIGN_FAILED,
+        EventTypes.MICROSERVICES_ARCHITECTURE_REQUESTED,
+        EventTypes.MICROSERVICES_ARCHITECTURE_COMPLETED,
+        EventTypes.MICROSERVICES_ARCHITECTURE_FAILED,
+        EventTypes.SCALABILITY_ANALYSIS_REQUESTED,
+        EventTypes.SCALABILITY_ANALYSIS_COMPLETED,
+        EventTypes.SCALABILITY_ANALYSIS_FAILED,
+        EventTypes.PERFORMANCE_ARCHITECTURE_REVIEW_REQUESTED,
+        EventTypes.PERFORMANCE_ARCHITECTURE_REVIEW_COMPLETED,
+        EventTypes.PERFORMANCE_ARCHITECTURE_REVIEW_FAILED,
+        EventTypes.SECURITY_ARCHITECTURE_REVIEW_REQUESTED,
+        EventTypes.SECURITY_ARCHITECTURE_REVIEW_COMPLETED,
+        EventTypes.SECURITY_ARCHITECTURE_REVIEW_FAILED,
+        EventTypes.ARCHITECTURE_DECISION_RECORD_REQUESTED,
+        EventTypes.ARCHITECTURE_DECISION_RECORD_CREATED,
+        EventTypes.ARCHITECTURE_DECISION_RECORD_FAILED,
+        EventTypes.TECHNICAL_DEBT_ANALYSIS_REQUESTED,
+        EventTypes.TECHNICAL_DEBT_ANALYSIS_COMPLETED,
+        EventTypes.TECHNICAL_DEBT_ANALYSIS_FAILED,
+        EventTypes.ARCHITECTURE_PATTERN_RECOMMENDATION_REQUESTED,
+        EventTypes.ARCHITECTURE_PATTERN_RECOMMENDATION_COMPLETED,
+        EventTypes.ARCHITECTURE_PATTERN_RECOMMENDATION_FAILED,
+    ],
+    "system_design": [
+        EventTypes.SYSTEM_DESIGN_REQUESTED,
+        EventTypes.SYSTEM_DESIGN_COMPLETED,
+        EventTypes.SYSTEM_DESIGN_FAILED,
+        EventTypes.ARCHITECTURE_REVIEW_REQUESTED,
+        EventTypes.ARCHITECTURE_REVIEW_COMPLETED,
+        EventTypes.ARCHITECTURE_REVIEW_FAILED,
+    ],
+    "tech_stack": [
+        EventTypes.TECH_STACK_EVALUATION_REQUESTED,
+        EventTypes.TECH_STACK_EVALUATION_COMPLETED,
+        EventTypes.TECH_STACK_EVALUATION_FAILED,
     ]
 }
 

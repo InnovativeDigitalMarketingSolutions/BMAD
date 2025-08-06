@@ -11,7 +11,12 @@ from typing import Any, Dict, Optional
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 
 from bmad.agents.core.ai.llm_client import ask_openai
-from bmad.agents.core.communication.message_bus import publish, subscribe
+# New Message Bus Integration
+from bmad.core.message_bus import (
+    AgentMessageBusIntegration,
+    EventTypes,
+    get_message_bus
+)
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
 
@@ -61,13 +66,14 @@ TEMPLATE_PATHS = {
 }
 
 
-class ArchitectAgent:
+class ArchitectAgent(AgentMessageBusIntegration):
     """
     Architect Agent voor BMAD.
     Gespecialiseerd in software architectuur, API design, en system design.
     """
     
     def __init__(self):
+        super().__init__("Architect")
         self.framework_manager = get_framework_templates_manager()
         try:
             self.architecture_template = self.framework_manager.get_framework_template('architecture')
@@ -172,6 +178,193 @@ class ArchitectAgent:
         except Exception as e:
             logging.warning(f"Tracing initialization failed: {e}")
             self.tracing_enabled = False
+    
+    async def initialize_message_bus(self):
+        """Initialize message bus integration for Architect agent."""
+        try:
+            # Subscribe to relevant event categories
+            await self.subscribe_to_event_category("architecture")
+            await self.subscribe_to_event_category("system_design")
+            await self.subscribe_to_event_category("development")
+            await self.subscribe_to_event_category("tech_stack")
+            await self.subscribe_to_event_category("collaboration")
+            
+            # Register specific event handlers
+            await self.register_event_handler(EventTypes.API_DESIGN_REQUESTED, self._handle_api_design_requested)
+            await self.register_event_handler(EventTypes.SYSTEM_DESIGN_REQUESTED, self._handle_system_design_requested)
+            await self.register_event_handler(EventTypes.ARCHITECTURE_REVIEW_REQUESTED, self._handle_architecture_review_requested)
+            await self.register_event_handler(EventTypes.TECH_STACK_EVALUATION_REQUESTED, self._handle_tech_stack_evaluation_requested)
+            await self.register_event_handler(EventTypes.PIPELINE_ADVICE_REQUESTED, self._handle_pipeline_advice_requested)
+            await self.register_event_handler(EventTypes.TASK_DELEGATED, self._handle_task_delegated)
+            
+            logging.info("Architect agent message bus integration initialized successfully")
+        except Exception as e:
+            logging.error(f"Message bus initialization failed: {e}")
+    
+    async def _handle_api_design_requested(self, event_data: Dict[str, Any]):
+        """Handle API design requests."""
+        try:
+            logging.info(f"Handling API design request: {event_data}")
+            # Process API design request
+            api_design = await self.design_api(event_data.get("requirements", {}))
+            await self.publish_agent_event(EventTypes.API_DESIGN_COMPLETED, {
+                "request_id": event_data.get("request_id"),
+                "api_design": api_design,
+                "status": "completed"
+            })
+        except Exception as e:
+            logging.error(f"Error handling API design request: {e}")
+            await self.publish_agent_event(EventTypes.API_DESIGN_FAILED, {
+                "request_id": event_data.get("request_id"),
+                "error": str(e),
+                "status": "failed"
+            })
+    
+    async def _handle_system_design_requested(self, event_data: Dict[str, Any]):
+        """Handle system design requests."""
+        try:
+            logging.info(f"Handling system design request: {event_data}")
+            # Process system design request
+            system_design = await self.design_system()
+            await self.publish_agent_event(EventTypes.SYSTEM_DESIGN_COMPLETED, {
+                "request_id": event_data.get("request_id"),
+                "system_design": system_design,
+                "status": "completed"
+            })
+        except Exception as e:
+            logging.error(f"Error handling system design request: {e}")
+            await self.publish_agent_event(EventTypes.SYSTEM_DESIGN_FAILED, {
+                "request_id": event_data.get("request_id"),
+                "error": str(e),
+                "status": "failed"
+            })
+    
+    async def _handle_architecture_review_requested(self, event_data: Dict[str, Any]):
+        """Handle architecture review requests."""
+        try:
+            logging.info(f"Handling architecture review request: {event_data}")
+            # Process architecture review
+            review_result = await self.review_architecture(event_data.get("architecture", {}))
+            await self.publish_agent_event(EventTypes.ARCHITECTURE_REVIEW_COMPLETED, {
+                "request_id": event_data.get("request_id"),
+                "review_result": review_result,
+                "status": "completed"
+            })
+        except Exception as e:
+            logging.error(f"Error handling architecture review request: {e}")
+            await self.publish_agent_event(EventTypes.ARCHITECTURE_REVIEW_FAILED, {
+                "request_id": event_data.get("request_id"),
+                "error": str(e),
+                "status": "failed"
+            })
+    
+    async def _handle_tech_stack_evaluation_requested(self, event_data: Dict[str, Any]):
+        """Handle tech stack evaluation requests."""
+        try:
+            logging.info(f"Handling tech stack evaluation request: {event_data}")
+            # Process tech stack evaluation
+            evaluation_result = await self.tech_stack()
+            await self.publish_agent_event(EventTypes.TECH_STACK_EVALUATION_COMPLETED, {
+                "request_id": event_data.get("request_id"),
+                "evaluation_result": evaluation_result,
+                "status": "completed"
+            })
+        except Exception as e:
+            logging.error(f"Error handling tech stack evaluation request: {e}")
+            await self.publish_agent_event(EventTypes.TECH_STACK_EVALUATION_FAILED, {
+                "request_id": event_data.get("request_id"),
+                "error": str(e),
+                "status": "failed"
+            })
+    
+    async def _handle_pipeline_advice_requested(self, event_data: Dict[str, Any]):
+        """Handle pipeline advice requests."""
+        try:
+            logging.info(f"Handling pipeline advice request: {event_data}")
+            # Process pipeline advice
+            advice_result = await self.provide_pipeline_advice(event_data.get("pipeline_data", {}))
+            await self.publish_agent_event(EventTypes.PIPELINE_ADVICE_COMPLETED, {
+                "request_id": event_data.get("request_id"),
+                "advice_result": advice_result,
+                "status": "completed"
+            })
+        except Exception as e:
+            logging.error(f"Error handling pipeline advice request: {e}")
+            await self.publish_agent_event(EventTypes.PIPELINE_ADVICE_FAILED, {
+                "request_id": event_data.get("request_id"),
+                "error": str(e),
+                "status": "failed"
+            })
+    
+    async def _handle_task_delegated(self, event_data: Dict[str, Any]):
+        """Handle delegated tasks."""
+        try:
+            logging.info(f"Handling delegated task: {event_data}")
+            task_type = event_data.get("task_type")
+            task_data = event_data.get("task_data", {})
+            
+            if task_type == "api_design":
+                result = await self.design_api(task_data)
+            elif task_type == "system_design":
+                result = await self.design_system()
+            elif task_type == "tech_stack":
+                result = await self.tech_stack()
+            else:
+                result = {"error": f"Unknown task type: {task_type}"}
+            
+            await self.publish_agent_event(EventTypes.TASK_COMPLETED, {
+                "task_id": event_data.get("task_id"),
+                "task_type": task_type,
+                "result": result,
+                "status": "completed"
+            })
+        except Exception as e:
+            logging.error(f"Error handling delegated task: {e}")
+            await self.publish_agent_event(EventTypes.TASK_FAILED, {
+                "task_id": event_data.get("task_id"),
+                "error": str(e),
+                "status": "failed"
+            })
+    
+    async def design_api(self, requirements: Dict[str, Any]) -> Dict[str, Any]:
+        """Design API based on requirements."""
+        try:
+            logging.info(f"Designing API with requirements: {requirements}")
+            # Placeholder implementation
+            return {
+                "api_design": "API design completed",
+                "endpoints": ["/api/users", "/api/posts"],
+                "methods": ["GET", "POST", "PUT", "DELETE"]
+            }
+        except Exception as e:
+            logging.error(f"Error designing API: {e}")
+            return {"error": str(e)}
+    
+    async def provide_pipeline_advice(self, pipeline_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Provide pipeline advice based on configuration."""
+        try:
+            logging.info(f"Providing pipeline advice for: {pipeline_data}")
+            # Placeholder implementation
+            return {
+                "advice": "Pipeline advice provided",
+                "recommendations": ["Use caching", "Implement monitoring"]
+            }
+        except Exception as e:
+            logging.error(f"Error providing pipeline advice: {e}")
+            return {"error": str(e)}
+    
+    async def review_architecture(self, architecture_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Review architecture based on provided data."""
+        try:
+            logging.info(f"Reviewing architecture: {architecture_data}")
+            # Placeholder implementation
+            return {
+                "review_result": "Architecture review completed",
+                "recommendations": ["Consider microservices", "Implement caching"]
+            }
+        except Exception as e:
+            logging.error(f"Error reviewing architecture: {e}")
+            return {"error": str(e)}
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced architecture design functionality."""
@@ -813,9 +1006,13 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
         # Initialize tracing capabilities
         await self.initialize_tracing()
         
+        # Initialize message bus integration
+        await self.initialize_message_bus()
+        
         print("🏗️ Architect Agent is running...")
         print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
         print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        print("Message Bus: Enabled")
         
         if command == "design-frontend":
             return await self.design_frontend()
@@ -846,6 +1043,11 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
             logging.error(f"Onbekend commando: {command}")
             self.show_help()
     
+    async def run_async(self):
+        """Run the Architect agent asynchronously with message bus integration."""
+        await self.initialize_message_bus()
+        logging.info("Architect agent message bus integration initialized")
+    
     @classmethod
     async def run_agent(cls):
         """Class method to run the Architect agent met MCP integration."""
@@ -854,25 +1056,39 @@ Samenwerking: Werkt nauw samen met Fullstack, Backend, DevOps, Product Owner, AI
         print("Architect agent started with MCP integration")
 
 
-def on_api_design_requested(event):
+async def on_api_design_requested(event):
+    """Global handler for API design requests."""
     use_case = event.get("use_case", "Onbekende use case")
     context = event.get("context", "")
     prompt = f"Ontwerp een REST API endpoint voor de volgende use case: {use_case}. Context: {context}. Geef een korte beschrijving en een voorbeeld van de JSON input/output."
     result = ask_openai(prompt)
     logging.info(f"[Architect][LLM API-design automatisch]: {result}")
+    
+    # Publish completion event
+    message_bus = get_message_bus()
+    await message_bus.publish(EventTypes.API_DESIGN_COMPLETED, {
+        "use_case": use_case,
+        "result": result,
+        "status": "completed"
+    })
     return result
 
-subscribe("api_design_requested", on_api_design_requested)
-
-def on_pipeline_advice_requested(event):
+async def on_pipeline_advice_requested(event):
+    """Global handler for pipeline advice requests."""
     pipeline_config = event.get("pipeline_config", "")
     prompt = f"Geef een architectuuradvies voor deze CI/CD pipeline config:\n{pipeline_config}. Geef het antwoord als JSON met een korte samenvatting en 2 adviezen."
     structured_output = '{"samenvatting": "...", "adviezen": ["advies 1", "advies 2"]}'
     result = ask_openai(prompt, structured_output=structured_output)
     logging.info(f"[Architect][LLM Pipeline Advies]: {result}")
+    
+    # Publish completion event
+    message_bus = get_message_bus()
+    await message_bus.publish(EventTypes.PIPELINE_ADVICE_REQUESTED, {
+        "pipeline_config": pipeline_config,
+        "result": result,
+        "status": "completed"
+    })
     return result
-
-subscribe("pipeline_advice_requested", on_pipeline_advice_requested)
 
 def main():
     import argparse
