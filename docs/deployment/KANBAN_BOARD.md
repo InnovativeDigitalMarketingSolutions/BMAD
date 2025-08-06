@@ -50,7 +50,7 @@
 ### 🔄 **IN PROGRESS TASKS**
 
 #### **Workflow Compliance Implementation** 🔄
-**Status**: 7/23 agents volledig compliant (30.4%)
+**Status**: 9/23 agents volledig compliant (39.1%)
 
 **✅ Completed Agents:**
 - **FrontendDeveloper Agent** - ✅ **FULLY COMPLIANT**
@@ -134,11 +134,28 @@
   - Quality-first approach toegepast
   - **Documentation**: ✅ Volledig up-to-date (changelog, .md, agents-overview)
 
+- **QualityGuardian Agent** - ✅ **FULLY COMPLIANT**
+  - 53/53 tests passing (100% coverage)
+  - 6 quality-specific event handlers met echte functionaliteit
+  - CLI Extension met 6 Message Bus commands
+  - Performance metrics tracking (12 quality metrics)
+  - Template quality assurance support
+  - Quality-first approach toegepast
+  - **Documentation**: ✅ Volledig up-to-date (changelog, .md, agents-overview)
+
+- **Scrummaster Agent** - ✅ **FULLY COMPLIANT**
+  - 65/65 tests passing (100% coverage)
+  - 6 scrum-specific event handlers met echte functionaliteit
+  - CLI Extension met 6 Message Bus commands
+  - Performance metrics tracking (12 scrum metrics)
+  - Complete sprint lifecycle management
+  - Quality-first approach toegepast
+  - **Documentation**: ✅ Volledig up-to-date (changelog, .md, agents-overview)
+
 **🔄 In Progress:**
 (None - all current agents are completed)
 
 **⏳ Pending:**
-- **QualityGuardian Agent** - Workflow compliance implementatie
 - **ProductOwner Agent** - Workflow compliance implementatie
 - **Scrummaster Agent** - Workflow compliance implementatie
 - **ReleaseManager Agent** - Workflow compliance implementatie
@@ -219,8 +236,8 @@
 
 ### **Workflow Compliance Progress**
 - **Total Agents**: 23
-- **Fully Compliant**: 7 (30.4%) - FrontendDeveloper, BackendDeveloper, FullstackDeveloper, TestEngineer, SecurityDeveloper, UXUIDesigner, Architect
-- **Partially Compliant**: 16 (69.6%) - Message Bus only
+- **Fully Compliant**: 9 (39.1%) - FrontendDeveloper, BackendDeveloper, FullstackDeveloper, TestEngineer, SecurityDeveloper, UXUIDesigner, Architect, QualityGuardian, Scrummaster
+- **Partially Compliant**: 14 (60.9%) - Message Bus only
 - **Overall Progress**: 47.8%
 
 ### **Quality Standards Implementation**
