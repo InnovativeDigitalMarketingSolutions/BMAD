@@ -654,6 +654,29 @@ async def agent_method(self, param):
 
 ## Enhanced MCP Implementation Workflow
 
+### **Quality-First Implementation Principe** 🎯
+
+**KRITIEK PRINCIPE**: Implementeer **ÉÉN AGENT PER KEER** om kwaliteit en complete implementatie te kunnen waarborgen.
+
+#### **Waarom Één Agent Per Keer?**
+- **Kwaliteitsborging**: Volledige focus op één agent voorkomt rushed implementations
+- **Complete Testing**: 100% test success rate per agent voor elke stap
+- **Root Cause Analysis**: Tijd voor grondige analyse bij issues in plaats van quick fixes
+- **Documentation Completeness**: Volledige documentatie per agent voordat verder te gaan
+- **Knowledge Transfer**: Lessons learned van één agent kunnen toegepast worden op volgende agents
+- **Risk Mitigation**: Voorkomen van cascade failures door incomplete implementations
+
+#### **Agent-per-Agent Workflow**:
+1. **Selecteer Target Agent**: Kies één specifieke agent uit de backlog
+2. **Complete Implementation**: Implementeer ALLE MCP Phase 2 features voor deze agent
+3. **Test tot 100%**: Behaal 100% test success rate voordat verder te gaan
+4. **Document Volledig**: Update alle documentatie (changelog, agents-overview, kanban)
+5. **Commit & Push**: Maak complete commit met alle wijzigingen
+6. **Verification**: Verifieer dat agent FULLY COMPLIANT is
+7. **Volgende Agent**: Ga pas daarna naar de volgende agent
+
+**NEVER**: Werk niet aan meerdere agents tegelijk - dit leidt tot incomplete implementations en reduced quality.
+
 ### **Step-by-Step Enhanced MCP Integration Process**
 
 #### **1. Pre-Implementation Checklist**
@@ -691,6 +714,9 @@ async def agent_method(self, param):
 - [ ] **Code Quality**: Geen code verwijderen, alleen uitbreiden/verbeteren
 - [ ] **Documentation**: Alle documentatie up-to-date
 - [ ] **Workflow Compliance**: Volg established workflow patterns
+- [ ] **Single Agent Focus**: Voltooi één agent volledig voordat verder te gaan (Quality-First Implementation)
+- [ ] **Root Cause Analysis**: Bij failures, voer grondige analyse uit in plaats van quick fixes
+- [ ] **Verification**: Verifieer FULLY COMPLIANT status voordat volgende agent te starten
 
 ### **Success Metrics**
 - **Test Success**: Alle tests blijven slagen (100% success rate)
@@ -705,6 +731,7 @@ async def agent_method(self, param):
 - **v1.1 (Planned)**: Additional agent-specific patterns
 - **v1.2 (Planned)**: Advanced troubleshooting en optimization
 - **v2.0 (2025-01-27)**: Enhanced MCP Phase 2 integration patterns en workflow
+- **v2.1 (2025-01-31)**: Quality-First Implementation principe toegevoegd - "Één Agent Per Keer" workflow voor kwaliteitsborging
 
 ## Contributing
 
