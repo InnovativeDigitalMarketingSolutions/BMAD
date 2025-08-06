@@ -3,217 +3,125 @@
     {
       "event_type": "agent_started",
       "data": {
-        "agent_name": "TestAgent",
-        "timestamp": "2025-08-06T12:00:00.232375"
+        "agent_name": "Orchestrator",
+        "timestamp": "2025-08-06T12:19:33.348408"
       },
-      "source_agent": "TestAgent",
-      "timestamp": "2025-08-06T12:00:00.232398",
-      "event_id": "agent_started_1754474400.232399",
+      "source_agent": "Orchestrator",
+      "timestamp": "2025-08-06T12:19:33.348411",
+      "event_id": "agent_started_1754475573.348412",
       "correlation_id": null
     },
     {
       "event_type": "agent_started",
       "data": {
-        "agent_name": "TestAgent",
-        "timestamp": "2025-08-06T12:00:00.239174"
+        "agent_name": "Orchestrator",
+        "timestamp": "2025-08-06T12:19:33.358534"
       },
-      "source_agent": "TestAgent",
-      "timestamp": "2025-08-06T12:00:00.239176",
-      "event_id": "agent_started_1754474400.239177",
-      "correlation_id": null
-    },
-    {
-      "event_type": "feedback_collected",
-      "data": {
-        "test": "data",
-        "agent_name": "TestAgent",
-        "timestamp": "2025-08-06T12:00:00.243947"
-      },
-      "source_agent": "TestAgent",
-      "timestamp": "2025-08-06T12:00:00.243950",
-      "event_id": "feedback_collected_1754474400.243951",
+      "source_agent": "Orchestrator",
+      "timestamp": "2025-08-06T12:19:33.358537",
+      "event_id": "agent_started_1754475573.358538",
       "correlation_id": null
     },
     {
       "event_type": "agent_started",
       "data": {
-        "agent_name": "TestAgent",
-        "timestamp": "2025-08-06T12:00:00.248450"
+        "agent_name": "Orchestrator",
+        "timestamp": "2025-08-06T12:19:33.368694"
       },
-      "source_agent": "TestAgent",
-      "timestamp": "2025-08-06T12:00:00.248458",
-      "event_id": "agent_started_1754474400.248459",
-      "correlation_id": null
-    },
-    {
-      "event_type": "agent_collaboration_requested",
-      "data": {
-        "from_agent": "TestAgent",
-        "to_agent": "OtherAgent",
-        "task": {
-          "type": "feedback_analysis",
-          "data": "test"
-        },
-        "request_id": "collab_TestAgent_OtherAgent_1754474400.25008",
-        "agent_name": "TestAgent",
-        "timestamp": "2025-08-06T12:00:00.250089"
-      },
-      "source_agent": "TestAgent",
-      "timestamp": "2025-08-06T12:00:00.250092",
-      "event_id": "agent_collaboration_requested_1754474400.250092",
-      "correlation_id": "collab_TestAgent_OtherAgent_1754474400.25008"
-    },
-    {
-      "event_type": "agent_started",
-      "data": {
-        "agent_name": "TestAgent",
-        "timestamp": "2025-08-06T12:00:00.253953"
-      },
-      "source_agent": "TestAgent",
-      "timestamp": "2025-08-06T12:00:00.253955",
-      "event_id": "agent_started_1754474400.253956",
-      "correlation_id": null
-    },
-    {
-      "event_type": "task_delegated",
-      "data": {
-        "from_agent": "TestAgent",
-        "to_agent": "OtherAgent",
-        "task": {
-          "type": "feedback_analysis",
-          "data": "test"
-        },
-        "delegation_id": "delegate_TestAgent_OtherAgent_1754474400.254848",
-        "agent_name": "TestAgent",
-        "timestamp": "2025-08-06T12:00:00.254854"
-      },
-      "source_agent": "TestAgent",
-      "timestamp": "2025-08-06T12:00:00.254857",
-      "event_id": "task_delegated_1754474400.254858",
-      "correlation_id": "delegate_TestAgent_OtherAgent_1754474400.254848"
-    },
-    {
-      "event_type": "agent_started",
-      "data": {
-        "agent_name": "TestAgent",
-        "timestamp": "2025-08-06T12:00:00.257906"
-      },
-      "source_agent": "TestAgent",
-      "timestamp": "2025-08-06T12:00:00.257910",
-      "event_id": "agent_started_1754474400.257911",
-      "correlation_id": null
-    },
-    {
-      "event_type": "task_accepted",
-      "data": {
-        "task_id": "task_123",
-        "accepted_by": "TestAgent",
-        "task_details": {
-          "type": "feedback_analysis",
-          "data": "test"
-        },
-        "acceptance_timestamp": "2025-08-06T12:00:00.263832",
-        "agent_name": "TestAgent",
-        "timestamp": "2025-08-06T12:00:00.263835"
-      },
-      "source_agent": "TestAgent",
-      "timestamp": "2025-08-06T12:00:00.263838",
-      "event_id": "task_accepted_1754474400.263838",
-      "correlation_id": "task_123"
-    },
-    {
-      "event_type": "agent_started",
-      "data": {
-        "agent_name": "TestAgent",
-        "timestamp": "2025-08-06T12:00:00.266299"
-      },
-      "source_agent": "TestAgent",
-      "timestamp": "2025-08-06T12:00:00.266301",
-      "event_id": "agent_started_1754474400.266301",
-      "correlation_id": null
-    },
-    {
-      "event_type": "task_completed",
-      "data": {
-        "task_id": "task_123",
-        "completed_by": "TestAgent",
-        "result": {
-          "status": "completed",
-          "data": "result"
-        },
-        "completion_timestamp": "2025-08-06T12:00:00.267522",
-        "agent_name": "TestAgent",
-        "timestamp": "2025-08-06T12:00:00.267527"
-      },
-      "source_agent": "TestAgent",
-      "timestamp": "2025-08-06T12:00:00.267529",
-      "event_id": "task_completed_1754474400.26753",
-      "correlation_id": "task_123"
-    },
-    {
-      "event_type": "agent_started",
-      "data": {
-        "agent_name": "TestAgent",
-        "timestamp": "2025-08-06T12:00:00.270496"
-      },
-      "source_agent": "TestAgent",
-      "timestamp": "2025-08-06T12:00:00.270498",
-      "event_id": "agent_started_1754474400.270499",
-      "correlation_id": null
-    },
-    {
-      "event_type": "feedback_collected",
-      "data": {
-        "test": "data",
-        "agent_name": "TestAgent",
-        "timestamp": "2025-08-06T12:00:00.271733"
-      },
-      "source_agent": "TestAgent",
-      "timestamp": "2025-08-06T12:00:00.271737",
-      "event_id": "feedback_collected_1754474400.271737",
-      "correlation_id": null
-    },
-    {
-      "event_type": "test_event",
-      "data": {
-        "test": "data"
-      },
-      "source_agent": "TestAgent",
-      "timestamp": "2025-08-06T12:00:00.376774",
-      "event_id": "test_event_1754474400.376779",
+      "source_agent": "Orchestrator",
+      "timestamp": "2025-08-06T12:19:33.368696",
+      "event_id": "agent_started_1754475573.368697",
       "correlation_id": null
     },
     {
       "event_type": "agent_started",
       "data": {
-        "agent_name": "TestAgent",
-        "timestamp": "2025-08-06T12:00:00.380406"
+        "agent_name": "Orchestrator",
+        "timestamp": "2025-08-06T12:19:33.378894"
       },
-      "source_agent": "TestAgent",
-      "timestamp": "2025-08-06T12:00:00.380408",
-      "event_id": "agent_started_1754474400.380409",
-      "correlation_id": null
-    },
-    {
-      "event_type": "test_event",
-      "data": null,
-      "source_agent": "TestAgent",
-      "timestamp": "2025-08-06T12:00:00.382768",
-      "event_id": "test_event_1754474400.382771",
+      "source_agent": "Orchestrator",
+      "timestamp": "2025-08-06T12:19:33.378896",
+      "event_id": "agent_started_1754475573.378897",
       "correlation_id": null
     },
     {
       "event_type": "agent_started",
       "data": {
-        "agent_name": "",
-        "timestamp": "2025-08-06T12:00:00.386077"
+        "agent_name": "Orchestrator",
+        "timestamp": "2025-08-06T12:19:33.390032"
       },
-      "source_agent": "",
-      "timestamp": "2025-08-06T12:00:00.386079",
-      "event_id": "agent_started_1754474400.38608",
+      "source_agent": "Orchestrator",
+      "timestamp": "2025-08-06T12:19:33.390034",
+      "event_id": "agent_started_1754475573.390035",
+      "correlation_id": null
+    },
+    {
+      "event_type": "agent_started",
+      "data": {
+        "agent_name": "Orchestrator",
+        "timestamp": "2025-08-06T12:19:33.402682"
+      },
+      "source_agent": "Orchestrator",
+      "timestamp": "2025-08-06T12:19:33.402684",
+      "event_id": "agent_started_1754475573.402684",
+      "correlation_id": null
+    },
+    {
+      "event_type": "agent_started",
+      "data": {
+        "agent_name": "Orchestrator",
+        "timestamp": "2025-08-06T12:19:33.413992"
+      },
+      "source_agent": "Orchestrator",
+      "timestamp": "2025-08-06T12:19:33.413994",
+      "event_id": "agent_started_1754475573.413995",
+      "correlation_id": null
+    },
+    {
+      "event_type": "agent_started",
+      "data": {
+        "agent_name": "Orchestrator",
+        "timestamp": "2025-08-06T12:19:33.424387"
+      },
+      "source_agent": "Orchestrator",
+      "timestamp": "2025-08-06T12:19:33.424390",
+      "event_id": "agent_started_1754475573.42439",
+      "correlation_id": null
+    },
+    {
+      "event_type": "agent_started",
+      "data": {
+        "agent_name": "Orchestrator",
+        "timestamp": "2025-08-06T12:19:33.448747"
+      },
+      "source_agent": "Orchestrator",
+      "timestamp": "2025-08-06T12:19:33.448749",
+      "event_id": "agent_started_1754475573.44875",
+      "correlation_id": null
+    },
+    {
+      "event_type": "agent_started",
+      "data": {
+        "agent_name": "Orchestrator",
+        "timestamp": "2025-08-06T12:19:33.459168"
+      },
+      "source_agent": "Orchestrator",
+      "timestamp": "2025-08-06T12:19:33.459170",
+      "event_id": "agent_started_1754475573.459171",
+      "correlation_id": null
+    },
+    {
+      "event_type": "agent_started",
+      "data": {
+        "agent_name": "Orchestrator",
+        "timestamp": "2025-08-06T12:19:33.472236"
+      },
+      "source_agent": "Orchestrator",
+      "timestamp": "2025-08-06T12:19:33.472241",
+      "event_id": "agent_started_1754475573.472242",
       "correlation_id": null
     }
   ],
-  "last_updated": "2025-08-06T12:00:00.387015",
-  "total_events": 17
+  "last_updated": "2025-08-06T12:19:33.478266",
+  "total_events": 11
 }

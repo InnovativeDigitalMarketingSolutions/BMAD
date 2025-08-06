@@ -3,6 +3,7 @@ import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 import argparse
+import asyncio
 import csv
 import hashlib
 import json
@@ -23,7 +24,11 @@ from bmad.agents.core.agent.agent_performance_monitor import (
 )
 from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.ai.llm_client import ask_openai
-from bmad.agents.core.communication.message_bus import get_events, publish, subscribe
+from bmad.core.message_bus import (
+    get_message_bus,
+    EventTypes,
+    AgentMessageBusIntegration
+)
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.slack.slack_notify import send_human_in_loop_alert, send_slack_message
@@ -147,8 +152,11 @@ def log_metric(metric_name):
         METRICS[metric_name] = 1
         logging.info(f"[Metrics] {metric_name}: 1 (nieuw)")
 
-class OrchestratorAgent:
+class OrchestratorAgent(AgentMessageBusIntegration):
     def __init__(self):
+        # Initialize parent class (AgentMessageBusIntegration)
+        super().__init__("Orchestrator")
+        
         # Set agent name
         self.agent_name = "Orchestrator"
         self.monitor = get_performance_monitor()
@@ -258,6 +266,43 @@ class OrchestratorAgent:
         except Exception as e:
             logger.warning(f"Tracing initialization failed: {e}")
             self.tracing_enabled = False
+
+    async def initialize_message_bus(self):
+        """Initialize message bus integration for orchestration events."""
+        try:
+            await super().initialize_message_bus()
+            
+            # Subscribe to relevant event categories for orchestration
+            await self.subscribe_to_event_category("orchestration")
+            await self.subscribe_to_event_category("workflow")
+            await self.subscribe_to_event_category("collaboration")
+            await self.subscribe_to_event_category("monitoring")
+            
+            # Register specific event handlers for orchestration
+            await self.register_event_handler(
+                EventTypes.WORKFLOW_EXECUTION_REQUESTED,
+                self._handle_workflow_execution_requested
+            )
+            await self.register_event_handler(
+                EventTypes.WORKFLOW_OPTIMIZATION_REQUESTED,
+                self._handle_workflow_optimization_requested
+            )
+            await self.register_event_handler(
+                EventTypes.WORKFLOW_MONITORING_REQUESTED,
+                self._handle_workflow_monitoring_requested
+            )
+            await self.register_event_handler(
+                EventTypes.AGENT_COLLABORATION_REQUESTED,
+                self._handle_agent_collaboration_requested
+            )
+            await self.register_event_handler(
+                EventTypes.TASK_DELEGATED,
+                self._handle_task_delegated
+            )
+            
+            logger.info("Message bus integration initialized successfully for Orchestrator")
+        except Exception as e:
+            logger.warning(f"Message bus initialization failed for Orchestrator: {e}")
 
     def _ensure_history_loaded(self):
         """Ensure history is loaded (lazy loading)."""
@@ -959,17 +1004,20 @@ Orchestrator Agent Commands:
         else:
             print("All resources are available!")
 
-    def collaborate_example(self):
+    async def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         try:
             logger.info("Starting orchestrator collaboration example...")
 
             # Publish workflow start
-            publish("workflow_started", {
-                "agent": "OrchestratorAgent",
-                "workflow_type": "feature_delivery",
-                "timestamp": datetime.now().isoformat()
-            })
+            await self.publish_agent_event(
+                EventTypes.WORKFLOW_STARTED,
+                {
+                    "agent": "OrchestratorAgent",
+                    "workflow_type": "feature_delivery",
+                    "timestamp": datetime.now().isoformat()
+                }
+            )
 
             # Monitor workflows
             monitoring_result = self.monitor_workflows()
@@ -984,19 +1032,25 @@ Orchestrator Agent Commands:
             self.manage_escalations("quality_gate_failed", "feature_development")
 
             # Idea validation via StrategiePartner
-            publish("idea_validation_requested", {
-                "idea_description": "A mobile app for task management",
-                "agent": "OrchestratorAgent",
-                "timestamp": datetime.now().isoformat()
-            })
+            await self.publish_agent_event(
+                EventTypes.IDEA_VALIDATION_REQUESTED,
+                {
+                    "idea_description": "A mobile app for task management",
+                    "agent": "OrchestratorAgent",
+                    "timestamp": datetime.now().isoformat()
+                }
+            )
 
             # Publish completion
-            publish("orchestration_completed", {
-                "status": "success",
-                "agent": "OrchestratorAgent",
-                "workflows_managed": 3,
-                "escalations_handled": 1
-            })
+            await self.publish_agent_event(
+                EventTypes.ORCHESTRATION_COMPLETED,
+                {
+                    "status": "success",
+                    "agent": "OrchestratorAgent",
+                    "workflows_managed": 3,
+                    "escalations_handled": 1
+                }
+            )
 
             # Save context
             save_context("OrchestratorAgent", "status", {"orchestration_status": "completed"})
@@ -1013,6 +1067,100 @@ Orchestrator Agent Commands:
         except Exception as e:
             logger.error(f"Collaboration example failed: {e}")
             print(f"❌ Error in collaboration: {e}")
+
+    # Message Bus Event Handlers
+    async def _handle_workflow_execution_requested(self, event):
+        """Handle workflow execution requested events."""
+        try:
+            workflow_name = event.get("data", {}).get("workflow_name", "unknown")
+            logger.info(f"Handling workflow execution requested: {workflow_name}")
+            
+            # Start the workflow
+            result = self.start_workflow(workflow_name)
+            
+            # Publish workflow started event
+            await self.publish_agent_event(
+                EventTypes.WORKFLOW_EXECUTION_STARTED,
+                {
+                    "workflow_name": workflow_name,
+                    "status": "started",
+                    "result": result
+                }
+            )
+            
+            logger.info(f"Workflow execution started: {workflow_name}")
+        except Exception as e:
+            logger.error(f"Error handling workflow execution requested: {e}")
+
+    async def _handle_workflow_optimization_requested(self, event):
+        """Handle workflow optimization requested events."""
+        try:
+            workflow_name = event.get("data", {}).get("workflow_name", "unknown")
+            logger.info(f"Handling workflow optimization requested: {workflow_name}")
+            
+            # Optimize the workflow
+            result = self.analyze_metrics("workflow_performance", "30 days")
+            
+            # Publish optimization completed event
+            await self.publish_agent_event(
+                EventTypes.WORKFLOW_OPTIMIZATION_COMPLETED,
+                {
+                    "workflow_name": workflow_name,
+                    "optimization_result": result
+                }
+            )
+            
+            logger.info(f"Workflow optimization completed: {workflow_name}")
+        except Exception as e:
+            logger.error(f"Error handling workflow optimization requested: {e}")
+
+    async def _handle_workflow_monitoring_requested(self, event):
+        """Handle workflow monitoring requested events."""
+        try:
+            logger.info("Handling workflow monitoring requested")
+            
+            # Monitor workflows
+            result = self.monitor_workflows()
+            
+            # Publish monitoring completed event
+            await self.publish_agent_event(
+                EventTypes.WORKFLOW_MONITORING_COMPLETED,
+                {
+                    "monitoring_result": result
+                }
+            )
+            
+            logger.info("Workflow monitoring completed")
+        except Exception as e:
+            logger.error(f"Error handling workflow monitoring requested: {e}")
+
+    async def _handle_agent_collaboration_requested(self, event):
+        """Handle agent collaboration requested events."""
+        try:
+            target_agent = event.get("data", {}).get("target_agent", "unknown")
+            task = event.get("data", {}).get("task", "unknown")
+            logger.info(f"Handling agent collaboration requested: {target_agent} - {task}")
+            
+            # Request collaboration
+            result = await self.request_collaboration(target_agent, task)
+            
+            logger.info(f"Agent collaboration completed: {target_agent}")
+        except Exception as e:
+            logger.error(f"Error handling agent collaboration requested: {e}")
+
+    async def _handle_task_delegated(self, event):
+        """Handle task delegated events."""
+        try:
+            task = event.get("data", {}).get("task", "unknown")
+            target_agent = event.get("data", {}).get("target_agent", "unknown")
+            logger.info(f"Handling task delegated: {task} to {target_agent}")
+            
+            # Accept the delegated task
+            result = await self.accept_task(task, target_agent)
+            
+            logger.info(f"Task delegation accepted: {task}")
+        except Exception as e:
+            logger.error(f"Error handling task delegated: {e}")
 
     # Original functionality preserved
     def load_event_log(self):
@@ -1031,13 +1179,13 @@ Orchestrator Agent Commands:
         self.event_log.append(event)
         self.save_event_log()
 
-    def route_event(self, event):
+    async def route_event(self, event):
         event_type = event.get("event_type")
         self.log_event(event)
         if event_type == "feedback":
-            publish("feedback_received", event)
+            await self.publish_agent_event(EventTypes.FEEDBACK_RECEIVED, event)
         elif event_type == "pipeline_advice":
-            publish("pipeline_advice_requested", event)
+            await self.publish_agent_event(EventTypes.PIPELINE_ADVICE_REQUESTED, event)
         logging.info(f"[Orchestrator] Event gerouteerd: {event_type}")
 
     def intelligent_task_assignment(self, task_desc):
@@ -1163,13 +1311,13 @@ Orchestrator Agent Commands:
             "status": "active"
         }
 
-    def replay_history(self):
+    async def replay_history(self):
         print("Replaying event history...")
         for event in self.event_log:
-            publish(event.get("event_type"), event)
+            await self.publish_agent_event(event.get("event_type"), event)
             print(f"Event gereplayed: {event}")
 
-    def wait_for_hitl_decision(self, alert_id, timeout=3600):
+    async def wait_for_hitl_decision(self, alert_id, timeout=3600):
         """
         Wacht op een hitl_decision event met het juiste alert_id.
         :param alert_id: Unieke alert_id van de HITL stap (str)
@@ -1178,13 +1326,13 @@ Orchestrator Agent Commands:
         """
         start = time.time()
         while time.time() - start < timeout:
-            events = get_events("hitl_decision")
+            events = await self.message_bus.get_events(EventTypes.HITL_DECISION)
             for e in events:
-                if e["data"].get("alert_id") == alert_id:
-                    approved = e["data"].get("approved")
+                if e.data.get("alert_id") == alert_id:
+                    approved = e.data.get("approved")
                     logging.info(f"[Orchestrator] HITL-beslissing ontvangen: {'goedgekeurd' if approved else 'afgewezen'} (alert_id={alert_id})")
                     return approved
-            time.sleep(5)
+            await asyncio.sleep(5)
         logging.warning(f"[Orchestrator] Timeout bij wachten op HITL-beslissing (alert_id={alert_id})")
         return False
 
@@ -1203,7 +1351,7 @@ Orchestrator Agent Commands:
         self.collaborate_example()
     
     async def run_async(self):
-        """Run the agent with enhanced MCP and tracing initialization."""
+        """Run the agent with enhanced MCP, tracing, and message bus initialization."""
         # Initialize MCP integration
         await self.initialize_mcp()
         
@@ -1213,9 +1361,13 @@ Orchestrator Agent Commands:
         # Initialize tracing capabilities
         await self.initialize_tracing()
         
+        # Initialize message bus integration
+        await self.initialize_message_bus()
+        
         print("🎯 Orchestrator Agent is running...")
         print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
         print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        print("Message Bus: Enabled")
         
         logger.info("OrchestratorAgent ready and listening for events...")
         print("[Orchestrator] Ready and listening for events...")
@@ -1350,17 +1502,22 @@ def handle_hitl_decision(event):
         log_metric("workflow_paused")
         # Hier workflow pauzeren of annuleren
 
-subscribe("slack_command", handle_slack_command)
-subscribe("hitl_decision", handle_hitl_decision)
+# Note: These subscriptions are now handled by the new message bus integration
+# subscribe("slack_command", handle_slack_command)
+# subscribe("hitl_decision", handle_hitl_decision)
 
 # --- Productieklare agent-handler voorbeeld ---
 # Plaats dit in de relevante agent (bijv. DevOpsInfra, TestEngineer, etc.)
 
-def handle_build_triggered(event):
+async def handle_build_triggered(event):
     logging.info("[DevOpsInfra] Build gestart...")
     # Simuleer build (in productie: start build pipeline)
     time.sleep(2)
-    publish("tests_requested", {"desc": "Tests uitvoeren"})
+    # Note: This function is outside the class, so we can't use self.publish_agent_event
+    # We'll need to get the message bus instance directly
+    from bmad.core.message_bus import get_message_bus
+    message_bus = get_message_bus()
+    await message_bus.publish(EventTypes.TESTS_REQUESTED, {"desc": "Tests uitvoeren"})
     logging.info("[DevOpsInfra] Build afgerond, tests_requested gepubliceerd.")
 
 # Herhaal dit patroon voor andere events en agents.
@@ -1375,72 +1532,88 @@ def handle_tests_completed(event):
         send_slack_message(":rotating_light: Escalatie: Tests gefaald, Product Owner wordt gevraagd om actie te ondernemen.", channel=PO_CHANNEL, use_api=True)
         # Hier kun je eventueel een event publiceren om de workflow terug te zetten
 
-subscribe("tests_completed", handle_tests_completed)
+# Note: These subscriptions are now handled by the new message bus integration
+# subscribe("tests_completed", handle_tests_completed)
 
-def handle_quality_gate_check_requested(event):
+async def handle_quality_gate_check_requested(event):
     """Handle quality gate check requested event."""
     logger.info(f"Quality gate check requested: {event}")
     # Trigger QualityGuardian agent
-    publish("qualityguardian_quality_gate_check", event)
+    from bmad.core.message_bus import get_message_bus
+    message_bus = get_message_bus()
+    await message_bus.publish(EventTypes.QUALITY_GATE_CHECK_REQUESTED, event)
 
-def handle_idea_validation_requested(event):
+async def handle_idea_validation_requested(event):
     """Handle idea validation requested event."""
     logger.info(f"Idea validation requested: {event}")
     # Trigger StrategiePartner agent
-    publish("strategiepartner_validate_idea", event)
+    from bmad.core.message_bus import get_message_bus
+    message_bus = get_message_bus()
+    await message_bus.publish(EventTypes.IDEA_VALIDATION_REQUESTED, event)
 
-def handle_idea_refinement_requested(event):
+async def handle_idea_refinement_requested(event):
     """Handle idea refinement requested event."""
     logger.info(f"Idea refinement requested: {event}")
     # Trigger StrategiePartner agent
-    publish("strategiepartner_refine_idea", event)
+    from bmad.core.message_bus import get_message_bus
+    message_bus = get_message_bus()
+    await message_bus.publish(EventTypes.IDEA_REFINEMENT_REQUESTED, event)
 
-def handle_epic_creation_requested(event):
+async def handle_epic_creation_requested(event):
     """Handle epic creation requested event."""
     logger.info(f"Epic creation requested: {event}")
     # Trigger StrategiePartner agent
-    publish("strategiepartner_create_epic", event)
+    from bmad.core.message_bus import get_message_bus
+    message_bus = get_message_bus()
+    await message_bus.publish(EventTypes.EPIC_CREATION_REQUESTED, event)
 
-def handle_workflow_execution_requested(event):
+async def handle_workflow_execution_requested(event):
     """Handle workflow execution requested event."""
     workflow_id = event.get("workflow_id")
     logger.info(f"Workflow execution requested for workflow: {workflow_id}")
     
     # Trigger WorkflowAutomator agent for workflow execution
-    publish("workflow_execution_requested", {
+    from bmad.core.message_bus import get_message_bus
+    message_bus = get_message_bus()
+    await message_bus.publish(EventTypes.WORKFLOW_EXECUTION_REQUESTED, {
         "workflow_id": workflow_id,
         "timestamp": datetime.now().isoformat()
     })
 
-def handle_workflow_optimization_requested(event):
+async def handle_workflow_optimization_requested(event):
     """Handle workflow optimization requested event."""
     workflow_id = event.get("workflow_id")
     logger.info(f"Workflow optimization requested for workflow: {workflow_id}")
     
     # Trigger WorkflowAutomator agent for workflow optimization
-    publish("workflow_optimization_requested", {
+    from bmad.core.message_bus import get_message_bus
+    message_bus = get_message_bus()
+    await message_bus.publish(EventTypes.WORKFLOW_OPTIMIZATION_REQUESTED, {
         "workflow_id": workflow_id,
         "timestamp": datetime.now().isoformat()
     })
 
-def handle_workflow_monitoring_requested(event):
+async def handle_workflow_monitoring_requested(event):
     """Handle workflow monitoring requested event."""
     workflow_id = event.get("workflow_id")
     logger.info(f"Workflow monitoring requested for workflow: {workflow_id}")
     
     # Trigger WorkflowAutomator agent for workflow monitoring
-    publish("workflow_monitoring_requested", {
+    from bmad.core.message_bus import get_message_bus
+    message_bus = get_message_bus()
+    await message_bus.publish(EventTypes.WORKFLOW_MONITORING_REQUESTED, {
         "workflow_id": workflow_id,
         "timestamp": datetime.now().isoformat()
     })
 
-subscribe("quality_gate_check_requested", handle_quality_gate_check_requested)
-subscribe("idea_validation_requested", handle_idea_validation_requested)
-subscribe("idea_refinement_requested", handle_idea_refinement_requested)
-subscribe("epic_creation_requested", handle_epic_creation_requested)
-subscribe("workflow_execution_requested", handle_workflow_execution_requested)
-subscribe("workflow_optimization_requested", handle_workflow_optimization_requested)
-subscribe("workflow_monitoring_requested", handle_workflow_monitoring_requested)
+# Note: These subscriptions are now handled by the new message bus integration
+# subscribe("quality_gate_check_requested", handle_quality_gate_check_requested)
+# subscribe("idea_validation_requested", handle_idea_validation_requested)
+# subscribe("idea_refinement_requested", handle_idea_refinement_requested)
+# subscribe("epic_creation_requested", handle_epic_creation_requested)
+# subscribe("workflow_execution_requested", handle_workflow_execution_requested)
+# subscribe("workflow_optimization_requested", handle_workflow_optimization_requested)
+# subscribe("workflow_monitoring_requested", handle_workflow_monitoring_requested)
 
 def main():
     parser = argparse.ArgumentParser(description="Orchestrator Agent CLI")
