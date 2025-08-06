@@ -264,6 +264,14 @@ Agents kunnen ook via Slack worden aangestuurd:
 
 ## 📚 Agent Resources
 
+### **Framework Templates**
+Alle agents gebruiken framework templates voor consistente development en testing:
+- **Development Strategy**: `bmad/resources/templates/frameworks/development_strategy_template.md`
+- **Development Workflow**: `bmad/resources/templates/frameworks/development_workflow_template.md`
+- **Testing Strategy**: `bmad/resources/templates/frameworks/testing_strategy_template.md`
+- **Testing Workflow**: `bmad/resources/templates/frameworks/testing_workflow_template.md`
+- **Agent-Specific Templates**: `bmad/resources/templates/frameworks/[agent_name]_template.md`
+
 ### **Documentation**
 - **Methodologie**: `bmad/agents/resources/data/general/bmad-method.md`
 - **Project Management**: `bmad/agents/resources/data/general/project-management.md`
