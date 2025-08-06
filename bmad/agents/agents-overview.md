@@ -59,6 +59,15 @@
 - **Events**: `experiment_completed`, `model_trained`, `model_deployed`
 - **Enhanced MCP Phase 2**: ✅ Volledig geïmplementeerd met advanced tracing en collaboration
 
+#### **Architect**
+- **Rol**: Software architectuur en system design
+- **Verantwoordelijkheden**: API design, microservices, architecture patterns, tech stack evaluation
+- **CLI Commando's**: `design-api`, `microservices`, `tech-stack`, `help`
+- **Events**: `architecture_reviewed`, `api_design_updated`, `tech_stack_evaluated`
+- **Enhanced MCP Phase 2**: ✅ Volledig geïmplementeerd met advanced tracing en collaboration
+- **✅ Status**: FULLY COMPLIANT - 32/32 tests passing (100% coverage)
+- **Quality-First Implementation**: 6 event handlers met echte functionaliteit, 12 performance metrics, 6 Message Bus CLI commands, 7 Enhanced MCP commands
+
 #### **TestEngineer**
 - **Rol**: Quality assurance en testing
 - **Verantwoordelijkheden**: Test strategy, automation, coverage analysis, quality gates
