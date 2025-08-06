@@ -44,13 +44,36 @@ Deze guide beschrijft de gestandaardiseerde workflow voor het implementeren van 
 - [ ] **Lessons Learned**: Update lessons learned guide met nieuwe ervaringen
 - [ ] **Integration Report**: Maak gedetailleerd integratie rapport
 
-### 7. Quality Assurance
+### 7. Agent Documentation Maintenance
+- [ ] **Changelog Update**: Voeg nieuwe changelog entry toe met datum en details
+  - [ ] **Added Section**: Nieuwe features en functionaliteit
+  - [ ] **Enhanced Section**: Verbeterde bestaande functionaliteit
+  - [ ] **Technical Section**: Technische implementatie details
+- [ ] **Agent .md File Update**: Update agent documentatie met nieuwe capabilities
+  - [ ] **Overview Section**: Update agent beschrijving en features
+  - [ ] **MCP Integration Section**: Documenteer MCP capabilities
+  - [ ] **CLI Commands Section**: Update met nieuwe commands en voorbeelden
+  - [ ] **Usage Examples**: Praktische voorbeelden voor nieuwe functionaliteit
+- [ ] **YAML Configuration Update**: Update agent YAML configuratie
+  - [ ] **Commands Section**: Voeg nieuwe commands toe met beschrijvingen
+  - [ ] **Dependencies Section**: Update dependencies indien nodig
+- [ ] **Agents Overview Update**: Update agents-overview.md
+  - [ ] **Message Bus Integration Status**: Update status voor specifieke agent
+  - [ ] **Workflow Compliance Status**: Update compliance status
+  - [ ] **Progress Metrics**: Update overall project progress
+- [ ] **Project Documentation Sync**: Synchroniseer alle project documentatie
+  - [ ] **Kanban Board**: Update progress en status
+  - [ ] **Integration Reports**: Update relevante rapporten
+  - [ ] **Best Practices**: Voeg nieuwe lessons learned toe
+
+### 8. Quality Assurance
 - [ ] **Test Execution**: Voer alle nieuwe tests uit (24-25 tests)
 - [ ] **Regression Testing**: Voer bestaande tests uit (80+ tests)
 - [ ] **Resource Validation**: Controleer resource completeness
 - [ ] **CLI Testing**: Test alle nieuwe CLI commands
+- [ ] **Documentation Review**: Controleer alle documentatie updates
 
-### 8. Commit and Push
+### 9. Commit and Push
 - [ ] **Comprehensive Commit**: Gedetailleerde commit message met alle wijzigingen
 - [ ] **Push to Repository**: Push naar GitHub branch
 - [ ] **Progress Update**: Update project documentatie met voortgang
@@ -74,6 +97,9 @@ Deze guide beschrijft de gestandaardiseerde workflow voor het implementeren van 
 - **CLI Examples**: Praktische voorbeelden voor alle nieuwe commands
 - **Integration Points**: Duidelijke beschrijving van agent integraties
 - **Performance Metrics**: Documentatie van performance impact
+- **Changelog Maintenance**: Gedetailleerde changelog entries met datum en categorieën
+- **Agent Documentation Sync**: Alle agent-specifieke documentatie moet up-to-date zijn
+- **Project Documentation Sync**: Alle project documentatie moet gesynchroniseerd zijn
 
 ### Resource Standards
 - **Completeness Check**: Alle resources moeten beschikbaar zijn
@@ -81,20 +107,55 @@ Deze guide beschrijft de gestandaardiseerde workflow voor het implementeren van 
 - **Template Quality**: Templates moeten up-to-date en relevant zijn
 - **Data Integrity**: Data files moeten consistent en compleet zijn
 
+## Agent Documentation Maintenance Checklist
+
+### Changelog Requirements
+- [ ] **Datum**: Gebruik YYYY-MM-DD formaat
+- [ ] **Categorieën**: Added, Enhanced, Technical secties
+- [ ] **Details**: Specifieke features en wijzigingen
+- [ ] **Technical Details**: Implementatie details voor developers
+
+### Agent .md File Requirements
+- [ ] **Overview**: Update agent beschrijving en core features
+- [ ] **MCP Integration**: Documenteer MCP capabilities en tools
+- [ ] **CLI Commands**: Volledige command lijst met voorbeelden
+- [ ] **Usage Examples**: Praktische voorbeelden voor alle features
+- [ ] **Integration Points**: Beschrijving van inter-agent communicatie
+
+### YAML Configuration Requirements
+- [ ] **Commands**: Alle commands met korte beschrijvingen
+- [ ] **Dependencies**: Volledige dependency lijst
+- [ ] **Persona**: Agent persona en core principles
+- [ ] **Customization**: Agent-specifieke customization details
+
+### Project Documentation Sync Requirements
+- [ ] **Agents Overview**: Update status en progress
+- [ ] **Kanban Board**: Update task status en progress
+- [ ] **Integration Reports**: Update relevante rapporten
+- **Best Practices**: Voeg nieuwe lessons learned toe
+- [ ] **Workflow Guides**: Update workflow guides indien nodig
+
 ## Success Criteria
 - ✅ Alle 24-25 nieuwe tests passing
 - ✅ Alle bestaande tests passing (geen regressies)
 - ✅ Resource completeness test successful
 - ✅ CLI commands functioneel en gedocumenteerd
 - ✅ Documentatie volledig bijgewerkt
+- ✅ Agent documentatie volledig gesynchroniseerd
+- ✅ Changelog bijgewerkt met gedetailleerde entry
+- ✅ Project documentatie gesynchroniseerd
 - ✅ Commit en push succesvol
 - ✅ Progress bijgewerkt in project documentatie
 
 ## Workflow Compliance
 **CRITICAL**: Deze workflow moet strikt gevolgd worden voor elke agent enhancement. Afwijkingen van deze workflow zijn niet toegestaan zonder expliciete toestemming van de gebruiker.
 
+**DOCUMENTATION COMPLIANCE**: Agent documentatie updates zijn verplicht en moeten altijd worden uitgevoerd na elke agent wijziging.
+
 ## Reference Documents
 - MCP Integration Guide: `docs/guides/MCP_INTEGRATION_GUIDE.md`
 - Best Practices Guide: `docs/guides/BEST_PRACTICES_GUIDE.md`
 - Lessons Learned Guide: `docs/guides/LESSONS_LEARNED_GUIDE.md`
-- Agent Optimization Guide: `docs/guides/agent-optimization-guide.md` 
+- Agent Optimization Guide: `docs/guides/agent-optimization-guide.md`
+- Quality Guide: `docs/guides/QUALITY_GUIDE.md`
+- Test Workflow Guide: `docs/guides/TEST_WORKFLOW_GUIDE.md` 
