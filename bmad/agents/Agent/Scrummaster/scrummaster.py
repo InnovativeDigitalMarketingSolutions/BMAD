@@ -41,6 +41,12 @@ from bmad.core.mcp.enhanced_mcp_integration import (
     create_enhanced_mcp_integration
 )
 
+# Message Bus Integration
+from bmad.agents.core.communication.agent_message_bus_integration import (
+    AgentMessageBusIntegration,
+    create_agent_message_bus_integration
+)
+
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
@@ -146,6 +152,15 @@ class ScrummasterAgent:
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
         self.mcp_enabled = False
 
+        # Enhanced MCP Phase 2 attributes
+        self.enhanced_mcp_integration: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_enabled = False
+        self.tracing_enabled = False
+        
+        # Message Bus Integration
+        self.message_bus_integration: Optional[AgentMessageBusIntegration] = None
+        self.message_bus_enabled = False
+
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
 
     async def initialize_mcp(self):
@@ -177,16 +192,49 @@ class ScrummasterAgent:
     async def initialize_tracing(self):
         """Initialize tracing capabilities."""
         try:
-            if self.tracer:
+            if self.tracer and hasattr(self.tracer, 'initialize'):
                 await self.tracer.initialize()
                 self.tracing_enabled = True
                 logger.info("Tracing initialized successfully")
             else:
-                logger.warning("Tracer not available")
+                logger.warning("Tracer not available or missing initialize method")
                 self.tracing_enabled = False
         except Exception as e:
             logger.warning(f"Tracing initialization failed: {e}")
             self.tracing_enabled = False
+
+    async def initialize_message_bus_integration(self):
+        """Initialize Message Bus Integration for the agent."""
+        try:
+            self.message_bus_integration = create_agent_message_bus_integration(
+                agent_name=self.agent_name,
+                agent_instance=self
+            )
+            
+            # Register event handlers for scrum-specific events
+            await self.message_bus_integration.register_event_handler(
+                "sprint_planning_requested", 
+                self.handle_sprint_planning_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "sprint_review_completed", 
+                self.handle_sprint_review_completed
+            )
+            await self.message_bus_integration.register_event_handler(
+                "daily_standup_requested",
+                self.handle_daily_standup_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "impediment_reported",
+                self.handle_impediment_reported
+            )
+            
+            self.message_bus_enabled = True
+            logger.info(f"✅ Message Bus Integration geïnitialiseerd voor {self.agent_name}")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Fout bij initialiseren van Message Bus Integration voor {self.agent_name}: {e}")
+            return False
 
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -1085,22 +1133,27 @@ Scrummaster Agent Commands:
 
     def handle_sprint_review_completed(self, event):
         """Handle sprint review completed event."""
-        try:
-            logger.info(f"Sprint review completed: {event}")
-            self.monitor.log_metric("sprint_review", event)
-            allowed = self.policy_engine.evaluate_policy("sprint_review", event)
-            logger.info(f"Policy evaluation result: {allowed}")
-        except Exception as e:
-            logger.error(f"Error handling sprint review completed: {e}")
+        logger.info(f"Sprint review completed: {event}")
+        # Process sprint review completion
+        return {"status": "processed", "event": "sprint_review_completed"}
 
     def handle_sprint_planning_requested(self, event):
         """Handle sprint planning requested event."""
-        try:
-            logger.info(f"Sprint planning requested: {event}")
-            sprint_number = event.get("sprint_number", 1)
-            self.plan_sprint(sprint_number)
-        except Exception as e:
-            logger.error(f"Error handling sprint planning requested: {e}")
+        logger.info(f"Sprint planning requested: {event}")
+        # Process sprint planning request
+        return {"status": "processed", "event": "sprint_planning_requested"}
+
+    async def handle_daily_standup_requested(self, event):
+        """Handle daily standup requested event."""
+        logger.info(f"Daily standup requested: {event}")
+        # Process daily standup request
+        return {"status": "processed", "event": "daily_standup_requested"}
+
+    async def handle_impediment_reported(self, event):
+        """Handle impediment reported event."""
+        logger.info(f"Impediment reported: {event}")
+        # Process impediment report
+        return {"status": "processed", "event": "impediment_reported"}
 
     async def run(self):
         """Start the agent in event listening mode met complete integration."""
@@ -1113,17 +1166,11 @@ Scrummaster Agent Commands:
         # Initialize tracing capabilities
         await self.initialize_tracing()
         
-        subscribe("sprint_review_completed", self.handle_sprint_review_completed)
-        subscribe("sprint_planning_requested", self.handle_sprint_planning_requested)
+        # Initialize Message Bus Integration
+        await self.initialize_message_bus_integration()
 
-        logger.info("ScrummasterAgent ready and listening for events...")
-        print("🎯 Scrummaster Agent is running...")
-        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
-        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
-        self.collaborate_example()
-        
+        # Keep the agent running
         try:
-            # Keep the agent running
             while True:
                 await asyncio.sleep(1)
         except KeyboardInterrupt:

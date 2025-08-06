@@ -19,11 +19,9 @@ from bmad.agents.core.agent.agent_performance_monitor import (
 from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.ai.llm_client import ask_openai
 # Message Bus Integration
-from bmad.core.message_bus import (
+from bmad.agents.core.communication.agent_message_bus_integration import (
     AgentMessageBusIntegration,
-    create_agent_integration,
-    EventTypes,
-    get_events_by_category
+    create_agent_message_bus_integration
 )
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
@@ -106,6 +104,7 @@ class FeedbackAgent:
         
         # Message Bus Integration
         self.message_bus_integration: Optional[AgentMessageBusIntegration] = None
+        self.message_bus_enabled = False
         
         # Enhanced MCP Phase 2 attributes
         self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
@@ -170,37 +169,28 @@ class FeedbackAgent:
             self.tracing_enabled = False
     
     async def initialize_message_bus(self):
-        """Initialize message bus integration"""
+        """Initialize Message Bus Integration for the agent."""
         try:
-            # Subscribe to feedback-related events
-            event_categories = ["feedback", "collaboration", "quality"]
-            self.message_bus_integration = await create_agent_integration(
-                self.agent_name, 
-                event_categories
+            self.message_bus_integration = create_agent_message_bus_integration(
+                agent_name=self.agent_name,
+                agent_type="feedback_agent",
+                config={
+                    "message_bus_url": "redis://localhost:6379",
+                    "enable_publishing": True,
+                    "enable_subscription": True,
+                    "event_handlers": {
+                        "feedback_collected": self._handle_feedback_collected_event,
+                        "quality_gate_requested": self._handle_quality_gate_requested_event,
+                        "task_delegated": self._handle_task_delegated_event
+                    }
+                }
             )
-            
-            # Register custom event handlers
-            await self.message_bus_integration.register_event_handler(
-                EventTypes.FEEDBACK_COLLECTED,
-                self._handle_feedback_collected_event
-            )
-            
-            await self.message_bus_integration.register_event_handler(
-                EventTypes.QUALITY_GATE_CHECK_REQUESTED,
-                self._handle_quality_gate_requested_event
-            )
-            
-            await self.message_bus_integration.register_event_handler(
-                EventTypes.TASK_DELEGATED,
-                self._handle_task_delegated_event
-            )
-            
-            logger.info("✅ Message bus integration initialized for FeedbackAgent")
-            return True
-            
+            await self.message_bus_integration.initialize()
+            self.message_bus_enabled = True
+            logger.info("Message Bus Integration initialized successfully for FeedbackAgent")
         except Exception as e:
-            logger.error(f"❌ Failed to initialize message bus: {e}")
-            return False
+            logger.warning(f"Message Bus Integration initialization failed: {e}")
+            self.message_bus_enabled = False
     
     async def _handle_feedback_collected_event(self, event):
         """Handle feedback collected event"""

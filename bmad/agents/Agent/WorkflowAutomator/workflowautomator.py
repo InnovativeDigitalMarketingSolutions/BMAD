@@ -39,6 +39,13 @@ from bmad.core.mcp.enhanced_mcp_integration import (
     EnhancedMCPIntegration,
     create_enhanced_mcp_integration
 )
+
+# Message Bus Integration
+from bmad.agents.core.communication.agent_message_bus_integration import (
+    AgentMessageBusIntegration,
+    create_agent_message_bus_integration
+)
+
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 
 # Configure logging
@@ -130,6 +137,10 @@ class WorkflowAutomatorAgent:
         self.tracer: Optional[BMADTracer] = None
         self.tracing_enabled = False
         
+        # Message Bus Integration
+        self.message_bus_integration: Optional[AgentMessageBusIntegration] = None
+        self.message_bus_enabled = False
+        
         # Initialize tracer
         self.tracer = BMADTracer(config=type("Config", (), {
             "service_name": "WorkflowAutomator",
@@ -206,13 +217,55 @@ class WorkflowAutomatorAgent:
             if self.tracer and hasattr(self.tracer, 'initialize'):
                 await self.tracer.initialize()
                 self.tracing_enabled = True
-                logger.info("Tracing initialized successfully")
+                logger.info("Tracing initialized successfully for WorkflowAutomator")
+                # Set up workflow-specific tracing spans
+                await self.tracer.setup_workflow_tracing({
+                    "agent_name": self.agent_name,
+                    "tracing_level": "detailed",
+                    "workflow_tracking": True,
+                    "execution_tracking": True,
+                    "performance_tracking": True,
+                    "error_tracking": True
+                })
             else:
-                logger.warning("Tracer not available or missing initialize method")
-                self.tracing_enabled = False
+                logger.warning("Tracing initialization failed, continuing without tracing")
+                
         except Exception as e:
-            logger.warning(f"Tracing initialization failed: {e}")
+            logger.warning(f"Tracing initialization failed for WorkflowAutomator: {e}")
             self.tracing_enabled = False
+
+    async def initialize_message_bus_integration(self):
+        """Initialize Message Bus Integration for the agent."""
+        try:
+            self.message_bus_integration = create_agent_message_bus_integration(
+                agent_name=self.agent_name,
+                agent_instance=self
+            )
+            
+            # Register event handlers for workflow-specific events
+            await self.message_bus_integration.register_event_handler(
+                "workflow_execution_requested", 
+                self.handle_workflow_execution_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "workflow_pause_requested", 
+                self.handle_workflow_pause_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "workflow_resume_requested",
+                self.handle_workflow_resume_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "workflow_cancel_requested",
+                self.handle_workflow_cancel_requested
+            )
+            
+            self.message_bus_enabled = True
+            logger.info(f"✅ Message Bus Integration geïnitialiseerd voor {self.agent_name}")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Fout bij initialiseren van Message Bus Integration voor {self.agent_name}: {e}")
+            return False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -1222,6 +1275,9 @@ class WorkflowAutomatorAgent:
         # Initialize tracing capabilities
         await self.initialize_tracing()
         
+        # Initialize Message Bus Integration
+        await self.initialize_message_bus_integration()
+        
         print("🤖 WorkflowAutomator is running...")
         print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
         print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
@@ -1258,6 +1314,9 @@ class WorkflowAutomatorAgent:
         
         # Initialize tracing capabilities
         await self.initialize_tracing()
+        
+        # Initialize Message Bus Integration
+        await self.initialize_message_bus_integration()
         
         print("🤖 WorkflowAutomator is running...")
         print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")

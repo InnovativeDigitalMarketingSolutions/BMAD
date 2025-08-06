@@ -43,6 +43,12 @@ from bmad.core.mcp.enhanced_mcp_integration import (
 # Tracing Integration
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 
+# Message Bus Integration
+from bmad.agents.core.communication.agent_message_bus_integration import (
+    AgentMessageBusIntegration,
+    create_agent_message_bus_integration
+)
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -103,6 +109,10 @@ class DevOpsInfraAgent:
         self.tracer: Optional[BMADTracer] = None
         self.tracing_enabled = False
         
+        # Message Bus Integration
+        self.message_bus_integration: Optional[AgentMessageBusIntegration] = None
+        self.message_bus_enabled = False
+        
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
     
     async def initialize_mcp(self):
@@ -159,6 +169,39 @@ class DevOpsInfraAgent:
         except Exception as e:
             logger.warning(f"Tracing initialization failed for DevOpsInfra: {e}")
             self.tracing_enabled = False
+
+    async def initialize_message_bus_integration(self):
+        """Initialize Message Bus Integration for the agent."""
+        try:
+            self.message_bus_integration = create_agent_message_bus_integration(
+                agent_name=self.agent_name,
+                agent_instance=self
+            )
+            
+            # Register event handlers for DevOps-specific events
+            await self.message_bus_integration.register_event_handler(
+                "pipeline_advice_requested", 
+                self.on_pipeline_advice_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "incident_response_requested", 
+                self.on_incident_response_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "infrastructure_deployment_requested",
+                self.handle_infrastructure_deployment_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "infrastructure_monitoring_requested",
+                self.handle_monitoring_requested
+            )
+            
+            self.message_bus_enabled = True
+            logger.info(f"✅ Message Bus Integration geïnitialiseerd voor {self.agent_name}")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Fout bij initialiseren van Message Bus Integration voor {self.agent_name}: {e}")
+            return False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -524,6 +567,13 @@ DevOps Infrastructure Agent Commands:
   export-report [format]  - Export infrastructure report (format: md, csv, json)
   test                    - Test resource completeness
   collaborate             - Demonstrate collaboration with other agents
+  run                     - Run the agent with full integration
+
+Message Bus Integration Commands:
+  initialize-message-bus  - Initialize Message Bus Integration
+  message-bus-status      - Show Message Bus Integration status
+  publish-event           - Publish an event to the message bus
+  subscribe-event         - Subscribe to an event type
         """
         print(help_text)
 
@@ -1298,12 +1348,53 @@ DevOps Infrastructure Agent Commands:
         publish("deployment_completed", {"desc": "Deployment afgerond"})
         logger.info("[DevOpsInfra] Deployment afgerond, deployment_completed gepubliceerd.")
 
+    async def handle_infrastructure_deployment_requested(self, event):
+        """Handle infrastructure deployment requested event."""
+        logger.info(f"Infrastructure deployment requested: {event}")
+        try:
+            # Perform infrastructure deployment based on event data
+            infrastructure_type = event.get("infrastructure_type", "kubernetes")
+            deployment_config = event.get("deployment_config", {})
+            
+            # Simulate infrastructure deployment
+            deployment_result = await self.deploy_infrastructure(infrastructure_type)
+            
+            await publish("infrastructure_deployment_completed", {
+                "request_id": event.get("request_id"),
+                "infrastructure_type": infrastructure_type,
+                "result": deployment_result
+            })
+        except Exception as e:
+            logger.error(f"Error handling infrastructure deployment request: {e}")
+
+    async def handle_monitoring_requested(self, event):
+        """Handle infrastructure monitoring requested event."""
+        logger.info(f"Infrastructure monitoring requested: {event}")
+        try:
+            # Perform infrastructure monitoring based on event data
+            infrastructure_id = event.get("infrastructure_id", "infra_001")
+            monitoring_type = event.get("monitoring_type", "performance")
+            
+            # Simulate monitoring
+            monitoring_result = self.monitor_infrastructure(infrastructure_id)
+            
+            await publish("infrastructure_monitoring_completed", {
+                "request_id": event.get("request_id"),
+                "infrastructure_id": infrastructure_id,
+                "result": monitoring_result
+            })
+        except Exception as e:
+            logger.error(f"Error handling monitoring request: {e}")
+
     async def run(self):
         """Run the agent and listen for events met MCP integration."""
         # Initialize MCP integration
         await self.initialize_mcp()
         await self.initialize_enhanced_mcp()
         await self.initialize_tracing()
+        
+        # Initialize Message Bus Integration
+        await self.initialize_message_bus_integration()
         
         def sync_handler(event):
             asyncio.run(self.on_pipeline_advice_requested(event))
@@ -1315,6 +1406,10 @@ DevOps Infrastructure Agent Commands:
         subscribe("deployment_executed", self.handle_deployment_executed)
 
         logger.info("DevOpsInfraAgent ready and listening for events...")
+        print("🛠️ DevOpsInfra is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        print("Message Bus: Enabled" if self.message_bus_enabled else "Message Bus: Disabled")
         await self.collaborate_example()
         
         try:
@@ -1337,7 +1432,8 @@ def main():
                        choices=["help", "pipeline-advice", "incident-response", "deploy-infrastructure",
                                "monitor-infrastructure", "show-infrastructure-history", "show-incident-history",
                                "show-best-practices", "show-changelog", "export-report", "test",
-                               "collaborate", "run"])
+                               "collaborate", "run",
+                               "initialize-message-bus", "message-bus-status", "publish-event", "subscribe-event"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--pipeline-config", default="Sample CI/CD pipeline", help="Pipeline configuration for analysis")
     parser.add_argument("--incident-desc", default="Sample incident description", help="Incident description for response")
@@ -1376,6 +1472,30 @@ def main():
         agent.test_resource_completeness()
     elif args.command == "collaborate":
         agent.collaborate_example()
+    elif args.command == "initialize-message-bus":
+        asyncio.run(agent.initialize_message_bus_integration())
+        print("✅ Message Bus Integration initialized successfully")
+    elif args.command == "message-bus-status":
+        status = agent.message_bus_integration.get_status() if agent.message_bus_integration else "Not initialized"
+        print(f"📡 Message Bus Status: {status}")
+    elif args.command == "publish-event":
+        if len(sys.argv) < 4:
+            print("❌ Usage: publish-event <event_type> <event_data_json>")
+            return
+        event_type = sys.argv[2]
+        try:
+            event_data = json.loads(sys.argv[3])
+            asyncio.run(agent.message_bus_integration.publish_event(event_type, event_data))
+            print(f"✅ Event '{event_type}' published successfully")
+        except json.JSONDecodeError:
+            print("❌ Invalid JSON format for event_data")
+    elif args.command == "subscribe-event":
+        if len(sys.argv) < 3:
+            print("❌ Usage: subscribe-event <event_type>")
+            return
+        event_type = sys.argv[2]
+        print(f"📡 Subscribing to event: {event_type}")
+        # Event handlers are already registered in initialize_message_bus_integration
     elif args.command == "run":
         asyncio.run(agent.run())
 

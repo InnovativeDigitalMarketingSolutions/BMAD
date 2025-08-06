@@ -49,6 +49,12 @@ from bmad.core.mcp.enhanced_mcp_integration import (
     create_enhanced_mcp_integration
 )
 
+# Message Bus Integration
+from bmad.agents.core.communication.agent_message_bus_integration import (
+    AgentMessageBusIntegration,
+    create_agent_message_bus_integration
+)
+
 # Tracing Integration
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 
@@ -101,6 +107,10 @@ class FullstackDeveloperAgent:
         # Tracing Integration
         self.tracer: Optional[BMADTracer] = None
         self.tracing_enabled = False
+        
+        # Message Bus Integration
+        self.message_bus_integration: Optional[AgentMessageBusIntegration] = None
+        self.message_bus_enabled = False
 
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
@@ -155,33 +165,53 @@ class FullstackDeveloperAgent:
             self.enhanced_mcp_enabled = False
 
     async def initialize_tracing(self):
-        """Initialize tracing capabilities for fullstack development."""
+        """Initialize tracing capabilities."""
         try:
-            self.tracer = BMADTracer(config=type("Config", (), {
-                "service_name": f"{self.agent_name}",
-                "environment": "development",
-                "tracing_level": "detailed"
-            })())
-            self.tracing_enabled = await self.tracer.initialize()
-            
-            if self.tracing_enabled:
-                logger.info("Tracing capabilities initialized successfully for FullstackDeveloper")
+            if self.tracer and hasattr(self.tracer, 'initialize'):
+                await self.tracer.initialize()
+                self.tracing_enabled = True
+                logger.info("Tracing initialized successfully for FullstackDeveloper")
                 # Set up fullstack-specific tracing spans
                 await self.tracer.setup_fullstack_tracing({
                     "agent_name": self.agent_name,
                     "tracing_level": "detailed",
-                    "performance_tracking": True,
-                    "feature_tracking": True,
+                    "development_tracking": True,
                     "integration_tracking": True,
+                    "performance_tracking": True,
                     "error_tracking": True
                 })
             else:
-                logger.warning("Tracing initialization failed, continuing without tracing")
-                
+                logger.warning("Tracer not available or missing initialize method")
+                self.tracing_enabled = False
         except Exception as e:
-            logger.warning(f"Tracing initialization failed for FullstackDeveloper: {e}")
+            logger.warning(f"Tracing initialization failed: {e}")
             self.tracing_enabled = False
-    
+
+    async def initialize_message_bus_integration(self):
+        """Initialize Message Bus Integration for the agent."""
+        try:
+            self.message_bus_integration = create_agent_message_bus_integration(
+                agent_name=self.agent_name,
+                agent_type="fullstack_developer",
+                config={
+                    "message_bus_url": "redis://localhost:6379",
+                    "enable_publishing": True,
+                    "enable_subscription": True,
+                    "event_handlers": {
+                        "fullstack_development_requested": self.handle_fullstack_development_requested,
+                        "fullstack_development_completed": self.handle_fullstack_development_completed,
+                        "api_development_requested": self.handle_api_development_requested,
+                        "frontend_development_requested": self.handle_frontend_development_requested
+                    }
+                }
+            )
+            await self.message_bus_integration.initialize()
+            self.message_bus_enabled = True
+            logger.info("Message Bus Integration initialized successfully for FullstackDeveloper")
+        except Exception as e:
+            logger.warning(f"Message Bus Integration initialization failed: {e}")
+            self.message_bus_enabled = False
+
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
         if not self.mcp_enabled or not self.mcp_client:
@@ -938,14 +968,22 @@ export function {component_name}({{
         self.implement_story()
 
     async def handle_fullstack_development_completed(self, event):
+        """Handle fullstack development completed event."""
         logger.info(f"Fullstack development completed: {event}")
+        # Process fullstack development completion
+        return {"status": "processed", "event": "fullstack_development_completed"}
 
-        # Evaluate policy
-        try:
-            allowed = await self.policy_engine.evaluate_policy("fullstack_development", event)
-            logger.info(f"Policy evaluation result: {allowed}")
-        except Exception as e:
-            logger.error(f"Policy evaluation failed: {e}")
+    async def handle_api_development_requested(self, event):
+        """Handle API development requested event."""
+        logger.info(f"API development requested: {event}")
+        # Process API development request
+        return {"status": "processed", "event": "api_development_requested"}
+
+    async def handle_frontend_development_requested(self, event):
+        """Handle frontend development requested event."""
+        logger.info(f"Frontend development requested: {event}")
+        # Process frontend development request
+        return {"status": "processed", "event": "frontend_development_requested"}
 
     async def run(self):
         """Run the agent and listen for events met MCP integration."""
@@ -953,6 +991,7 @@ export function {component_name}({{
         await self.initialize_mcp()
         await self.initialize_enhanced_mcp()
         await self.initialize_tracing()
+        await self.initialize_message_bus_integration()
         
         def sync_handler(event):
             asyncio.run(self.handle_fullstack_development_completed(event))

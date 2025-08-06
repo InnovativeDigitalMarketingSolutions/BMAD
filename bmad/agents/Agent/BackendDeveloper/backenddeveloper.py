@@ -17,8 +17,10 @@ from bmad.agents.core.agent.agent_performance_monitor import (
 )
 from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.ai.llm_client import ask_openai
-from bmad.core.message_bus import MessageBus, EventTypes
-from bmad.core.message_bus.agent_integration import AgentMessageBusIntegration
+from bmad.agents.core.communication.agent_message_bus_integration import (
+    AgentMessageBusIntegration,
+    create_agent_message_bus_integration
+)
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
