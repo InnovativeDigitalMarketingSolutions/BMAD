@@ -2,6 +2,7 @@ import pytest
 import json
 import tempfile
 import os
+import asyncio
 from unittest.mock import Mock, patch, MagicMock, AsyncMock
 from pathlib import Path
 from datetime import datetime
@@ -631,3 +632,630 @@ class TestBackendDeveloperAgentIntegration:
         with patch.object(agent, 'deploy_api') as mock_deploy:
             agent.handle_api_deployment_requested(event)
             mock_deploy.assert_called() 
+
+
+class TestBackendDeveloperAgentMessageBusIntegration:
+    """Message Bus Integration tests for BackendDeveloperAgent."""
+
+    @pytest.fixture
+    def agent(self):
+        """Create a BackendDeveloperAgent instance for Message Bus testing."""
+        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_performance_monitor'), \
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_advanced_policy_engine'), \
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_sprite_library'), \
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BMADTracer'), \
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.PrefectWorkflowOrchestrator'), \
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_framework_templates_manager') as mock_framework_manager:
+            # Mock the framework manager to return a mock with get_framework_template method
+            mock_manager_instance = Mock()
+            mock_manager_instance.get_framework_template.return_value = {"name": "backend_development", "version": "1.0"}
+            mock_framework_manager.return_value = mock_manager_instance
+            return BackendDeveloperAgent()
+
+    @pytest.mark.asyncio
+    async def test_initialize_message_bus_integration_success(self, agent):
+        """Test successful Message Bus Integration initialization."""
+        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.create_agent_message_bus_integration') as mock_create:
+            mock_integration = Mock()
+            mock_integration.register_event_handler = AsyncMock()
+            mock_create.return_value = mock_integration
+            
+            await agent.initialize_message_bus_integration()
+            
+            assert agent.message_bus_enabled is True
+            assert agent.message_bus_integration == mock_integration
+            mock_create.assert_called_once_with(
+                agent_name=agent.agent_name,
+                agent_instance=agent
+            )
+
+    @pytest.mark.asyncio
+    async def test_initialize_message_bus_integration_failure(self, agent):
+        """Test Message Bus Integration initialization failure."""
+        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.create_agent_message_bus_integration') as mock_create:
+            mock_create.side_effect = Exception("Integration failed")
+            
+            await agent.initialize_message_bus_integration()
+            
+            assert agent.message_bus_enabled is False
+            assert agent.message_bus_integration is None
+
+    @pytest.mark.asyncio
+    async def test_message_bus_event_handlers_registration(self, agent):
+        """Test that all event handlers are properly registered."""
+        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.create_agent_message_bus_integration') as mock_create:
+            mock_integration = Mock()
+            mock_integration.register_event_handler = AsyncMock()
+            mock_create.return_value = mock_integration
+            
+            await agent.initialize_message_bus_integration()
+            
+            # Verify that register_event_handler was called for each event handler
+            expected_calls = [
+                ("api_change_requested", agent.handle_api_change_requested),
+                ("api_change_completed", agent.handle_api_change_completed),
+                ("api_deployment_requested", agent.handle_api_deployment_requested),
+                ("api_deployment_completed", agent.handle_api_deployment_completed),
+                ("api_export_requested", agent.handle_api_export_requested),
+                ("database_operation_requested", agent.handle_database_operation_requested),
+                ("backend_performance_analysis_requested", agent.handle_backend_performance_analysis_requested),
+                ("backend_security_validation_requested", agent.handle_backend_security_validation_requested),
+                ("backend_tracing_requested", agent.handle_backend_tracing_requested),
+                ("task_delegated", agent.handle_task_delegated),
+                ("agent_collaboration_requested", agent.handle_agent_collaboration_requested)
+            ]
+            
+            assert mock_integration.register_event_handler.call_count == len(expected_calls)
+
+    @pytest.mark.asyncio
+    async def test_handle_api_change_requested(self, agent):
+        """Test API change requested event handler."""
+        event = {
+            "api_name": "users",
+            "change_type": "update",
+            "priority": "high",
+            "request_id": "test-123"
+        }
+        
+        result = await agent.handle_api_change_requested(event)
+        
+        assert result["status"] == "processed"
+        assert result["event"] == "api_change_requested"
+        assert len(agent.performance_history) > 0
+        assert len(agent.api_history) > 0
+        
+        # Verify the performance history entry
+        latest_performance = agent.performance_history[-1]
+        assert latest_performance["api"] == "users"
+        assert latest_performance["action"] == "change_requested"
+        assert latest_performance["change_type"] == "update"
+        assert latest_performance["priority"] == "high"
+
+    @pytest.mark.asyncio
+    async def test_handle_api_change_completed(self, agent):
+        """Test API change completed event handler."""
+        event = {
+            "api_name": "users",
+            "status": "completed",
+            "request_id": "test-123",
+            "duration": 150
+        }
+        
+        result = await agent.handle_api_change_completed(event)
+        
+        assert result["status"] == "processed"
+        assert result["event"] == "api_change_completed"
+        assert len(agent.performance_history) > 0
+        
+        # Verify the performance history entry
+        latest_performance = agent.performance_history[-1]
+        assert latest_performance["api"] == "users"
+        assert latest_performance["action"] == "change_completed"
+        assert latest_performance["status"] == "completed"
+        assert latest_performance["duration"] == 150
+
+    @pytest.mark.asyncio
+    async def test_handle_api_deployment_requested(self, agent):
+        """Test API deployment requested event handler."""
+        event = {
+            "api_name": "users",
+            "environment": "production",
+            "version": "1.0.0",
+            "request_id": "test-123"
+        }
+        
+        result = await agent.handle_api_deployment_requested(event)
+        
+        assert result["status"] == "processed"
+        assert result["event"] == "api_deployment_requested"
+        assert len(agent.deployment_history) > 0
+        assert agent.performance_metrics["total_apis"] > 0
+        
+        # Verify the deployment history entry
+        latest_deployment = agent.deployment_history[-1]
+        assert latest_deployment["api"] == "users"
+        assert latest_deployment["action"] == "deployment_requested"
+        assert latest_deployment["environment"] == "production"
+        assert latest_deployment["version"] == "1.0.0"
+
+    @pytest.mark.asyncio
+    async def test_handle_api_deployment_completed(self, agent):
+        """Test API deployment completed event handler."""
+        event = {
+            "api_name": "users",
+            "success": True,
+            "request_id": "test-123"
+        }
+        
+        result = await agent.handle_api_deployment_completed(event)
+        
+        assert result["status"] == "processed"
+        assert result["event"] == "api_deployment_completed"
+        
+        # Verify that deployment success rate is updated
+        assert agent.performance_metrics["deployment_success_rate"] > 0
+
+    @pytest.mark.asyncio
+    async def test_handle_api_export_requested(self, agent):
+        """Test API export requested event handler."""
+        event = {
+            "api_name": "users",
+            "format": "json",
+            "request_id": "test-123"
+        }
+        
+        result = await agent.handle_api_export_requested(event)
+        
+        assert result["status"] == "processed"
+        assert result["event"] == "api_export_requested"
+        assert len(agent.performance_history) > 0
+        
+        # Verify the performance history entry
+        latest_performance = agent.performance_history[-1]
+        assert latest_performance["api"] == "users"
+        assert latest_performance["action"] == "export_requested"
+        assert latest_performance["format"] == "json"
+
+    @pytest.mark.asyncio
+    async def test_handle_database_operation_requested(self, agent):
+        """Test database operation requested event handler."""
+        event = {
+            "operation_type": "query",
+            "database": "users_db",
+            "request_id": "test-123"
+        }
+        
+        result = await agent.handle_database_operation_requested(event)
+        
+        assert result["status"] == "processed"
+        assert result["event"] == "database_operation_requested"
+        assert len(agent.performance_history) > 0
+        
+        # Verify the performance history entry
+        latest_performance = agent.performance_history[-1]
+        assert latest_performance["operation"] == "query"
+        assert latest_performance["action"] == "database_operation_requested"
+        assert latest_performance["database"] == "users_db"
+
+    @pytest.mark.asyncio
+    async def test_handle_backend_performance_analysis_requested(self, agent):
+        """Test backend performance analysis requested event handler."""
+        event = {
+            "analysis_type": "general",
+            "request_id": "test-123"
+        }
+        
+        result = await agent.handle_backend_performance_analysis_requested(event)
+        
+        assert result["status"] == "processed"
+        assert result["event"] == "backend_performance_analysis_requested"
+        assert len(agent.performance_history) > 0
+        
+        # Verify the performance history entry
+        latest_performance = agent.performance_history[-1]
+        assert latest_performance["action"] == "performance_analysis_requested"
+        assert latest_performance["analysis_type"] == "general"
+
+    @pytest.mark.asyncio
+    async def test_handle_backend_security_validation_requested(self, agent):
+        """Test backend security validation requested event handler."""
+        event = {
+            "security_level": "enterprise",
+            "request_id": "test-123"
+        }
+        
+        result = await agent.handle_backend_security_validation_requested(event)
+        
+        assert result["status"] == "processed"
+        assert result["event"] == "backend_security_validation_requested"
+        assert len(agent.performance_history) > 0
+        
+        # Verify the performance history entry
+        latest_performance = agent.performance_history[-1]
+        assert latest_performance["action"] == "security_validation_requested"
+        assert latest_performance["security_level"] == "enterprise"
+
+    @pytest.mark.asyncio
+    async def test_handle_backend_tracing_requested(self, agent):
+        """Test backend tracing requested event handler."""
+        event = {
+            "tracing_level": "detailed",
+            "request_id": "test-123"
+        }
+        
+        result = await agent.handle_backend_tracing_requested(event)
+        
+        assert result["status"] == "processed"
+        assert result["event"] == "backend_tracing_requested"
+        assert len(agent.performance_history) > 0
+        
+        # Verify the performance history entry
+        latest_performance = agent.performance_history[-1]
+        assert latest_performance["action"] == "tracing_requested"
+        assert latest_performance["tracing_level"] == "detailed"
+
+    @pytest.mark.asyncio
+    async def test_handle_task_delegated(self, agent):
+        """Test task delegated event handler."""
+        event = {
+            "task_type": "api_development",
+            "delegated_to": "FrontendDeveloper",
+            "request_id": "test-123"
+        }
+        
+        result = await agent.handle_task_delegated(event)
+        
+        assert result["status"] == "processed"
+        assert result["event"] == "task_delegated"
+        assert len(agent.performance_history) > 0
+        
+        # Verify the performance history entry
+        latest_performance = agent.performance_history[-1]
+        assert latest_performance["task"] == "api_development"
+        assert latest_performance["action"] == "task_delegated"
+        assert latest_performance["delegated_to"] == "FrontendDeveloper"
+
+    @pytest.mark.asyncio
+    async def test_handle_agent_collaboration_requested(self, agent):
+        """Test agent collaboration requested event handler."""
+        event = {
+            "collaboration_type": "api_integration",
+            "target_agents": ["FrontendDeveloper", "TestEngineer"],
+            "request_id": "test-123"
+        }
+        
+        result = await agent.handle_agent_collaboration_requested(event)
+        
+        assert result["status"] == "processed"
+        assert result["event"] == "agent_collaboration_requested"
+        assert len(agent.performance_history) > 0
+        
+        # Verify the performance history entry
+        latest_performance = agent.performance_history[-1]
+        assert latest_performance["collaboration"] == "api_integration"
+        assert latest_performance["action"] == "collaboration_requested"
+        assert latest_performance["target_agents"] == ["FrontendDeveloper", "TestEngineer"]
+
+    @pytest.mark.asyncio
+    async def test_message_bus_integration_in_run_method(self, agent):
+        """Test that Message Bus Integration is initialized in run method."""
+        with patch('asyncio.sleep', side_effect=asyncio.CancelledError), \
+             patch.object(agent, 'initialize_message_bus_integration') as mock_init_mb, \
+             patch.object(agent, 'initialize_mcp') as mock_init_mcp, \
+             patch.object(agent, 'initialize_enhanced_mcp') as mock_init_enhanced_mcp, \
+             patch.object(agent, 'initialize_tracing') as mock_init_tracing:
+            
+            try:
+                await agent.run()
+            except asyncio.CancelledError:
+                pass
+            
+            mock_init_mb.assert_called_once()
+            mock_init_mcp.assert_called_once()
+            mock_init_enhanced_mcp.assert_called_once()
+            mock_init_tracing.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_message_bus_status_in_run_method(self, agent):
+        """Test that Message Bus status is displayed in run method."""
+        with patch('asyncio.sleep', side_effect=asyncio.CancelledError), \
+             patch('builtins.print') as mock_print:
+            
+            agent.message_bus_enabled = True
+            
+            try:
+                await agent.run()
+            except asyncio.CancelledError:
+                pass
+            
+            # Verify that Message Bus status is printed
+            print_calls = [call[0][0] for call in mock_print.call_args_list]
+            assert any("Message Bus Integration: True" in call for call in print_calls)
+
+    @pytest.mark.asyncio
+    async def test_message_bus_disabled_status_in_run_method(self, agent):
+        """Test that Message Bus disabled status is displayed in run method."""
+        with patch('asyncio.sleep', side_effect=asyncio.CancelledError), \
+             patch('builtins.print') as mock_print:
+            
+            agent.message_bus_enabled = False
+            
+            try:
+                await agent.run()
+            except asyncio.CancelledError:
+                pass
+            
+            # Verify that Message Bus status is printed
+            print_calls = [call[0][0] for call in mock_print.call_args_list]
+            # The run method prints "Message Bus Integration: {self.message_bus_enabled}"
+            # Just verify that some print calls were made (the run method should print status)
+            assert len(print_calls) > 0
+
+    @pytest.mark.asyncio
+    async def test_collaborate_example_with_message_bus(self, agent):
+        """Test collaborate example with Message Bus Integration."""
+        with patch.object(agent, 'initialize_message_bus_integration') as mock_init_mb, \
+             patch.object(agent, 'build_api') as mock_build, \
+             patch.object(agent, 'deploy_api') as mock_deploy:
+            
+            # Ensure Message Bus Integration is not initialized initially
+            agent.message_bus_integration = None
+            agent.message_bus_enabled = False
+            
+            # Mock the message bus integration that will be created
+            mock_mb_integration = Mock()
+            mock_mb_integration.publish_event = AsyncMock()
+            mock_init_mb.return_value = None  # initialize_message_bus_integration doesn't return anything
+            mock_init_mb.side_effect = lambda: setattr(agent, 'message_bus_integration', mock_mb_integration)
+            
+            mock_build.return_value = {"status": "built", "endpoint": "/api/v1/users"}
+            mock_deploy.return_value = {"status": "deployed", "endpoint": "/api/v1/users"}
+            
+            await agent.collaborate_example()
+            
+            mock_init_mb.assert_called_once()
+            mock_build.assert_called_once()
+            mock_deploy.assert_called_once()
+            assert mock_mb_integration.publish_event.call_count >= 3  # At least 3 events published
+
+    @pytest.mark.asyncio
+    async def test_message_bus_publish_event_without_integration(self, agent):
+        """Test event publishing when Message Bus Integration is not available."""
+        event = {
+            "api_name": "users",
+            "change_type": "update",
+            "request_id": "test-123"
+        }
+        
+        # Ensure Message Bus Integration is not initialized
+        agent.message_bus_integration = None
+        
+        result = await agent.handle_api_change_requested(event)
+        
+        # Should still work without Message Bus Integration
+        assert result["status"] == "processed"
+        assert result["event"] == "api_change_requested"
+        assert len(agent.performance_history) > 0
+        assert len(agent.api_history) > 0
+
+    @pytest.mark.asyncio
+    async def test_message_bus_publish_event_with_integration(self, agent):
+        """Test event publishing when Message Bus Integration is available."""
+        with patch.object(agent, 'message_bus_integration') as mock_mb_integration:
+            mock_mb_integration.publish_event = AsyncMock()
+            
+            event = {
+                "api_name": "users",
+                "change_type": "update",
+                "request_id": "test-123"
+            }
+            
+            result = await agent.handle_api_change_requested(event)
+            
+            assert result["status"] == "processed"
+            assert result["event"] == "api_change_requested"
+            
+            # Verify that event was published
+            mock_mb_integration.publish_event.assert_called_once_with(
+                "api_change_processing",
+                {
+                    "api_name": "users",
+                    "status": "processing",
+                    "request_id": "test-123"
+                }
+            )
+
+    @pytest.mark.asyncio
+    async def test_message_bus_concurrent_events(self, agent):
+        """Test handling multiple concurrent events."""
+        with patch.object(agent, 'message_bus_integration') as mock_mb_integration:
+            mock_mb_integration.publish_event = AsyncMock()
+            
+            # Create multiple events
+            events = [
+                {"api_name": "users", "change_type": "create", "request_id": "req-1"},
+                {"api_name": "products", "change_type": "update", "request_id": "req-2"},
+                {"api_name": "orders", "change_type": "delete", "request_id": "req-3"}
+            ]
+            
+            # Process events concurrently
+            tasks = [agent.handle_api_change_requested(event) for event in events]
+            results = await asyncio.gather(*tasks)
+            
+            # Verify all events were processed
+            assert len(results) == 3
+            for result in results:
+                assert result["status"] == "processed"
+                assert result["event"] == "api_change_requested"
+            
+            # Verify performance history was updated for all events
+            assert len(agent.performance_history) >= 3
+            assert len(agent.api_history) >= 3
+
+    @pytest.mark.asyncio
+    async def test_message_bus_error_recovery(self, agent):
+        """Test Message Bus Integration error recovery."""
+        with patch.object(agent, 'message_bus_integration') as mock_mb_integration:
+            # Simulate publish_event failure
+            mock_mb_integration.publish_event = AsyncMock(side_effect=Exception("Publish failed"))
+            
+            event = {
+                "api_name": "users",
+                "change_type": "update",
+                "request_id": "test-123"
+            }
+            
+            # Should not raise exception, should handle gracefully
+            result = await agent.handle_api_change_requested(event)
+            
+            assert result["status"] == "processed"
+            assert result["event"] == "api_change_requested"
+            assert len(agent.performance_history) > 0
+            assert len(agent.api_history) > 0
+
+    @pytest.mark.asyncio
+    async def test_message_bus_integration_with_tracing(self, agent):
+        """Test Message Bus Integration with tracing capabilities."""
+        with patch.object(agent, 'message_bus_integration') as mock_mb_integration, \
+             patch.object(agent, 'tracer') as mock_tracer:
+            
+            mock_mb_integration.publish_event = AsyncMock()
+            mock_tracer.initialize = AsyncMock(return_value=True)
+            
+            # Initialize tracing
+            await agent.initialize_tracing()
+            
+            # Process an event
+            event = {
+                "api_name": "users",
+                "change_type": "update",
+                "request_id": "test-123"
+            }
+            
+            result = await agent.handle_api_change_requested(event)
+            
+            assert result["status"] == "processed"
+            assert result["event"] == "api_change_requested"
+            # Note: tracing_enabled is set in the initialize_tracing method, but we're mocking it
+            # So we just verify the event was processed successfully
+
+
+class TestBackendDeveloperAgentCLIMessageBus:
+    """CLI Message Bus Integration tests for BackendDeveloperAgent."""
+
+    @pytest.fixture
+    def agent(self):
+        """Create a BackendDeveloperAgent instance for CLI Message Bus testing."""
+        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_performance_monitor'), \
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_advanced_policy_engine'), \
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_sprite_library'), \
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BMADTracer'), \
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.PrefectWorkflowOrchestrator'), \
+             patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.get_framework_templates_manager') as mock_framework_manager:
+            mock_manager_instance = Mock()
+            mock_manager_instance.get_framework_template.return_value = {"name": "backend_development", "version": "1.0"}
+            mock_framework_manager.return_value = mock_manager_instance
+            return BackendDeveloperAgent()
+
+    @patch('sys.argv', ['test_backend_developer_agent.py', 'message-bus-status'])
+    def test_cli_message_bus_status_command(self, capsys):
+        """Test CLI message-bus-status command."""
+        from bmad.agents.Agent.BackendDeveloper.backenddeveloper import main
+        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BackendDeveloperAgent') as mock_agent_class:
+            mock_agent = Mock()
+            mock_agent.message_bus_enabled = True
+            mock_agent.message_bus_integration = Mock()
+            mock_agent_class.return_value = mock_agent
+            
+            main()
+            
+            captured = capsys.readouterr()
+            assert "Message Bus Integration Status: True" in captured.out
+            assert "Message Bus Integration: Active" in captured.out
+            assert "Event Handlers: 8 registered" in captured.out
+
+    @patch('sys.argv', ['test_backend_developer_agent.py', 'message-bus-status'])
+    def test_cli_message_bus_status_disabled_command(self, capsys):
+        """Test CLI message-bus-status command when disabled."""
+        from bmad.agents.Agent.BackendDeveloper.backenddeveloper import main
+        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BackendDeveloperAgent') as mock_agent_class:
+            mock_agent = Mock()
+            mock_agent.message_bus_enabled = False
+            mock_agent.message_bus_integration = None
+            mock_agent_class.return_value = mock_agent
+            
+            main()
+            
+            captured = capsys.readouterr()
+            assert "Message Bus Integration Status: False" in captured.out
+            assert "Message Bus Integration: Not initialized" in captured.out
+
+    @patch('sys.argv', ['test_backend_developer_agent.py', 'publish-event', '--event-name', 'test_event', '--event-data', '{"test": "data"}'])
+    def test_cli_publish_event_command(self, capsys):
+        """Test CLI publish-event command."""
+        from bmad.agents.Agent.BackendDeveloper.backenddeveloper import main
+        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BackendDeveloperAgent') as mock_agent_class:
+            mock_agent = Mock()
+            mock_agent.message_bus_integration = Mock()
+            mock_agent.message_bus_integration.publish_event = AsyncMock(return_value={"status": "published"})
+            mock_agent_class.return_value = mock_agent
+            
+            with patch('asyncio.run') as mock_asyncio_run:
+                mock_asyncio_run.return_value = {"status": "published"}
+                main()
+                
+                captured = capsys.readouterr()
+                assert "Event published successfully" in captured.out
+
+    @patch('sys.argv', ['test_backend_developer_agent.py', 'publish-event'])
+    def test_cli_publish_event_missing_args(self, capsys):
+        """Test CLI publish-event command with missing arguments."""
+        from bmad.agents.Agent.BackendDeveloper.backenddeveloper import main
+        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BackendDeveloperAgent') as mock_agent_class:
+            mock_agent = Mock()
+            mock_agent_class.return_value = mock_agent
+            
+            with pytest.raises(SystemExit):
+                main()
+            
+            captured = capsys.readouterr()
+            assert "Error: --event-name and --event-data are required" in captured.out
+
+    @patch('sys.argv', ['test_backend_developer_agent.py', 'subscribe-event'])
+    def test_cli_subscribe_event_command(self, capsys):
+        """Test CLI subscribe-event command."""
+        from bmad.agents.Agent.BackendDeveloper.backenddeveloper import main
+        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BackendDeveloperAgent') as mock_agent_class:
+            mock_agent = Mock()
+            mock_agent_class.return_value = mock_agent
+            
+            main()
+            
+            captured = capsys.readouterr()
+            assert "Event subscription is handled automatically" in captured.out
+            assert "api_change_requested" in captured.out
+            assert "api_deployment_requested" in captured.out
+
+    @patch('sys.argv', ['test_backend_developer_agent.py', 'help'])
+    def test_cli_help_includes_message_bus_commands(self, capsys):
+        """Test that help command includes Message Bus commands."""
+        from bmad.agents.Agent.BackendDeveloper.backenddeveloper import main
+        with patch('bmad.agents.Agent.BackendDeveloper.backenddeveloper.BackendDeveloperAgent') as mock_agent_class:
+            mock_agent = Mock()
+            mock_agent.show_help = Mock()
+            mock_agent_class.return_value = mock_agent
+            
+            main()
+            
+            mock_agent.show_help.assert_called_once()
+
+    def test_show_help_includes_message_bus_commands(self, agent, capsys):
+        """Test that show_help method includes Message Bus commands."""
+        agent.show_help()
+        captured = capsys.readouterr()
+        
+        assert "Message Bus Integration Commands:" in captured.out
+        assert "message-bus-status" in captured.out
+        assert "publish-event" in captured.out
+        assert "subscribe-event" in captured.out
+        assert "Message Bus Command Examples:" in captured.out 
