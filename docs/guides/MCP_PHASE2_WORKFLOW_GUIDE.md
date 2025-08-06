@@ -3,6 +3,29 @@
 ## Overview
 Deze guide beschrijft de gestandaardiseerde workflow voor het implementeren van MCP Phase 2 enhancements en tracing functionaliteit voor BMAD agents.
 
+## 🎯 Quality-First Implementation Principe
+
+**KRITIEK PRINCIPE**: Implementeer **ÉÉN AGENT PER KEER** om kwaliteit en complete implementatie te kunnen waarborgen.
+
+### Waarom Één Agent Per Keer?
+- **Kwaliteitsborging**: Volledige focus op één agent voorkomt rushed implementations
+- **Complete Testing**: 100% test success rate per agent voor elke stap
+- **Root Cause Analysis**: Tijd voor grondige analyse bij issues in plaats van quick fixes
+- **Documentation Completeness**: Volledige documentatie per agent voordat verder te gaan
+- **Knowledge Transfer**: Lessons learned van één agent kunnen toegepast worden op volgende agents
+- **Risk Mitigation**: Voorkomen van cascade failures door incomplete implementations
+
+### Agent-per-Agent Workflow:
+1. **Selecteer Target Agent**: Kies één specifieke agent uit de MCP Phase 2 backlog
+2. **Complete Implementation**: Volg ALLE stappen hieronder voor deze ene agent
+3. **Test tot 100%**: Behaal 100% test success rate voordat verder te gaan
+4. **Document Volledig**: Update alle documentatie (changelog, agents-overview, kanban)
+5. **Commit & Push**: Maak complete commit met alle wijzigingen
+6. **Verification**: Verifieer dat agent FULLY COMPLIANT is
+7. **Volgende Agent**: Ga pas daarna naar de volgende agent
+
+**NEVER**: Werk niet aan meerdere agents tegelijk tijdens MCP Phase 2 implementatie.
+
 ## Workflow Stappen
 
 ### 1. Pre-Implementation Analysis
@@ -90,12 +113,18 @@ Deze guide beschrijft de gestandaardiseerde workflow voor het implementeren van 
 - [ ] **Best Practices**: Voeg nieuwe best practices toe aan BEST_PRACTICES_GUIDE.md
 - [ ] **Integration Reports**: Update relevante rapporten indien nodig
 
-### 8. Quality Assurance
-- [ ] **Test Execution**: Voer alle nieuwe tests uit (24-25 tests)
-- [ ] **Regression Testing**: Voer bestaande tests uit (80+ tests)
-- [ ] **Resource Validation**: Controleer resource completeness
-- [ ] **CLI Testing**: Test alle nieuwe CLI commands
-- [ ] **Documentation Review**: Controleer alle documentatie updates
+### 8. Quality Assurance & Verification (VERPLICHT)
+**CRITICAL**: Deze stap zorgt ervoor dat de Quality-First Implementation principe wordt nageleefd.
+
+- [ ] **Single Agent Focus Verified**: Bevestig dat alleen deze ene agent is gewijzigd
+- [ ] **100% Test Success**: Alle tests voor deze agent passeren (geen enkele failure toegestaan)
+- [ ] **No Regressions**: Bestaande functionaliteit blijft intact
+- [ ] **Complete Documentation**: Alle documentatie is bijgewerkt en consistent
+- [ ] **FULLY COMPLIANT Status**: Agent voldoet aan alle MCP Phase 2 eisen
+- [ ] **Commit Quality**: Alle wijzigingen zijn gecommit met gedetailleerde message
+- [ ] **Verification Complete**: Agent is getest en geverifieerd als complete implementation
+
+**STOP POINT**: Ga NIET verder naar volgende agent totdat huidige agent 100% compliant is.
 
 ### 9. Commit and Push
 - [ ] **Comprehensive Commit**: Gedetailleerde commit message met alle wijzigingen
