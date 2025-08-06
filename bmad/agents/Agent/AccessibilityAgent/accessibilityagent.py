@@ -39,6 +39,12 @@ from bmad.core.mcp.enhanced_mcp_integration import (
 )
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 
+# Message Bus Integration
+from bmad.agents.core.communication.agent_message_bus_integration import (
+    AgentMessageBusIntegration,
+    create_agent_message_bus_integration
+)
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -101,6 +107,10 @@ class AccessibilityAgent:
         self.enhanced_mcp_enabled = False
         self.enhanced_mcp_client = None
         
+        # Message Bus Integration
+        self.message_bus_integration: Optional[AgentMessageBusIntegration] = None
+        self.message_bus_enabled = False
+        
         # Tracing Integration
         self.tracer: Optional[BMADTracer] = None
         self.tracing_enabled = False
@@ -157,6 +167,39 @@ class AccessibilityAgent:
         except Exception as e:
             logger.warning(f"Tracing initialization failed: {e}")
             self.tracing_enabled = False
+
+    async def initialize_message_bus_integration(self):
+        """Initialize Message Bus Integration for the agent."""
+        try:
+            self.message_bus_integration = create_agent_message_bus_integration(
+                agent_name=self.agent_name,
+                agent_instance=self
+            )
+            
+            # Register event handlers for accessibility-specific events
+            await self.message_bus_integration.register_event_handler(
+                "accessibility_audit_requested", 
+                self.handle_audit_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "accessibility_audit_completed", 
+                self.handle_audit_completed
+            )
+            await self.message_bus_integration.register_event_handler(
+                "accessibility_validation_requested",
+                self.handle_validation_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "accessibility_improvement_requested",
+                self.handle_improvement_requested
+            )
+            
+            self.message_bus_enabled = True
+            logger.info(f"✅ Message Bus Integration geïnitialiseerd voor {self.agent_name}")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Fout bij initialiseren van Message Bus Integration voor {self.agent_name}: {e}")
+            return False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -451,6 +494,25 @@ Accessibility Agent Commands:
   generate-report         - Generate improvement report
   test                    - Test resource completeness
   collaborate             - Demonstrate collaboration with other agents
+
+Enhanced MCP Phase 2 Commands:
+  initialize-mcp          - Initialize MCP integration
+  use-mcp-tool            - Use MCP tool
+  get-mcp-status          - Get MCP status
+  use-accessibility-mcp-tools - Use accessibility-specific MCP tools
+  enhanced-collaborate    - Enhanced collaboration with other agents
+  enhanced-security       - Enhanced security features
+  enhanced-performance    - Enhanced performance monitoring
+  trace-operation         - Trace accessibility operation
+  trace-performance       - Trace performance metrics
+  trace-error             - Trace error handling
+  tracing-summary         - Show tracing summary
+
+Message Bus Integration Commands:
+  initialize-message-bus  - Initialize Message Bus Integration
+  message-bus-status      - Show Message Bus Integration status
+  publish-event           - Publish accessibility event
+  subscribe-event         - Subscribe to accessibility events
         """
         print(help_text)
 
@@ -1100,6 +1162,32 @@ Accessibility Agent Commands:
         except Exception as e:
             logger.error(f"Policy evaluation failed: {e}")
 
+    async def handle_validation_requested(self, event):
+        """Handle accessibility validation requested event."""
+        logger.info(f"Accessibility validation requested: {event}")
+        try:
+            # Perform validation based on event data
+            validation_result = await self.validate_aria(event.get("component_code", ""))
+            await publish("accessibility_validation_completed", {
+                "request_id": event.get("request_id"),
+                "result": validation_result
+            })
+        except Exception as e:
+            logger.error(f"Error handling validation request: {e}")
+
+    async def handle_improvement_requested(self, event):
+        """Handle accessibility improvement requested event."""
+        logger.info(f"Accessibility improvement requested: {event}")
+        try:
+            # Generate improvement recommendations
+            improvement_report = self.generate_improvement_report()
+            await publish("accessibility_improvement_completed", {
+                "request_id": event.get("request_id"),
+                "report": improvement_report
+            })
+        except Exception as e:
+            logger.error(f"Error handling improvement request: {e}")
+
     async def run(self):
         """Run the agent and listen for events."""
         # Initialize MCP integration
@@ -1111,9 +1199,13 @@ Accessibility Agent Commands:
         # Initialize tracing capabilities
         await self.initialize_tracing()
         
+        # Initialize Message Bus Integration
+        await self.initialize_message_bus_integration()
+        
         print("♿ Accessibility Agent is running...")
         print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
         print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        print("Message Bus: Enabled" if self.message_bus_enabled else "Message Bus: Disabled")
         
         def sync_handler(event):
             asyncio.run(self.handle_audit_completed(event))
@@ -1133,7 +1225,8 @@ def main():
                                "export-audit", "generate-report", "test", "collaborate", "run",
                                "initialize-mcp", "use-mcp-tool", "get-mcp-status", "use-accessibility-mcp-tools", 
                                "check-dependencies", "enhanced-collaborate", "enhanced-security", "enhanced-performance",
-                               "trace-operation", "trace-performance", "trace-error", "tracing-summary"])
+                               "trace-operation", "trace-performance", "trace-error", "tracing-summary",
+                               "initialize-message-bus", "message-bus-status", "publish-event", "subscribe-event"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--target", default="/mock/page", help="Target for accessibility audit")
     parser.add_argument("--component", default="Button", help="Component name for testing")
@@ -1226,6 +1319,23 @@ def main():
             print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
             print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
             print(f"Agent: {agent.agent_name}")
+    # Message Bus Integration Commands
+    elif args.command == "initialize-message-bus":
+        result = asyncio.run(agent.initialize_message_bus_integration())
+        print(f"Message Bus Integration: {'Enabled' if result else 'Failed'}")
+    elif args.command == "message-bus-status":
+        print(f"Message Bus Integration: {'Enabled' if agent.message_bus_enabled else 'Disabled'}")
+    elif args.command == "publish-event":
+        # Example: publish accessibility audit requested event
+        event_data = {"target": args.target, "request_id": "test-123"}
+        asyncio.run(publish("accessibility_audit_requested", event_data))
+        print(f"Published event: accessibility_audit_requested with data: {event_data}")
+    elif args.command == "subscribe-event":
+        # Example: subscribe to accessibility events
+        def event_handler(event):
+            print(f"Received event: {event}")
+        subscribe("accessibility_audit_completed", event_handler)
+        print("Subscribed to accessibility_audit_completed events")
     else:
         print(f"Unknown command: {args.command}")
         agent.show_help()
