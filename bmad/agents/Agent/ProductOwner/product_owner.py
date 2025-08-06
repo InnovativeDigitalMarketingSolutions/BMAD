@@ -11,7 +11,7 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 from dotenv import load_dotenv
@@ -324,12 +324,21 @@ Voorbeelden:
   python -m bmad.agents.Agent.ProductOwner.product_owner create-story --input "Dashboard voor agent monitoring"
 """)
 
-    async def create_user_story(self, story_data: Dict[str, Any]) -> Dict[str, Any]:
+    async def create_user_story(self, story_data: Union[Dict[str, Any], str]) -> Dict[str, Any]:
         """Create a user story based on story data with MCP enhancement."""
         try:
             # Initialize enhanced MCP if not already done
             if not self.enhanced_mcp_enabled:
                 await self.initialize_enhanced_mcp()
+            
+            # Handle both string and dictionary input
+            if isinstance(story_data, str):
+                # Convert string to dictionary format
+                story_data = {
+                    "title": "User Story",
+                    "description": story_data,
+                    "priority": "medium"
+                }
             
             # Extract story data
             title = story_data.get("title", "Untitled Story")
