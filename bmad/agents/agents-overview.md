@@ -93,6 +93,16 @@
 - **✅ Status**: FULLY COMPLIANT - 95/95 tests passing (100% coverage)
 - **Quality-First Implementation**: 4 event handlers met echte functionaliteit, 6 Message Bus CLI commands, 12 performance metrics
 
+#### **QualityGuardian**
+- **Rol**: Quality assurance en standards enforcement
+- **Verantwoordelijkheden**: Code quality analysis, test coverage monitoring, security scanning, performance analysis, quality gates, standards enforcement
+- **CLI Commando's**: `analyze-code-quality`, `monitor-test-coverage`, `security-scan`, `performance-analysis`, `enforce-standards`, `quality-gate-check`, `generate-quality-report`, `suggest-improvements`, `message-bus-status`, `performance-metrics`, `help` (35+ totaal)
+- **Events**: `quality_gate_check_requested`, `code_quality_analysis_requested`, `security_scan_requested`, `performance_analysis_requested`, `standards_enforcement_requested`, `quality_report_generation_requested`
+- **Enhanced MCP Phase 2**: ✅ Volledig geïmplementeerd met advanced tracing en collaboration  
+- **✅ Status**: FULLY COMPLIANT - 53/53 tests passing (100% coverage)
+- **Quality-First Implementation**: 6 quality-specific event handlers met echte functionaliteit, 12 quality performance metrics, 6 Message Bus CLI commands, template quality assurance
+- **YAML Compliance**: Alle Message Bus commands geïmplementeerd en gedocumenteerd
+
 #### **DataEngineer**
 - **Rol**: Data engineering en pipeline management
 - **Verantwoordelijkheden**: Data pipelines, ETL processes, data quality, analytics
@@ -221,6 +231,7 @@ python3 <agent>.py tracing-summary         # Get tracing summary
 | AiDeveloper | ✅ | ✅ | ✅ | ✅ | ✅ |
 | TestEngineer | ✅ | ✅ | ✅ | ✅ | ✅ |
 | SecurityDeveloper | ✅ | ✅ | ✅ | ✅ | ✅ |
+| QualityGuardian | ✅ | ✅ | ✅ | ✅ | ✅ |
 | DataEngineer | ✅ | ✅ | ✅ | ✅ | ✅ |
 | UXUIDesigner | ✅ | ✅ | ✅ | ✅ | ✅ |
 | AccessibilityAgent | ✅ | ✅ | ✅ | ✅ | ✅ |

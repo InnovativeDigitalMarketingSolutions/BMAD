@@ -61,22 +61,25 @@ class QualityValidationError(QualityError):
     """Exception for quality validation failures."""
     pass
 
-class QualityGuardianAgent:
+class QualityGuardianAgent(AgentMessageBusIntegration):
     """
     Quality Guardian Agent voor BMAD.
     Gespecialiseerd in quality assurance, standards enforcement, en quality monitoring.
     """
     
     def __init__(self):
+        # Initialize AgentMessageBusIntegration first
+        super().__init__("QualityGuardian", self)
+        
+        # Set agent name
+        self.agent_name = "QualityGuardian"
+        
         self.framework_manager = get_framework_templates_manager()
         try:
             self.quality_guardian_template = self.framework_manager.get_framework_template('quality_guardian')
         except:
             self.quality_guardian_template = None
         self.lessons_learned = []
-
-        # Set agent name
-        self.agent_name = "QualityGuardian"
         
         # Initialize core services
         self.monitor = get_performance_monitor()
@@ -122,14 +125,20 @@ class QualityGuardianAgent:
             "performance_score": 85
         }
 
-        # Performance metrics
+        # Performance metrics - Updated with 12 quality-specific metrics
         self.performance_metrics = {
             "quality_analyses_completed": 0,
             "security_scans_completed": 0,
             "performance_analyses_completed": 0,
             "quality_gates_passed": 0,
             "quality_gates_failed": 0,
-            "quality_score": 0.0
+            "quality_score": 0.0,
+            "security_vulnerabilities_found": 0,
+            "code_coverage_percentage": 0.0,
+            "compliance_score": 0.0,
+            "standards_violations_found": 0,
+            "improvement_suggestions_generated": 0,
+            "quality_reports_generated": 0
         }
         
         # MCP Integration
@@ -552,6 +561,14 @@ QualityGuardian Agent Commands:
   test                   - Test resource completeness
   collaborate            - Demonstrate collaboration with other agents
   run                    - Start the agent in event listening mode
+
+Message Bus Commands:
+  message-bus-status     - Show Message Bus status
+  publish-event          - Publish event to Message Bus
+  subscribe-event        - Subscribe to event
+  list-events           - List supported events
+  event-history         - Show event history
+  performance-metrics   - Show performance metrics
 
 Template Quality Assurance:
   validate-framework-template <template>     - Validate framework template quality and completeness
@@ -2205,16 +2222,24 @@ Examples:
                 self.handle_quality_gate_check_requested
             )
             await self.message_bus_integration.register_event_handler(
-                "quality_analysis_completed", 
-                self.handle_quality_analysis_completed
+                "code_quality_analysis_requested", 
+                self.handle_code_quality_analysis_requested
             )
             await self.message_bus_integration.register_event_handler(
-                "security_scan_completed",
-                self.handle_security_scan_completed
+                "security_scan_requested",
+                self.handle_security_scan_requested
             )
             await self.message_bus_integration.register_event_handler(
-                "performance_analysis_completed",
-                self.handle_performance_analysis_completed
+                "performance_analysis_requested",
+                self.handle_performance_analysis_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "standards_enforcement_requested",
+                self.handle_standards_enforcement_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "quality_report_generation_requested",
+                self.handle_quality_report_generation_requested
             )
             
             self.message_bus_enabled = True
@@ -2226,27 +2251,226 @@ Examples:
 
     async def handle_quality_gate_check_requested(self, event):
         """Handle quality gate check requested event."""
-        logger.info(f"Quality gate check requested: {event}")
-        # Process quality gate check request
-        return {"status": "processed", "event": "quality_gate_check_requested"}
+        try:
+            logger.info(f"Quality gate check requested: {event}")
+            
+            # Extract deployment flag from event
+            deployment = event.get("data", {}).get("deployment", False)
+            
+            # Perform quality gate check using existing method
+            result = await self.quality_gate_check(deployment)
+            
+            # Update performance metrics
+            if result.get("all_gates_passed", False):
+                self.performance_metrics["quality_gates_passed"] += 1
+            else:
+                self.performance_metrics["quality_gates_failed"] += 1
+            
+            # Record in quality history
+            status = "PASSED" if result.get("all_gates_passed", False) else "FAILED"
+            self.quality_history.append(f"{datetime.now().isoformat()}: Quality gate check {status} for deployment: {deployment}")
+            self._save_quality_history()
+            
+            # Publish completion event
+            completion_event = {
+                "event_type": "quality_gate_check_completed", 
+                "agent": self.agent_name,
+                "data": {
+                    "deployment": deployment,
+                    "status": status,
+                    "result": result,
+                    "timestamp": datetime.now().isoformat()
+                }
+            }
+            await self.publish_event("quality_gate_check_completed", completion_event)
+            
+            return {"status": "processed", "event": "quality_gate_check_requested", "result": result}
+        except Exception as e:
+            logger.error(f"Error handling quality gate check request: {e}")
+            return {"status": "error", "event": "quality_gate_check_requested", "error": str(e)}
 
-    async def handle_quality_analysis_completed(self, event):
-        """Handle quality analysis completed event."""
-        logger.info(f"Quality analysis completed: {event}")
-        # Process quality analysis completion
-        return {"status": "processed", "event": "quality_analysis_completed"}
+    async def handle_code_quality_analysis_requested(self, event):
+        """Handle code quality analysis requested event."""
+        try:
+            logger.info(f"Code quality analysis requested: {event}")
+            
+            # Extract path from event
+            path = event.get("data", {}).get("path", "./")
+            
+            # Perform code quality analysis using existing method
+            result = self.analyze_code_quality(path)
+            
+            # Update performance metrics
+            self.performance_metrics["quality_analyses_completed"] += 1
+            self.performance_metrics["quality_score"] = result.get("code_quality_score", 0.0)
+            
+            # Record in quality history
+            score = result.get("code_quality_score", 0)
+            self.quality_history.append(f"{datetime.now().isoformat()}: Code quality analysis for {path} - Score: {score}")
+            self._save_quality_history()
+            
+            # Publish completion event
+            completion_event = {
+                "event_type": "code_quality_analysis_completed", 
+                "agent": self.agent_name,
+                "data": {
+                    "path": path,
+                    "result": result,
+                    "timestamp": datetime.now().isoformat()
+                }
+            }
+            await self.publish_event("code_quality_analysis_completed", completion_event)
+            
+            return {"status": "processed", "event": "code_quality_analysis_requested", "result": result}
+        except Exception as e:
+            logger.error(f"Error handling code quality analysis request: {e}")
+            return {"status": "error", "event": "code_quality_analysis_requested", "error": str(e)}
 
-    async def handle_security_scan_completed(self, event):
-        """Handle security scan completed event."""
-        logger.info(f"Security scan completed: {event}")
-        # Process security scan completion
-        return {"status": "processed", "event": "security_scan_completed"}
+    async def handle_security_scan_requested(self, event):
+        """Handle security scan requested event."""
+        try:
+            logger.info(f"Security scan requested: {event}")
+            
+            # Extract files pattern from event
+            files = event.get("data", {}).get("files", "*.py")
+            
+            # Perform security scan using existing method
+            result = self.security_scan(files)
+            
+            # Update performance metrics
+            self.performance_metrics["security_scans_completed"] += 1
+            self.performance_metrics["security_vulnerabilities_found"] += result.get("vulnerabilities_found", 0)
+            
+            # Record in security history
+            vulnerabilities = result.get("vulnerabilities_found", 0)
+            self.security_history.append(f"{datetime.now().isoformat()}: Security scan for {files} - Vulnerabilities: {vulnerabilities}")
+            self._save_security_history()
+            
+            # Publish completion event
+            completion_event = {
+                "event_type": "security_scan_completed", 
+                "agent": self.agent_name,
+                "data": {
+                    "files": files,
+                    "result": result,
+                    "timestamp": datetime.now().isoformat()
+                }
+            }
+            await self.publish_event("security_scan_completed", completion_event)
+            
+            return {"status": "processed", "event": "security_scan_requested", "result": result}
+        except Exception as e:
+            logger.error(f"Error handling security scan request: {e}")
+            return {"status": "error", "event": "security_scan_requested", "error": str(e)}
 
-    async def handle_performance_analysis_completed(self, event):
-        """Handle performance analysis completed event."""
-        logger.info(f"Performance analysis completed: {event}")
-        # Process performance analysis completion
-        return {"status": "processed", "event": "performance_analysis_completed"}
+    async def handle_performance_analysis_requested(self, event):
+        """Handle performance analysis requested event."""
+        try:
+            logger.info(f"Performance analysis requested: {event}")
+            
+            # Extract component from event
+            component = event.get("data", {}).get("component", "main")
+            
+            # Perform performance analysis using existing method
+            result = self.performance_analysis(component)
+            
+            # Update performance metrics
+            self.performance_metrics["performance_analyses_completed"] += 1
+            
+            # Record in performance history
+            score = result.get("performance_score", 0)
+            self.performance_history.append(f"{datetime.now().isoformat()}: Performance analysis for {component} - Score: {score}")
+            self._save_performance_history()
+            
+            # Publish completion event
+            completion_event = {
+                "event_type": "performance_analysis_completed", 
+                "agent": self.agent_name,
+                "data": {
+                    "component": component,
+                    "result": result,
+                    "timestamp": datetime.now().isoformat()
+                }
+            }
+            await self.publish_event("performance_analysis_completed", completion_event)
+            
+            return {"status": "processed", "event": "performance_analysis_requested", "result": result}
+        except Exception as e:
+            logger.error(f"Error handling performance analysis request: {e}")
+            return {"status": "error", "event": "performance_analysis_requested", "error": str(e)}
+
+    async def handle_standards_enforcement_requested(self, event):
+        """Handle standards enforcement requested event."""
+        try:
+            logger.info(f"Standards enforcement requested: {event}")
+            
+            # Extract path from event
+            path = event.get("data", {}).get("path", "./")
+            
+            # Perform standards enforcement using existing method
+            result = self.enforce_standards(path)
+            
+            # Update performance metrics
+            violations = result.get("violations_found", 0)
+            self.performance_metrics["standards_violations_found"] += violations
+            self.performance_metrics["compliance_score"] = result.get("compliance_score", 0.0)
+            
+            # Record in quality history
+            compliance = result.get("compliance_score", 0)
+            self.quality_history.append(f"{datetime.now().isoformat()}: Standards enforcement for {path} - Compliance: {compliance}%")
+            self._save_quality_history()
+            
+            # Publish completion event
+            completion_event = {
+                "event_type": "standards_enforcement_completed", 
+                "agent": self.agent_name,
+                "data": {
+                    "path": path,
+                    "result": result,
+                    "timestamp": datetime.now().isoformat()
+                }
+            }
+            await self.publish_event("standards_enforcement_completed", completion_event)
+            
+            return {"status": "processed", "event": "standards_enforcement_requested", "result": result}
+        except Exception as e:
+            logger.error(f"Error handling standards enforcement request: {e}")
+            return {"status": "error", "event": "standards_enforcement_requested", "error": str(e)}
+
+    async def handle_quality_report_generation_requested(self, event):
+        """Handle quality report generation requested event."""
+        try:
+            logger.info(f"Quality report generation requested: {event}")
+            
+            # Extract format from event
+            format_type = event.get("data", {}).get("format", "md")
+            
+            # Generate quality report using existing method
+            result = self.generate_quality_report(format_type)
+            
+            # Update performance metrics
+            self.performance_metrics["quality_reports_generated"] += 1
+            
+            # Record in quality history
+            self.quality_history.append(f"{datetime.now().isoformat()}: Quality report generated in {format_type} format")
+            self._save_quality_history()
+            
+            # Publish completion event
+            completion_event = {
+                "event_type": "quality_report_generation_completed", 
+                "agent": self.agent_name,
+                "data": {
+                    "format": format_type,
+                    "result": result,
+                    "timestamp": datetime.now().isoformat()
+                }
+            }
+            await self.publish_event("quality_report_generation_completed", completion_event)
+            
+            return {"status": "processed", "event": "quality_report_generation_requested", "result": result}
+        except Exception as e:
+            logger.error(f"Error handling quality report generation request: {e}")
+            return {"status": "error", "event": "quality_report_generation_requested", "error": str(e)}
 
 def main():
     """Main CLI function with comprehensive error handling."""
@@ -2259,7 +2483,9 @@ def main():
                                "show-performance-history", "show-quality-metrics",
                                "test", "collaborate", "run", "validate-framework-template",
                                "monitor-template-quality", "enforce-template-standards",
-                               "generate-template-quality-report"])
+                               "generate-template-quality-report", "message-bus-status",
+                               "publish-event", "subscribe-event", "list-events", 
+                               "event-history", "performance-metrics"])
     parser.add_argument("--path", default="./", help="Path to analyze")
     parser.add_argument("--threshold", type=int, default=80, help="Coverage threshold")
     parser.add_argument("--files", default="*.py", help="Files pattern for security scan")
@@ -2270,6 +2496,10 @@ def main():
     # Template quality assurance arguments
     parser.add_argument("--template-name", help="Template name for quality assurance")
     parser.add_argument("--template-names", nargs="+", help="List of template names to monitor")
+    
+    # Message Bus arguments
+    parser.add_argument("--event-type", help="Event type for publish/subscribe")
+    parser.add_argument("--event-data", help="Event data (JSON string)")
 
     args = parser.parse_args()
 
@@ -2316,6 +2546,37 @@ def main():
             asyncio.run(agent.collaborate_example())
         elif args.command == "run":
             asyncio.run(agent.run())
+        elif args.command == "message-bus-status":
+            status = asyncio.run(agent.get_message_bus_status())
+            print(f"📊 Message Bus Status: {status}")
+        elif args.command == "publish-event":
+            if not args.event_type:
+                print("Error: --event-type is required for publish-event")
+                return
+            event_data = json.loads(args.event_data) if args.event_data else {}
+            result = asyncio.run(agent.publish_event(args.event_type, event_data))
+            print(f"📤 Event published: {args.event_type}")
+        elif args.command == "subscribe-event":
+            if not args.event_type:
+                print("Error: --event-type is required for subscribe-event")
+                return
+            result = asyncio.run(agent.subscribe_to_event(args.event_type))
+            print(f"📥 Subscribed to event: {args.event_type}")
+        elif args.command == "list-events":
+            events = asyncio.run(agent.get_supported_events())
+            print("📋 Supported Events:")
+            for event in events:
+                print(f"  - {event}")
+        elif args.command == "event-history":
+            history = asyncio.run(agent.get_event_history())
+            print("📜 Event History:")
+            for entry in history:
+                print(f"  - {entry}")
+        elif args.command == "performance-metrics":
+            metrics = asyncio.run(agent.get_performance_metrics())
+            print("📈 Performance Metrics:")
+            for key, value in metrics.items():
+                print(f"  - {key}: {value}")
         elif args.command == "validate-framework-template":
             if not args.template_name:
                 print("Error: --template-name is required")
