@@ -22,7 +22,7 @@ from bmad.agents.core.ai.confidence_scoring import (
     format_confidence_message,
 )
 from bmad.agents.core.ai.llm_client import ask_openai_with_confidence
-from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.core.message_bus import AgentMessageBusIntegration, EventTypes, get_message_bus
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.projects.project_manager import project_manager
 from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
@@ -50,13 +50,14 @@ from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 load_dotenv()
 
 
-class ProductOwnerAgent:
+class ProductOwnerAgent(AgentMessageBusIntegration):
     """
     Product Owner Agent voor BMAD.
     Gespecialiseerd in product management, user stories, en product vision.
     """
     
     def __init__(self):
+        super().__init__("ProductOwner")
         self.framework_manager = get_framework_templates_manager()
         try:
             self.product_owner_template = self.framework_manager.get_framework_template('product_owner')
@@ -104,7 +105,257 @@ class ProductOwnerAgent:
         self._load_vision_history()
         
         logging.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
-    
+
+    async def initialize_message_bus(self):
+        """Initialize message bus integration for ProductOwner agent."""
+        try:
+            # Subscribe to relevant event categories
+            await self.subscribe_to_event_category("product_management")
+            await self.subscribe_to_event_category("user_stories")
+            await self.subscribe_to_event_category("backlog")
+            await self.subscribe_to_event_category("feedback")
+            await self.subscribe_to_event_category("collaboration")
+            
+            # Register specific event handlers
+            await self.register_event_handler(EventTypes.USER_STORY_REQUESTED, self._handle_user_story_requested)
+            await self.register_event_handler(EventTypes.BACKLOG_UPDATE_REQUESTED, self._handle_backlog_update_requested)
+            await self.register_event_handler(EventTypes.PRODUCT_VISION_REQUESTED, self._handle_product_vision_requested)
+            await self.register_event_handler(EventTypes.STAKEHOLDER_ANALYSIS_REQUESTED, self._handle_stakeholder_analysis_requested)
+            await self.register_event_handler(EventTypes.FEEDBACK_RECEIVED, self._handle_feedback_received)
+            await self.register_event_handler(EventTypes.TASK_DELEGATED, self._handle_task_delegated)
+            
+            logging.info("ProductOwner agent message bus integration initialized successfully")
+            return True
+        except Exception as e:
+            logging.error(f"Failed to initialize message bus integration: {e}")
+            return False
+
+    async def _handle_user_story_requested(self, event_data: Dict[str, Any]):
+        """Handle user story requested event."""
+        try:
+            requirement = event_data.get('requirement', 'Default requirement')
+            user_type = event_data.get('user_type', 'end_user')
+            priority = event_data.get('priority', 'medium')
+            
+            logging.info(f"Processing user story request: {requirement}")
+            
+            # Create user story
+            story_result = await self.create_user_story({
+                "title": f"User Story for {requirement}",
+                "description": requirement,
+                "priority": priority,
+                "user_type": user_type
+            })
+            
+            if story_result.get("success"):
+                await self.publish_agent_event(EventTypes.USER_STORY_CREATED, {
+                    "requirement": requirement,
+                    "story": story_result.get("story"),
+                    "status": "success"
+                })
+            else:
+                await self.publish_agent_event(EventTypes.USER_STORY_CREATION_FAILED, {
+                    "requirement": requirement,
+                    "error": story_result.get("error"),
+                    "status": "failed"
+                })
+                
+        except Exception as e:
+            logging.error(f"Error handling user story requested event: {e}")
+            await self.publish_agent_event(EventTypes.USER_STORY_CREATION_FAILED, {
+                "error": str(e),
+                "status": "failed"
+            })
+
+    async def _handle_backlog_update_requested(self, event_data: Dict[str, Any]):
+        """Handle backlog update requested event."""
+        try:
+            backlog_items = event_data.get('backlog_items', [])
+            prioritization_method = event_data.get('prioritization_method', 'value_effort')
+            
+            logging.info(f"Processing backlog update request with {len(backlog_items)} items")
+            
+            # Process backlog update
+            # This would typically involve reordering, reprioritizing, or adding new items
+            updated_backlog = await self._process_backlog_update(backlog_items, prioritization_method)
+            
+            await self.publish_agent_event(EventTypes.BACKLOG_UPDATED, {
+                "backlog_items": updated_backlog,
+                "prioritization_method": prioritization_method,
+                "status": "success"
+            })
+            
+        except Exception as e:
+            logging.error(f"Error handling backlog update requested event: {e}")
+            await self.publish_agent_event(EventTypes.BACKLOG_UPDATE_FAILED, {
+                "error": str(e),
+                "status": "failed"
+            })
+
+    async def _handle_product_vision_requested(self, event_data: Dict[str, Any]):
+        """Handle product vision requested event."""
+        try:
+            product_name = event_data.get('product_name', 'Unknown Product')
+            vision_type = event_data.get('vision_type', 'strategic')
+            timeframe = event_data.get('timeframe', 'long_term')
+            
+            logging.info(f"Processing product vision request for {product_name}")
+            
+            # Generate product vision
+            vision_result = await self._generate_product_vision(product_name, vision_type, timeframe)
+            
+            await self.publish_agent_event(EventTypes.PRODUCT_VISION_CREATED, {
+                "product_name": product_name,
+                "vision": vision_result,
+                "vision_type": vision_type,
+                "timeframe": timeframe,
+                "status": "success"
+            })
+            
+        except Exception as e:
+            logging.error(f"Error handling product vision requested event: {e}")
+            await self.publish_agent_event(EventTypes.PRODUCT_VISION_CREATION_FAILED, {
+                "error": str(e),
+                "status": "failed"
+            })
+
+    async def _handle_stakeholder_analysis_requested(self, event_data: Dict[str, Any]):
+        """Handle stakeholder analysis requested event."""
+        try:
+            stakeholders = event_data.get('stakeholders', [])
+            analysis_type = event_data.get('analysis_type', 'comprehensive')
+            
+            logging.info(f"Processing stakeholder analysis request for {len(stakeholders)} stakeholders")
+            
+            # Perform stakeholder analysis
+            analysis_result = await self._perform_stakeholder_analysis(stakeholders, analysis_type)
+            
+            await self.publish_agent_event(EventTypes.STAKEHOLDER_ANALYSIS_COMPLETED, {
+                "stakeholders": stakeholders,
+                "analysis": analysis_result,
+                "analysis_type": analysis_type,
+                "status": "success"
+            })
+            
+        except Exception as e:
+            logging.error(f"Error handling stakeholder analysis requested event: {e}")
+            await self.publish_agent_event(EventTypes.STAKEHOLDER_ANALYSIS_FAILED, {
+                "error": str(e),
+                "status": "failed"
+            })
+
+    async def _handle_feedback_received(self, event_data: Dict[str, Any]):
+        """Handle feedback received event."""
+        try:
+            feedback = event_data.get('feedback', '')
+            source = event_data.get('source', 'unknown')
+            sentiment = event_data.get('sentiment', 'neutral')
+            
+            logging.info(f"Processing feedback from {source} with sentiment: {sentiment}")
+            
+            # Process feedback and determine actions
+            actions = await self._process_feedback(feedback, source, sentiment)
+            
+            await self.publish_agent_event(EventTypes.FEEDBACK_PROCESSED, {
+                "feedback": feedback,
+                "source": source,
+                "sentiment": sentiment,
+                "actions": actions,
+                "status": "success"
+            })
+            
+        except Exception as e:
+            logging.error(f"Error handling feedback received event: {e}")
+            await self.publish_agent_event(EventTypes.FEEDBACK_PROCESSING_FAILED, {
+                "error": str(e),
+                "status": "failed"
+            })
+
+    async def _handle_task_delegated(self, event_data: Dict[str, Any]):
+        """Handle task delegated event."""
+        try:
+            task = event_data.get('task', {})
+            task_id = task.get('id', 'unknown')
+            task_type = task.get('type', 'unknown')
+            
+            logging.info(f"Processing delegated task {task_id} of type {task_type}")
+            
+            # Accept and process the delegated task
+            result = await self._process_delegated_task(task)
+            
+            await self.publish_agent_event(EventTypes.TASK_COMPLETED, {
+                "task_id": task_id,
+                "task_type": task_type,
+                "result": result,
+                "status": "completed"
+            })
+            
+        except Exception as e:
+            logging.error(f"Error handling task delegated event: {e}")
+            await self.publish_agent_event(EventTypes.TASK_FAILED, {
+                "task_id": task.get('id', 'unknown'),
+                "error": str(e),
+                "status": "failed"
+            })
+
+    async def _process_backlog_update(self, backlog_items: list, prioritization_method: str) -> list:
+        """Process backlog update with prioritization."""
+        # This is a placeholder implementation
+        # In a real scenario, this would involve complex prioritization logic
+        return sorted(backlog_items, key=lambda x: x.get('priority', 'medium'))
+
+    async def _generate_product_vision(self, product_name: str, vision_type: str, timeframe: str) -> Dict[str, Any]:
+        """Generate product vision."""
+        # This is a placeholder implementation
+        return {
+            "product_name": product_name,
+            "vision_type": vision_type,
+            "timeframe": timeframe,
+            "vision_statement": f"To create the best {product_name} experience for our users",
+            "key_objectives": ["User satisfaction", "Market leadership", "Innovation"],
+            "success_metrics": ["User adoption", "Customer satisfaction", "Revenue growth"]
+        }
+
+    async def _perform_stakeholder_analysis(self, stakeholders: list, analysis_type: str) -> Dict[str, Any]:
+        """Perform stakeholder analysis."""
+        # This is a placeholder implementation
+        return {
+            "stakeholders": stakeholders,
+            "analysis_type": analysis_type,
+            "engagement_levels": {s: "high" for s in stakeholders},
+            "communication_preferences": {s: "email" for s in stakeholders},
+            "influence_levels": {s: "medium" for s in stakeholders}
+        }
+
+    async def _process_feedback(self, feedback: str, source: str, sentiment: str) -> list:
+        """Process feedback and determine actions."""
+        actions = []
+        
+        if sentiment == "negative":
+            actions.append("Prioritize improvements")
+            actions.append("Schedule stakeholder meeting")
+        elif sentiment == "positive":
+            actions.append("Continue current direction")
+            actions.append("Share success with team")
+        else:
+            actions.append("Monitor for trends")
+        
+        return actions
+
+    async def _process_delegated_task(self, task: Dict[str, Any]) -> Dict[str, Any]:
+        """Process a delegated task."""
+        task_type = task.get('type', 'unknown')
+        
+        if task_type == 'create_user_story':
+            return await self.create_user_story(task.get('data', {}))
+        elif task_type == 'update_backlog':
+            return await self._process_backlog_update(task.get('data', {}).get('items', []), 'value_effort')
+        elif task_type == 'generate_vision':
+            data = task.get('data', {})
+            return await self._generate_product_vision(data.get('product_name', ''), data.get('vision_type', 'strategic'), data.get('timeframe', 'long_term'))
+        else:
+            return {"status": "unknown_task_type", "error": f"Unknown task type: {task_type}"}
+
     async def initialize_mcp(self):
         """Initialize MCP client and integration."""
         try:
@@ -583,10 +834,14 @@ Voorbeelden:
         # Initialize tracing capabilities
         await self.initialize_tracing()
         
+        # Initialize message bus integration
+        await self.initialize_message_bus()
+        
         print("🎯 ProductOwner Agent is running...")
-        print("Listening for events: user_story_requested, feedback_sentiment_analyzed, feature_planned")
+        print("Listening for events: user_story_requested, backlog_update_requested, product_vision_requested")
         print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
         print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        print("Message Bus: Enabled")
         print("Press Ctrl+C to stop")
         
         try:
@@ -595,10 +850,14 @@ Voorbeelden:
         except KeyboardInterrupt:
             print("\n🛑 ProductOwner Agent stopped.")
 
-    def collaborate_example(self):
+    async def run_async(self):
+        """Async version of run method."""
+        await self.run()
+
+    async def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         try:
-            publish("backlog_updated", {"status": "success", "agent": "ProductOwner"})
+            await self.publish_agent_event(EventTypes.BACKLOG_UPDATED, {"status": "success", "agent": "ProductOwner"})
             save_context("ProductOwner", "status", {"backlog_status": "updated"})
             print("Event gepubliceerd en context opgeslagen.")
             context = get_context("ProductOwner")
@@ -629,11 +888,11 @@ def main():
         if args.input:
             asyncio.run(create_user_story(args.input))
         else:
-            create_bmad_frontend_story()
+            asyncio.run(create_bmad_frontend_story())
     elif args.command == "show-vision":
         show_bmad_vision()
     elif args.command == "collaborate":
-        collaborate_example()
+        asyncio.run(collaborate_example())
     else:
         print("Unknown command. Use 'help' to see available commands.")
         sys.exit(1)
@@ -652,7 +911,7 @@ Voorbeelden:
   python -m bmad.agents.Agent.ProductOwner.product_owner create-story --input "Dashboard voor agent monitoring"
 """)
 
-def create_bmad_frontend_story():
+async def create_bmad_frontend_story():
     """Maak user stories voor het huidige project."""
     # Haal project context op
     project_context = project_manager.get_project_context()
@@ -772,7 +1031,8 @@ def create_bmad_frontend_story():
     project_manager.add_user_story(result["answer"], "high")
 
     # Publiceer event voor andere agents
-    publish("user_stories_created", {
+    message_bus = get_message_bus()
+    await message_bus.publish(EventTypes.USER_STORIES_CREATED, {
         "agent": "ProductOwner",
         "project": project_name,
         "status": "success"
@@ -844,9 +1104,10 @@ def show_bmad_vision():
     print(vision)
 
 
-def collaborate_example():
+async def collaborate_example():
     """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
-    publish("backlog_updated", {"status": "success", "agent": "ProductOwner"})
+    message_bus = get_message_bus()
+    await message_bus.publish(EventTypes.BACKLOG_UPDATED, {"status": "success", "agent": "ProductOwner"})
     save_context("ProductOwner", "status", {"backlog_status": "updated"})
     print("Event gepubliceerd en context opgeslagen.")
     context = get_context("ProductOwner")
@@ -913,47 +1174,8 @@ def ask_llm_user_story(requirement):
         return error_output
 
 
-def on_user_story_requested(event):
-    """Handle user story requested event."""
-    # Input validation
-    if not isinstance(event, dict):
-        logging.warning("Invalid event type for user story requested event")
-        return
-    
-    print("📝 User story requested event received")
-    requirement = event.get('requirement', 'Default requirement')
-    story = ask_llm_user_story(requirement)
-    print(f"Generated story: {story}")
 
-def on_feedback_sentiment_analyzed(event):
-    """Handle feedback sentiment analyzed event."""
-    # Input validation
-    if not isinstance(event, dict):
-        logging.warning("Invalid event type for feedback sentiment analyzed event")
-        return
-    
-    sentiment = event.get('sentiment', 'neutral')
-    if sentiment == 'negative':
-        print("😔 Negative feedback detected - prioritizing improvements")
-        # Trigger improvement workflow
-    else:
-        print("😊 Positive feedback - continuing current direction")
-
-def handle_feature_planned(event):
-    """Handle feature planned event."""
-    # Input validation
-    if not isinstance(event, dict):
-        logging.warning("Invalid event type for feature planned event")
-        return
-    
-    feature = event.get('feature', 'Unknown feature')
-    print(f"🎯 Feature planned: {feature}")
-    time.sleep(1)  # Simulate processing
-    publish("feature_prioritized", {"feature": feature, "priority": "high"})
 
 
 if __name__ == "__main__":
     main()
-    subscribe("user_story_requested", on_user_story_requested)
-    subscribe("feedback_sentiment_analyzed", on_feedback_sentiment_analyzed)
-    subscribe("feature_planned", handle_feature_planned)

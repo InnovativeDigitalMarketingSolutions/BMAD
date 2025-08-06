@@ -4,12 +4,23 @@
 
 ### **Core Development Agents**
 
+#### **Orchestrator**
+- **Rol**: Coördineert alle agents en workflows
+- **Verantwoordelijkheden**: Workflow orchestration, agent coordination, task delegation
+- **CLI Commando's**: `start-workflow`, `coordinate-agents`, `monitor-progress`, `help`
+- **Events**: `workflow_started`, `agent_coordination_requested`, `task_delegated`
+- **Delegatie**: Kan taken delegeren naar alle andere agents
+- **Message Bus Integration**: ✅ Volledig geïntegreerd met nieuwe message bus systeem
+- **Event Handlers**: 8 handlers voor orchestration, collaboration, workflow management
+
 #### **ProductOwner** 
 - **Rol**: Definiert business value, prioriteert features
 - **Verantwoordelijkheden**: User stories, requirements, backlog management
 - **CLI Commando's**: `create-story`, `show-vision`, `help`
 - **Events**: `user_story_requested`, `feedback_sentiment_analyzed`, `feature_planned`
 - **Delegatie**: Kan taken delegeren naar Architect, FrontendDeveloper, BackendDeveloper
+- **Message Bus Integration**: ✅ Volledig geïntegreerd met nieuwe message bus systeem
+- **Event Handlers**: 6 handlers voor product management, user stories, backlog, feedback
 
 #### **ScrumMaster**
 - **Rol**: Faciliteert planning, standups, sprint reviews

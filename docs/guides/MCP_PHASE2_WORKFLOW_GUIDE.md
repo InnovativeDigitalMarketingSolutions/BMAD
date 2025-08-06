@@ -40,6 +40,9 @@ Deze guide beschrijft de gestandaardiseerde workflow voor het implementeren van 
 - [ ] **YAML Configuration**: Update YAML met nieuwe commands en dependencies
 - [ ] **Changelog**: Voeg gedetailleerde changelog entry toe
 - [ ] **Project Documentation**: Update MCP Phase 2 plan en kanban board
+- [ ] **Agent Overview**: Update agents-overview.md met message bus integratie status
+- [ ] **Lessons Learned**: Update lessons learned guide met nieuwe ervaringen
+- [ ] **Integration Report**: Maak gedetailleerd integratie rapport
 
 ### 7. Quality Assurance
 - [ ] **Test Execution**: Voer alle nieuwe tests uit (24-25 tests)

@@ -8,9 +8,12 @@ class EventTypes:
     """Event types for BMAD message bus"""
     
     # Product Development Events
+    USER_STORY_REQUESTED = "user_story_requested"
     USER_STORY_CREATED = "user_story_created"
     USER_STORY_UPDATED = "user_story_updated"
     USER_STORY_COMPLETED = "user_story_completed"
+    USER_STORIES_CREATED = "user_stories_created"
+    USER_STORY_CREATION_FAILED = "user_story_creation_failed"
     EPIC_CREATED = "epic_created"
     EPIC_UPDATED = "epic_updated"
     EPIC_COMPLETED = "epic_completed"
@@ -118,6 +121,21 @@ class EventTypes:
     ROADMAP_UPDATED = "roadmap_updated"
     BUSINESS_OBJECTIVE_UPDATED = "business_objective_updated"
     
+    # Backlog Management Events
+    BACKLOG_UPDATE_REQUESTED = "backlog_update_requested"
+    BACKLOG_UPDATED = "backlog_updated"
+    BACKLOG_UPDATE_FAILED = "backlog_update_failed"
+    
+    # Product Vision Events
+    PRODUCT_VISION_REQUESTED = "product_vision_requested"
+    PRODUCT_VISION_CREATED = "product_vision_created"
+    PRODUCT_VISION_CREATION_FAILED = "product_vision_creation_failed"
+    
+    # Stakeholder Analysis Events
+    STAKEHOLDER_ANALYSIS_REQUESTED = "stakeholder_analysis_requested"
+    STAKEHOLDER_ANALYSIS_COMPLETED = "stakeholder_analysis_completed"
+    STAKEHOLDER_ANALYSIS_FAILED = "stakeholder_analysis_failed"
+    
     # Collaboration Events
     AGENT_COLLABORATION_REQUESTED = "agent_collaboration_requested"
     AGENT_COLLABORATION_STARTED = "agent_collaboration_started"
@@ -181,14 +199,19 @@ class EventTypes:
     
     # Feedback Events (additional)
     FEEDBACK_RECEIVED = "feedback_received"
+    FEEDBACK_PROCESSED = "feedback_processed"
+    FEEDBACK_PROCESSING_FAILED = "feedback_processing_failed"
     PIPELINE_ADVICE_REQUESTED = "pipeline_advice_requested"
 
 # Event categories for easier management
 EVENT_CATEGORIES = {
     "product_development": [
+        EventTypes.USER_STORY_REQUESTED,
         EventTypes.USER_STORY_CREATED,
         EventTypes.USER_STORY_UPDATED,
         EventTypes.USER_STORY_COMPLETED,
+        EventTypes.USER_STORIES_CREATED,
+        EventTypes.USER_STORY_CREATION_FAILED,
         EventTypes.EPIC_CREATED,
         EventTypes.EPIC_UPDATED,
         EventTypes.EPIC_COMPLETED,
@@ -237,7 +260,30 @@ EVENT_CATEGORIES = {
         EventTypes.IMPROVEMENT_SUGGESTED,
         EventTypes.SENTIMENT_ANALYSIS_COMPLETED,
         EventTypes.FEEDBACK_RECEIVED,
+        EventTypes.FEEDBACK_PROCESSED,
+        EventTypes.FEEDBACK_PROCESSING_FAILED,
         EventTypes.PIPELINE_ADVICE_REQUESTED,
+    ],
+    "user_stories": [
+        EventTypes.USER_STORY_REQUESTED,
+        EventTypes.USER_STORY_CREATED,
+        EventTypes.USER_STORY_UPDATED,
+        EventTypes.USER_STORY_COMPLETED,
+        EventTypes.USER_STORIES_CREATED,
+        EventTypes.USER_STORY_CREATION_FAILED,
+    ],
+    "backlog": [
+        EventTypes.BACKLOG_UPDATE_REQUESTED,
+        EventTypes.BACKLOG_UPDATED,
+        EventTypes.BACKLOG_UPDATE_FAILED,
+    ],
+    "product_management": [
+        EventTypes.PRODUCT_VISION_REQUESTED,
+        EventTypes.PRODUCT_VISION_CREATED,
+        EventTypes.PRODUCT_VISION_CREATION_FAILED,
+        EventTypes.STAKEHOLDER_ANALYSIS_REQUESTED,
+        EventTypes.STAKEHOLDER_ANALYSIS_COMPLETED,
+        EventTypes.STAKEHOLDER_ANALYSIS_FAILED,
     ],
     "documentation": [
         EventTypes.DOCUMENTATION_REQUESTED,
