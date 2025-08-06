@@ -59,12 +59,27 @@ app = Flask(__name__)
 CORS(app, origins=os.getenv("ALLOWED_ORIGINS", "*").split(","))
 
 # Rate limiting configuration
+# Development mode: higher limits for testing
+# Production mode: stricter limits for security
+if os.getenv("DEV_MODE") == "true" or os.getenv("FLASK_ENV") == "development":
+    default_limits = ["10000 per day", "2000 per hour", "500 per minute"]
+else:
+    default_limits = ["200 per day", "50 per hour", "10 per minute"]
+
 limiter = Limiter(
     app=app,
     key_func=get_remote_address,
-    default_limits=["200 per day", "50 per hour"],
+    default_limits=default_limits,
     storage_uri="memory://"
 )
+
+# Clear rate limiting storage on startup for development
+if os.getenv("FLASK_ENV") == "development":
+    try:
+        limiter.storage.reset_all()
+    except AttributeError:
+        # Memory storage doesn't have reset_all, so we'll just continue
+        pass
 
 # Security headers middleware
 @app.after_request
@@ -331,6 +346,43 @@ def workflow_status(name):
 @require_permission("view_analytics")
 def orchestrator_metrics():
     return jsonify(METRICS)
+
+@app.route("/api/metrics", methods=["GET"])
+@require_auth
+@require_permission("view_analytics")
+def api_metrics():
+    return jsonify(METRICS)
+
+@app.route("/api/agents", methods=["GET"])
+@require_auth
+def list_agents():
+    # Return list of all 23 available agents
+    agents = [
+        {"name": "Orchestrator", "status": "active", "type": "orchestrator"},
+        {"name": "ProductOwner", "status": "idle", "type": "planning"},
+        {"name": "Architect", "status": "idle", "type": "planning"},
+        {"name": "Scrummaster", "status": "idle", "type": "management"},
+        {"name": "FrontendDeveloper", "status": "idle", "type": "development"},
+        {"name": "BackendDeveloper", "status": "idle", "type": "development"},
+        {"name": "FullstackDeveloper", "status": "idle", "type": "development"},
+        {"name": "MobileDeveloper", "status": "idle", "type": "development"},
+        {"name": "DataEngineer", "status": "idle", "type": "development"},
+        {"name": "DevOpsInfra", "status": "idle", "type": "infrastructure"},
+        {"name": "QualityGuardian", "status": "idle", "type": "quality"},
+        {"name": "DocumentationAgent", "status": "idle", "type": "documentation"},
+        {"name": "FeedbackAgent", "status": "idle", "type": "feedback"},
+        {"name": "AccessibilityAgent", "status": "idle", "type": "accessibility"},
+        {"name": "ReleaseManager", "status": "idle", "type": "release"},
+        {"name": "Retrospective", "status": "idle", "type": "retrospective"},
+        {"name": "RnD", "status": "idle", "type": "research"},
+        {"name": "AiDeveloper", "status": "idle", "type": "development"},
+        {"name": "SecurityDeveloper", "status": "idle", "type": "security"},
+        {"name": "StrategiePartner", "status": "idle", "type": "strategy"},
+        {"name": "TestEngineer", "status": "idle", "type": "testing"},
+        {"name": "UXUIDesigner", "status": "idle", "type": "design"},
+        {"name": "WorkflowAutomator", "status": "idle", "type": "automation"},
+    ]
+    return jsonify(agents)
 
 @app.route("/agent/<agent_name>/command", methods=["POST"])
 @require_auth
@@ -706,7 +758,7 @@ def swagger_redirect():
     return redirect("/swagger-ui/index.html")
 
 if __name__ == "__main__":
-    app.run(port=5001, debug=False)
+    app.run(port=5003, debug=False)
 
 # Export the Flask app for testing
 __all__ = ['app']
