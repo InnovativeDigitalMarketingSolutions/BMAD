@@ -173,33 +173,25 @@ class AccessibilityAgent:
         try:
             self.message_bus_integration = create_agent_message_bus_integration(
                 agent_name=self.agent_name,
-                agent_instance=self
+                agent_type="accessibility_agent",
+                config={
+                    "message_bus_url": "redis://localhost:6379",
+                    "enable_publishing": True,
+                    "enable_subscription": True,
+                    "event_handlers": {
+                        "accessibility_audit_requested": self.handle_audit_requested,
+                        "accessibility_audit_completed": self.handle_audit_completed,
+                        "accessibility_validation_requested": self.handle_validation_requested,
+                        "accessibility_improvement_requested": self.handle_improvement_requested
+                    }
+                }
             )
-            
-            # Register event handlers for accessibility-specific events
-            await self.message_bus_integration.register_event_handler(
-                "accessibility_audit_requested", 
-                self.handle_audit_requested
-            )
-            await self.message_bus_integration.register_event_handler(
-                "accessibility_audit_completed", 
-                self.handle_audit_completed
-            )
-            await self.message_bus_integration.register_event_handler(
-                "accessibility_validation_requested",
-                self.handle_validation_requested
-            )
-            await self.message_bus_integration.register_event_handler(
-                "accessibility_improvement_requested",
-                self.handle_improvement_requested
-            )
-            
+            await self.message_bus_integration.initialize()
             self.message_bus_enabled = True
-            logger.info(f"✅ Message Bus Integration geïnitialiseerd voor {self.agent_name}")
-            return True
+            logger.info("Message Bus Integration initialized successfully for AccessibilityAgent")
         except Exception as e:
-            logger.error(f"❌ Fout bij initialiseren van Message Bus Integration voor {self.agent_name}: {e}")
-            return False
+            logger.warning(f"Message Bus Integration initialization failed: {e}")
+            self.message_bus_enabled = False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""

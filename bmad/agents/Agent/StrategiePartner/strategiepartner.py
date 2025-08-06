@@ -30,6 +30,13 @@ from bmad.core.mcp.enhanced_mcp_integration import (
     EnhancedMCPIntegration,
     create_enhanced_mcp_integration
 )
+
+# Message Bus Integration
+from bmad.agents.core.communication.agent_message_bus_integration import (
+    AgentMessageBusIntegration,
+    create_agent_message_bus_integration
+)
+
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 from integrations.slack.slack_notify import send_slack_message
 
@@ -74,6 +81,10 @@ class StrategiePartnerAgent:
             "exporters": []
         })())
         self.tracing_enabled = False
+        
+        # Message Bus Integration
+        self.message_bus_integration: Optional[AgentMessageBusIntegration] = None
+        self.message_bus_enabled = False
 
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
@@ -154,13 +165,55 @@ class StrategiePartnerAgent:
             if self.tracer and hasattr(self.tracer, 'initialize'):
                 await self.tracer.initialize()
                 self.tracing_enabled = True
-                logger.info("Tracing initialized successfully")
+                logger.info("Tracing initialized successfully for StrategiePartner")
+                # Set up strategy-specific tracing spans
+                await self.tracer.setup_strategy_tracing({
+                    "agent_name": self.agent_name,
+                    "tracing_level": "detailed",
+                    "strategy_tracking": True,
+                    "market_tracking": True,
+                    "competitive_tracking": True,
+                    "risk_tracking": True
+                })
             else:
-                logger.warning("Tracer not available or missing initialize method")
-                self.tracing_enabled = False
+                logger.warning("Tracing initialization failed, continuing without tracing")
+                
         except Exception as e:
-            logger.warning(f"Tracing initialization failed: {e}")
+            logger.warning(f"Tracing initialization failed for StrategiePartner: {e}")
             self.tracing_enabled = False
+
+    async def initialize_message_bus_integration(self):
+        """Initialize Message Bus Integration for the agent."""
+        try:
+            self.message_bus_integration = create_agent_message_bus_integration(
+                agent_name=self.agent_name,
+                agent_instance=self
+            )
+            
+            # Register event handlers for strategy-specific events
+            await self.message_bus_integration.register_event_handler(
+                "strategy_development_requested", 
+                self.handle_strategy_development_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "idea_validation_requested", 
+                self.handle_idea_validation_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "idea_refinement_requested",
+                self.handle_idea_refinement_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "epic_creation_requested",
+                self.handle_epic_creation_requested
+            )
+            
+            self.message_bus_enabled = True
+            logger.info(f"✅ Message Bus Integration geïnitialiseerd voor {self.agent_name}")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Fout bij initialiseren van Message Bus Integration voor {self.agent_name}: {e}")
+            return False
 
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -1675,6 +1728,9 @@ StrategiePartner Agent Commands:
         
         # Initialize tracing capabilities
         await self.initialize_tracing()
+        
+        # Initialize Message Bus Integration
+        await self.initialize_message_bus_integration()
         
         print("🎯 StrategiePartner Agent is running...")
         print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")

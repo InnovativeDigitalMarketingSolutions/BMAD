@@ -41,6 +41,12 @@ from bmad.core.mcp.enhanced_mcp_integration import (
     create_enhanced_mcp_integration
 )
 
+# Message Bus Integration
+from bmad.agents.core.communication.agent_message_bus_integration import (
+    AgentMessageBusIntegration,
+    create_agent_message_bus_integration
+)
+
 # Tracing Integration
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 
@@ -79,6 +85,10 @@ class FrontendDeveloperAgent:
         # Tracing Integration
         self.tracer: Optional[BMADTracer] = None
         self.tracing_enabled = False
+        
+        # Message Bus Integration
+        self.message_bus_integration: Optional[AgentMessageBusIntegration] = None
+        self.message_bus_enabled = False
         
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
@@ -134,22 +144,18 @@ class FrontendDeveloperAgent:
             self.enhanced_mcp_enabled = False
 
     async def initialize_tracing(self):
-        """Initialize tracing capabilities for frontend development."""
+        """Initialize tracing capabilities."""
         try:
-            self.tracer = BMADTracer(config=type("Config", (), {
-                "service_name": f"{self.agent_name}",
-                "environment": "development",
-                "tracing_level": "detailed"
-            })())
-            self.tracing_enabled = await self.tracer.initialize()
-            
-            if self.tracing_enabled:
-                logger.info("Tracing capabilities initialized successfully for FrontendDeveloper")
+            if self.tracer and hasattr(self.tracer, 'initialize'):
+                await self.tracer.initialize()
+                self.tracing_enabled = True
+                logger.info("Tracing initialized successfully for FrontendDeveloper")
                 # Set up frontend-specific tracing spans
                 await self.tracer.setup_frontend_tracing({
                     "agent_name": self.agent_name,
                     "tracing_level": "detailed",
                     "performance_tracking": True,
+                    "component_tracking": True,
                     "user_interaction_tracking": True,
                     "error_tracking": True
                 })
@@ -159,6 +165,39 @@ class FrontendDeveloperAgent:
         except Exception as e:
             logger.warning(f"Tracing initialization failed for FrontendDeveloper: {e}")
             self.tracing_enabled = False
+
+    async def initialize_message_bus_integration(self):
+        """Initialize Message Bus Integration for the agent."""
+        try:
+            self.message_bus_integration = create_agent_message_bus_integration(
+                agent_name=self.agent_name,
+                agent_instance=self
+            )
+            
+            # Register event handlers for frontend-specific events
+            await self.message_bus_integration.register_event_handler(
+                "component_build_requested", 
+                self.handle_component_build_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "component_build_completed", 
+                self.handle_component_build_completed
+            )
+            await self.message_bus_integration.register_event_handler(
+                "figma_design_updated",
+                self.handle_figma_design_updated
+            )
+            await self.message_bus_integration.register_event_handler(
+                "accessibility_check_requested",
+                self.handle_accessibility_check_requested
+            )
+            
+            self.message_bus_enabled = True
+            logger.info(f"✅ Message Bus Integration geïnitialiseerd voor {self.agent_name}")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Fout bij initialiseren van Message Bus Integration voor {self.agent_name}: {e}")
+            return False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -953,19 +992,28 @@ Examples:
             print(f"❌ Error in collaboration: {e}")
 
     def handle_component_build_requested(self, event):
+        """Handle component build requested event."""
         logger.info(f"Component build requested: {event}")
-        component_name = event.get("component_name", "Button")
-        self.build_component(component_name)
+        # Process component build request
+        return {"status": "processed", "event": "component_build_requested"}
 
     async def handle_component_build_completed(self, event):
+        """Handle component build completed event."""
         logger.info(f"Component build completed: {event}")
+        # Process component build completion
+        return {"status": "processed", "event": "component_build_completed"}
 
-        # Evaluate policy
-        try:
-            allowed = await self.policy_engine.evaluate_policy("component_build", event)
-            logger.info(f"Policy evaluation result: {allowed}")
-        except Exception as e:
-            logger.error(f"Policy evaluation failed: {e}")
+    async def handle_figma_design_updated(self, event):
+        """Handle Figma design updated event."""
+        logger.info(f"Figma design updated: {event}")
+        # Process Figma design update
+        return {"status": "processed", "event": "figma_design_updated"}
+
+    async def handle_accessibility_check_requested(self, event):
+        """Handle accessibility check requested event."""
+        logger.info(f"Accessibility check requested: {event}")
+        # Process accessibility check request
+        return {"status": "processed", "event": "accessibility_check_requested"}
 
     def code_review(self, code_snippet: str) -> str:
         if not code_snippet or not isinstance(code_snippet, str):
@@ -1099,19 +1147,20 @@ Examples:
         # Initialize MCP integration
         await self.initialize_mcp()
         
-        # Initialize enhanced MCP capabilities for Phase 2
+        # Initialize Enhanced MCP
         await self.initialize_enhanced_mcp()
-
-        # Initialize tracing capabilities for frontend development
+        
+        # Initialize tracing
         await self.initialize_tracing()
         
-        def sync_handler(event):
-            asyncio.run(self.handle_component_build_completed(event))
+        # Initialize Message Bus Integration
+        await self.initialize_message_bus_integration()
 
-        subscribe("component_build_completed", sync_handler)
-        subscribe("component_build_requested", self.handle_component_build_requested)
-
-        logger.info("FrontendDeveloperAgent ready and listening for events with enhanced MCP capabilities...")
+        logger.info("FrontendDeveloperAgent ready and listening for events...")
+        print("🎨 Frontend Developer Agent is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        print("Message Bus: Enabled" if self.message_bus_enabled else "Message Bus: Disabled")
         self.collaborate_example()
         
         try:

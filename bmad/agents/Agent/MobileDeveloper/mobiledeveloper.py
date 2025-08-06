@@ -45,6 +45,12 @@ from bmad.core.mcp.enhanced_mcp_integration import (
     create_enhanced_mcp_integration
 )
 
+# Message Bus Integration
+from bmad.agents.core.communication.agent_message_bus_integration import (
+    AgentMessageBusIntegration,
+    create_agent_message_bus_integration
+)
+
 # Tracing Integration
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 
@@ -109,6 +115,15 @@ class MobileDeveloperAgent:
         self.tracer: Optional[BMADTracer] = None
         self.tracing_enabled = False
         
+        # Enhanced MCP Phase 2 attributes
+        self.enhanced_mcp_integration: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_enabled = False
+        self.tracing_enabled = False
+        
+        # Message Bus Integration
+        self.message_bus_integration: Optional[AgentMessageBusIntegration] = None
+        self.message_bus_enabled = False
+        
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
     
     async def initialize_mcp(self):
@@ -140,23 +155,18 @@ class MobileDeveloperAgent:
             self.enhanced_mcp_enabled = False
 
     async def initialize_tracing(self):
-        """Initialize tracing capabilities for mobile development."""
+        """Initialize tracing capabilities."""
         try:
-            self.tracer = BMADTracer(config=type("Config", (), {
-                "service_name": f"{self.agent_name}",
-                "environment": "development",
-                "tracing_level": "detailed"
-            })())
-            self.tracing_enabled = await self.tracer.initialize()
-            
-            if self.tracing_enabled:
-                logger.info("Tracing capabilities initialized successfully for MobileDeveloper")
+            if self.tracer and hasattr(self.tracer, 'initialize'):
+                await self.tracer.initialize()
+                self.tracing_enabled = True
+                logger.info("Tracing initialized successfully for MobileDeveloper")
                 # Set up mobile-specific tracing spans
                 await self.tracer.setup_mobile_tracing({
                     "agent_name": self.agent_name,
                     "tracing_level": "detailed",
-                    "performance_tracking": True,
                     "app_tracking": True,
+                    "performance_tracking": True,
                     "deployment_tracking": True,
                     "error_tracking": True
                 })
@@ -166,7 +176,40 @@ class MobileDeveloperAgent:
         except Exception as e:
             logger.warning(f"Tracing initialization failed for MobileDeveloper: {e}")
             self.tracing_enabled = False
-    
+
+    async def initialize_message_bus_integration(self):
+        """Initialize Message Bus Integration for the agent."""
+        try:
+            self.message_bus_integration = create_agent_message_bus_integration(
+                agent_name=self.agent_name,
+                agent_instance=self
+            )
+            
+            # Register event handlers for mobile-specific events
+            await self.message_bus_integration.register_event_handler(
+                "mobile_app_development_requested", 
+                self.handle_mobile_app_development_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "mobile_app_deployment_requested", 
+                self.handle_mobile_app_deployment_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "mobile_performance_optimization_requested",
+                self.handle_mobile_performance_optimization_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "mobile_testing_requested",
+                self.handle_mobile_testing_requested
+            )
+            
+            self.message_bus_enabled = True
+            logger.info(f"✅ Message Bus Integration geïnitialiseerd voor {self.agent_name}")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Fout bij initialiseren van Message Bus Integration voor {self.agent_name}: {e}")
+            return False
+
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
         if not self.mcp_enabled or not self.mcp_client:
@@ -1857,6 +1900,9 @@ fun {component_name}(
         # Initialize Tracing
         await self.initialize_tracing()
         
+        # Initialize Message Bus Integration
+        await self.initialize_message_bus_integration()
+        
         await self.collaborate_example()
 
     async def build_mobile_app(self, app_name: str = "MyMobileApp", platform: str = "react-native") -> Dict[str, Any]:
@@ -1885,6 +1931,30 @@ fun {component_name}(
             "platform": platform,
             "message": f"Mobile app '{app_name}' built for platform '{platform}' (fallback mode)."
         }
+
+    async def handle_mobile_app_development_requested(self, event):
+        """Handle mobile app development requested event."""
+        logger.info(f"Mobile app development requested: {event}")
+        # Process mobile app development request
+        return {"status": "processed", "event": "mobile_app_development_requested"}
+
+    async def handle_mobile_app_deployment_requested(self, event):
+        """Handle mobile app deployment requested event."""
+        logger.info(f"Mobile app deployment requested: {event}")
+        # Process mobile app deployment request
+        return {"status": "processed", "event": "mobile_app_deployment_requested"}
+
+    async def handle_mobile_performance_optimization_requested(self, event):
+        """Handle mobile performance optimization requested event."""
+        logger.info(f"Mobile performance optimization requested: {event}")
+        # Process mobile performance optimization request
+        return {"status": "processed", "event": "mobile_performance_optimization_requested"}
+
+    async def handle_mobile_testing_requested(self, event):
+        """Handle mobile testing requested event."""
+        logger.info(f"Mobile testing requested: {event}")
+        # Process mobile testing request
+        return {"status": "processed", "event": "mobile_testing_requested"}
 
 def main():
     import asyncio

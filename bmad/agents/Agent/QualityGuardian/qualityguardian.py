@@ -37,6 +37,18 @@ from bmad.core.mcp import (
     initialize_framework_mcp_integration
 )
 
+# Enhanced MCP Phase 2 imports
+from bmad.core.mcp.enhanced_mcp_integration import (
+    EnhancedMCPIntegration,
+    create_enhanced_mcp_integration
+)
+
+# Message Bus Integration
+from bmad.agents.core.communication.agent_message_bus_integration import (
+    AgentMessageBusIntegration,
+    create_agent_message_bus_integration
+)
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -134,6 +146,15 @@ class QualityGuardianAgent:
         self.tracer: Optional[BMADTracer] = None
         self.tracing_enabled = False
         
+        # Enhanced MCP Phase 2 attributes
+        self.enhanced_mcp_integration: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_enabled = False
+        self.tracing_enabled = False
+        
+        # Message Bus Integration
+        self.message_bus_integration: Optional[AgentMessageBusIntegration] = None
+        self.message_bus_enabled = False
+        
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
     
     async def initialize_mcp(self):
@@ -166,19 +187,28 @@ class QualityGuardianAgent:
             self.enhanced_mcp_enabled = False
 
     async def initialize_tracing(self):
-        """Initialize tracing voor quality assurance monitoring."""
+        """Initialize tracing capabilities."""
         try:
-            self.tracer = BMADTracer(config=type("Config", (), {
-                "service_name": self.agent_name,
-                "service_version": "1.0.0",
-                "environment": "development"
-            })())
-            self.tracing_enabled = True
-            logger.info("Tracing initialized for QualityGuardian")
+            if self.tracer and hasattr(self.tracer, 'initialize'):
+                await self.tracer.initialize()
+                self.tracing_enabled = True
+                logger.info("Tracing initialized successfully for QualityGuardian")
+                # Set up quality-specific tracing spans
+                await self.tracer.setup_quality_tracing({
+                    "agent_name": self.agent_name,
+                    "tracing_level": "detailed",
+                    "quality_tracking": True,
+                    "security_tracking": True,
+                    "performance_tracking": True,
+                    "standards_tracking": True
+                })
+            else:
+                logger.warning("Tracing initialization failed, continuing without tracing")
+                
         except Exception as e:
             logger.warning(f"Tracing initialization failed for QualityGuardian: {e}")
             self.tracing_enabled = False
-    
+
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced quality assurance functionality."""
         if not self.mcp_enabled or not self.mcp_client:
@@ -1516,7 +1546,20 @@ Examples:
         # Initialize MCP integration
         await self.initialize_mcp()
         
+        # Initialize Enhanced MCP
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing
+        await self.initialize_tracing()
+        
+        # Initialize Message Bus Integration
+        await self.initialize_message_bus_integration()
+        
         print("🚀 Starting QualityGuardian Agent...")
+        print("🛡️ Quality Guardian Agent is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        print("Message Bus: Enabled" if self.message_bus_enabled else "Message Bus: Disabled")
         
         def sync_handler(event):
             """Handle events synchronously."""
@@ -2147,6 +2190,63 @@ Examples:
             
         except Exception as e:
             logger.error(f"Error exporting template quality CSV: {e}")
+
+    async def initialize_message_bus_integration(self):
+        """Initialize Message Bus Integration for the agent."""
+        try:
+            self.message_bus_integration = create_agent_message_bus_integration(
+                agent_name=self.agent_name,
+                agent_instance=self
+            )
+            
+            # Register event handlers for quality-specific events
+            await self.message_bus_integration.register_event_handler(
+                "quality_gate_check_requested", 
+                self.handle_quality_gate_check_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "quality_analysis_completed", 
+                self.handle_quality_analysis_completed
+            )
+            await self.message_bus_integration.register_event_handler(
+                "security_scan_completed",
+                self.handle_security_scan_completed
+            )
+            await self.message_bus_integration.register_event_handler(
+                "performance_analysis_completed",
+                self.handle_performance_analysis_completed
+            )
+            
+            self.message_bus_enabled = True
+            logger.info(f"✅ Message Bus Integration geïnitialiseerd voor {self.agent_name}")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Fout bij initialiseren van Message Bus Integration voor {self.agent_name}: {e}")
+            return False
+
+    async def handle_quality_gate_check_requested(self, event):
+        """Handle quality gate check requested event."""
+        logger.info(f"Quality gate check requested: {event}")
+        # Process quality gate check request
+        return {"status": "processed", "event": "quality_gate_check_requested"}
+
+    async def handle_quality_analysis_completed(self, event):
+        """Handle quality analysis completed event."""
+        logger.info(f"Quality analysis completed: {event}")
+        # Process quality analysis completion
+        return {"status": "processed", "event": "quality_analysis_completed"}
+
+    async def handle_security_scan_completed(self, event):
+        """Handle security scan completed event."""
+        logger.info(f"Security scan completed: {event}")
+        # Process security scan completion
+        return {"status": "processed", "event": "security_scan_completed"}
+
+    async def handle_performance_analysis_completed(self, event):
+        """Handle performance analysis completed event."""
+        logger.info(f"Performance analysis completed: {event}")
+        # Process performance analysis completion
+        return {"status": "processed", "event": "performance_analysis_completed"}
 
 def main():
     """Main CLI function with comprehensive error handling."""

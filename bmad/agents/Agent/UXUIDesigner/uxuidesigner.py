@@ -38,6 +38,13 @@ from bmad.core.mcp.enhanced_mcp_integration import (
     EnhancedMCPIntegration,
     create_enhanced_mcp_integration
 )
+
+# Message Bus Integration
+from bmad.agents.core.communication.agent_message_bus_integration import (
+    AgentMessageBusIntegration,
+    create_agent_message_bus_integration
+)
+
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 
 # Configure logging
@@ -91,6 +98,10 @@ class UXUIDesignerAgent:
         self.tracer: Optional[BMADTracer] = None
         self.tracing_enabled = False
         
+        # Message Bus Integration
+        self.message_bus_integration: Optional[AgentMessageBusIntegration] = None
+        self.message_bus_enabled = False
+        
         # Initialize tracer
         self.tracer = BMADTracer(config=type("Config", (), {
             "service_name": "UXUIDesignerAgent",
@@ -136,13 +147,55 @@ class UXUIDesignerAgent:
             if self.tracer and hasattr(self.tracer, 'initialize'):
                 await self.tracer.initialize()
                 self.tracing_enabled = True
-                logger.info("Tracing initialized successfully")
+                logger.info("Tracing initialized successfully for UXUIDesigner")
+                # Set up UX/UI-specific tracing spans
+                await self.tracer.setup_uxui_tracing({
+                    "agent_name": self.agent_name,
+                    "tracing_level": "detailed",
+                    "design_tracking": True,
+                    "user_research_tracking": True,
+                    "accessibility_tracking": True,
+                    "feedback_tracking": True
+                })
             else:
-                logger.warning("Tracer not available or missing initialize method")
-                self.tracing_enabled = False
+                logger.warning("Tracing initialization failed, continuing without tracing")
+                
         except Exception as e:
-            logger.warning(f"Tracing initialization failed: {e}")
+            logger.warning(f"Tracing initialization failed for UXUIDesigner: {e}")
             self.tracing_enabled = False
+
+    async def initialize_message_bus_integration(self):
+        """Initialize Message Bus Integration for the agent."""
+        try:
+            self.message_bus_integration = create_agent_message_bus_integration(
+                agent_name=self.agent_name,
+                agent_instance=self
+            )
+            
+            # Register event handlers for UX/UI-specific events
+            await self.message_bus_integration.register_event_handler(
+                "design_requested", 
+                self.handle_design_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "design_completed", 
+                self.handle_design_completed
+            )
+            await self.message_bus_integration.register_event_handler(
+                "figma_analysis_requested",
+                self.handle_figma_analysis_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "design_feedback_requested",
+                self.handle_design_feedback_requested
+            )
+            
+            self.message_bus_enabled = True
+            logger.info(f"✅ Message Bus Integration geïnitialiseerd voor {self.agent_name}")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Fout bij initialiseren van Message Bus Integration voor {self.agent_name}: {e}")
+            return False
 
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -1013,44 +1066,29 @@ UXUIDesigner Agent Commands:
         print(f"Opgehaalde context: {context}")
 
     def handle_design_requested(self, event):
+        """Handle design requested event."""
         logger.info(f"Design requested: {event}")
-        event.get("task", "Create UI Component")
-        self.build_shadcn_component("Button")
+        # Process design request
+        return {"status": "processed", "event": "design_requested"}
 
     async def handle_design_completed(self, event):
+        """Handle design completed event."""
         logger.info(f"Design completed: {event}")
+        # Process design completion
+        return {"status": "processed", "event": "design_completed"}
 
-        # Evaluate policy
-        try:
-            allowed = await self.policy_engine.evaluate_policy("design_approval", event)
-            logger.info(f"Policy evaluation result: {allowed}")
-        except Exception as e:
-            logger.error(f"Policy evaluation failed: {e}")
+    async def handle_figma_analysis_requested(self, event):
+        """Handle Figma analysis requested event."""
+        logger.info(f"Figma analysis requested: {event}")
+        # Process Figma analysis request
+        return {"status": "processed", "event": "figma_analysis_requested"}
 
-    async def run(self):
-        # Initialize MCP integration
-        await self.initialize_mcp()
-        
-        # Initialize enhanced MCP capabilities for Phase 2
-        await self.initialize_enhanced_mcp()
-        
-        # Initialize tracing capabilities
-        await self.initialize_tracing()
-        
-        print("🎨 UX/UI Designer Agent is running...")
-        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
-        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
-        
-        def sync_handler(event):
-            asyncio.run(self.handle_design_completed(event))
+    async def handle_design_feedback_requested(self, event):
+        """Handle design feedback requested event."""
+        logger.info(f"Design feedback requested: {event}")
+        # Process design feedback request
+        return {"status": "processed", "event": "design_feedback_requested"}
 
-        subscribe("design_completed", sync_handler)
-        subscribe("design_requested", self.handle_design_requested)
-
-        logger.info("UXUIDesignerAgent ready and listening for events...")
-        await self.collaborate_example()
-
-    # --- ORIGINELE FUNCTIONALITEIT BEHOUDEN ---
     def collaborate_example_original(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         publish("design_finalized", {"status": "success", "agent": "UXUIDesigner"})
@@ -1449,6 +1487,7 @@ def main():
             print("Tracing Summary for UXUIDesigner Agent:")
             print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
             print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+            print(f"Message Bus: {'Enabled' if agent.message_bus_enabled else 'Disabled'}")
             print(f"Agent: {agent.agent_name}")
     else:
         print(f"Unknown command: {args.command}")

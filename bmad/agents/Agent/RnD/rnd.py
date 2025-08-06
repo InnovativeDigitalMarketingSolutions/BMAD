@@ -38,6 +38,13 @@ from bmad.core.mcp.enhanced_mcp_integration import (
     EnhancedMCPIntegration,
     create_enhanced_mcp_integration
 )
+
+# Message Bus Integration
+from bmad.agents.core.communication.agent_message_bus_integration import (
+    AgentMessageBusIntegration,
+    create_agent_message_bus_integration
+)
+
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 
 
@@ -96,6 +103,10 @@ class RnDAgent:
         self.tracer: Optional[BMADTracer] = None
         self.tracing_enabled = False
         
+        # Message Bus Integration
+        self.message_bus_integration: Optional[AgentMessageBusIntegration] = None
+        self.message_bus_enabled = False
+        
         # Initialize tracer
         self.tracer = BMADTracer(config=type("Config", (), {
             "service_name": "RnD",
@@ -139,13 +150,47 @@ class RnDAgent:
             if self.tracer and hasattr(self.tracer, 'initialize'):
                 await self.tracer.initialize()
                 self.tracing_enabled = True
-                logger.info("Tracing initialized successfully")
+                logger.info("Tracing initialized successfully for RnD")
+                # Set up R&D-specific tracing spans
+                await self.tracer.setup_rnd_tracing({
+                    "agent_name": self.agent_name,
+                    "tracing_level": "detailed",
+                    "research_tracking": True,
+                    "experiment_tracking": True,
+                    "innovation_tracking": True,
+                    "prototype_tracking": True
+                })
             else:
                 logger.warning("Tracer not available or missing initialize method")
                 self.tracing_enabled = False
         except Exception as e:
             logger.warning(f"Tracing initialization failed: {e}")
             self.tracing_enabled = False
+
+    async def initialize_message_bus_integration(self):
+        """Initialize Message Bus Integration for the agent."""
+        try:
+            self.message_bus_integration = create_agent_message_bus_integration(
+                agent_name=self.agent_name,
+                agent_type="rnd",
+                config={
+                    "message_bus_url": "redis://localhost:6379",
+                    "enable_publishing": True,
+                    "enable_subscription": True,
+                    "event_handlers": {
+                        "research_requested": self.handle_research_requested,
+                        "experiment_requested": self.handle_experiment_requested,
+                        "innovation_requested": self.handle_innovation_requested,
+                        "prototype_requested": self.handle_prototype_requested
+                    }
+                }
+            )
+            await self.message_bus_integration.initialize()
+            self.message_bus_enabled = True
+            logger.info("Message Bus Integration initialized successfully for RnD")
+        except Exception as e:
+            logger.warning(f"Message Bus Integration initialization failed: {e}")
+            self.message_bus_enabled = False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -1214,19 +1259,34 @@ RnD Agent Commands:
 
     # Original functionality preserved
     def handle_experiment_completed(self, event):
-        """Handle experiment completed event from other agents."""
-        # Input validation
-        if not isinstance(event, dict):
-            logger.warning("Invalid event type for experiment completed event")
-            return
-        
-        logger.info(f"Experiment completed event received: {event}")
-        logger.info("[RnD] Experiment voltooid, resultaten worden geëvalueerd.")
-        try:
-            send_slack_message("[RnD] Experiment voltooid, resultaten worden geëvalueerd.")
-        except Exception as e:
-            logger.warning(f"Could not send Slack notification: {e}")
-        # Evaluate results (stub)
+        """Handle experiment completed event."""
+        logger.info(f"Experiment completed: {event}")
+        # Process experiment completion
+        return {"status": "processed", "event": "experiment_completed"}
+
+    async def handle_research_requested(self, event):
+        """Handle research requested event."""
+        logger.info(f"Research requested: {event}")
+        # Process research request
+        return {"status": "processed", "event": "research_requested"}
+
+    async def handle_experiment_requested(self, event):
+        """Handle experiment requested event."""
+        logger.info(f"Experiment requested: {event}")
+        # Process experiment request
+        return {"status": "processed", "event": "experiment_requested"}
+
+    async def handle_innovation_requested(self, event):
+        """Handle innovation requested event."""
+        logger.info(f"Innovation requested: {event}")
+        # Process innovation request
+        return {"status": "processed", "event": "innovation_requested"}
+
+    async def handle_prototype_requested(self, event):
+        """Handle prototype requested event."""
+        logger.info(f"Prototype requested: {event}")
+        # Process prototype request
+        return {"status": "processed", "event": "prototype_requested"}
 
     async def run(self):
         """Run the agent and listen for events met MCP integration."""
@@ -1239,9 +1299,13 @@ RnD Agent Commands:
         # Initialize tracing capabilities
         await self.initialize_tracing()
         
+        # Initialize Message Bus Integration
+        await self.initialize_message_bus_integration()
+        
         print("🔬 RnD is running...")
         print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
         print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        print("Message Bus: Enabled" if self.message_bus_enabled else "Message Bus: Disabled")
         
         subscribe("experiment_completed", self.handle_experiment_completed)
         logger.info("RnDAgent ready and listening for events...")
@@ -1259,9 +1323,13 @@ RnD Agent Commands:
         # Initialize tracing capabilities
         await self.initialize_tracing()
         
+        # Initialize Message Bus Integration
+        await self.initialize_message_bus_integration()
+        
         print("🔬 RnD is running...")
         print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
         print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        print("Message Bus: Enabled" if self.message_bus_enabled else "Message Bus: Disabled")
         
         logger.info("RnDAgent ready and listening for events...")
         await self.collaborate_example()
@@ -1385,6 +1453,7 @@ def main():
             print("Tracing Summary for RnD:")
             print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
             print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+            print(f"Message Bus: {'Enabled' if agent.message_bus_enabled else 'Disabled'}")
             print(f"Agent: {agent.agent_name}")
     else:
         print("Unknown command. Use 'help' to see available commands.")

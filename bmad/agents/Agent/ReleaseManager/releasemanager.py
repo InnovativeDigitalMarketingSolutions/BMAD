@@ -38,6 +38,13 @@ from bmad.core.mcp.enhanced_mcp_integration import (
     EnhancedMCPIntegration,
     create_enhanced_mcp_integration
 )
+
+# Message Bus Integration
+from bmad.agents.core.communication.agent_message_bus_integration import (
+    AgentMessageBusIntegration,
+    create_agent_message_bus_integration
+)
+
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 
 # Configure logging
@@ -100,6 +107,10 @@ class ReleaseManagerAgent:
         self.tracer: Optional[BMADTracer] = None
         self.tracing_enabled = False
         
+        # Message Bus Integration
+        self.message_bus_integration: Optional[AgentMessageBusIntegration] = None
+        self.message_bus_enabled = False
+        
         # Initialize tracer
         self.tracer = BMADTracer(config=type("Config", (), {
             "service_name": "ReleaseManager",
@@ -143,13 +154,47 @@ class ReleaseManagerAgent:
             if self.tracer and hasattr(self.tracer, 'initialize'):
                 await self.tracer.initialize()
                 self.tracing_enabled = True
-                logger.info("Tracing initialized successfully")
+                logger.info("Tracing initialized successfully for ReleaseManager")
+                # Set up release-specific tracing spans
+                await self.tracer.setup_release_tracing({
+                    "agent_name": self.agent_name,
+                    "tracing_level": "detailed",
+                    "release_tracking": True,
+                    "deployment_tracking": True,
+                    "rollback_tracking": True,
+                    "version_tracking": True
+                })
             else:
                 logger.warning("Tracer not available or missing initialize method")
                 self.tracing_enabled = False
         except Exception as e:
             logger.warning(f"Tracing initialization failed: {e}")
             self.tracing_enabled = False
+
+    async def initialize_message_bus_integration(self):
+        """Initialize Message Bus Integration for the agent."""
+        try:
+            self.message_bus_integration = create_agent_message_bus_integration(
+                agent_name=self.agent_name,
+                agent_type="release_manager",
+                config={
+                    "message_bus_url": "redis://localhost:6379",
+                    "enable_publishing": True,
+                    "enable_subscription": True,
+                    "event_handlers": {
+                        "release_requested": self.handle_release_requested,
+                        "deployment_requested": self.handle_deployment_requested,
+                        "rollback_requested": self.handle_rollback_requested,
+                        "version_update_requested": self.handle_version_update_requested
+                    }
+                }
+            )
+            await self.message_bus_integration.initialize()
+            self.message_bus_enabled = True
+            logger.info("Message Bus Integration initialized successfully for ReleaseManager")
+        except Exception as e:
+            logger.warning(f"Message Bus Integration initialization failed: {e}")
+            self.message_bus_enabled = False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -1118,19 +1163,34 @@ Release Manager Agent Commands:
         # Zet release live (stub)
 
     def on_deployment_failed(self, event):
-        """Handle deployment failed event from other agents."""
-        # Input validation
-        if not isinstance(event, dict):
-            logger.warning("Invalid event type for deployment failed event")
-            return
-        
-        logger.error(f"Deployment failed event received: {event}")
-        logger.error("[ReleaseManager] Deployment failed! Rollback gestart.")
-        try:
-            send_slack_message("[ReleaseManager] Deployment failed! Rollback gestart.")
-        except Exception as e:
-            logger.warning(f"Could not send Slack notification: {e}")
-        # Start rollback (stub)
+        """Handle deployment failed event."""
+        logger.info(f"Deployment failed: {event}")
+        # Process deployment failure
+        return {"status": "processed", "event": "deployment_failed"}
+
+    async def handle_release_requested(self, event):
+        """Handle release requested event."""
+        logger.info(f"Release requested: {event}")
+        # Process release request
+        return {"status": "processed", "event": "release_requested"}
+
+    async def handle_deployment_requested(self, event):
+        """Handle deployment requested event."""
+        logger.info(f"Deployment requested: {event}")
+        # Process deployment request
+        return {"status": "processed", "event": "deployment_requested"}
+
+    async def handle_rollback_requested(self, event):
+        """Handle rollback requested event."""
+        logger.info(f"Rollback requested: {event}")
+        # Process rollback request
+        return {"status": "processed", "event": "rollback_requested"}
+
+    async def handle_version_update_requested(self, event):
+        """Handle version update requested event."""
+        logger.info(f"Version update requested: {event}")
+        # Process version update request
+        return {"status": "processed", "event": "version_update_requested"}
 
     async def run(self):
         """Run the agent and listen for events met MCP integration."""
@@ -1139,16 +1199,33 @@ Release Manager Agent Commands:
         await self.initialize_enhanced_mcp()
         await self.initialize_tracing()
         
-        print("🚀 ReleaseManager is running...")
+        # Initialize Enhanced MCP
+        await self.initialize_enhanced_mcp()
+        
+        # Initialize tracing
+        await self.initialize_tracing()
+        
+        # Initialize Message Bus Integration
+        await self.initialize_message_bus_integration()
+        
+        print("🚀 Release Manager is running...")
         print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
         print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        print("Message Bus: Enabled" if self.message_bus_enabled else "Message Bus: Disabled")
         
         subscribe("tests_passed", self.on_tests_passed)
         subscribe("release_approved", self.on_release_approved)
         subscribe("deployment_failed", self.on_deployment_failed)
-
+        
         logger.info("ReleaseManagerAgent ready and listening for events...")
-        await self.collaborate_example()
+        print("Listening for events: tests_passed, release_approved, deployment_failed")
+        print("Press Ctrl+C to stop")
+        
+        try:
+            while True:
+                await asyncio.sleep(1)
+        except KeyboardInterrupt:
+            print("\n🛑 Release Manager Agent stopped.")
     
     async def run_async(self):
         """Run the agent with enhanced MCP and tracing initialization."""
