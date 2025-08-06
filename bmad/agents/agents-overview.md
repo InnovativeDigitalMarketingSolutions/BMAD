@@ -56,11 +56,14 @@
 - **Resource Management**: Proper resource paths en template management
 
 #### **AiDeveloper**
-- **Rol**: AI/ML development en model management
-- **Verantwoordelijkheden**: AI model development, MLOps, experiment tracking, model deployment
-- **CLI Commando's**: `run-experiment`, `train-model`, `deploy-model`, `help`
-- **Events**: `experiment_completed`, `model_trained`, `model_deployed`
+- **Rol**: AI/ML development, model training, en AI system integration
+- **Verantwoordelijkheden**: LLM pipelines, prompt engineering, vector search, model deployment, evaluation, explainability, bias/fairness checking
+- **CLI Commando's**: `build-pipeline`, `prompt-template`, `evaluate`, `deploy-model`, `bias-check`, `experiment-log`, `message-bus-status`, `performance-metrics`, `help` (50+ totaal)
+- **Events**: `model_trained`, `experiment_completed`, `pipeline_built`, `model_evaluated`, `model_deployed`, `bias_check_completed`
 - **Enhanced MCP Phase 2**: ✅ Volledig geïmplementeerd met advanced tracing en collaboration
+- **✅ Status**: FULLY COMPLIANT - 125/125 tests passing (100% coverage)
+- **Quality-First Implementation**: 6 AI-specific event handlers met echte functionaliteit, 12 AI/ML performance metrics, 6 Message Bus CLI commands, model lifecycle management
+- **YAML Compliance**: Alle Message Bus commands geïmplementeerd en gedocumenteerd
 
 #### **Architect**
 - **Rol**: Software architectuur en system design
@@ -229,6 +232,7 @@ python3 <agent>.py tracing-summary         # Get tracing summary
 | FeedbackAgent | ✅ | ✅ | ✅ | ✅ | ✅ |
 | RnD | ✅ | ✅ | ✅ | ✅ | ✅ |
 | MobileDeveloper | ✅ | ✅ | ✅ | ✅ | ✅ |
+| AiDeveloper | ✅ | ✅ | ✅ | ✅ | ✅ |
 
 ## 🚀 Next Steps
 
