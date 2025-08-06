@@ -2896,3 +2896,169 @@ def test_load_development_history_success(self, mock_exists, mock_file, agent):
 - **Backward Compatibility**: Alle bestaande functionaliteit behouden
 """
 ```
+
+#### 7. **Performance Metrics Implementation**
+**Principle**: Track performance metrics for all agent operations.
+```python
+self.performance_metrics = {
+    "total_operations": 0,
+    "successful_operations": 0,
+    "failed_operations": 0,
+    "average_response_time": 0.0,
+    "error_rate": 0.0
+}
+```
+
+## TestEngineer Agent - Quality-First Implementation Best Practices (Augustus 2025)
+
+### Core Implementation Principles
+
+#### 1. **Event Handler Real Functionality**
+**Principle**: Event handlers must have real business logic, not just status returns.
+```python
+async def handle_test_generation_requested(self, event):
+    """Handle test generation requested event with real functionality."""
+    try:
+        # Generate actual test content
+        function_description = event.get("function_description", "")
+        context = event.get("context", "")
+        
+        if function_description and context:
+            # Use existing methods for real functionality
+            test_result = await self.generate_tests("GeneratedComponent", "unit")
+            generated_content = test_result.get("test_content", "No test content generated")
+            
+            # Update history and metrics
+            self.test_history.append({
+                "action": "test_generation_requested",
+                "timestamp": datetime.now().isoformat(),
+                "status": "completed"
+            })
+            
+            return generated_content
+        else:
+            raise ValueError("Missing required parameters")
+            
+    except Exception as e:
+        # Update history with error
+        self.test_history.append({
+            "action": "test_generation_requested",
+            "status": "error",
+            "error": str(e)
+        })
+        
+        return {"status": "error", "error": str(e)}
+```
+
+#### 2. **Performance Metrics Tracking**
+**Principle**: Track comprehensive performance metrics for all operations.
+```python
+# Performance metrics for quality-first implementation
+self.performance_metrics = {
+    "total_test_requests": 0,
+    "total_tests_completed": 0,
+    "total_coverage_reports": 0,
+    "test_generation_success_rate": 0.0,
+    "average_test_execution_time": 0.0,
+    "coverage_percentage": 0.0,
+    "test_failure_rate": 0.0,
+    "total_test_generations": 0,
+    "successful_test_generations": 0,
+    "failed_test_generations": 0
+}
+```
+
+#### 3. **Error Handling in Event Handlers**
+**Principle**: Implement graceful error handling with proper logging and recovery.
+```python
+try:
+    # Business logic here
+    result = await self.perform_operation(data)
+    
+    # Update metrics on success
+    self.performance_metrics["successful_operations"] += 1
+    
+    return result
+    
+except Exception as e:
+    logger.error(f"Error in operation: {e}")
+    
+    # Update metrics on failure
+    self.performance_metrics["failed_operations"] += 1
+    
+    # Update history with error details
+    self.operation_history.append({
+        "action": "operation_name",
+        "status": "error",
+        "error": str(e),
+        "timestamp": datetime.now().isoformat()
+    })
+    
+    # Return structured error response
+    return {"status": "error", "error": str(e)}
+```
+
+#### 4. **Message Bus CLI Extension Pattern**
+**Principle**: Provide comprehensive CLI commands for agent interaction and debugging.
+```python
+# Message Bus CLI Extension commands
+elif args.command == "message-bus-status":
+    print("🎯 Agent Message Bus Status:")
+    print(f"✅ Message Bus Integration: {'Enabled' if agent.message_bus_enabled else 'Disabled'}")
+    print(f"📊 Performance Metrics: {len(agent.performance_metrics)} metrics tracked")
+    print(f"📝 History: {len(agent.operation_history)} entries")
+
+elif args.command == "publish-event":
+    if not args.event_type:
+        print("❌ Error: --event-type is required")
+        sys.exit(1)
+    
+    event_data = json.loads(args.event_data) if args.event_data else {}
+    result = asyncio.run(agent.handle_event(args.event_type, event_data))
+    print(f"✅ Event '{args.event_type}' published successfully")
+    print(f"📊 Result: {json.dumps(result, indent=2)}")
+
+elif args.command == "performance-metrics":
+    print("📊 Agent Performance Metrics:")
+    for metric, value in agent.performance_metrics.items():
+        print(f"  • {metric}: {value}")
+```
+
+#### 5. **Automatic History Tracking**
+**Principle**: Automatically track all operations for debugging and analytics.
+```python
+# In every event handler
+self.test_history.append({
+    "action": "event_name",
+    "timestamp": datetime.now().isoformat(),
+    "input_data": event_data,
+    "status": "completed",
+    "result": operation_result
+})
+```
+
+#### 6. **Resource Management Best Practices**
+**Principle**: Implement proper resource paths and validation.
+```python
+# Resource paths implementation
+self.template_paths = {
+    "best-practices": self.resource_base / "templates/agent/best-practices.md",
+    "strategy-template": self.resource_base / "templates/agent/strategy-template.md",
+    # ... more template paths
+}
+self.data_paths = {
+    "changelog": self.resource_base / "data/agent/changelog.md",
+    "history": self.resource_base / "data/agent/history.md",
+    # ... more data paths
+}
+```
+
+### Quality-First Implementation Checklist
+- [ ] **Event Handlers**: Implement real functionality, not just status returns
+- [ ] **Performance Metrics**: Track comprehensive metrics for all operations
+- [ ] **Error Handling**: Graceful error handling with proper logging
+- [ ] **CLI Extension**: Message Bus commands for interaction and debugging
+- [ ] **History Tracking**: Automatic tracking of all operations
+- [ ] **Resource Management**: Proper resource paths and validation
+- [ ] **Test Coverage**: 100% test coverage with real functionality validation
+- [ ] **Documentation**: Complete documentation updates according to workflow

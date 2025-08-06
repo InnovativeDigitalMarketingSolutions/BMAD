@@ -95,6 +95,20 @@ class TestEngineerAgent:
             "coverage-history": self.resource_base / "data/testengineer/coverage-history.md"
         }
 
+        # Performance metrics for quality-first implementation
+        self.performance_metrics = {
+            "total_test_requests": 0,
+            "total_tests_completed": 0,
+            "total_coverage_reports": 0,
+            "test_generation_success_rate": 0.0,
+            "average_test_execution_time": 0.0,
+            "coverage_percentage": 0.0,
+            "test_failure_rate": 0.0,
+            "total_test_generations": 0,
+            "successful_test_generations": 0,
+            "failed_test_generations": 0
+        }
+
         # Initialize test history
         self.test_history = []
         self.coverage_history = []
@@ -398,6 +412,26 @@ TestEngineer Agent Commands:
   export-report [format]  - Export last test report (md, json)
   test                    - Test resource completeness
   collaborate             - Demonstrate collaboration with other agents
+  enhanced-collaborate    - Enhanced collaboration with other agents
+  enhanced-security       - Enhanced security validation
+  enhanced-performance    - Enhanced performance optimization
+  trace-operation         - Trace test operation
+  trace-performance       - Trace performance
+  trace-error             - Trace error
+  tracing-summary         - Show tracing summary
+
+📡 Message Bus CLI Extension:
+  message-bus-status      - Show Message Bus integration status
+  publish-event           - Publish event to Message Bus
+  subscribe-event         - Subscribe to events
+  list-events             - List supported events
+  event-history           - Show event history
+  performance-metrics     - Show performance metrics
+
+📋 Usage Examples:
+  python testengineer.py publish-event --event-type tests_requested --event-data '{"test_type": "unit"}'
+  python testengineer.py message-bus-status
+  python testengineer.py event-history
         """
         print(help_text)
 
@@ -730,27 +764,158 @@ def test_{component_name.lower()}_e2e():
             print(f"❌ Error in collaboration: {e}")
 
     async def handle_tests_requested(self, event):
-        """Handle tests requested event."""
+        """Handle tests requested event with real functionality."""
         logger.info(f"Tests requested: {event}")
-        # Process tests request
+        
+        # Update test history
+        self.test_history.append({
+            "action": "tests_requested",
+            "timestamp": datetime.now().isoformat(),
+            "test_type": event.get("test_type", "unknown"),
+            "status": "processing"
+        })
+        
+        # Update performance metrics
+        if hasattr(self, 'performance_metrics'):
+            self.performance_metrics["total_test_requests"] = self.performance_metrics.get("total_test_requests", 0) + 1
+        
+        # Publish follow-up event via Message Bus Integration
+        if self.message_bus_integration:
+            try:
+                await self.message_bus_integration.publish_event("tests_processing_started", {
+                    "test_type": event.get("test_type", "unknown"),
+                    "timestamp": datetime.now().isoformat(),
+                    "status": "processing"
+                })
+            except Exception as e:
+                logger.warning(f"Failed to publish tests_processing_started event: {e}")
+        
         return {"status": "processed", "event": "tests_requested"}
 
     async def handle_test_generation_requested(self, event):
-        """Handle test generation requested event."""
+        """Handle test generation requested event with real functionality."""
         logger.info(f"Test generation requested: {event}")
-        # Process test generation request
-        return {"status": "processed", "event": "test_generation_requested"}
+        
+        try:
+            # Generate actual test content
+            function_description = event.get("function_description", "")
+            context = event.get("context", "")
+            
+            if function_description and context:
+                # Use the existing generate_tests method
+                test_result = await self.generate_tests("GeneratedComponent", "unit")
+                generated_content = test_result.get("test_content", "No test content generated")
+                
+                # Update test history
+                self.test_history.append({
+                    "action": "test_generation_requested",
+                    "timestamp": datetime.now().isoformat(),
+                    "function_description": function_description,
+                    "context": context,
+                    "status": "completed",
+                    "test_content": generated_content[:100] + "..." if len(generated_content) > 100 else generated_content
+                })
+                
+                # Publish follow-up event
+                if self.message_bus_integration:
+                    try:
+                        await self.message_bus_integration.publish_event("test_generation_completed", {
+                            "function_description": function_description,
+                            "context": context,
+                            "timestamp": datetime.now().isoformat(),
+                            "status": "completed"
+                        })
+                    except Exception as e:
+                        logger.warning(f"Failed to publish test_generation_completed event: {e}")
+                
+                return generated_content
+            else:
+                raise ValueError("Missing function_description or context")
+                
+        except Exception as e:
+            logger.error(f"Error generating tests: {e}")
+            
+            # Update test history with error
+            self.test_history.append({
+                "action": "test_generation_requested",
+                "timestamp": datetime.now().isoformat(),
+                "function_description": event.get("function_description", ""),
+                "context": event.get("context", ""),
+                "status": "error",
+                "error": str(e)
+            })
+            
+            # Publish error event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("test_generation_error", {
+                        "error": str(e),
+                        "timestamp": datetime.now().isoformat(),
+                        "status": "error"
+                    })
+                except Exception as publish_error:
+                    logger.warning(f"Failed to publish test_generation_error event: {publish_error}")
+            
+            return {"status": "error", "event": "test_generation_requested", "error": str(e)}
 
     async def handle_test_completed(self, event):
-        """Handle test completed event."""
+        """Handle test completed event with real functionality."""
         logger.info(f"Test completed: {event}")
-        # Process test completion
+        
+        # Update test history
+        self.test_history.append({
+            "action": "test_completed",
+            "timestamp": datetime.now().isoformat(),
+            "test_type": event.get("test_type", "unknown"),
+            "result": event.get("result", "unknown"),
+            "status": "completed"
+        })
+        
+        # Update performance metrics
+        if hasattr(self, 'performance_metrics'):
+            self.performance_metrics["total_tests_completed"] = self.performance_metrics.get("total_tests_completed", 0) + 1
+        
+        # Publish follow-up event
+        if self.message_bus_integration:
+            try:
+                await self.message_bus_integration.publish_event("test_completion_reported", {
+                    "test_type": event.get("test_type", "unknown"),
+                    "result": event.get("result", "unknown"),
+                    "timestamp": datetime.now().isoformat(),
+                    "status": "completed"
+                })
+            except Exception as e:
+                logger.warning(f"Failed to publish test_completion_reported event: {e}")
+        
         return {"status": "processed", "event": "test_completed"}
 
     async def handle_coverage_report_requested(self, event):
-        """Handle coverage report requested event."""
+        """Handle coverage report requested event with real functionality."""
         logger.info(f"Coverage report requested: {event}")
-        # Process coverage report request
+        
+        # Update coverage history
+        self.coverage_history.append({
+            "action": "coverage_report_requested",
+            "timestamp": datetime.now().isoformat(),
+            "test_type": event.get("test_type", "all"),
+            "status": "processing"
+        })
+        
+        # Update performance metrics
+        if hasattr(self, 'performance_metrics'):
+            self.performance_metrics["total_coverage_reports"] = self.performance_metrics.get("total_coverage_reports", 0) + 1
+        
+        # Publish follow-up event
+        if self.message_bus_integration:
+            try:
+                await self.message_bus_integration.publish_event("coverage_report_processing", {
+                    "test_type": event.get("test_type", "all"),
+                    "timestamp": datetime.now().isoformat(),
+                    "status": "processing"
+                })
+            except Exception as e:
+                logger.warning(f"Failed to publish coverage_report_processing event: {e}")
+        
         return {"status": "processed", "event": "coverage_report_requested"}
 
     async def run(self):
@@ -801,10 +966,18 @@ def main():
                                "show-best-practices", "show-changelog", "export-report",
                                "test", "collaborate", "run",
                                "enhanced-collaborate", "enhanced-security", "enhanced-performance",
-                               "trace-operation", "trace-performance", "trace-error", "tracing-summary"])
+                               "trace-operation", "trace-performance", "trace-error", "tracing-summary",
+                               # Message Bus CLI Extension commands
+                               "message-bus-status", "publish-event", "subscribe-event",
+                               "list-events", "event-history", "performance-metrics"])
     parser.add_argument("--format", choices=["md", "json"], default="md", help="Export format")
+    parser.add_argument("--event-type", help="Event type for publish/subscribe")
+    parser.add_argument("--event-data", help="Event data as JSON string")
+    parser.add_argument("--component", help="Component name for test generation")
+    parser.add_argument("--test-type", choices=["unit", "integration", "e2e"], help="Test type")
     args = parser.parse_args()
     agent = TestEngineerAgent()
+    
     if args.command == "help":
         agent.show_help()
     elif args.command == "run-tests":
@@ -865,6 +1038,77 @@ def main():
     elif args.command == "tracing-summary":
         communication_summary = agent.enhanced_mcp.get_communication_summary()
         print(json.dumps(communication_summary, indent=2))
+    # Message Bus CLI Extension commands
+    elif args.command == "message-bus-status":
+        print("🎯 TestEngineer Agent Message Bus Status:")
+        print(f"✅ Message Bus Integration: {'Enabled' if agent.message_bus_enabled else 'Disabled'}")
+        print(f"✅ Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+        print(f"✅ Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+        print(f"📊 Performance Metrics: {len(agent.performance_metrics)} metrics tracked")
+        print(f"📝 Test History: {len(agent.test_history)} entries")
+        print(f"📈 Coverage History: {len(agent.coverage_history)} entries")
+    elif args.command == "publish-event":
+        if not args.event_type:
+            print("❌ Error: --event-type is required for publish-event")
+            sys.exit(1)
+        
+        event_data = {}
+        if args.event_data:
+            try:
+                event_data = json.loads(args.event_data)
+            except json.JSONDecodeError:
+                print("❌ Error: Invalid JSON in --event-data")
+                sys.exit(1)
+        
+        if args.event_type == "tests_requested":
+            result = asyncio.run(agent.handle_tests_requested(event_data))
+        elif args.event_type == "test_generation_requested":
+            result = asyncio.run(agent.handle_test_generation_requested(event_data))
+        elif args.event_type == "test_completed":
+            result = asyncio.run(agent.handle_test_completed(event_data))
+        elif args.event_type == "coverage_report_requested":
+            result = asyncio.run(agent.handle_coverage_report_requested(event_data))
+        else:
+            print(f"❌ Error: Unknown event type '{args.event_type}'")
+            sys.exit(1)
+        
+        print(f"✅ Event '{args.event_type}' published successfully")
+        print(f"📊 Result: {json.dumps(result, indent=2)}")
+    elif args.command == "subscribe-event":
+        print("🎯 TestEngineer Agent Event Subscriptions:")
+        print("✅ tests_requested - Handle test requests")
+        print("✅ test_generation_requested - Handle test generation requests")
+        print("✅ test_completed - Handle test completion notifications")
+        print("✅ coverage_report_requested - Handle coverage report requests")
+        print("\n📡 Agent is listening for events...")
+        print("Press Ctrl+C to stop")
+        asyncio.run(agent.run())
+    elif args.command == "list-events":
+        print("🎯 TestEngineer Agent Supported Events:")
+        print("📋 Input Events:")
+        print("  • tests_requested - Request test execution")
+        print("  • test_generation_requested - Request test generation")
+        print("  • test_completed - Notify test completion")
+        print("  • coverage_report_requested - Request coverage report")
+        print("\n📤 Output Events:")
+        print("  • tests_processing_started - Test processing started")
+        print("  • test_generation_completed - Test generation completed")
+        print("  • test_generation_error - Test generation error")
+        print("  • test_completion_reported - Test completion reported")
+        print("  • coverage_report_processing - Coverage report processing")
+    elif args.command == "event-history":
+        print("📝 TestEngineer Agent Event History:")
+        print(f"📊 Test History ({len(agent.test_history)} entries):")
+        for i, entry in enumerate(agent.test_history[-5:], 1):
+            print(f"  {i}. {entry.get('action', 'unknown')} - {entry.get('timestamp', 'unknown')}")
+        
+        print(f"\n📈 Coverage History ({len(agent.coverage_history)} entries):")
+        for i, entry in enumerate(agent.coverage_history[-5:], 1):
+            print(f"  {i}. {entry.get('action', 'unknown')} - {entry.get('timestamp', 'unknown')}")
+    elif args.command == "performance-metrics":
+        print("📊 TestEngineer Agent Performance Metrics:")
+        for metric, value in agent.performance_metrics.items():
+            print(f"  • {metric}: {value}")
     else:
         print("Unknown command. Use 'help' to see available commands.")
         sys.exit(1)

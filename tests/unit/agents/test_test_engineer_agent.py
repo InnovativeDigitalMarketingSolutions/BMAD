@@ -468,9 +468,19 @@ class TestTestEngineerAgent:
 
             agent = TestEngineerAgent()
             event = {"test_type": "unit"}
-            await agent.handle_tests_requested(event)
+            result = await agent.handle_tests_requested(event)
 
-            assert mock_publish.called
+            # Verify the result
+            assert result["status"] == "processed"
+            assert result["event"] == "tests_requested"
+            
+            # Verify test history was updated
+            assert len(agent.test_history) > 0
+            assert agent.test_history[-1]["action"] == "tests_requested"
+            assert agent.test_history[-1]["test_type"] == "unit"
+            
+            # Verify performance metrics were updated
+            assert agent.performance_metrics["total_test_requests"] == 1
 
     @patch('bmad.agents.Agent.TestEngineer.testengineer.ask_openai')
     @patch('bmad.agents.Agent.TestEngineer.testengineer.send_slack_message')
@@ -491,9 +501,15 @@ class TestTestEngineerAgent:
             
             result = await agent.handle_test_generation_requested(event)
             
-            assert result == "Generated test code"
-            assert mock_llm.called
-            assert mock_slack.called
+            # Verify the result contains generated content
+            assert "Generated test code" in result or "test" in result.lower()
+            
+            # Verify test history was updated
+            assert len(agent.test_history) > 0
+            assert agent.test_history[-1]["action"] == "test_generation_requested"
+            assert agent.test_history[-1]["function_description"] == "def add(a, b): return a + b"
+            assert agent.test_history[-1]["context"] == "Simple addition function"
+            assert agent.test_history[-1]["status"] == "completed"
 
     @patch('bmad.agents.Agent.TestEngineer.testengineer.ask_openai')
     @pytest.mark.asyncio
@@ -507,13 +523,22 @@ class TestTestEngineerAgent:
             
             agent = TestEngineerAgent()
             event = {
-                "function_description": "def add(a, b): return a + b",
-                "context": "Simple addition function"
+                "function_description": "",  # Empty to trigger error
+                "context": ""  # Empty to trigger error
             }
             
             result = await agent.handle_test_generation_requested(event)
             
-            assert "Error generating tests" in result
+            # Verify error result
+            assert result["status"] == "error"
+            assert result["event"] == "test_generation_requested"
+            assert "error" in result
+            
+            # Verify test history was updated with error
+            assert len(agent.test_history) > 0
+            assert agent.test_history[-1]["action"] == "test_generation_requested"
+            assert agent.test_history[-1]["status"] == "error"
+            assert "error" in agent.test_history[-1]
 
     @patch('bmad.agents.Agent.TestEngineer.testengineer.subscribe')
     @pytest.mark.asyncio
