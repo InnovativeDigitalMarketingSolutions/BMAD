@@ -34,6 +34,14 @@ commands:
   - show-security-history: Toon security scan historie
   - show-performance-history: Toon performance analyse historie
   - test: Test resource completeness
+  
+  # Message Bus Commands
+  - message-bus-status: "Show Message Bus connection status"
+  - publish-event: "Publish event to Message Bus"
+  - subscribe-event: "Subscribe to event type"
+  - list-events: "List all supported events"
+  - event-history: "Show event processing history"
+  - performance-metrics: "Show performance metrics"
 
 dependencies:
   templates:
