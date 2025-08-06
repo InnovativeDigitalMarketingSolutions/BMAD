@@ -42,6 +42,8 @@
 - **CLI Commando's**: `build-api`, `test-endpoint`, `deploy-backend`, `help`
 - **Events**: `api_development_requested`, `backend_test_completed`
 - **Delegatie**: Kan taken delegeren naar TestEngineer, SecurityDeveloper
+- **Message Bus Integration**: ✅ Volledig geïntegreerd met nieuwe message bus systeem
+- **Event Handlers**: 11 handlers voor backend development, API management, database operations, performance analysis, security validation, tracing
 
 #### **FrontendDeveloper**
 - **Rol**: Bouwt interfaces (Next.js, React, Tailwind)

@@ -255,6 +255,29 @@ class EventTypes:
     # Pipeline Events
     PIPELINE_ADVICE_COMPLETED = "pipeline_advice_completed"
     PIPELINE_ADVICE_FAILED = "pipeline_advice_failed"
+    
+    # Backend Development Events
+    API_CHANGE_REQUESTED = "api_change_requested"
+    API_CHANGE_COMPLETED = "api_change_completed"
+    API_CHANGE_FAILED = "api_change_failed"
+    API_DEPLOYMENT_REQUESTED = "api_deployment_requested"
+    API_DEPLOYMENT_COMPLETED = "api_deployment_completed"
+    API_DEPLOYMENT_FAILED = "api_deployment_failed"
+    API_EXPORT_REQUESTED = "api_export_requested"
+    API_EXPORT_COMPLETED = "api_export_completed"
+    API_EXPORT_FAILED = "api_export_failed"
+    DATABASE_OPERATION_REQUESTED = "database_operation_requested"
+    DATABASE_OPERATION_COMPLETED = "database_operation_completed"
+    DATABASE_OPERATION_FAILED = "database_operation_failed"
+    BACKEND_PERFORMANCE_ANALYSIS_REQUESTED = "backend_performance_analysis_requested"
+    BACKEND_PERFORMANCE_ANALYSIS_COMPLETED = "backend_performance_analysis_completed"
+    BACKEND_PERFORMANCE_ANALYSIS_FAILED = "backend_performance_analysis_failed"
+    BACKEND_SECURITY_VALIDATION_REQUESTED = "backend_security_validation_requested"
+    BACKEND_SECURITY_VALIDATION_COMPLETED = "backend_security_validation_completed"
+    BACKEND_SECURITY_VALIDATION_FAILED = "backend_security_validation_failed"
+    BACKEND_TRACING_REQUESTED = "backend_tracing_requested"
+    BACKEND_TRACING_COMPLETED = "backend_tracing_completed"
+    BACKEND_TRACING_FAILED = "backend_tracing_failed"
 
 # Event categories for easier management
 EVENT_CATEGORIES = {
@@ -505,6 +528,29 @@ EVENT_CATEGORIES = {
         EventTypes.TECH_STACK_EVALUATION_REQUESTED,
         EventTypes.TECH_STACK_EVALUATION_COMPLETED,
         EventTypes.TECH_STACK_EVALUATION_FAILED,
+    ],
+    "backend_development": [
+        EventTypes.API_CHANGE_REQUESTED,
+        EventTypes.API_CHANGE_COMPLETED,
+        EventTypes.API_CHANGE_FAILED,
+        EventTypes.API_DEPLOYMENT_REQUESTED,
+        EventTypes.API_DEPLOYMENT_COMPLETED,
+        EventTypes.API_DEPLOYMENT_FAILED,
+        EventTypes.API_EXPORT_REQUESTED,
+        EventTypes.API_EXPORT_COMPLETED,
+        EventTypes.API_EXPORT_FAILED,
+        EventTypes.DATABASE_OPERATION_REQUESTED,
+        EventTypes.DATABASE_OPERATION_COMPLETED,
+        EventTypes.DATABASE_OPERATION_FAILED,
+        EventTypes.BACKEND_PERFORMANCE_ANALYSIS_REQUESTED,
+        EventTypes.BACKEND_PERFORMANCE_ANALYSIS_COMPLETED,
+        EventTypes.BACKEND_PERFORMANCE_ANALYSIS_FAILED,
+        EventTypes.BACKEND_SECURITY_VALIDATION_REQUESTED,
+        EventTypes.BACKEND_SECURITY_VALIDATION_COMPLETED,
+        EventTypes.BACKEND_SECURITY_VALIDATION_FAILED,
+        EventTypes.BACKEND_TRACING_REQUESTED,
+        EventTypes.BACKEND_TRACING_COMPLETED,
+        EventTypes.BACKEND_TRACING_FAILED,
     ]
 }
 
