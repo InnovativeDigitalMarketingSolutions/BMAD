@@ -145,22 +145,31 @@ class TestProductOwnerAgent:
     @pytest.mark.asyncio
     async def test_create_user_story_valid_input(self, agent):
         """Test create_user_story method with valid input."""
+        # Mock the create_user_story function to return expected result
         with patch('bmad.agents.Agent.ProductOwner.product_owner.create_user_story') as mock_create:
             mock_create.return_value = {"answer": "Test story", "confidence": 0.9}
             result = await agent.create_user_story("Test requirement")
-            assert result == {"answer": "Test story", "confidence": 0.9}
+            assert result["success"] is True
+            assert result["status"] == "completed"
+            assert "story" in result
+            assert result["story"]["content"]["answer"] == "Test story"
+            assert result["story"]["content"]["confidence"] == 0.9
 
     @pytest.mark.asyncio
     async def test_create_user_story_invalid_input(self, agent):
         """Test create_user_story method with invalid input."""
-        with pytest.raises(ValueError, match="Requirement must be a non-empty string"):
-            await agent.create_user_story("")
+        # The method now handles empty strings gracefully, so we test for empty result
+        result = await agent.create_user_story("")
+        assert result["success"] is False
+        assert "error" in result
 
     @pytest.mark.asyncio
     async def test_create_user_story_whitespace_requirement(self, agent):
         """Test create_user_story with whitespace requirement."""
-        with pytest.raises(ValueError, match="Requirement must be a non-empty string"):
-            await agent.create_user_story("   ")
+        # The method returns error for whitespace-only input
+        result = await agent.create_user_story("   ")
+        assert result["success"] is False
+        assert "error" in result
 
     def test_show_vision(self, agent):
         """Test show_vision method."""

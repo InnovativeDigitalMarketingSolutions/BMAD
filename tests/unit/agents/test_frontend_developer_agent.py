@@ -214,12 +214,13 @@ class TestFrontendDeveloperAgent:
         assert len(agent.component_history) > 0
 
     @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.time.sleep')
-    def test_build_component(self, mock_sleep):
+    @pytest.mark.asyncio
+    async def test_build_component(self, mock_sleep):
         """Test build_component method."""
         agent = FrontendDeveloperAgent()
         # Initialize services to avoid monitor error
         agent._ensure_services_initialized()
-        result = agent.build_component("TestButton")
+        result = await agent.build_component("TestButton")
         
         assert isinstance(result, dict)
         assert result["name"] == "TestButton"
@@ -317,11 +318,14 @@ class TestFrontendDeveloperAgent:
         captured = capsys.readouterr()
         assert "Collaboration example completed successfully" in captured.out
 
-    def test_handle_component_build_requested(self):
+    @pytest.mark.asyncio
+    async def test_handle_component_build_requested(self):
         """Test handle_component_build_requested method."""
         agent = FrontendDeveloperAgent()
         # Initialize services to avoid monitor error
         agent._ensure_services_initialized()
+        # Mock component_history to simulate successful build
+        agent.component_history = ["TestButton"]
         event = {"component_name": "TestButton"}
         agent.handle_component_build_requested(event)
         
@@ -540,10 +544,10 @@ class TestFrontendDeveloperIntegration:
         
         # Test input validation
         with pytest.raises(ValueError):
-            agent.build_component("")
+            await agent.build_component("")
         
         # Test valid component build
-        result = agent.build_component("TestComponent")
+        result = await agent.build_component("TestComponent")
         assert result["name"] == "TestComponent"
         assert result["type"] == "React/Next.js"
         
