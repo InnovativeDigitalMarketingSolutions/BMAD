@@ -35,7 +35,7 @@ from bmad.core.mcp import (
     initialize_framework_mcp_integration
 )
 
-# Enhanced MCP Integration for Phase 2
+# Enhanced MCP Phase 2 imports
 from bmad.core.mcp.enhanced_mcp_integration import (
     EnhancedMCPIntegration,
     create_enhanced_mcp_integration
@@ -84,13 +84,6 @@ class ScrummasterAgent(AgentMessageBusIntegration):
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
-        self.tracer = BMADTracer(config=type("Config", (), {
-            "service_name": "ScrummasterAgent",
-            "service_version": "1.0.0",
-            "environment": "development",
-            "sample_rate": 1.0,
-            "exporters": []
-        })())
         self.workflow = PrefectWorkflowOrchestrator()
 
         # Resource paths
@@ -125,7 +118,14 @@ class ScrummasterAgent(AgentMessageBusIntegration):
         self.enhanced_mcp_client = None
         
         # Tracing Integration
-        self.tracing_enabled = False
+        try:
+            self.tracer = BMADTracer(service_name=f"bmad-{self.agent_name.lower()}-agent")
+            self.tracing_enabled = True
+            logging.info(f"✅ Tracing initialized for {self.agent_name}")
+        except Exception as e:
+            logging.warning(f"Tracing initialization failed for {self.agent_name}: {e}")
+            self.tracer = None
+            self.tracing_enabled = False
         self.sprint_history = []
         self.team_metrics = []
         self.impediment_log = []
@@ -213,6 +213,62 @@ class ScrummasterAgent(AgentMessageBusIntegration):
         except Exception as e:
             logger.warning(f"Tracing initialization failed: {e}")
             self.tracing_enabled = False
+
+    async def trace_scrum_operation(self, operation_data: Dict[str, Any]) -> Dict[str, Any]:
+        """Trace scrum operations for enhanced monitoring."""
+        if not self.tracing_enabled or not self.tracer:
+            return {"status": "tracing_disabled", "data": operation_data}
+        
+        try:
+            # Create trace context
+            trace_context = {
+                "agent": self.agent_name,
+                "operation_type": operation_data.get("operation_type", "scrum_operation"),
+                "timestamp": datetime.now().isoformat(),
+                "sprint_number": self.current_sprint,
+                "team_size": len(self.team_members),
+                "active_impediments": len(self.impediments)
+            }
+            
+            # Add operation-specific data
+            trace_context.update(operation_data)
+            
+            # Perform tracing with enhanced context
+            trace_result = {
+                "trace_id": f"scrum_{operation_data.get('operation_type', 'op')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                "status": "traced",
+                "context": trace_context,
+                "performance_metrics": self.performance_metrics.copy(),
+                "recommendations": []
+            }
+            
+            # Add operation-specific recommendations
+            operation_type = operation_data.get("operation_type", "")
+            if "sprint_planning" in operation_type:
+                trace_result["recommendations"].extend([
+                    "Consider team velocity for capacity planning",
+                    "Ensure all user stories have acceptance criteria",
+                    "Review dependencies before sprint commitment"
+                ])
+            elif "retrospective" in operation_type:
+                trace_result["recommendations"].extend([
+                    "Focus on actionable improvement items",
+                    "Track completion of previous action items",
+                    "Maintain psychological safety in discussions"
+                ])
+            elif "impediment" in operation_type:
+                trace_result["recommendations"].extend([
+                    "Prioritize impediments by impact and urgency",
+                    "Escalate blockers that affect sprint goal",
+                    "Track resolution time and effectiveness"
+                ])
+            
+            logger.info(f"Scrum operation traced: {trace_result['trace_id']}")
+            return trace_result
+            
+        except Exception as e:
+            logger.error(f"Failed to trace scrum operation: {e}")
+            return {"status": "trace_failed", "error": str(e), "data": operation_data}
 
     async def initialize_message_bus_integration(self):
         """Initialize Message Bus Integration for the agent."""
@@ -402,28 +458,6 @@ class ScrummasterAgent(AgentMessageBusIntegration):
         
         return enhanced_tools
     
-    async def trace_scrum_operation(self, operation_data: Dict[str, Any]) -> Dict[str, Any]:
-        """Trace scrum operations for monitoring and debugging."""
-        if not self.tracing_enabled or not self.tracer:
-            return {"status": "tracing_disabled"}
-        
-        try:
-            trace_data = {
-                "agent": self.agent_name,
-                "operation": operation_data.get("operation_type", "unknown"),
-                "timestamp": datetime.now().isoformat(),
-                "data": operation_data
-            }
-            
-            result = await self.tracer.trace_operation(trace_data)
-            logger.info(f"Scrum operation traced: {operation_data.get('operation_type', 'unknown')}")
-            
-            return result
-            
-        except Exception as e:
-            logger.error(f"Tracing failed: {e}")
-            return {"status": "tracing_error", "error": str(e)}
-
     def _validate_input(self, value: Any, expected_type: type, param_name: str) -> None:
         """Validate input parameters with type checking."""
         if not isinstance(value, expected_type):

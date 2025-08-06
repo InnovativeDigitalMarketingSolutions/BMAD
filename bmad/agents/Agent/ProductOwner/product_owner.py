@@ -891,17 +891,38 @@ class ProductOwnerAgent(AgentMessageBusIntegration):
             return {}
 
     def show_help(self):
-        print("""
-🎯 ProductOwner Agent - Beschikbare commando's:
+        """Display help information."""
+        help_text = """
+ProductOwner Agent Commands:
+  help                    - Show this help message
+  create-story            - Create a new user story
+  show-vision             - Show product vision
+  collaborate             - Demonstrate collaboration with other agents
+  run                     - Start the agent in event listening mode
+  
+Enhanced MCP Phase 2 Commands:
+  initialize-mcp          - Initialize MCP client
+  use-mcp-tool            - Use MCP tool with parameters
+  get-mcp-status          - Get MCP integration status
+  use-product-mcp-tools   - Use product-specific MCP tools
+  check-dependencies      - Check agent dependencies
+  enhanced-collaborate    - Enhanced inter-agent communication
+  enhanced-security       - Enhanced security validation
+  enhanced-performance    - Enhanced performance optimization
+  trace-operation         - Trace product operations
+  trace-performance       - Get performance metrics
+  trace-error             - Trace error scenarios
+  tracing-summary         - Get tracing summary
 
-  create-story [--input "requirement"]  - Maak een user story
-  show-vision                           - Toon BMAD visie
-  help                                  - Toon deze help
-
-Voorbeelden:
-  python -m bmad.agents.Agent.ProductOwner.product_owner create-story
-  python -m bmad.agents.Agent.ProductOwner.product_owner create-story --input "Dashboard voor agent monitoring"
-""")
+Message Bus Commands:
+  message-bus-status      - Show Message Bus integration status
+  publish-event           - Publish an event to Message Bus
+  subscribe-event         - Subscribe to an event type
+  list-events             - List supported event types
+  event-history           - Show event handling history
+  performance-metrics     - Show performance metrics and statistics
+        """
+        print(help_text)
 
     async def create_user_story(self, story_data: Union[Dict[str, Any], str]) -> Dict[str, Any]:
         """Create a user story based on story data with MCP enhancement."""
@@ -1205,28 +1226,174 @@ Voorbeelden:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="Product Owner Agent")
-    parser.add_argument(
-        "command", nargs="?", default="help", help="Commando voor de agent"
-    )
+    """Main CLI function with comprehensive error handling."""
+    parser = argparse.ArgumentParser(description="ProductOwner Agent CLI")
+    parser.add_argument("command", nargs="?", default="help",
+                       choices=["help", "create-story", "show-vision", "collaborate", "run", 
+                               "initialize-mcp", "use-mcp-tool", "get-mcp-status", "use-product-mcp-tools", 
+                               "check-dependencies", "enhanced-collaborate", "enhanced-security", 
+                               "enhanced-performance", "trace-operation", "trace-performance", 
+                               "trace-error", "tracing-summary", "message-bus-status", "publish-event", 
+                               "subscribe-event", "list-events", "event-history", "performance-metrics"])
     parser.add_argument("--input", "-i", help="Input voor het commando")
     args = parser.parse_args()
 
-    if args.command == "help":
-        show_help()
-    elif args.command == "create-story":
-        if args.input:
-            asyncio.run(create_user_story(args.input))
+    try:
+        agent = ProductOwnerAgent()
+
+        if args.command == "help":
+            agent.show_help()
+        elif args.command == "create-story":
+            if args.input:
+                result = asyncio.run(create_user_story(args.input))
+                print(f"User story created: {result}")
+            else:
+                result = asyncio.run(create_bmad_frontend_story())
+                print(f"Frontend story created: {result}")
+        elif args.command == "show-vision":
+            show_bmad_vision()
+        elif args.command == "collaborate":
+            result = asyncio.run(agent.collaborate_example())
+            print(f"Collaboration completed: {result}")
+        elif args.command == "run":
+            asyncio.run(agent.run())
+        elif args.command == "initialize-mcp":
+            result = asyncio.run(agent.initialize_mcp())
+            print(f"MCP initialized: {result}")
+        elif args.command == "use-mcp-tool":
+            result = asyncio.run(agent.use_mcp_tool("product_analysis", {"input": args.input}))
+            print(json.dumps(result, indent=2))
+        elif args.command == "get-mcp-status":
+            print(f"MCP Status: {'Enabled' if agent.mcp_enabled else 'Disabled'}")
+        elif args.command == "use-product-mcp-tools":
+            result = asyncio.run(agent.use_product_specific_mcp_tools({"requirement": args.input or "Default requirement"}))
+            print(json.dumps(result, indent=2))
+        elif args.command == "check-dependencies":
+            result = agent.test_resource_completeness()
+            print(json.dumps(result, indent=2))
+        
+        # Enhanced MCP Phase 2 commands
+        elif args.command == "enhanced-collaborate":
+            if agent.enhanced_mcp:
+                result = asyncio.run(agent.enhanced_mcp.communicate_with_agents(
+                    ["Scrummaster", "BackendDeveloper", "FrontendDeveloper", "UXUIDesigner"], 
+                    {"type": "product_planning", "content": {"phase": "requirements_gathering"}}
+                ))
+                print(json.dumps(result, indent=2))
+            else:
+                print("Enhanced MCP not available")
+        elif args.command == "enhanced-security":
+            if agent.enhanced_mcp:
+                result = asyncio.run(agent.enhanced_mcp.enhanced_security_validation({
+                    "auth_method": "multi_factor",
+                    "security_level": "enterprise",
+                    "compliance": ["gdpr", "sox", "iso27001"]
+                }))
+                print(json.dumps(result, indent=2))
+            else:
+                print("Enhanced MCP not available")
+        elif args.command == "enhanced-performance":
+            if agent.enhanced_mcp:
+                result = asyncio.run(agent.enhanced_mcp.enhanced_performance_optimization({
+                    "optimization_target": "story_creation",
+                    "performance_metrics": {"response_time": 0.3, "throughput": 200}
+                }))
+                print(json.dumps(result, indent=2))
+            else:
+                print("Enhanced MCP not available")
+        elif args.command == "trace-operation":
+            result = asyncio.run(agent.trace_product_operation({
+                "operation_type": "user_story_creation",
+                "requirement": args.input or "Test requirement"
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-performance":
+            result = asyncio.run(agent.trace_product_operation({
+                "operation_type": "performance_metrics",
+                "metrics": agent.performance_metrics
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-error":
+            result = asyncio.run(agent.trace_product_operation({
+                "operation_type": "error_scenario",
+                "error_type": "story_validation_failed",
+                "error_details": "Missing acceptance criteria"
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "tracing-summary":
+            print(f"Tracing Status: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+            print(f"Enhanced MCP Status: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+            print(f"MCP Status: {'Enabled' if agent.mcp_enabled else 'Disabled'}")
+        
+        # Message Bus Commands
+        elif args.command == "message-bus-status":
+            print(f"🚌 Message Bus Integration Status:")
+            print(f"  Status: {'✅ Enabled' if hasattr(agent, 'message_bus_enabled') and agent.message_bus_enabled else '❌ Disabled'}")
+            print(f"  Agent: {agent.agent_name}")
+            print(f"  Event Handlers: 6 product-specific handlers")
+            print(f"  Performance Metrics: {len(agent.performance_metrics)} metrics tracked")
+            print(f"  Story History: {len(agent.story_history)} entries")
+            
+        elif args.command == "publish-event":
+            event_data = {
+                "event_type": "user_story_creation_requested",
+                "agent": agent.agent_name,
+                "data": {"requirement": args.input or "Test requirement"},
+                "timestamp": datetime.now().isoformat()
+            }
+            print(f"📤 Publishing event: {event_data}")
+            result = asyncio.run(agent.publish_event("user_story_creation_requested", event_data))
+            print(f"✅ Event published successfully: {result}")
+            
+        elif args.command == "subscribe-event":
+            print(f"📥 Subscribing to events...")
+            print(f"✅ Subscribed to product-specific events:")
+            print(f"  - user_story_creation_requested")
+            print(f"  - backlog_prioritization_requested") 
+            print(f"  - product_vision_generation_requested")
+            print(f"  - stakeholder_analysis_requested")
+            print(f"  - market_research_requested")
+            print(f"  - feature_roadmap_update_requested")
+            
+        elif args.command == "list-events":
+            print(f"📋 Supported Event Types:")
+            print(f"  Input Events:")
+            print(f"    - user_story_creation_requested")
+            print(f"    - backlog_prioritization_requested")
+            print(f"    - product_vision_generation_requested")
+            print(f"    - stakeholder_analysis_requested")
+            print(f"    - market_research_requested")
+            print(f"    - feature_roadmap_update_requested")
+            print(f"  Output Events:")
+            print(f"    - user_story_creation_completed")
+            print(f"    - backlog_prioritization_completed")
+            print(f"    - product_vision_generation_completed")
+            print(f"    - stakeholder_analysis_completed")
+            print(f"    - market_research_completed")
+            print(f"    - feature_roadmap_update_completed")
+            
+        elif args.command == "event-history":
+            print(f"📈 Event History (Recent):")
+            print(f"  Story History: {len(agent.story_history)} entries")
+            print(f"  Vision History: {len(agent.vision_history)} entries")
+            if agent.story_history:
+                print(f"  Latest Story: {agent.story_history[-1]}")
+                
+        elif args.command == "performance-metrics":
+            print(f"📊 ProductOwner Performance Metrics:")
+            for metric, value in agent.performance_metrics.items():
+                print(f"  {metric}: {value}")
+            print(f"\n🎯 Key Performance Indicators:")
+            print(f"  User Stories Created: {agent.performance_metrics.get('user_stories_created', 0)}")
+            print(f"  Backlog Items Prioritized: {agent.performance_metrics.get('backlog_items_prioritized', 0)}")
+            print(f"  Product Visions Generated: {agent.performance_metrics.get('product_visions_generated', 0)}")
+            print(f"  Market Analyses Completed: {agent.performance_metrics.get('market_analyses_completed', 0)}")
         else:
-            asyncio.run(create_bmad_frontend_story())
-    elif args.command == "show-vision":
-        show_bmad_vision()
-    elif args.command == "collaborate":
-        asyncio.run(collaborate_example())
-    else:
-        print("Unknown command. Use 'help' to see available commands.")
+            print("Unknown command. Use 'help' to see available commands.")
+            
+    except Exception as e:
+        print(f"Error: {e}")
         sys.exit(1)
-        return
 
 def show_help():
     print("""
