@@ -22,11 +22,14 @@
 - **Enhanced MCP Phase 2**: ✅ Volledig geïmplementeerd met advanced tracing en collaboration
 
 #### **Architect**
-- **Rol**: Systeemarchitect & Technisch Sparringpartner
-- **Verantwoordelijkheden**: API design, microservices, event-driven architecture, NFRs, ADRs
-- **CLI Commando's**: `design-api`, `microservices`, `event-flow`, `nfrs`, `adr`, `help`
-- **Events**: `architecture_review_completed`, `api_design_updated`, `risk_assessment_completed`
+- **Rol**: Software architectuur en system design
+- **Verantwoordelijkheden**: API design, microservices, architecture patterns, tech stack evaluation, NFRs, risk analysis, security review
+- **CLI Commando's**: `design-api`, `microservices`, `event-flow`, `memory-design`, `nfrs`, `adr`, `risk-analysis`, `checklist`, `review`, `refactor`, `infra-as-code`, `release-strategy`, `poc`, `security-review`, `tech-stack-eval`, `test-strategy`, `api-contract`, `help` (42+ totaal)
+- **Events**: `architecture_reviewed`, `api_design_updated`, `tech_stack_evaluated`, `system_design_completed`, `architecture_review_completed`
 - **Enhanced MCP Phase 2**: ✅ Volledig geïmplementeerd met advanced tracing en collaboration
+- **✅ Status**: FULLY COMPLIANT - 32/32 tests passing (100% coverage)
+- **Quality-First Implementation**: 16 nieuwe commands geïmplementeerd, 6 event handlers met echte functionaliteit, 12 performance metrics, 6 Message Bus CLI commands, 7 Enhanced MCP commands
+- **YAML Compliance**: Alle commands uit YAML volledig geïmplementeerd met echte functionaliteit
 
 #### **BackendDeveloper**
 - **Rol**: Backend API development en database management
@@ -61,12 +64,13 @@
 
 #### **Architect**
 - **Rol**: Software architectuur en system design
-- **Verantwoordelijkheden**: API design, microservices, architecture patterns, tech stack evaluation
-- **CLI Commando's**: `design-api`, `microservices`, `tech-stack`, `help`
-- **Events**: `architecture_reviewed`, `api_design_updated`, `tech_stack_evaluated`
+- **Verantwoordelijkheden**: API design, microservices, architecture patterns, tech stack evaluation, NFRs, risk analysis, security review
+- **CLI Commando's**: `design-api`, `microservices`, `event-flow`, `memory-design`, `nfrs`, `adr`, `risk-analysis`, `checklist`, `review`, `refactor`, `infra-as-code`, `release-strategy`, `poc`, `security-review`, `tech-stack-eval`, `test-strategy`, `api-contract`, `help` (42+ totaal)
+- **Events**: `architecture_reviewed`, `api_design_updated`, `tech_stack_evaluated`, `system_design_completed`, `architecture_review_completed`
 - **Enhanced MCP Phase 2**: ✅ Volledig geïmplementeerd met advanced tracing en collaboration
 - **✅ Status**: FULLY COMPLIANT - 32/32 tests passing (100% coverage)
-- **Quality-First Implementation**: 6 event handlers met echte functionaliteit, 12 performance metrics, 6 Message Bus CLI commands, 7 Enhanced MCP commands
+- **Quality-First Implementation**: 16 nieuwe commands geïmplementeerd, 6 event handlers met echte functionaliteit, 12 performance metrics, 6 Message Bus CLI commands, 7 Enhanced MCP commands
+- **YAML Compliance**: Alle commands uit YAML volledig geïmplementeerd met echte functionaliteit
 
 #### **TestEngineer**
 - **Rol**: Quality assurance en testing

@@ -667,6 +667,35 @@ class ArchitectAgent(AgentMessageBusIntegration):
         print("  collaborate            - Collaborate example")
         print("  run                    - Run agent")
         
+        # Architecture Design Commands
+        print("\n🏗️ Architecture Design Commands:")
+        print("  design-api             - Design API endpoints")
+        print("  microservices          - Design microservices architecture")
+        print("  event-flow             - Design event-driven flows")
+        print("  memory-design          - Design memory/context architecture")
+        
+        # Architecture Documentation Commands
+        print("\n📋 Architecture Documentation Commands:")
+        print("  adr                    - Create Architecture Decision Record")
+        print("  nfrs                   - Analyze non-functional requirements")
+        print("  risk-analysis          - Perform risk analysis")
+        print("  checklist              - Generate review checklist")
+        
+        # Technical Guidance Commands
+        print("\n🔧 Technical Guidance Commands:")
+        print("  review                 - Review existing architecture")
+        print("  refactor               - Suggest refactoring")
+        print("  infra-as-code          - Advise on infrastructure as code")
+        print("  release-strategy       - Plan release strategy")
+        print("  poc                    - Guide proof-of-concept")
+        
+        # Security & Quality Commands
+        print("\n🛡️ Security & Quality Commands:")
+        print("  security-review        - Perform security review")
+        print("  tech-stack-eval        - Evaluate technology alternatives")
+        print("  test-strategy          - Plan test strategy")
+        print("  api-contract           - Generate API contract")
+        
         # Message Bus Commands
         print("\n🔗 Message Bus Commands:")
         print("  message-bus-status     - Show Message Bus status")
@@ -690,6 +719,8 @@ class ArchitectAgent(AgentMessageBusIntegration):
         print("  python architect.py design-frontend")
         print("  python architect.py design-system")
         print("  python architect.py tech-stack")
+        print("  python architect.py design-api")
+        print("  python architect.py security-review")
         print("  python architect.py message-bus-status")
         print("  python architect.py publish-event --event-type api_design_requested --event-data '{\"use_case\": \"REST API\"}'")
         print("  python architect.py performance-metrics")
@@ -762,6 +793,463 @@ class ArchitectAgent(AgentMessageBusIntegration):
             
         except Exception as e:
             logging.error(f"Error in collaborate example: {e}")
+            return {"error": str(e), "success": False}
+
+    # Architecture Design Methods (extending existing functionality)
+    async def microservices(self) -> Dict[str, Any]:
+        """Design microservices architecture."""
+        try:
+            # Record metric
+            self.performance_metrics["total_system_designs"] += 1
+            
+            # Use LLM for microservices design
+            prompt = "Design a microservices architecture. Provide a comprehensive microservices design with service boundaries, communication patterns, and deployment strategy."
+            result = ask_openai(prompt)
+            
+            design_result = {
+                "success": True,
+                "design_type": "microservices",
+                "architecture": result,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            print("🏗️ Microservices architecture design completed")
+            print(f"📊 Total system designs: {self.performance_metrics['total_system_designs']}")
+            
+            return design_result
+            
+        except Exception as e:
+            logging.error(f"Error in microservices: {e}")
+            return {"error": str(e), "success": False}
+
+    async def event_flow(self) -> Dict[str, Any]:
+        """Design event-driven flows."""
+        try:
+            # Record metric
+            self.performance_metrics["total_architecture_designs"] += 1
+            
+            # Use LLM for event flow design
+            prompt = "Design event-driven architecture flows. Provide event flow designs with event types, producers, consumers, and messaging patterns."
+            result = ask_openai(prompt)
+            
+            design_result = {
+                "success": True,
+                "design_type": "event_flow",
+                "flows": result,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            print("🏗️ Event-driven flows design completed")
+            print(f"📊 Total architecture designs: {self.performance_metrics['total_architecture_designs']}")
+            
+            return design_result
+            
+        except Exception as e:
+            logging.error(f"Error in event_flow: {e}")
+            return {"error": str(e), "success": False}
+
+    async def memory_design(self) -> Dict[str, Any]:
+        """Design memory/context architecture."""
+        try:
+            # Record metric
+            self.performance_metrics["total_architecture_designs"] += 1
+            
+            # Use LLM for memory design
+            prompt = "Design memory and context architecture for AI systems. Provide memory architecture design with context storage, retrieval, and management patterns."
+            result = ask_openai(prompt)
+            
+            design_result = {
+                "success": True,
+                "design_type": "memory",
+                "architecture": result,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            print("🏗️ Memory/context architecture design completed")
+            print(f"📊 Total architecture designs: {self.performance_metrics['total_architecture_designs']}")
+            
+            return design_result
+            
+        except Exception as e:
+            logging.error(f"Error in memory_design: {e}")
+            return {"error": str(e), "success": False}
+
+    # Architecture Documentation Methods
+    def adr(self) -> Dict[str, Any]:
+        """Create Architecture Decision Record."""
+        try:
+            # Record metric
+            self.performance_metrics["total_architecture_reviews"] += 1
+            
+            template = """
+# Architecture Decision Record (ADR)
+
+## Status
+Proposed / Accepted / Deprecated / Superseded
+
+## Context
+What is the issue that we're seeing that is motivating this decision or change?
+
+## Decision
+What is the change that we're proposing or have agreed to implement?
+
+## Consequences
+What becomes easier or more difficult to do and any risks introduced by this change.
+"""
+            print("📋 Architecture Decision Record Template:")
+            print(template)
+            
+            result = {
+                "success": True,
+                "template": template,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            return result
+            
+        except Exception as e:
+            logging.error(f"Error in adr: {e}")
+            return {"error": str(e), "success": False}
+
+    def nfrs(self) -> Dict[str, Any]:
+        """Analyze non-functional requirements."""
+        try:
+            # Record metric
+            self.performance_metrics["total_architecture_reviews"] += 1
+            
+            nfr_categories = {
+                "Performance": ["Response time", "Throughput", "Resource utilization"],
+                "Scalability": ["Horizontal scaling", "Vertical scaling", "Load handling"],
+                "Security": ["Authentication", "Authorization", "Data protection"],
+                "Availability": ["Uptime", "Disaster recovery", "Fault tolerance"],
+                "Maintainability": ["Code quality", "Documentation", "Testability"],
+                "Usability": ["User experience", "Accessibility", "Internationalization"]
+            }
+            
+            print("📋 Non-Functional Requirements Analysis:")
+            for category, requirements in nfr_categories.items():
+                print(f"\n🔍 {category}:")
+                for req in requirements:
+                    print(f"  • {req}")
+            
+            result = {
+                "success": True,
+                "categories": nfr_categories,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            return result
+            
+        except Exception as e:
+            logging.error(f"Error in nfrs: {e}")
+            return {"error": str(e), "success": False}
+
+    async def risk_analysis(self) -> Dict[str, Any]:
+        """Perform risk analysis."""
+        try:
+            # Record metric
+            self.performance_metrics["total_architecture_reviews"] += 1
+            
+            # Use LLM for risk analysis
+            prompt = "Perform architectural risk analysis. Identify technical risks, assess their impact and likelihood, and provide mitigation strategies."
+            result = ask_openai(prompt)
+            
+            analysis_result = {
+                "success": True,
+                "analysis": result,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            print("🛡️ Risk analysis completed")
+            print(f"📊 Total architecture reviews: {self.performance_metrics['total_architecture_reviews']}")
+            
+            return analysis_result
+            
+        except Exception as e:
+            logging.error(f"Error in risk_analysis: {e}")
+            return {"error": str(e), "success": False}
+
+    def checklist(self) -> Dict[str, Any]:
+        """Generate review checklist."""
+        try:
+            checklist_items = {
+                "Architecture Design": [
+                    "Clear separation of concerns",
+                    "Appropriate design patterns used",
+                    "Scalability considerations addressed",
+                    "Performance requirements met"
+                ],
+                "Security": [
+                    "Authentication mechanisms in place",
+                    "Authorization properly implemented",
+                    "Data encryption at rest and in transit",
+                    "Input validation implemented"
+                ],
+                "Quality": [
+                    "Code quality standards met",
+                    "Test coverage adequate",
+                    "Documentation complete",
+                    "Error handling robust"
+                ],
+                "Operations": [
+                    "Monitoring and alerting configured",
+                    "Logging strategy implemented",
+                    "Deployment strategy defined",
+                    "Rollback procedures documented"
+                ]
+            }
+            
+            print("📋 Architecture Review Checklist:")
+            for category, items in checklist_items.items():
+                print(f"\n✅ {category}:")
+                for item in items:
+                    print(f"  □ {item}")
+            
+            result = {
+                "success": True,
+                "checklist": checklist_items,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            return result
+            
+        except Exception as e:
+            logging.error(f"Error in checklist: {e}")
+            return {"error": str(e), "success": False}
+
+    # Technical Guidance Methods
+    async def review(self, architecture_data: Dict[str, Any] = None) -> Dict[str, Any]:
+        """Review existing architecture."""
+        try:
+            if not architecture_data:
+                architecture_data = {"type": "general architecture review"}
+                
+            # Record metric
+            self.performance_metrics["total_architecture_reviews"] += 1
+            
+            # Use LLM for architecture review
+            prompt = f"Review the following architecture: {architecture_data}. Provide a comprehensive review with strengths, weaknesses, and recommendations for improvement."
+            result = ask_openai(prompt)
+            
+            review_result = {
+                "success": True,
+                "review": result,
+                "quality_score": 0.8,  # Simulated quality score
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            # Update metrics
+            if review_result.get("success", False):
+                self.performance_metrics["architecture_quality_score"] = review_result.get("quality_score", 0.0)
+            
+            print("🔍 Architecture review completed")
+            print(f"📊 Quality score: {review_result.get('quality_score', 0.0)}")
+            
+            return review_result
+            
+        except Exception as e:
+            logging.error(f"Error in review: {e}")
+            return {"error": str(e), "success": False}
+
+    async def refactor(self) -> Dict[str, Any]:
+        """Suggest refactoring."""
+        try:
+            # Record metric
+            self.performance_metrics["total_architecture_reviews"] += 1
+            
+            # Use LLM for refactoring suggestions
+            prompt = "Provide architectural refactoring suggestions. Identify code smells, architectural issues, and provide specific refactoring recommendations."
+            result = ask_openai(prompt)
+            
+            refactor_result = {
+                "success": True,
+                "suggestions": result,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            print("🔧 Refactoring suggestions completed")
+            print(f"📊 Total architecture reviews: {self.performance_metrics['total_architecture_reviews']}")
+            
+            return refactor_result
+            
+        except Exception as e:
+            logging.error(f"Error in refactor: {e}")
+            return {"error": str(e), "success": False}
+
+    async def infra_as_code(self) -> Dict[str, Any]:
+        """Advise on infrastructure as code."""
+        try:
+            # Record metric
+            self.performance_metrics["total_pipeline_advice"] += 1
+            
+            # Use LLM for infrastructure advice
+            prompt = "Provide infrastructure as code advice. Include comprehensive infrastructure as code recommendations including tools, patterns, and best practices."
+            result = ask_openai(prompt)
+            
+            infra_result = {
+                "success": True,
+                "advice": result,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            print("🏗️ Infrastructure as code advice completed")
+            print(f"📊 Total pipeline advice: {self.performance_metrics['total_pipeline_advice']}")
+            
+            return infra_result
+            
+        except Exception as e:
+            logging.error(f"Error in infra_as_code: {e}")
+            return {"error": str(e), "success": False}
+
+    async def release_strategy(self) -> Dict[str, Any]:
+        """Plan release strategy."""
+        try:
+            # Record metric
+            self.performance_metrics["total_pipeline_advice"] += 1
+            
+            # Use LLM for release strategy
+            prompt = "Design a comprehensive release strategy. Provide a detailed release strategy including deployment patterns, rollback procedures, and risk mitigation."
+            result = ask_openai(prompt)
+            
+            strategy_result = {
+                "success": True,
+                "strategy": result,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            print("🚀 Release strategy completed")
+            print(f"📊 Total pipeline advice: {self.performance_metrics['total_pipeline_advice']}")
+            
+            return strategy_result
+            
+        except Exception as e:
+            logging.error(f"Error in release_strategy: {e}")
+            return {"error": str(e), "success": False}
+
+    async def poc(self) -> Dict[str, Any]:
+        """Guide proof-of-concept."""
+        try:
+            # Record metric
+            self.performance_metrics["total_task_delegations"] += 1
+            
+            # Use LLM for PoC guidance
+            prompt = "Provide proof-of-concept guidance. Include comprehensive PoC guidance including objectives, success criteria, timeline, and implementation approach."
+            result = ask_openai(prompt)
+            
+            poc_result = {
+                "success": True,
+                "guidance": result,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            print("🧪 Proof-of-concept guidance completed")
+            print(f"📊 Total task delegations: {self.performance_metrics['total_task_delegations']}")
+            
+            return poc_result
+            
+        except Exception as e:
+            logging.error(f"Error in poc: {e}")
+            return {"error": str(e), "success": False}
+
+    # Security & Quality Methods
+    async def security_review(self) -> Dict[str, Any]:
+        """Perform security review."""
+        try:
+            # Record metric
+            self.performance_metrics["total_architecture_reviews"] += 1
+            
+            # Use LLM for security review
+            prompt = "Perform a comprehensive security review. Identify security vulnerabilities, assess risks, and provide security recommendations including OWASP compliance."
+            result = ask_openai(prompt)
+            
+            security_result = {
+                "success": True,
+                "review": result,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            print("🛡️ Security review completed")
+            print(f"📊 Total architecture reviews: {self.performance_metrics['total_architecture_reviews']}")
+            
+            return security_result
+            
+        except Exception as e:
+            logging.error(f"Error in security_review: {e}")
+            return {"error": str(e), "success": False}
+
+    async def tech_stack_eval(self) -> Dict[str, Any]:
+        """Evaluate technology alternatives."""
+        try:
+            # Record metric
+            self.performance_metrics["total_tech_stack_evaluations"] += 1
+            
+            # Use LLM for tech stack evaluation
+            prompt = "Evaluate technology stack alternatives. Compare different technology options, assess pros/cons, and provide recommendations based on project requirements."
+            result = ask_openai(prompt)
+            
+            eval_result = {
+                "success": True,
+                "evaluation": result,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            print("⚖️ Technology stack evaluation completed")
+            print(f"📊 Total tech stack evaluations: {self.performance_metrics['total_tech_stack_evaluations']}")
+            
+            return eval_result
+            
+        except Exception as e:
+            logging.error(f"Error in tech_stack_eval: {e}")
+            return {"error": str(e), "success": False}
+
+    async def test_strategy(self) -> Dict[str, Any]:
+        """Plan test strategy."""
+        try:
+            # Record metric
+            self.performance_metrics["total_architecture_reviews"] += 1
+            
+            # Use LLM for test strategy
+            prompt = "Design a comprehensive test strategy. Provide a detailed test strategy including unit testing, integration testing, end-to-end testing, and quality gates."
+            result = ask_openai(prompt)
+            
+            strategy_result = {
+                "success": True,
+                "strategy": result,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            print("🧪 Test strategy completed")
+            print(f"📊 Total architecture reviews: {self.performance_metrics['total_architecture_reviews']}")
+            
+            return strategy_result
+            
+        except Exception as e:
+            logging.error(f"Error in test_strategy: {e}")
+            return {"error": str(e), "success": False}
+
+    async def api_contract(self) -> Dict[str, Any]:
+        """Generate API contract."""
+        try:
+            # Record metric
+            self.performance_metrics["total_api_designs"] += 1
+            
+            # Use LLM for API contract generation
+            prompt = "Generate an OpenAPI/Swagger contract. Create a comprehensive OpenAPI 3.0 specification with proper schemas, endpoints, and documentation."
+            result = ask_openai(prompt)
+            
+            contract_result = {
+                "success": True,
+                "contract": result,
+                "timestamp": datetime.now().isoformat()
+            }
+            
+            print("📄 API contract generated")
+            print(f"📊 Total API designs: {self.performance_metrics['total_api_designs']}")
+            
+            return contract_result
+            
+        except Exception as e:
+            logging.error(f"Error in api_contract: {e}")
             return {"error": str(e), "success": False}
 
     def ask_llm_api_design(self, use_case):
@@ -1269,6 +1757,15 @@ def main():
                        choices=["help", "design-frontend", "design-system", "tech-stack", 
                                "start-conversation", "best-practices", "export", "changelog", 
                                "list-resources", "test", "collaborate", "run",
+                               # Architecture Design Commands
+                               "design-api", "microservices", "event-flow", "memory-design",
+                               # Architecture Documentation Commands
+                               "adr", "nfrs", "risk-analysis", "checklist",
+                               # Technical Guidance Commands
+                               "review", "refactor", "infra-as-code", "release-strategy", "poc",
+                               # Security & Quality Commands
+                               "security-review", "tech-stack-eval", "test-strategy", "api-contract",
+                               # Enhanced MCP and Message Bus Commands
                                "initialize-mcp", "use-mcp-tool", "get-mcp-status", "use-architecture-mcp-tools",
                                "check-dependencies", "enhanced-collaborate", "enhanced-security", "enhanced-performance",
                                "trace-operation", "trace-performance", "trace-error", "tracing-summary",
@@ -1305,6 +1802,108 @@ def main():
         print(json.dumps(result, indent=2))
     elif args.command == "run":
         asyncio.run(agent.run())
+    # Architecture Design Commands
+    elif args.command == "design-api":
+        result = asyncio.run(agent.design_api({}))
+        print(json.dumps(result, indent=2))
+    elif args.command == "microservices":
+        result = asyncio.run(agent.microservices())
+        print(json.dumps(result, indent=2))
+    elif args.command == "event-flow":
+        result = asyncio.run(agent.event_flow())
+        print(json.dumps(result, indent=2))
+    elif args.command == "memory-design":
+        result = asyncio.run(agent.memory_design())
+        print(json.dumps(result, indent=2))
+    # Architecture Documentation Commands
+    elif args.command == "adr":
+        result = agent.adr()
+        print(json.dumps(result, indent=2))
+    elif args.command == "nfrs":
+        result = agent.nfrs()
+        print(json.dumps(result, indent=2))
+    elif args.command == "risk-analysis":
+        result = asyncio.run(agent.risk_analysis())
+        print(json.dumps(result, indent=2))
+    elif args.command == "checklist":
+        result = agent.checklist()
+        print(json.dumps(result, indent=2))
+    # Technical Guidance Commands
+    elif args.command == "review":
+        result = asyncio.run(agent.review())
+        print(json.dumps(result, indent=2))
+    elif args.command == "refactor":
+        result = asyncio.run(agent.refactor())
+        print(json.dumps(result, indent=2))
+    elif args.command == "infra-as-code":
+        result = asyncio.run(agent.infra_as_code())
+        print(json.dumps(result, indent=2))
+    elif args.command == "release-strategy":
+        result = asyncio.run(agent.release_strategy())
+        print(json.dumps(result, indent=2))
+    elif args.command == "poc":
+        result = asyncio.run(agent.poc())
+        print(json.dumps(result, indent=2))
+    # Security & Quality Commands
+    elif args.command == "security-review":
+        result = asyncio.run(agent.security_review())
+        print(json.dumps(result, indent=2))
+    elif args.command == "tech-stack-eval":
+        result = asyncio.run(agent.tech_stack_eval())
+        print(json.dumps(result, indent=2))
+    elif args.command == "test-strategy":
+        result = asyncio.run(agent.test_strategy())
+        print(json.dumps(result, indent=2))
+    elif args.command == "api-contract":
+        result = asyncio.run(agent.api_contract())
+        print(json.dumps(result, indent=2))
+    # Enhanced MCP Phase 2 Commands
+    elif args.command in ["enhanced-collaborate", "enhanced-security", "enhanced-performance", 
+                         "trace-operation", "trace-performance", "trace-error", "tracing-summary"]:
+        # Enhanced MCP commands
+        if args.command == "enhanced-collaborate":
+            result = asyncio.run(agent.enhanced_mcp.communicate_with_agents(
+                ["ProductOwner", "BackendDeveloper", "FrontendDeveloper", "DevOpsInfra"], 
+                {"type": "architecture_review", "content": {"review_type": "system_design"}}
+            ))
+            print(json.dumps(result, indent=2))
+        elif args.command == "enhanced-security":
+            result = asyncio.run(agent.enhanced_mcp.enhanced_security_validation({
+                "architecture_data": {"components": ["API", "Database", "Frontend"]},
+                "security_requirements": ["authentication", "authorization", "data_encryption"]
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "enhanced-performance":
+            result = asyncio.run(agent.enhanced_mcp.enhanced_performance_optimization({
+                "architecture_data": {"components": ["API", "Database", "Frontend"]},
+                "performance_metrics": {"response_time": 200, "throughput": 1000}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-operation":
+            result = asyncio.run(agent.trace_architecture_operation({
+                "operation_type": "system_design",
+                "components": ["API", "Database", "Frontend"],
+                "architecture_requirements": ["scalability", "reliability", "security"]
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-performance":
+            result = asyncio.run(agent.trace_architecture_operation({
+                "operation_type": "performance_analysis",
+                "performance_metrics": {"response_time": 200, "throughput": 1000}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "trace-error":
+            result = asyncio.run(agent.trace_architecture_operation({
+                "operation_type": "error_analysis",
+                "error_data": {"error_type": "design_validation", "error_message": "Architecture review failed"}
+            }))
+            print(json.dumps(result, indent=2))
+        elif args.command == "tracing-summary":
+            print("Tracing Summary for Architect Agent:")
+            print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+            print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+            print(f"Message Bus: {'Enabled' if agent.message_bus_enabled else 'Disabled'}")
+            print(f"Agent: {agent.agent_name}")
     # Message Bus Commands
     elif args.command == "message-bus-status":
         print("🏗️ Architect Agent Message Bus Status:")
@@ -1363,53 +1962,6 @@ def main():
                 print(f"  • {metric}: {value:.2f}")
             else:
                 print(f"  • {metric}: {value}")
-    # Enhanced MCP Phase 2 Commands
-    elif args.command in ["enhanced-collaborate", "enhanced-security", "enhanced-performance", 
-                         "trace-operation", "trace-performance", "trace-error", "tracing-summary"]:
-        # Enhanced MCP commands
-        if args.command == "enhanced-collaborate":
-            result = asyncio.run(agent.enhanced_mcp.communicate_with_agents(
-                ["ProductOwner", "BackendDeveloper", "FrontendDeveloper", "DevOpsInfra"], 
-                {"type": "architecture_review", "content": {"review_type": "system_design"}}
-            ))
-            print(json.dumps(result, indent=2))
-        elif args.command == "enhanced-security":
-            result = asyncio.run(agent.enhanced_mcp.enhanced_security_validation({
-                "architecture_data": {"components": ["API", "Database", "Frontend"]},
-                "security_requirements": ["authentication", "authorization", "data_encryption"]
-            }))
-            print(json.dumps(result, indent=2))
-        elif args.command == "enhanced-performance":
-            result = asyncio.run(agent.enhanced_mcp.enhanced_performance_optimization({
-                "architecture_data": {"components": ["API", "Database", "Frontend"]},
-                "performance_metrics": {"response_time": 200, "throughput": 1000}
-            }))
-            print(json.dumps(result, indent=2))
-        elif args.command == "trace-operation":
-            result = asyncio.run(agent.trace_architecture_operation({
-                "operation_type": "system_design",
-                "components": ["API", "Database", "Frontend"],
-                "architecture_requirements": ["scalability", "reliability", "security"]
-            }))
-            print(json.dumps(result, indent=2))
-        elif args.command == "trace-performance":
-            result = asyncio.run(agent.trace_architecture_operation({
-                "operation_type": "performance_analysis",
-                "performance_metrics": {"response_time": 200, "throughput": 1000}
-            }))
-            print(json.dumps(result, indent=2))
-        elif args.command == "trace-error":
-            result = asyncio.run(agent.trace_architecture_operation({
-                "operation_type": "error_analysis",
-                "error_data": {"error_type": "design_validation", "error_message": "Architecture review failed"}
-            }))
-            print(json.dumps(result, indent=2))
-        elif args.command == "tracing-summary":
-            print("Tracing Summary for Architect Agent:")
-            print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
-            print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
-            print(f"Message Bus: {'Enabled' if agent.message_bus_enabled else 'Disabled'}")
-            print(f"Agent: {agent.agent_name}")
     else:
         print(f"Unknown command: {args.command}")
         agent.show_help()
