@@ -320,7 +320,7 @@ Dit document bevat de aangepaste workflow voor de implementatie van FrameworkTem
 
 ## 📚 **Reference Documents**
 - Basic Workflow Template: `docs/guides/BASIC_WORKFLOW_TEMPLATE.md`
-- MCP Phase 2 Workflow Guide: `docs/guides/MCP_PHASE2_WORKFLOW_GUIDE.md`
+- Agent Enhancement Workflow Guide: `docs/guides/AGENT_ENHANCEMENT_WORKFLOW.md`
 - Lessons Learned Guide: `docs/guides/LESSONS_LEARNED_GUIDE.md`
 - Best Practices Guide: `docs/guides/BEST_PRACTICES_GUIDE.md`
 - Kanban Board: `docs/deployment/KANBAN_BOARD.md`
