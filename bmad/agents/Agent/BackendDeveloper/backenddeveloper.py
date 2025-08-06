@@ -115,6 +115,15 @@ class BackendDeveloperAgent(AgentMessageBusIntegration):
         self.message_bus_integration = None
         self.message_bus_enabled = False
         
+        # Initialize MCP attributes
+        self.mcp_enabled = False
+        self.enhanced_mcp_enabled = False
+        self.enhanced_mcp = None
+        self.enhanced_mcp_client = None
+        
+        # Initialize tracing attributes
+        self.tracing_enabled = False
+        
     async def initialize_message_bus_integration(self):
         """Initialize Message Bus Integration with quality-first approach and real functionality."""
         try:
