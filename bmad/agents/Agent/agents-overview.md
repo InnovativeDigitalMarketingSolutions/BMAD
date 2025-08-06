@@ -47,7 +47,7 @@
 
 📋 **Voor gedetailleerde Enhanced MCP Integration status en planning, zie:**
 - `docs/deployment/KANBAN_BOARD.md` - MCP Phase 2: Agent Enhancement sectie
-- `docs/guides/MCP_PHASE2_WORKFLOW_GUIDE.md` - Enhanced MCP workflow guide
+- `docs/guides/AGENT_ENHANCEMENT_WORKFLOW.md` - Agent enhancement workflow guide
 
 **Huidige Status**: 6/23 agents hebben Enhanced MCP + Tracing integration
 
@@ -193,7 +193,7 @@ Alle agents communiceren via:
 
 ### **Guides & Documentation**
 - **MCP Integration**: `docs/guides/MCP_INTEGRATION_GUIDE.md`
-- **Enhanced MCP Workflow**: `docs/guides/MCP_PHASE2_WORKFLOW_GUIDE.md`
+- **Enhanced MCP Workflow**: `docs/guides/AGENT_ENHANCEMENT_WORKFLOW.md`
 - **Best Practices**: `docs/guides/BEST_PRACTICES_GUIDE.md`
 - **Development Workflow**: `docs/guides/DEVELOPMENT_WORKFLOW_GUIDE.md`
 - **Agent Optimization**: `docs/guides/agent-optimization-guide.md`

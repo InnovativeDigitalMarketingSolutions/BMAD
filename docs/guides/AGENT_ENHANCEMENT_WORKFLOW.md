@@ -1,7 +1,7 @@
-# MCP Phase 2 Agent Enhancement Workflow Guide
+# BMAD Agent Enhancement Workflow Guide
 
 ## Overview
-Deze guide beschrijft de gestandaardiseerde workflow voor het implementeren van MCP Phase 2 enhancements en tracing functionaliteit voor BMAD agents.
+Deze guide beschrijft de gestandaardiseerde workflow voor het implementeren van agent enhancements, MCP Phase 2 features en tracing functionaliteit voor BMAD agents met Quality-First Implementation principe.
 
 ## 🎯 Quality-First Implementation Principe
 

@@ -204,7 +204,7 @@ Synchroniseer alle project documentatie:
 4. **Test Documentation**: Test documentatie voor accuracy en completeness
 
 ## Reference Documents
-- MCP Phase 2 Workflow Guide: `docs/guides/MCP_PHASE2_WORKFLOW_GUIDE.md`
+- Agent Enhancement Workflow Guide: `docs/guides/AGENT_ENHANCEMENT_WORKFLOW.md`
 - Best Practices Guide: `docs/guides/BEST_PRACTICES_GUIDE.md`
 - Lessons Learned Guide: `docs/guides/LESSONS_LEARNED_GUIDE.md`
 - Quality Guide: `docs/guides/QUALITY_GUIDE.md`
