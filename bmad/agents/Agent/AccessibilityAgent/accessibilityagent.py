@@ -17,7 +17,7 @@ from bmad.agents.core.agent.agent_performance_monitor import (
     get_performance_monitor,
 )
 from bmad.agents.core.agent.test_sprites import get_sprite_library
-from bmad.agents.core.communication.message_bus import publish, subscribe
+# Message Bus Integration imports only
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.slack.slack_notify import send_slack_message
@@ -1314,16 +1314,17 @@ def main():
     elif args.command == "message-bus-status":
         print(f"Message Bus Integration: {'Enabled' if agent.message_bus_enabled else 'Disabled'}")
     elif args.command == "publish-event":
-        # Example: publish accessibility audit requested event
+        # Example: publish accessibility audit requested event using Message Bus Integration
         event_data = {"target": args.target, "request_id": "test-123"}
-        asyncio.run(publish("accessibility_audit_requested", event_data))
-        print(f"Published event: accessibility_audit_requested with data: {event_data}")
+        if agent.message_bus_integration:
+            asyncio.run(agent.message_bus_integration.publish_event("accessibility_audit_requested", event_data))
+            print(f"Published event: accessibility_audit_requested with data: {event_data}")
+        else:
+            print("Message Bus Integration not available")
     elif args.command == "subscribe-event":
-        # Example: subscribe to accessibility events
-        def event_handler(event):
-            print(f"Received event: {event}")
-        subscribe("accessibility_audit_completed", event_handler)
-        print("Subscribed to accessibility_audit_completed events")
+        # Example: subscribe to accessibility events using Message Bus Integration
+        print("Event subscription is handled automatically by Message Bus Integration")
+        print("Events are processed by registered event handlers")
     else:
         print(f"Unknown command: {args.command}")
         agent.show_help()
