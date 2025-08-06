@@ -17,7 +17,8 @@ from bmad.agents.core.agent.agent_performance_monitor import (
 )
 from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.ai.llm_client import ask_openai
-from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.core.message_bus import MessageBus, EventTypes
+from bmad.core.message_bus.agent_integration import AgentMessageBusIntegration
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
@@ -53,14 +54,14 @@ class BackendValidationError(BackendError):
     """Exception for backend validation failures."""
     pass
 
-class BackendDeveloperAgent:
+class BackendDeveloperAgent(AgentMessageBusIntegration):
     def __init__(self):
+        # Initialize parent class
+        super().__init__("BackendDeveloper")
+        
         self.framework_manager = get_framework_templates_manager()
         self.backend_development_template = self.framework_manager.get_framework_template('backend_development')
         self.lessons_learned = []
-        
-        # Set agent name
-        self.agent_name = "BackendDeveloper"
         # Initialize core services
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
@@ -98,6 +99,35 @@ class BackendDeveloperAgent:
         self.performance_history = []
         self.deployment_history = []
         self._load_api_history()
+        
+        # Initialize message bus integration
+        asyncio.create_task(self.initialize_message_bus())
+        
+    async def initialize_message_bus(self):
+        """Initialize message bus subscriptions and event handlers for BackendDeveloper agent."""
+        # Subscribe to relevant event categories
+        await self.subscribe_to_event_category("backend_development")
+        await self.subscribe_to_event_category("development")
+        await self.subscribe_to_event_category("devops")
+        await self.subscribe_to_event_category("quality")
+        await self.subscribe_to_event_category("testing")
+        await self.subscribe_to_event_category("documentation")
+        await self.subscribe_to_event_category("collaboration")
+        
+        # Register specific event handlers
+        await self.register_event_handler(EventTypes.API_CHANGE_REQUESTED, self._handle_api_change_requested)
+        await self.register_event_handler(EventTypes.API_CHANGE_COMPLETED, self._handle_api_change_completed)
+        await self.register_event_handler(EventTypes.API_DEPLOYMENT_REQUESTED, self._handle_api_deployment_requested)
+        await self.register_event_handler(EventTypes.API_DEPLOYMENT_COMPLETED, self._handle_api_deployment_completed)
+        await self.register_event_handler(EventTypes.API_EXPORT_REQUESTED, self._handle_api_export_requested)
+        await self.register_event_handler(EventTypes.DATABASE_OPERATION_REQUESTED, self._handle_database_operation_requested)
+        await self.register_event_handler(EventTypes.BACKEND_PERFORMANCE_ANALYSIS_REQUESTED, self._handle_backend_performance_analysis_requested)
+        await self.register_event_handler(EventTypes.BACKEND_SECURITY_VALIDATION_REQUESTED, self._handle_backend_security_validation_requested)
+        await self.register_event_handler(EventTypes.BACKEND_TRACING_REQUESTED, self._handle_backend_tracing_requested)
+        await self.register_event_handler(EventTypes.TASK_DELEGATED, self._handle_task_delegated)
+        await self.register_event_handler(EventTypes.AGENT_COLLABORATION_REQUESTED, self._handle_agent_collaboration_requested)
+        
+        logger.info(f"BackendDeveloper agent message bus initialized with {len(self.subscribed_events)} event subscriptions")
         self._load_performance_history()
         self._load_deployment_history()
 
@@ -1062,27 +1092,26 @@ Enhanced Command Examples:
             print("All resources are available!")
             return True
 
-    def collaborate_example(self):
+    async def collaborate_example(self):
         """Demonstrate collaboration with other agents."""
         logger.info("Starting collaboration example...")
 
         try:
-            # Publish API change request
-            publish("api_change_requested", {
-                "agent": "BackendDeveloperAgent",
+            # Publish API change request using new message bus
+            await self.publish_agent_event(EventTypes.API_CHANGE_REQUESTED, {
                 "endpoint": "/api/v1/users",
                 "timestamp": datetime.now().isoformat()
             })
 
             # Build API
-            api_result = self.build_api("/api/v1/users")
+            api_result = await self.build_api("/api/v1/users")
 
             # Deploy API
             deploy_result = self.deploy_api("/api/v1/users")
 
-            # Publish completion
-            publish("api_change_completed", api_result)
-            publish("api_deployment_completed", deploy_result)
+            # Publish completion using new message bus
+            await self.publish_agent_event(EventTypes.API_CHANGE_COMPLETED, api_result)
+            await self.publish_agent_event(EventTypes.API_DEPLOYMENT_COMPLETED, deploy_result)
 
             # Notify via Slack
             try:
@@ -1096,26 +1125,41 @@ Enhanced Command Examples:
             logger.error(f"Error in collaboration example: {e}")
             raise BackendError(f"Collaboration example failed: {e}")
 
-    def handle_api_change_requested(self, event):
-        """Handle API change requested event."""
+
+
+    # New message bus event handlers
+    async def _handle_api_change_requested(self, event_data: Dict[str, Any]) -> None:
+        """Handle API change requested event from message bus."""
         try:
-            logger.info(f"API change requested: {event}")
-            endpoint = event.get("endpoint", "/api/v1/users")
-            self.build_api(endpoint)
+            logger.info(f"BackendDeveloper: API change requested: {event_data}")
+            endpoint = event_data.get("endpoint", "/api/v1/users")
+            result = await self.build_api(endpoint)
+            
+            # Publish completion event
+            await self.publish_agent_event(EventTypes.API_CHANGE_COMPLETED, {
+                "endpoint": endpoint,
+                "result": result,
+                "status": "completed",
+                "timestamp": datetime.now().isoformat()
+            })
+            
         except Exception as e:
-            logger.error(f"Error handling API change request: {e}")
+            logger.error(f"Error handling API change requested: {e}")
+            await self.publish_agent_event(EventTypes.API_CHANGE_FAILED, {
+                "endpoint": endpoint if 'endpoint' in locals() else "unknown",
+                "error": str(e),
+                "status": "failed",
+                "timestamp": datetime.now().isoformat()
+            })
 
-    async def handle_api_change_completed(self, event):
-        """Handle API change completed event."""
+    async def _handle_api_change_completed(self, event_data: Dict[str, Any]) -> None:
+        """Handle API change completed event from message bus."""
         try:
-            logger.info(f"API change completed: {event}")
-
-            # Record event in tracing
-            self.tracer.record_event("api_change_completed", event)
-
+            logger.info(f"BackendDeveloper: API change completed: {event_data}")
+            
             # Evaluate policy
             try:
-                allowed = await self.policy_engine.evaluate_policy("api_change", event)
+                allowed = await self.policy_engine.evaluate_policy("api_change", event_data)
                 logger.info(f"Policy evaluation result: {allowed}")
             except Exception as e:
                 logger.error(f"Policy evaluation failed: {e}")
@@ -1123,32 +1167,245 @@ Enhanced Command Examples:
         except Exception as e:
             logger.error(f"Error handling API change completed: {e}")
 
-    def handle_api_deployment_requested(self, event):
-        """Handle API deployment requested event."""
+    async def _handle_api_deployment_requested(self, event_data: Dict[str, Any]) -> None:
+        """Handle API deployment requested event from message bus."""
         try:
-            logger.info(f"API deployment requested: {event}")
-            endpoint = event.get("endpoint", "/api/v1/users")
-            self.deploy_api(endpoint)
+            logger.info(f"BackendDeveloper: API deployment requested: {event_data}")
+            endpoint = event_data.get("endpoint", "/api/v1/users")
+            result = self.deploy_api(endpoint)
+            
+            # Publish completion event
+            await self.publish_agent_event(EventTypes.API_DEPLOYMENT_COMPLETED, {
+                "endpoint": endpoint,
+                "result": result,
+                "status": "completed",
+                "timestamp": datetime.now().isoformat()
+            })
+            
         except Exception as e:
-            logger.error(f"Error handling API deployment request: {e}")
+            logger.error(f"Error handling API deployment requested: {e}")
+            await self.publish_agent_event(EventTypes.API_DEPLOYMENT_FAILED, {
+                "endpoint": endpoint if 'endpoint' in locals() else "unknown",
+                "error": str(e),
+                "status": "failed",
+                "timestamp": datetime.now().isoformat()
+            })
 
-    async def handle_api_deployment_completed(self, event):
-        """Handle API deployment completed event."""
+    async def _handle_api_deployment_completed(self, event_data: Dict[str, Any]) -> None:
+        """Handle API deployment completed event from message bus."""
         try:
-            logger.info(f"API deployment completed: {event}")
-
-            # Record event in tracing
-            self.tracer.record_event("api_deployment_completed", event)
-
+            logger.info(f"BackendDeveloper: API deployment completed: {event_data}")
+            
             # Evaluate policy
             try:
-                allowed = await self.policy_engine.evaluate_policy("api_deployment", event)
+                allowed = await self.policy_engine.evaluate_policy("api_deployment", event_data)
                 logger.info(f"Policy evaluation result: {allowed}")
             except Exception as e:
                 logger.error(f"Policy evaluation failed: {e}")
                 
         except Exception as e:
             logger.error(f"Error handling API deployment completed: {e}")
+
+    async def _handle_api_export_requested(self, event_data: Dict[str, Any]) -> None:
+        """Handle API export requested event from message bus."""
+        try:
+            logger.info(f"BackendDeveloper: API export requested: {event_data}")
+            format_type = event_data.get("format", "md")
+            api_data = event_data.get("api_data")
+            result = self.export_api(format_type, api_data)
+            
+            # Publish completion event
+            await self.publish_agent_event(EventTypes.API_EXPORT_COMPLETED, {
+                "format": format_type,
+                "result": result,
+                "status": "completed",
+                "timestamp": datetime.now().isoformat()
+            })
+            
+        except Exception as e:
+            logger.error(f"Error handling API export requested: {e}")
+            await self.publish_agent_event(EventTypes.API_EXPORT_FAILED, {
+                "format": format_type if 'format_type' in locals() else "unknown",
+                "error": str(e),
+                "status": "failed",
+                "timestamp": datetime.now().isoformat()
+            })
+
+    async def _handle_database_operation_requested(self, event_data: Dict[str, Any]) -> None:
+        """Handle database operation requested event from message bus."""
+        try:
+            logger.info(f"BackendDeveloper: Database operation requested: {event_data}")
+            operation = event_data.get("operation", "query")
+            result = await self.trace_database_operation(event_data)
+            
+            # Publish completion event
+            await self.publish_agent_event(EventTypes.DATABASE_OPERATION_COMPLETED, {
+                "operation": operation,
+                "result": result,
+                "status": "completed",
+                "timestamp": datetime.now().isoformat()
+            })
+            
+        except Exception as e:
+            logger.error(f"Error handling database operation requested: {e}")
+            await self.publish_agent_event(EventTypes.DATABASE_OPERATION_FAILED, {
+                "operation": operation if 'operation' in locals() else "unknown",
+                "error": str(e),
+                "status": "failed",
+                "timestamp": datetime.now().isoformat()
+            })
+
+    async def _handle_backend_performance_analysis_requested(self, event_data: Dict[str, Any]) -> None:
+        """Handle backend performance analysis requested event from message bus."""
+        try:
+            logger.info(f"BackendDeveloper: Performance analysis requested: {event_data}")
+            result = await self.enhanced_performance_optimization(event_data)
+            
+            # Publish completion event
+            await self.publish_agent_event(EventTypes.BACKEND_PERFORMANCE_ANALYSIS_COMPLETED, {
+                "result": result,
+                "status": "completed",
+                "timestamp": datetime.now().isoformat()
+            })
+            
+        except Exception as e:
+            logger.error(f"Error handling performance analysis requested: {e}")
+            await self.publish_agent_event(EventTypes.BACKEND_PERFORMANCE_ANALYSIS_FAILED, {
+                "error": str(e),
+                "status": "failed",
+                "timestamp": datetime.now().isoformat()
+            })
+
+    async def _handle_backend_security_validation_requested(self, event_data: Dict[str, Any]) -> None:
+        """Handle backend security validation requested event from message bus."""
+        try:
+            logger.info(f"BackendDeveloper: Security validation requested: {event_data}")
+            result = await self.enhanced_security_validation(event_data)
+            
+            # Publish completion event
+            await self.publish_agent_event(EventTypes.BACKEND_SECURITY_VALIDATION_COMPLETED, {
+                "result": result,
+                "status": "completed",
+                "timestamp": datetime.now().isoformat()
+            })
+            
+        except Exception as e:
+            logger.error(f"Error handling security validation requested: {e}")
+            await self.publish_agent_event(EventTypes.BACKEND_SECURITY_VALIDATION_FAILED, {
+                "error": str(e),
+                "status": "failed",
+                "timestamp": datetime.now().isoformat()
+            })
+
+    async def _handle_backend_tracing_requested(self, event_data: Dict[str, Any]) -> None:
+        """Handle backend tracing requested event from message bus."""
+        try:
+            logger.info(f"BackendDeveloper: Tracing requested: {event_data}")
+            trace_type = event_data.get("trace_type", "api")
+            
+            if trace_type == "api":
+                result = await self.trace_api_development(event_data)
+            elif trace_type == "database":
+                result = await self.trace_database_operation(event_data)
+            elif trace_type == "deployment":
+                result = await self.trace_api_deployment(event_data)
+            else:
+                result = await self.trace_backend_error(event_data)
+            
+            # Publish completion event
+            await self.publish_agent_event(EventTypes.BACKEND_TRACING_COMPLETED, {
+                "trace_type": trace_type,
+                "result": result,
+                "status": "completed",
+                "timestamp": datetime.now().isoformat()
+            })
+            
+        except Exception as e:
+            logger.error(f"Error handling tracing requested: {e}")
+            await self.publish_agent_event(EventTypes.BACKEND_TRACING_FAILED, {
+                "trace_type": trace_type if 'trace_type' in locals() else "unknown",
+                "error": str(e),
+                "status": "failed",
+                "timestamp": datetime.now().isoformat()
+            })
+
+    async def _handle_task_delegated(self, event_data: Dict[str, Any]) -> None:
+        """Handle task delegated event from message bus."""
+        try:
+            logger.info(f"BackendDeveloper: Task delegated: {event_data}")
+            task_id = event_data.get("task_id")
+            task_details = event_data.get("task_details", {})
+            
+            # Accept the task
+            await self.accept_task(task_id, task_details)
+            
+            # Process the task based on type
+            task_type = task_details.get("type", "unknown")
+            if task_type == "api_build":
+                endpoint = task_details.get("endpoint", "/api/v1/users")
+                result = await self.build_api(endpoint)
+            elif task_type == "api_deploy":
+                endpoint = task_details.get("endpoint", "/api/v1/users")
+                result = self.deploy_api(endpoint)
+            elif task_type == "performance_analysis":
+                result = await self.enhanced_performance_optimization(task_details)
+            elif task_type == "security_validation":
+                result = await self.enhanced_security_validation(task_details)
+            else:
+                result = {"status": "unknown_task_type", "task_type": task_type}
+            
+            # Publish task completion
+            await self.publish_agent_event(EventTypes.TASK_COMPLETED, {
+                "task_id": task_id,
+                "result": result,
+                "status": "completed",
+                "timestamp": datetime.now().isoformat()
+            })
+            
+        except Exception as e:
+            logger.error(f"Error handling task delegated: {e}")
+            await self.publish_agent_event(EventTypes.TASK_COMPLETED, {
+                "task_id": task_id if 'task_id' in locals() else "unknown",
+                "error": str(e),
+                "status": "failed",
+                "timestamp": datetime.now().isoformat()
+            })
+
+    async def _handle_agent_collaboration_requested(self, event_data: Dict[str, Any]) -> None:
+        """Handle agent collaboration requested event from message bus."""
+        try:
+            logger.info(f"BackendDeveloper: Collaboration requested: {event_data}")
+            requesting_agent = event_data.get("from_agent")
+            collaboration_type = event_data.get("collaboration_type", "general")
+            
+            # Process collaboration request
+            if collaboration_type == "api_review":
+                result = await self.build_api("/api/v1/users")  # Example
+            elif collaboration_type == "performance_review":
+                result = await self.enhanced_performance_optimization({})
+            elif collaboration_type == "security_review":
+                result = await self.enhanced_security_validation({})
+            else:
+                result = {"status": "collaboration_processed", "type": collaboration_type}
+            
+            # Publish collaboration completion
+            await self.publish_agent_event(EventTypes.AGENT_COLLABORATION_COMPLETED, {
+                "from_agent": requesting_agent,
+                "collaboration_type": collaboration_type,
+                "result": result,
+                "status": "completed",
+                "timestamp": datetime.now().isoformat()
+            })
+            
+        except Exception as e:
+            logger.error(f"Error handling agent collaboration requested: {e}")
+            await self.publish_agent_event(EventTypes.AGENT_COLLABORATION_COMPLETED, {
+                "from_agent": requesting_agent if 'requesting_agent' in locals() else "unknown",
+                "collaboration_type": collaboration_type if 'collaboration_type' in locals() else "unknown",
+                "error": str(e),
+                "status": "failed",
+                "timestamp": datetime.now().isoformat()
+            })
 
     async def run(self):
         """Start the agent in event listening mode met MCP integration."""
@@ -1161,21 +1418,11 @@ Enhanced Command Examples:
         # Initialize tracing capabilities for backend development
         await self.initialize_tracing()
 
-        def sync_handler(event):
-            asyncio.run(self.handle_api_change_completed(event))
-
-        def sync_deployment_handler(event):
-            asyncio.run(self.handle_api_deployment_completed(event))
-
-        subscribe("api_change_completed", sync_handler)
-        subscribe("api_change_requested", self.handle_api_change_requested)
-        subscribe("api_deployment_completed", sync_deployment_handler)
-        subscribe("api_deployment_requested", self.handle_api_deployment_requested)
-
         logger.info("BackendDeveloperAgent ready and listening for events...")
-        print("🔧 BackendDeveloper Agent is running with enhanced MCP capabilities...")
-        print("Listening for events: api_change_completed, api_change_requested, api_deployment_completed, api_deployment_requested")
+        print("🔧 BackendDeveloper Agent is running with enhanced MCP capabilities and message bus integration...")
+        print(f"Listening for {len(self.subscribed_events)} event types across multiple categories")
         print("Enhanced MCP capabilities: Inter-agent communication, External tools, Security validation, Performance optimization")
+        print("Message bus integration: Backend development, DevOps, Quality, Testing, Documentation, Collaboration")
         print("Press Ctrl+C to stop")
         
         try:
@@ -1241,7 +1488,7 @@ def main():
             else:
                 print("Resource completeness test failed!")
         elif args.command == "collaborate":
-            agent.collaborate_example()
+            asyncio.run(agent.collaborate_example())
         elif args.command == "enhanced-collaborate":
             if not args.agents or not args.message:
                 print("Error: --agents and --message are required for enhanced collaboration")
