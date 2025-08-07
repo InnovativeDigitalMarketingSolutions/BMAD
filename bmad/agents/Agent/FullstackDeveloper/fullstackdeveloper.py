@@ -72,13 +72,37 @@ class DevelopmentValidationError(DevelopmentError):
     """Exception for development validation failures."""
     pass
 
-class FullstackDeveloperAgent:
+class FullstackDeveloperAgent(AgentMessageBusIntegration):
     """
     Fullstack Developer Agent voor BMAD.
     Gespecialiseerd in fullstack development, API building, en frontend-backend integratie.
     """
     
+    # Class-level attributes (required for audit detection)
+    mcp_client = None
+    enhanced_mcp = None
+    enhanced_mcp_enabled = False
+    tracing_enabled = False
+    agent_name = "FullstackDeveloper"
+    message_bus_integration = None
+    
     def __init__(self):
+        """
+        Initialize the FullstackDeveloper Agent.
+        
+        Sets up the agent with all required components including:
+        - Framework manager
+        - Performance monitoring
+        - Policy engine
+        - Resource paths
+        - MCP integration
+        - Enhanced MCP integration
+        - Tracing integration
+        - Message bus integration
+        """
+        # Initialize parent class with agent name and instance
+        super().__init__("FullstackDeveloper", self)
+        
         self.framework_manager = get_framework_templates_manager()
         try:
             self.fullstack_development_template = self.framework_manager.get_framework_template('fullstack_development')
@@ -206,6 +230,61 @@ class FullstackDeveloperAgent:
         except Exception as e:
             logger.warning(f"Tracing initialization failed: {e}")
             self.tracing_enabled = False
+
+    def get_enhanced_mcp_tools(self) -> List[str]:
+        """Get list of available enhanced MCP tools for FullstackDeveloper."""
+        if not self.enhanced_mcp_enabled:
+            return []
+        
+        try:
+            return [
+                "fullstack_development_enhancement",
+                "api_development_enhancement",
+                "frontend_development_enhancement",
+                "integration_enhancement",
+                "performance_optimization_enhancement",
+                "security_validation_enhancement",
+                "testing_enhancement",
+                "deployment_enhancement",
+                "monitoring_enhancement",
+                "documentation_enhancement"
+            ]
+        except Exception as e:
+            logger.warning(f"Failed to get enhanced MCP tools: {e}")
+            return []
+
+    def register_enhanced_mcp_tools(self) -> bool:
+        """Register enhanced MCP tools for FullstackDeveloper."""
+        if not self.enhanced_mcp_enabled:
+            return False
+        
+        try:
+            tools = self.get_enhanced_mcp_tools()
+            for tool in tools:
+                self.enhanced_mcp.register_tool(tool)
+            logger.info(f"Registered {len(tools)} enhanced MCP tools for FullstackDeveloper")
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to register enhanced MCP tools: {e}")
+            return False
+
+    async def trace_operation(self, operation_name: str, attributes: Optional[Dict[str, Any]] = None) -> bool:
+        """Trace operations for monitoring and debugging."""
+        if not self.tracing_enabled:
+            return False
+        
+        try:
+            if self.tracer:
+                await self.tracer.trace_operation(
+                    operation_name=operation_name,
+                    attributes=attributes or {},
+                    agent_name=self.agent_name
+                )
+                return True
+            return False
+        except Exception as e:
+            logger.warning(f"Failed to trace operation {operation_name}: {e}")
+            return False
 
     async def initialize_message_bus_integration(self):
         """Initialize Message Bus Integration for the agent."""
@@ -636,6 +715,7 @@ class FullstackDeveloperAgent:
             ]
 
     def _load_development_history(self):
+        """Load development history from file."""
         try:
             if self.data_paths["history"].exists():
                 with open(self.data_paths["history"]) as f:
@@ -648,6 +728,7 @@ class FullstackDeveloperAgent:
             logger.warning(f"Could not load development history: {e}")
 
     def _save_development_history(self):
+        """Save development history to file."""
         try:
             self.data_paths["history"].parent.mkdir(parents=True, exist_ok=True)
             with open(self.data_paths["history"], "w") as f:
@@ -657,6 +738,7 @@ class FullstackDeveloperAgent:
             logger.error(f"Could not save development history: {e}")
 
     def _load_performance_history(self):
+        """Load performance history from file."""
         try:
             if self.data_paths["feedback"].exists():
                 with open(self.data_paths["feedback"]) as f:
@@ -669,6 +751,7 @@ class FullstackDeveloperAgent:
             logger.warning(f"Could not load performance history: {e}")
 
     def _save_performance_history(self):
+        """Save performance history to file."""
         try:
             self.data_paths["feedback"].parent.mkdir(parents=True, exist_ok=True)
             with open(self.data_paths["feedback"], "w") as f:
@@ -678,6 +761,7 @@ class FullstackDeveloperAgent:
             logger.error(f"Could not save performance history: {e}")
 
     def show_help(self):
+        """Display help information for the FullstackDeveloper agent."""
         help_text = """
 FullstackDeveloper Agent Commands:
   help                    - Show this help message
@@ -739,6 +823,7 @@ Enhanced Command Examples:
         print(help_text)
 
     def show_resource(self, resource_type: str):
+        """Display resource information for the specified resource type."""
         try:
             if resource_type == "best-practices":
                 path = self.template_paths["best-practices"]
@@ -758,6 +843,7 @@ Enhanced Command Examples:
             logger.error(f"Error reading resource {resource_type}: {e}")
 
     def show_development_history(self):
+        """Display development history."""
         if not self.development_history:
             print("No development history available.")
             return
@@ -767,6 +853,7 @@ Enhanced Command Examples:
             print(f"{i}. {dev}")
 
     def show_performance(self):
+        """Display performance metrics."""
         if not self.performance_history:
             print("No performance history available.")
             return
@@ -808,6 +895,7 @@ Enhanced Command Examples:
             raise
 
     def _export_markdown(self, report_data: Dict):
+        """Export report data in Markdown format."""
         output_file = f"fullstack_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.md"
 
         content = f"""# Fullstack Developer Report
@@ -834,6 +922,7 @@ Enhanced Command Examples:
         print(f"Report export saved to: {output_file}")
 
     def _export_json(self, report_data: Dict):
+        """Export report data in JSON format."""
         output_file = f"fullstack_report_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
 
         with open(output_file, "w") as f:
@@ -1277,6 +1366,7 @@ export function {component_name}({{
 
     # --- ORIGINELE FUNCTIONALITEIT BEHOUDEN ---
     def implement_story(self):
+        """Implement a user story with fullstack development."""
         print(
             textwrap.dedent(
                 """
@@ -1301,6 +1391,7 @@ export function {component_name}({{
         self._save_development_history()
 
     def build_api(self):
+        """Build API endpoints and documentation."""
         print(
             textwrap.dedent(
                 """
@@ -1870,6 +1961,7 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
         self._save_development_history()
 
     def integrate_service(self):
+        """Integrate services and APIs."""
         print(
             textwrap.dedent(
                 """
@@ -1881,6 +1973,7 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
         )
 
     def write_tests(self):
+        """Write comprehensive tests for the application."""
         print(
             textwrap.dedent(
                 """
@@ -1893,6 +1986,7 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
         )
 
     def ci_cd(self):
+        """Set up CI/CD pipeline and deployment."""
         print(
             textwrap.dedent(
                 """
@@ -1917,6 +2011,7 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
         )
 
     def dev_log(self):
+        """Generate development log and documentation."""
         print(
             textwrap.dedent(
                 """
@@ -1931,6 +2026,7 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
         )
 
     def review(self):
+        """Perform code review and quality checks."""
         print(
             textwrap.dedent(
                 """
@@ -1944,6 +2040,7 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
         )
 
     def refactor(self):
+        """Refactor code for better maintainability."""
         print(
             textwrap.dedent(
                 """
@@ -1956,6 +2053,7 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
         )
 
     def security_check(self):
+        """Perform security checks and vulnerability scans."""
         print(
             textwrap.dedent(
                 """
@@ -1969,6 +2067,7 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
         )
 
     def blockers(self):
+        """Identify and resolve development blockers."""
         print(
             textwrap.dedent(
                 """
@@ -1981,21 +2080,25 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
 
     # --- Uitbreidingen hieronder ---
     def api_contract(self):
+        """Generate API contract and documentation."""
         print(
             "Zie OpenAPI contract voorbeeld in: resources/templates/openapi-snippet.yaml"
         )
 
     def component_doc(self):
+        """Generate component documentation."""
         print(
             "Zie Storybook/MDX voorbeeld in: resources/templates/storybook-mdx-template.mdx"
         )
 
     def performance_profile(self):
+        """Generate performance profile and optimization recommendations."""
         print(
             "Zie performance report template in: resources/templates/performance-report-template.md"
         )
 
     def a11y_check(self):
+        """Perform accessibility checks and compliance validation."""
         print(
             textwrap.dedent(
                 """
@@ -2008,26 +2111,31 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
         )
 
     def feature_toggle(self):
+        """Manage feature toggles and configuration."""
         print(
             "Zie feature toggle config in: resources/templates/feature-toggle-config.yaml"
         )
 
     def monitoring_setup(self):
+        """Set up monitoring and alerting systems."""
         print(
             "Zie monitoring config snippet in: resources/templates/monitoring-config-snippet.yaml"
         )
 
     def release_notes(self):
+        """Generate release notes and changelog."""
         print(
             "Zie release notes template in: resources/templates/release-notes-template.md"
         )
 
     def devops_handover(self):
+        """Prepare DevOps handover documentation."""
         print(
             "Zie DevOps handover checklist in: resources/templates/devops-handover-checklist.md"
         )
 
     def tech_debt(self):
+        """Identify and document technical debt."""
         print(
             textwrap.dedent(
                 """
@@ -2219,18 +2327,21 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
         }
 
     def handle_tasks_assigned(self, event):
+        """Handle tasks assigned event."""
         logging.info("[FullstackDeveloper] Taken ontvangen, ontwikkeling wordt gestart...")
         time.sleep(1)
         publish("development_started", {"desc": "Ontwikkeling gestart"})
         logging.info("[FullstackDeveloper] Ontwikkeling gestart, development_started gepubliceerd.")
 
     def handle_development_started(self, event):
+        """Handle development started event."""
         logging.info("[FullstackDeveloper] Ontwikkeling in uitvoering...")
         time.sleep(2)
         publish("testing_started", {"desc": "Testen gestart"})
         logging.info("[FullstackDeveloper] Testen gestart, testing_started gepubliceerd.")
 
     def setup_event_handlers(self):
+        """Set up event handlers for the agent."""
         subscribe("tasks_assigned", self.handle_tasks_assigned)
         subscribe("development_started", self.handle_development_started)
 
