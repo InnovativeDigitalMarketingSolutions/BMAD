@@ -337,7 +337,7 @@ class TestFullstackDeveloperAgentIntegration:
     async def test_fullstack_agent_error_recovery(self, fullstack_agent):
         """Test fullstack agent error recovery."""
         # Simulate initialization failure
-        with patch('bmad.core.mcp.get_mcp_client', side_effect=Exception("MCP connection failed")):
+        with patch('bmad.agents.Agent.FullstackDeveloper.fullstackdeveloper.get_mcp_client', side_effect=Exception("MCP connection failed")):
             await fullstack_agent.initialize_mcp()
             assert fullstack_agent.mcp_enabled is False
 
