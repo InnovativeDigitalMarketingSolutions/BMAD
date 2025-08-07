@@ -53,13 +53,16 @@ from bmad.agents.core.communication.agent_message_bus_integration import (
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-class DevOpsInfraAgent:
+class DevOpsInfraAgent(AgentMessageBusIntegration):
     """
     DevOps Infrastructure Agent voor BMAD.
     Gespecialiseerd in infrastructure management, CI/CD pipelines, en deployment automation.
     """
     
     def __init__(self):
+        # Initialize parent class with agent name and instance
+        super().__init__("DevOpsInfra", self)
+        
         self.framework_manager = get_framework_templates_manager()
         try:
             self.devops_template = self.framework_manager.get_framework_template('devops')
@@ -94,6 +97,22 @@ class DevOpsInfraAgent:
         self.incident_history = []
         self._load_infrastructure_history()
         self._load_incident_history()
+        
+        # Performance metrics
+        self.performance_metrics = {
+            "pipeline_execution_time": 0.0,
+            "deployment_success_rate": 0.0,
+            "incident_response_time": 0.0,
+            "infrastructure_uptime": 0.0,
+            "monitoring_accuracy": 0.0,
+            "automation_level": 0.0,
+            "security_compliance_score": 0.0,
+            "resource_utilization": 0.0,
+            "deployment_frequency": 0.0,
+            "mean_time_to_recovery": 0.0,
+            "change_failure_rate": 0.0,
+            "lead_time_for_changes": 0.0
+        }
         
         # MCP Integration
         self.mcp_client: Optional[MCPClient] = None
@@ -569,11 +588,23 @@ DevOps Infrastructure Agent Commands:
   collaborate             - Demonstrate collaboration with other agents
   run                     - Run the agent with full integration
 
+Enhanced MCP Phase 2 Commands:
+  enhanced-collaborate    - Enhanced collaboration with other agents
+  enhanced-security       - Enhanced security validation
+  enhanced-performance    - Enhanced performance optimization
+  trace-operation         - Trace infrastructure operations
+  trace-performance       - Trace performance metrics
+  trace-error             - Trace error analysis
+  tracing-summary         - Show tracing status
+
 Message Bus Integration Commands:
-  initialize-message-bus  - Initialize Message Bus Integration
-  message-bus-status      - Show Message Bus Integration status
-  publish-event           - Publish an event to the message bus
-  subscribe-event         - Subscribe to an event type
+  initialize-message-bus  - Initialize Message Bus integration
+  message-bus-status      - Show Message Bus status
+  publish-event           - Publish infrastructure event
+  subscribe-event         - Show subscribed events
+  list-events             - List supported events
+  event-history           - Show event history
+  performance-metrics     - Show performance metrics
         """
         print(help_text)
 
@@ -1433,7 +1464,10 @@ def main():
                                "monitor-infrastructure", "show-infrastructure-history", "show-incident-history",
                                "show-best-practices", "show-changelog", "export-report", "test",
                                "collaborate", "run",
-                               "initialize-message-bus", "message-bus-status", "publish-event", "subscribe-event"])
+                               "enhanced-collaborate", "enhanced-security", "enhanced-performance",
+                               "trace-operation", "trace-performance", "trace-error", "tracing-summary",
+                               "initialize-message-bus", "message-bus-status", "publish-event", "subscribe-event",
+                               "list-events", "event-history", "performance-metrics"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--pipeline-config", default="Sample CI/CD pipeline", help="Pipeline configuration for analysis")
     parser.add_argument("--incident-desc", default="Sample incident description", help="Incident description for response")
@@ -1472,12 +1506,60 @@ def main():
         agent.test_resource_completeness()
     elif args.command == "collaborate":
         agent.collaborate_example()
+    # Enhanced MCP Phase 2 Commands
+    elif args.command == "enhanced-collaborate":
+        result = asyncio.run(agent.enhanced_mcp.communicate_with_agents(
+            ["ReleaseManager", "QualityGuardian", "TestEngineer", "DataEngineer"], 
+            {"type": "infrastructure_coordination", "content": {"coordination_type": "devops_management"}}
+        ))
+        print(json.dumps(result, indent=2))
+    elif args.command == "enhanced-security":
+        result = asyncio.run(agent.enhanced_mcp.enhanced_security_validation({
+            "infrastructure_data": {"pipelines": [], "deployments": [], "incidents": []},
+            "security_requirements": ["infrastructure_security", "deployment_security", "access_control"]
+        }))
+        print(json.dumps(result, indent=2))
+    elif args.command == "enhanced-performance":
+        result = asyncio.run(agent.enhanced_mcp.enhanced_performance_optimization({
+            "infrastructure_data": {"pipelines": [], "deployments": [], "incidents": []},
+            "performance_metrics": {"deployment_speed": 85.5, "uptime": 99.9}
+        }))
+        print(json.dumps(result, indent=2))
+    elif args.command == "trace-operation":
+        result = asyncio.run(agent.trace_infrastructure_deployment({
+            "operation_type": "infrastructure_deployment",
+            "infrastructure_type": args.infrastructure_type,
+            "deployments": list(agent.infrastructure_history)
+        }))
+        print(json.dumps(result, indent=2))
+    elif args.command == "trace-performance":
+        result = asyncio.run(agent.trace_pipeline_optimization({
+            "operation_type": "performance_analysis",
+            "performance_metrics": {"deployment_speed": 85.5, "uptime": 99.9}
+        }))
+        print(json.dumps(result, indent=2))
+    elif args.command == "trace-error":
+        result = asyncio.run(agent.trace_devops_error({
+            "operation_type": "error_analysis",
+            "error_data": {"error_type": "deployment_failure", "error_message": "Infrastructure deployment failed"}
+        }))
+        print(json.dumps(result, indent=2))
+    elif args.command == "tracing-summary":
+        print("Tracing Summary for DevOpsInfra:")
+        print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+        print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+        print(f"Agent: {agent.agent_name}")
     elif args.command == "initialize-message-bus":
         asyncio.run(agent.initialize_message_bus_integration())
         print("✅ Message Bus Integration initialized successfully")
     elif args.command == "message-bus-status":
-        status = agent.message_bus_integration.get_status() if agent.message_bus_integration else "Not initialized"
-        print(f"📡 Message Bus Status: {status}")
+        print("🚀 DevOpsInfra Agent Message Bus Status:")
+        print(f"✅ Message Bus Integration: {'Enabled' if agent.message_bus_enabled else 'Disabled'}")
+        print(f"✅ Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+        print(f"✅ Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+        print(f"📊 Performance Metrics: {len(agent.performance_metrics)} metrics tracked")
+        print(f"📝 Infrastructure History: {len(agent.infrastructure_history)} entries")
+        print(f"⚡ Incident History: {len(agent.incident_history)} entries")
     elif args.command == "publish-event":
         if len(sys.argv) < 4:
             print("❌ Usage: publish-event <event_type> <event_data_json>")
@@ -1496,6 +1578,37 @@ def main():
         event_type = sys.argv[2]
         print(f"📡 Subscribing to event: {event_type}")
         # Event handlers are already registered in initialize_message_bus_integration
+    elif args.command == "list-events":
+        print("🚀 DevOpsInfra Agent Supported Events:")
+        print("📥 Input Events:")
+        print("  - pipeline_advice_requested")
+        print("  - incident_response_requested")
+        print("  - infrastructure_deployment_requested")
+        print("  - monitoring_requested")
+        print("  - build_triggered")
+        print("  - deployment_executed")
+        print("  - feedback_sentiment_analyzed")
+        print("📤 Output Events:")
+        print("  - pipeline_advice_provided")
+        print("  - incident_response_completed")
+        print("  - infrastructure_deployed")
+        print("  - monitoring_configured")
+        print("  - build_completed")
+        print("  - deployment_completed")
+    elif args.command == "event-history":
+        print("📝 Infrastructure History:")
+        for entry in agent.infrastructure_history[-10:]:  # Show last 10 entries
+            print(f"  - {entry}")
+        print("\n⚡ Incident History:")
+        for entry in agent.incident_history[-10:]:  # Show last 10 entries
+            print(f"  - {entry}")
+    elif args.command == "performance-metrics":
+        print("📊 DevOpsInfra Agent Performance Metrics:")
+        for metric, value in agent.performance_metrics.items():
+            if isinstance(value, float):
+                print(f"  • {metric}: {value:.2f}")
+            else:
+                print(f"  • {metric}: {value}")
     elif args.command == "run":
         asyncio.run(agent.run())
 

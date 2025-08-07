@@ -1,0 +1,47 @@
+{
+  "policy_id": "api_change",
+  "policy_name": "API Change Policy",
+  "policy_type": "workflow_policies",
+  "version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "api_versioning",
+      "rule_name": "API Versioning Required",
+      "policy_type": "workflow_policies",
+      "conditions": [
+        {
+          "condition_id": "backward_compatibility",
+          "condition_type": "context_based",
+          "parameters": {
+            "version_semantic": true,
+            "deprecation_notice": true
+          },
+          "description": "API versioning requirements",
+          "severity": "high",
+          "enabled": true
+        }
+      ],
+      "actions": [
+        "allow"
+      ],
+      "priority": 200,
+      "enabled": true,
+      "description": "API change requirements",
+      "metadata": {}
+    }
+  ],
+  "parent_policy": null,
+  "inheritance_rules": {},
+  "status": "active",
+  "created_at": "2025-08-07T08:11:51.638769",
+  "updated_at": "2025-08-07T08:11:51.638770",
+  "expires_at": null,
+  "metadata": {
+    "category": "backend",
+    "tags": [
+      "api",
+      "versioning",
+      "compatibility"
+    ]
+  }
+}
