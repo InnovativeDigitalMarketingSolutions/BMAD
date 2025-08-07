@@ -57,6 +57,19 @@ class BackendValidationError(BackendError):
     pass
 
 class BackendDeveloperAgent(AgentMessageBusIntegration):
+    """
+    Backend Developer Agent voor BMAD.
+    Gespecialiseerd in backend development, API development, database operations, en backend system integration.
+    """
+    
+    # Required attributes for all agents (class level)
+    mcp_client = None
+    enhanced_mcp = None
+    enhanced_mcp_enabled = False
+    tracing_enabled = False
+    agent_name = "BackendDeveloper"
+    message_bus_integration = None
+    
     def __init__(self):
         # Initialize parent class
         super().__init__("BackendDeveloper", self)
@@ -199,6 +212,65 @@ class BackendDeveloperAgent(AgentMessageBusIntegration):
         except Exception as e:
             logger.error(f"❌ Failed to initialize Message Bus Integration: {e}")
             self.message_bus_enabled = False
+
+    def get_enhanced_mcp_tools(self) -> List[str]:
+        """Get list of available enhanced MCP tools for this agent."""
+        if not self.enhanced_mcp_enabled:
+            return []
+        
+        try:
+            return [
+                "backend_specific_tool_1",
+                "backend_specific_tool_2", 
+                "backend_specific_tool_3",
+                "api_development",
+                "database_operations",
+                "backend_performance_optimization",
+                "backend_security_validation",
+                "backend_tracing",
+                "api_deployment",
+                "backend_monitoring"
+            ]
+        except Exception as e:
+            logger.warning(f"Failed to get enhanced MCP tools: {e}")
+            return []
+
+    def register_enhanced_mcp_tools(self) -> bool:
+        """Register enhanced MCP tools for this agent."""
+        if not self.enhanced_mcp_enabled:
+            return False
+        
+        if not self.enhanced_mcp:
+            return False
+        
+        try:
+            tools = self.get_enhanced_mcp_tools()
+            for tool in tools:
+                self.enhanced_mcp.register_tool(tool)
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to register enhanced MCP tools: {e}")
+            return False
+
+    async def trace_operation(self, operation_name: str, attributes: Optional[Dict[str, Any]] = None) -> bool:
+        """Trace operations for monitoring and debugging."""
+        try:
+            if not self.tracing_enabled or not self.tracer:
+                return False
+            
+            trace_data = {
+                "agent": self.agent_name,
+                "operation": operation_name,
+                "timestamp": datetime.now().isoformat(),
+                "attributes": attributes or {}
+            }
+            
+            await self.tracer.trace_operation(trace_data)
+            return True
+            
+        except Exception as e:
+            logger.warning(f"Tracing operation failed: {e}")
+            return False
 
     # Quality-First Event Handlers with Real Functionality
     async def handle_api_change_requested(self, event):

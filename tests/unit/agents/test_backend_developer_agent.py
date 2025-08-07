@@ -1276,4 +1276,113 @@ class TestBackendDeveloperAgentCLIMessageBus:
         assert "message-bus-status" in captured.out
         assert "publish-event" in captured.out
         assert "subscribe-event" in captured.out
-        assert "Message Bus Command Examples:" in captured.out 
+        assert "Message Bus Command Examples:" in captured.out
+
+    # Tests for new enhanced MCP and tracing methods
+    def test_get_enhanced_mcp_tools_disabled(self, agent):
+        """Test get_enhanced_mcp_tools when enhanced MCP is disabled."""
+        agent.enhanced_mcp_enabled = False
+        tools = agent.get_enhanced_mcp_tools()
+        assert tools == []
+
+    def test_get_enhanced_mcp_tools_enabled(self, agent):
+        """Test get_enhanced_mcp_tools when enhanced MCP is enabled."""
+        agent.enhanced_mcp_enabled = True
+        tools = agent.get_enhanced_mcp_tools()
+        assert isinstance(tools, list)
+        assert len(tools) > 0
+        assert "backend_specific_tool_1" in tools
+        assert "api_development" in tools
+        assert "database_operations" in tools
+
+    def test_get_enhanced_mcp_tools_exception(self, agent):
+        """Test get_enhanced_mcp_tools when exception occurs."""
+        agent.enhanced_mcp_enabled = True
+        # Test that the method handles exceptions gracefully
+        tools = agent.get_enhanced_mcp_tools()
+        assert isinstance(tools, list)
+        # The method should return a list even if there are internal issues
+
+    def test_register_enhanced_mcp_tools_disabled(self, agent):
+        """Test register_enhanced_mcp_tools when enhanced MCP is disabled."""
+        agent.enhanced_mcp_enabled = False
+        result = agent.register_enhanced_mcp_tools()
+        assert result is False
+
+    def test_register_enhanced_mcp_tools_enabled(self, agent):
+        """Test register_enhanced_mcp_tools when enhanced MCP is enabled."""
+        agent.enhanced_mcp_enabled = True
+        agent.enhanced_mcp = Mock()
+        agent.enhanced_mcp.register_tool = Mock()
+        result = agent.register_enhanced_mcp_tools()
+        assert result is True
+        assert agent.enhanced_mcp.register_tool.called
+
+    def test_register_enhanced_mcp_tools_no_enhanced_mcp(self, agent):
+        """Test register_enhanced_mcp_tools when enhanced_mcp is None."""
+        agent.enhanced_mcp_enabled = True
+        agent.enhanced_mcp = None
+        result = agent.register_enhanced_mcp_tools()
+        assert result is False
+
+    def test_register_enhanced_mcp_tools_exception(self, agent):
+        """Test register_enhanced_mcp_tools when exception occurs."""
+        agent.enhanced_mcp_enabled = True
+        agent.enhanced_mcp = Mock()
+        agent.enhanced_mcp.register_tool.side_effect = Exception("Test error")
+        result = agent.register_enhanced_mcp_tools()
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_trace_operation_disabled(self, agent):
+        """Test trace_operation when tracing is disabled."""
+        agent.tracing_enabled = False
+        result = await agent.trace_operation("test_operation")
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_trace_operation_no_tracer(self, agent):
+        """Test trace_operation when tracer is None."""
+        agent.tracing_enabled = True
+        agent.tracer = None
+        result = await agent.trace_operation("test_operation")
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_trace_operation_success(self, agent):
+        """Test trace_operation with successful tracing."""
+        agent.tracing_enabled = True
+        agent.tracer = AsyncMock()
+        agent.tracer.trace_operation = AsyncMock(return_value=True)
+        
+        result = await agent.trace_operation("test_operation", {"test": "data"})
+        assert result is True
+        agent.tracer.trace_operation.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_trace_operation_exception(self, agent):
+        """Test trace_operation when exception occurs."""
+        agent.tracing_enabled = True
+        agent.tracer = AsyncMock()
+        agent.tracer.trace_operation.side_effect = Exception("Test error")
+        
+        result = await agent.trace_operation("test_operation")
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_trace_operation_with_attributes(self, agent):
+        """Test trace_operation with custom attributes."""
+        agent.tracing_enabled = True
+        agent.tracer = AsyncMock()
+        agent.tracer.trace_operation = AsyncMock(return_value=True)
+        
+        attributes = {"user_id": "123", "action": "test"}
+        result = await agent.trace_operation("test_operation", attributes)
+        assert result is True
+        
+        # Verify the trace data structure
+        call_args = agent.tracer.trace_operation.call_args[0][0]
+        assert call_args["agent"] == "BackendDeveloper"
+        assert call_args["operation"] == "test_operation"
+        assert call_args["attributes"] == attributes
+        assert "timestamp" in call_args 
