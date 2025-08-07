@@ -366,7 +366,16 @@ class TestEngineerAgent:
                     lines = content.split("\n")
                     for line in lines:
                         if line.strip().startswith("- "):
-                            self.test_history.append(line.strip()[2:])
+                            # Support both string and dictionary formats
+                            entry = line.strip()[2:]
+                            try:
+                                # Try to parse as JSON (dictionary)
+                                import json
+                                parsed_entry = json.loads(entry)
+                                self.test_history.append(parsed_entry)
+                            except (json.JSONDecodeError, ValueError):
+                                # Fall back to string format
+                                self.test_history.append(entry)
         except Exception as e:
             logger.warning(f"Could not load test history: {e}")
 
@@ -375,7 +384,12 @@ class TestEngineerAgent:
             self.data_paths["test-history"].parent.mkdir(parents=True, exist_ok=True)
             with open(self.data_paths["test-history"], "w") as f:
                 f.write("# Test History\n\n")
-                f.writelines(f"- {test}\n" for test in self.test_history[-50:])
+                for test in self.test_history[-50:]:
+                    if isinstance(test, dict):
+                        import json
+                        f.write(f"- {json.dumps(test)}\n")
+                    else:
+                        f.write(f"- {test}\n")
         except Exception as e:
             logger.error(f"Could not save test history: {e}")
 
@@ -387,7 +401,16 @@ class TestEngineerAgent:
                     lines = content.split("\n")
                     for line in lines:
                         if line.strip().startswith("- "):
-                            self.coverage_history.append(line.strip()[2:])
+                            # Support both string and dictionary formats
+                            entry = line.strip()[2:]
+                            try:
+                                # Try to parse as JSON (dictionary)
+                                import json
+                                parsed_entry = json.loads(entry)
+                                self.coverage_history.append(parsed_entry)
+                            except (json.JSONDecodeError, ValueError):
+                                # Fall back to string format
+                                self.coverage_history.append(entry)
         except Exception as e:
             logger.warning(f"Could not load coverage history: {e}")
 
@@ -396,7 +419,12 @@ class TestEngineerAgent:
             self.data_paths["coverage-history"].parent.mkdir(parents=True, exist_ok=True)
             with open(self.data_paths["coverage-history"], "w") as f:
                 f.write("# Coverage History\n\n")
-                f.writelines(f"- {cov}\n" for cov in self.coverage_history[-50:])
+                for cov in self.coverage_history[-50:]:
+                    if isinstance(cov, dict):
+                        import json
+                        f.write(f"- {json.dumps(cov)}\n")
+                    else:
+                        f.write(f"- {cov}\n")
         except Exception as e:
             logger.error(f"Could not save coverage history: {e}")
 
@@ -765,38 +793,79 @@ def test_{component_name.lower()}_e2e():
 
     async def handle_tests_requested(self, event):
         """Handle tests requested event with real functionality."""
-        logger.info(f"Tests requested: {event}")
-        
-        # Update test history
-        self.test_history.append({
-            "action": "tests_requested",
-            "timestamp": datetime.now().isoformat(),
-            "test_type": event.get("test_type", "unknown"),
-            "status": "processing"
-        })
-        
-        # Update performance metrics
-        if hasattr(self, 'performance_metrics'):
-            self.performance_metrics["total_test_requests"] = self.performance_metrics.get("total_test_requests", 0) + 1
-        
-        # Publish follow-up event via Message Bus Integration
-        if self.message_bus_integration:
-            try:
-                await self.message_bus_integration.publish_event("tests_processing_started", {
-                    "test_type": event.get("test_type", "unknown"),
-                    "timestamp": datetime.now().isoformat(),
-                    "status": "processing"
-                })
-            except Exception as e:
-                logger.warning(f"Failed to publish tests_processing_started event: {e}")
-        
-        return {"status": "processed", "event": "tests_requested"}
+        try:
+            logger.info(f"Tests requested: {event}")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+            
+            # Log metric for tests requested
+            self.monitor.log_metric("tests_requested", {
+                "test_type": event.get("test_type", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update test history
+            test_entry = {
+                "action": "tests_requested",
+                "timestamp": datetime.now().isoformat(),
+                "test_type": event.get("test_type", "unknown"),
+                "status": "processing"
+            }
+            self.test_history.append(test_entry)
+            self._save_test_history()
+            
+            # Update performance metrics
+            if hasattr(self, 'performance_metrics'):
+                self.performance_metrics["total_test_requests"] = self.performance_metrics.get("total_test_requests", 0) + 1
+            
+            # Publish follow-up event via Message Bus Integration
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("tests_processing_started", {
+                        "test_type": event.get("test_type", "unknown"),
+                        "timestamp": datetime.now().isoformat(),
+                        "status": "processing"
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to publish tests_processing_started event: {e}")
+            
+            # Return None for consistency with other event handlers
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error in tests requested event handler: {e}")
+            return None
 
     async def handle_test_generation_requested(self, event):
         """Handle test generation requested event with real functionality."""
-        logger.info(f"Test generation requested: {event}")
-        
         try:
+            logger.info(f"Test generation requested: {event}")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                # Add history entry for validation error
+                error_entry = {
+                    "action": "test_generation_requested",
+                    "timestamp": datetime.now().isoformat(),
+                    "function_description": "invalid_event",
+                    "context": "invalid_event",
+                    "status": "error",
+                    "error": "Invalid event data: event must be a dictionary"
+                }
+                self.test_history.append(error_entry)
+                self._save_test_history()
+                return None
+            
+            # Log metric for test generation requested
+            self.monitor.log_metric("test_generation_requested", {
+                "function_description": event.get("function_description", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
             # Generate actual test content
             function_description = event.get("function_description", "")
             context = event.get("context", "")
@@ -807,14 +876,16 @@ def test_{component_name.lower()}_e2e():
                 generated_content = test_result.get("test_content", "No test content generated")
                 
                 # Update test history
-                self.test_history.append({
+                test_entry = {
                     "action": "test_generation_requested",
                     "timestamp": datetime.now().isoformat(),
                     "function_description": function_description,
                     "context": context,
                     "status": "completed",
                     "test_content": generated_content[:100] + "..." if len(generated_content) > 100 else generated_content
-                })
+                }
+                self.test_history.append(test_entry)
+                self._save_test_history()
                 
                 # Publish follow-up event
                 if self.message_bus_integration:
@@ -828,22 +899,37 @@ def test_{component_name.lower()}_e2e():
                     except Exception as e:
                         logger.warning(f"Failed to publish test_generation_completed event: {e}")
                 
-                return generated_content
+                # Return None for consistency with other event handlers
+                return None
             else:
-                raise ValueError("Missing function_description or context")
+                logger.error("Missing function_description or context")
+                # Add history entry for validation error
+                error_entry = {
+                    "action": "test_generation_requested",
+                    "timestamp": datetime.now().isoformat(),
+                    "function_description": function_description,
+                    "context": context,
+                    "status": "error",
+                    "error": "Missing function_description or context"
+                }
+                self.test_history.append(error_entry)
+                self._save_test_history()
+                return None
                 
         except Exception as e:
-            logger.error(f"Error generating tests: {e}")
+            logger.error(f"Error in test generation event handler: {e}")
             
             # Update test history with error
-            self.test_history.append({
+            error_entry = {
                 "action": "test_generation_requested",
                 "timestamp": datetime.now().isoformat(),
                 "function_description": event.get("function_description", ""),
                 "context": event.get("context", ""),
                 "status": "error",
                 "error": str(e)
-            })
+            }
+            self.test_history.append(error_entry)
+            self._save_test_history()
             
             # Publish error event
             if self.message_bus_integration:
@@ -856,67 +942,107 @@ def test_{component_name.lower()}_e2e():
                 except Exception as publish_error:
                     logger.warning(f"Failed to publish test_generation_error event: {publish_error}")
             
-            return {"status": "error", "event": "test_generation_requested", "error": str(e)}
+            # Return None for consistency with other event handlers
+            return None
 
     async def handle_test_completed(self, event):
         """Handle test completed event with real functionality."""
-        logger.info(f"Test completed: {event}")
-        
-        # Update test history
-        self.test_history.append({
-            "action": "test_completed",
-            "timestamp": datetime.now().isoformat(),
-            "test_type": event.get("test_type", "unknown"),
-            "result": event.get("result", "unknown"),
-            "status": "completed"
-        })
-        
-        # Update performance metrics
-        if hasattr(self, 'performance_metrics'):
-            self.performance_metrics["total_tests_completed"] = self.performance_metrics.get("total_tests_completed", 0) + 1
-        
-        # Publish follow-up event
-        if self.message_bus_integration:
-            try:
-                await self.message_bus_integration.publish_event("test_completion_reported", {
-                    "test_type": event.get("test_type", "unknown"),
-                    "result": event.get("result", "unknown"),
-                    "timestamp": datetime.now().isoformat(),
-                    "status": "completed"
-                })
-            except Exception as e:
-                logger.warning(f"Failed to publish test_completion_reported event: {e}")
-        
-        return {"status": "processed", "event": "test_completed"}
+        try:
+            logger.info(f"Test completed: {event}")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+            
+            # Log metric for test completed
+            self.monitor.log_metric("test_completed", {
+                "test_type": event.get("test_type", "unknown"),
+                "result": event.get("result", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update test history
+            test_entry = {
+                "action": "test_completed",
+                "timestamp": datetime.now().isoformat(),
+                "test_type": event.get("test_type", "unknown"),
+                "result": event.get("result", "unknown"),
+                "status": "completed"
+            }
+            self.test_history.append(test_entry)
+            self._save_test_history()
+            
+            # Update performance metrics
+            if hasattr(self, 'performance_metrics'):
+                self.performance_metrics["total_tests_completed"] = self.performance_metrics.get("total_tests_completed", 0) + 1
+            
+            # Publish follow-up event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("test_completion_reported", {
+                        "test_type": event.get("test_type", "unknown"),
+                        "result": event.get("result", "unknown"),
+                        "timestamp": datetime.now().isoformat(),
+                        "status": "completed"
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to publish test_completion_reported event: {e}")
+            
+            # Return None for consistency with other event handlers
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error in test completed event handler: {e}")
+            return None
 
     async def handle_coverage_report_requested(self, event):
         """Handle coverage report requested event with real functionality."""
-        logger.info(f"Coverage report requested: {event}")
-        
-        # Update coverage history
-        self.coverage_history.append({
-            "action": "coverage_report_requested",
-            "timestamp": datetime.now().isoformat(),
-            "test_type": event.get("test_type", "all"),
-            "status": "processing"
-        })
-        
-        # Update performance metrics
-        if hasattr(self, 'performance_metrics'):
-            self.performance_metrics["total_coverage_reports"] = self.performance_metrics.get("total_coverage_reports", 0) + 1
-        
-        # Publish follow-up event
-        if self.message_bus_integration:
-            try:
-                await self.message_bus_integration.publish_event("coverage_report_processing", {
-                    "test_type": event.get("test_type", "all"),
-                    "timestamp": datetime.now().isoformat(),
-                    "status": "processing"
-                })
-            except Exception as e:
-                logger.warning(f"Failed to publish coverage_report_processing event: {e}")
-        
-        return {"status": "processed", "event": "coverage_report_requested"}
+        try:
+            logger.info(f"Coverage report requested: {event}")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+            
+            # Log metric for coverage report requested
+            self.monitor.log_metric("coverage_report_requested", {
+                "test_type": event.get("test_type", "all"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update coverage history
+            coverage_entry = {
+                "action": "coverage_report_requested",
+                "timestamp": datetime.now().isoformat(),
+                "test_type": event.get("test_type", "all"),
+                "status": "processing"
+            }
+            self.coverage_history.append(coverage_entry)
+            self._save_coverage_history()
+            
+            # Update performance metrics
+            if hasattr(self, 'performance_metrics'):
+                self.performance_metrics["total_coverage_reports"] = self.performance_metrics.get("total_coverage_reports", 0) + 1
+            
+            # Publish follow-up event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("coverage_report_processing", {
+                        "test_type": event.get("test_type", "all"),
+                        "timestamp": datetime.now().isoformat(),
+                        "status": "processing"
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to publish coverage_report_processing event: {e}")
+            
+            # Return None for consistency with other event handlers
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error in coverage report requested event handler: {e}")
+            return None
 
     async def run(self):
         """Main event loop for the agent met complete integration."""
