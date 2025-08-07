@@ -45,6 +45,10 @@ from bmad.core.mcp.enhanced_mcp_integration import (
 
 # Tracing Integration
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
+from bmad.core.tracing import tracing_service
+
+# Agent Message Bus Integration
+from bmad.agents.core.communication.agent_message_bus_integration import AgentMessageBusIntegration
 
 
 load_dotenv()
@@ -66,7 +70,7 @@ class ProductOwnerAgent(AgentMessageBusIntegration):
     
     def __init__(self):
         """Initialize ProductOwner agent met MCP integration."""
-        super().__init__("ProductOwner")
+        super().__init__("ProductOwner", self)
         self.framework_manager = get_framework_templates_manager()
         try:
             self.product_owner_template = self.framework_manager.get_framework_template('product_owner')
