@@ -39,7 +39,7 @@ Volg de development pyramid strategie zoals beschreven in `DEVELOPMENT_STRATEGY.
 - [ ] **Gitignore Check**: Controleer `.gitignore` voor nieuwe file patterns en update indien nodig
 - [ ] **MCP Integration Planning**: Voor MCP integratie, raadpleeg:
   - `docs/guides/MCP_INTEGRATION_GUIDE.md` - MCP integration patterns
-  - `docs/guides/MCP_TROUBLESHOOTING_GUIDE.md` - Common issues en solutions
+  - `docs/guides/AGENT_ENHANCEMENT_WORKFLOW.md` - Common issues en troubleshooting
   - `docs/guides/LESSONS_LEARNED_GUIDE.md` - Lessons from previous MCP integrations
 
 ### Tijdens implementatie:

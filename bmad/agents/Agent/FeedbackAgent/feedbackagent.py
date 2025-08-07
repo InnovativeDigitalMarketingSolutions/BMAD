@@ -18,7 +18,11 @@ from bmad.agents.core.agent.agent_performance_monitor import (
 )
 from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.ai.llm_client import ask_openai
-from bmad.agents.core.communication.message_bus import publish, subscribe
+# Message Bus Integration
+from bmad.agents.core.communication.agent_message_bus_integration import (
+    AgentMessageBusIntegration,
+    create_agent_message_bus_integration
+)
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
@@ -45,13 +49,16 @@ from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-class FeedbackAgent:
+class FeedbackAgent(AgentMessageBusIntegration):
     """
     Feedback Agent voor BMAD.
     Gespecialiseerd in feedback collection, sentiment analysis, en template quality tracking.
     """
     
     def __init__(self):
+        # Initialize parent class with agent name and instance
+        super().__init__("FeedbackAgent", self)
+        
         # Framework templates integration
         self.framework_manager = get_framework_templates_manager()
         try:
@@ -93,10 +100,30 @@ class FeedbackAgent:
         self.template_quality_scores = {}
         self._load_template_feedback()
         
+        # Performance metrics
+        self.performance_metrics = {
+            "feedback_collection_speed": 0.0,
+            "sentiment_analysis_accuracy": 0.0,
+            "feedback_processing_time": 0.0,
+            "insight_generation_quality": 0.0,
+            "trend_analysis_effectiveness": 0.0,
+            "template_quality_score": 0.0,
+            "feedback_response_time": 0.0,
+            "collaboration_efficiency": 0.0,
+            "data_quality_score": 0.0,
+            "report_generation_speed": 0.0,
+            "user_satisfaction_score": 0.0,
+            "feedback_completeness": 0.0
+        }
+        
         # MCP Integration
         self.mcp_client: Optional[MCPClient] = None
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
         self.mcp_enabled = False
+        
+        # Message Bus Integration
+        self.message_bus_integration: Optional[AgentMessageBusIntegration] = None
+        self.message_bus_enabled = False
         
         # Enhanced MCP Phase 2 attributes
         self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
@@ -159,6 +186,134 @@ class FeedbackAgent:
         except Exception as e:
             logger.warning(f"Tracing initialization failed: {e}")
             self.tracing_enabled = False
+    
+    async def initialize_message_bus(self):
+        """Initialize Message Bus Integration for the agent."""
+        try:
+            self.message_bus_integration = create_agent_message_bus_integration(
+                agent_name=self.agent_name,
+                agent_type="feedback_agent",
+                config={
+                    "message_bus_url": "redis://localhost:6379",
+                    "enable_publishing": True,
+                    "enable_subscription": True,
+                    "event_handlers": {
+                        "feedback_collected": self._handle_feedback_collected_event,
+                        "quality_gate_requested": self._handle_quality_gate_requested_event,
+                        "task_delegated": self._handle_task_delegated_event
+                    }
+                }
+            )
+            await self.message_bus_integration.initialize()
+            self.message_bus_enabled = True
+            logger.info("Message Bus Integration initialized successfully for FeedbackAgent")
+        except Exception as e:
+            logger.warning(f"Message Bus Integration initialization failed: {e}")
+            self.message_bus_enabled = False
+    
+    async def _handle_feedback_collected_event(self, event):
+        """Handle feedback collected event"""
+        try:
+            feedback_data = event.data
+            logger.info(f"📨 FeedbackAgent received feedback: {feedback_data.get('feedback_text', 'N/A')}")
+            
+            # Process the feedback
+            await self._process_incoming_feedback(feedback_data)
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to handle feedback collected event: {e}")
+    
+    async def _handle_quality_gate_requested_event(self, event):
+        """Handle quality gate check requested event"""
+        try:
+            quality_data = event.data
+            logger.info(f"📨 FeedbackAgent received quality gate request")
+            
+            # Perform quality gate check
+            await self._perform_quality_gate_check(quality_data)
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to handle quality gate event: {e}")
+    
+    async def _handle_task_delegated_event(self, event):
+        """Handle task delegated event"""
+        try:
+            task_data = event.data
+            if task_data.get('to_agent') == self.agent_name:
+                logger.info(f"📨 FeedbackAgent received delegated task: {task_data.get('task', {}).get('type', 'N/A')}")
+                
+                # Accept the task
+                await self.message_bus_integration.accept_task(
+                    task_data.get('delegation_id'),
+                    task_data.get('task', {})
+                )
+                
+                # Process the task
+                await self._process_delegated_task(task_data)
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to handle task delegated event: {e}")
+    
+    async def _process_incoming_feedback(self, feedback_data: Dict[str, Any]):
+        """Process incoming feedback from message bus"""
+        try:
+            feedback_text = feedback_data.get('feedback_text', '')
+            source = feedback_data.get('source', 'MessageBus')
+            
+            # Collect and analyze feedback
+            result = await self.collect_feedback(feedback_text, source)
+            
+            # Publish feedback analyzed event
+            await self.message_bus_integration.publish_agent_event(
+                EventTypes.FEEDBACK_ANALYZED,
+                {
+                    "feedback_id": result.get('feedback_id'),
+                    "sentiment_score": result.get('sentiment_score'),
+                    "analysis_summary": result.get('summary', '')
+                }
+            )
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to process incoming feedback: {e}")
+    
+    async def _perform_quality_gate_check(self, quality_data: Dict[str, Any]):
+        """Perform quality gate check"""
+        try:
+            # Perform quality analysis
+            quality_result = {
+                "quality_score": 85,  # Example score
+                "issues_found": [],
+                "recommendations": ["Consider adding more test coverage"]
+            }
+            
+            # Publish quality gate result
+            await self.message_bus_integration.publish_agent_event(
+                EventTypes.QUALITY_GATE_PASSED,
+                quality_result
+            )
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to perform quality gate check: {e}")
+    
+    async def _process_delegated_task(self, task_data: Dict[str, Any]):
+        """Process delegated task"""
+        try:
+            task = task_data.get('task', {})
+            task_type = task.get('type', '')
+            
+            if task_type == 'feedback_analysis':
+                # Perform feedback analysis
+                feedback_text = task.get('feedback_text', '')
+                result = await self.collect_feedback(feedback_text, 'Delegated Task')
+                
+                # Complete the task
+                await self.message_bus_integration.complete_task(
+                    task_data.get('delegation_id'),
+                    result
+                )
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to process delegated task: {e}")
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -447,6 +602,24 @@ Template Quality Assurance:
   analyze-template-trends [template] [timeframe]                 - Analyze feedback trends for templates
   suggest-template-improvements <template>                       - Suggest improvements for templates
   get-template-quality-report [template]                        - Generate quality report for templates
+
+Enhanced MCP Phase 2 Commands:
+  enhanced-collaborate    - Enhanced collaboration with other agents
+  enhanced-security       - Enhanced security features
+  enhanced-performance    - Enhanced performance monitoring
+  trace-operation         - Trace feedback operations
+  trace-performance       - Trace performance metrics
+  trace-error             - Trace error handling
+  tracing-summary         - Show tracing summary
+
+Message Bus Integration Commands:
+  initialize-message-bus  - Initialize Message Bus integration
+  message-bus-status      - Show Message Bus status
+  publish-event           - Publish feedback event
+  subscribe-event         - Show subscribed events
+  list-events             - List supported events
+  event-history           - Show event history
+  performance-metrics     - Show performance metrics
 
 Examples:
   collect-template-feedback "backend_development" "Excellent template with clear guidelines" "quality" 5
@@ -1183,18 +1356,70 @@ Examples:
         feedback_list = event.get("feedback_list", [])
         self.summarize_feedback_original(feedback_list)
 
-    def handle_retro_planned(self, event):
+    async def handle_retro_planned(self, event):
         """Handle retro planned event from other agents."""
         logger.info("[FeedbackAgent] Retro gepland, feedback wordt verzameld...")
-        time.sleep(1)
-        publish("feedback_collected", {"desc": "Feedback verzameld"})
+        
+        # Update performance history
+        self.feedback_history.append({
+            "action": "retro_planned",
+            "timestamp": datetime.now().isoformat(),
+            "data": event,
+            "status": "processing"
+        })
+        
+        # Update performance metrics
+        self.performance_metrics["feedback_collection_speed"] += 1
+        self.performance_metrics["feedback_processing_time"] += 0.1
+        
+        # Publish follow-up event via Message Bus Integration
+        if self.message_bus_integration:
+            try:
+                await self.message_bus_integration.publish_event("feedback_collected", {
+                    "desc": "Feedback verzameld",
+                    "retrospective": event.get("retrospective", "unknown"),
+                    "timestamp": datetime.now().isoformat()
+                })
+            except Exception as e:
+                logger.warning(f"Failed to publish feedback_collected event: {e}")
+        
+        # Save updated history
+        self._save_feedback_history()
+        
+        return {"status": "processed", "event": "retro_planned"}
         logger.info("[FeedbackAgent] Feedback verzameld, feedback_collected gepubliceerd.")
 
-    def handle_feedback_collected(self, event):
+    async def handle_feedback_collected(self, event):
         """Handle feedback collected event from other agents."""
         logger.info("[FeedbackAgent] Feedback wordt geanalyseerd...")
-        time.sleep(1)
-        publish("trends_analyzed", {"desc": "Trends geanalyseerd"})
+        
+        # Update performance history
+        self.feedback_history.append({
+            "action": "feedback_collected",
+            "timestamp": datetime.now().isoformat(),
+            "data": event,
+            "status": "processing"
+        })
+        
+        # Update performance metrics
+        self.performance_metrics["feedback_processing_time"] += 0.2
+        self.performance_metrics["sentiment_analysis_accuracy"] += 0.1
+        
+        # Publish follow-up event via Message Bus Integration
+        if self.message_bus_integration:
+            try:
+                await self.message_bus_integration.publish_event("trends_analyzed", {
+                    "desc": "Trends geanalyseerd",
+                    "feedback_data": event.get("feedback", "unknown"),
+                    "timestamp": datetime.now().isoformat()
+                })
+            except Exception as e:
+                logger.warning(f"Failed to publish trends_analyzed event: {e}")
+        
+        # Save updated history
+        self._save_feedback_history()
+        
+        return {"status": "processed", "event": "feedback_collected"}
         logger.info("[FeedbackAgent] Trends geanalyseerd, trends_analyzed gepubliceerd.")
 
     def collect_template_feedback(self, template_name: str, feedback_text: str, 
@@ -1549,14 +1774,23 @@ Examples:
         # Initialize tracing capabilities
         await self.initialize_tracing()
         
+        # Initialize message bus integration
+        await self.initialize_message_bus()
+        
         print("💬 FeedbackAgent is running...")
         print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
         print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        print("Message Bus: Enabled" if self.message_bus_integration else "Message Bus: Disabled")
         
-        subscribe("feedback_received", self.on_feedback_received)
-        subscribe("summarize_feedback", self.on_summarize_feedback)
-        subscribe("retro_planned", self.handle_retro_planned)
-        subscribe("feedback_collected", self.handle_feedback_collected)
+        # Legacy event subscriptions (for backward compatibility)
+        try:
+            from bmad.agents.core.communication.message_bus import subscribe
+            subscribe("feedback_received", self.on_feedback_received)
+            subscribe("summarize_feedback", self.on_summarize_feedback)
+            subscribe("retro_planned", self.handle_retro_planned)
+            subscribe("feedback_collected", self.handle_feedback_collected)
+        except ImportError:
+            logger.info("Legacy message bus not available, using new message bus only")
 
         logger.info("FeedbackAgent ready and listening for events...")
         await self.collaborate_example()
@@ -1572,9 +1806,13 @@ Examples:
         # Initialize tracing capabilities
         await self.initialize_tracing()
         
+        # Initialize message bus integration
+        await self.initialize_message_bus()
+        
         print("💬 FeedbackAgent is running...")
         print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
         print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        print("Message Bus: Enabled" if self.message_bus_integration else "Message Bus: Disabled")
         
         logger.info("FeedbackAgent ready and listening for events...")
         await self.collaborate_example()
@@ -1604,7 +1842,9 @@ def main():
                                "use-mcp-tool", "get-mcp-status", "use-feedback-mcp-tools", 
                                "check-dependencies", "enhanced-collaborate", "enhanced-security", 
                                "enhanced-performance", "trace-operation", "trace-performance", 
-                               "trace-error", "tracing-summary"])
+                               "trace-error", "tracing-summary",
+                               "initialize-message-bus", "message-bus-status", "publish-event", "subscribe-event",
+                               "list-events", "event-history", "performance-metrics"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--feedback-text", default="The new dashboard is much more user-friendly", help="Feedback text to analyze")
     parser.add_argument("--source", default="User Survey", help="Feedback source")
@@ -1710,7 +1950,7 @@ def main():
         elif args.command == "trace-error":
             result = asyncio.run(agent.trace_feedback_operation({
                 "operation_type": "error_analysis",
-                "error_data": {"error_type": "feedback_analysis", "error_message": "Feedback analysis failed"}
+                "error_data": {"error_type": "feedback_analysis_failure", "error_message": "Feedback analysis failed"}
             }))
             print(json.dumps(result, indent=2))
         elif args.command == "tracing-summary":
@@ -1718,6 +1958,51 @@ def main():
             print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
             print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
             print(f"Agent: {agent.agent_name}")
+    # Message Bus Integration Commands
+    elif args.command == "initialize-message-bus":
+        result = asyncio.run(agent.initialize_message_bus_integration())
+        print(f"Message Bus Integration: {'Enabled' if result else 'Failed'}")
+    elif args.command == "message-bus-status":
+        print("🚀 FeedbackAgent Message Bus Status:")
+        print(f"✅ Message Bus Integration: {'Enabled' if agent.message_bus_enabled else 'Disabled'}")
+        print(f"✅ Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+        print(f"✅ Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+        print(f"📊 Performance Metrics: {len(agent.performance_metrics)} metrics tracked")
+        print(f"📝 Feedback History: {len(agent.feedback_history)} entries")
+        print(f"📊 Sentiment History: {len(agent.sentiment_history)} entries")
+    elif args.command == "publish-event":
+        # Example: publish feedback event
+        event_data = {"feedback_type": "user_feedback", "request_id": "test-123"}
+        asyncio.run(agent.publish_event("feedback_collected", event_data))
+        print(f"Published event: feedback_collected with data: {event_data}")
+    elif args.command == "subscribe-event":
+        # Example: subscribe to feedback events
+        print(f"📡 Subscribing to feedback events")
+        # Event handlers are already registered in initialize_message_bus_integration
+    elif args.command == "list-events":
+        print("🚀 FeedbackAgent Supported Events:")
+        print("📥 Input Events:")
+        print("  - feedback_collected")
+        print("  - quality_gate_requested")
+        print("  - task_delegated")
+        print("📤 Output Events:")
+        print("  - feedback_analyzed")
+        print("  - quality_gate_completed")
+        print("  - task_completed")
+    elif args.command == "event-history":
+        print("📝 Feedback History:")
+        for entry in agent.feedback_history[-10:]:  # Show last 10 entries
+            print(f"  - {entry}")
+        print("\n📊 Sentiment History:")
+        for entry in agent.sentiment_history[-10:]:  # Show last 10 entries
+            print(f"  - {entry}")
+    elif args.command == "performance-metrics":
+        print("📊 FeedbackAgent Performance Metrics:")
+        for metric, value in agent.performance_metrics.items():
+            if isinstance(value, float):
+                print(f"  • {metric}: {value:.2f}")
+            else:
+                print(f"  • {metric}: {value}")
     else:
         print(f"Unknown command: {args.command}")
         agent.show_help()

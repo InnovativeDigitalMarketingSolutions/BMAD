@@ -30,6 +30,13 @@ from bmad.core.mcp.enhanced_mcp_integration import (
     EnhancedMCPIntegration,
     create_enhanced_mcp_integration
 )
+
+# Message Bus Integration
+from bmad.agents.core.communication.agent_message_bus_integration import (
+    AgentMessageBusIntegration,
+    create_agent_message_bus_integration
+)
+
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 from integrations.slack.slack_notify import send_slack_message
 
@@ -45,8 +52,11 @@ class StrategyValidationError(StrategyError):
     """Exception for strategy validation failures."""
     pass
 
-class StrategiePartnerAgent:
+class StrategiePartnerAgent(AgentMessageBusIntegration):
     def __init__(self):
+        # Initialize parent class
+        super().__init__("StrategiePartner", self)
+        
         # Set agent name
         self.agent_name = "StrategiePartner"
         
@@ -74,6 +84,10 @@ class StrategiePartnerAgent:
             "exporters": []
         })())
         self.tracing_enabled = False
+        
+        # Message Bus Integration
+        self.message_bus_integration: Optional[AgentMessageBusIntegration] = None
+        self.message_bus_enabled = False
 
         # Resource paths
         self.resource_base = Path("/Users/yannickmacgillavry/Projects/BMAD/bmad/resources")
@@ -117,6 +131,13 @@ class StrategiePartnerAgent:
             "market_analyses_completed": 0,
             "competitive_analyses_completed": 0,
             "risk_assessments_completed": 0,
+            "stakeholder_analyses_completed": 0,
+            "roadmaps_created": 0,
+            "roi_calculations_completed": 0,
+            "ideas_validated": 0,
+            "ideas_refined": 0,
+            "epics_created": 0,
+            "business_models_analyzed": 0,
             "strategy_success_rate": 0.0
         }
 
@@ -154,13 +175,55 @@ class StrategiePartnerAgent:
             if self.tracer and hasattr(self.tracer, 'initialize'):
                 await self.tracer.initialize()
                 self.tracing_enabled = True
-                logger.info("Tracing initialized successfully")
+                logger.info("Tracing initialized successfully for StrategiePartner")
+                # Set up strategy-specific tracing spans
+                await self.tracer.setup_strategy_tracing({
+                    "agent_name": self.agent_name,
+                    "tracing_level": "detailed",
+                    "strategy_tracking": True,
+                    "market_tracking": True,
+                    "competitive_tracking": True,
+                    "risk_tracking": True
+                })
             else:
-                logger.warning("Tracer not available or missing initialize method")
-                self.tracing_enabled = False
+                logger.warning("Tracing initialization failed, continuing without tracing")
+                
         except Exception as e:
-            logger.warning(f"Tracing initialization failed: {e}")
+            logger.warning(f"Tracing initialization failed for StrategiePartner: {e}")
             self.tracing_enabled = False
+
+    async def initialize_message_bus_integration(self):
+        """Initialize Message Bus Integration for the agent."""
+        try:
+            self.message_bus_integration = create_agent_message_bus_integration(
+                agent_name=self.agent_name,
+                agent_instance=self
+            )
+            
+            # Register event handlers for strategy-specific events
+            await self.message_bus_integration.register_event_handler(
+                "strategy_development_requested", 
+                self.handle_strategy_development_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "idea_validation_requested", 
+                self.handle_idea_validation_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "idea_refinement_requested",
+                self.handle_idea_refinement_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "epic_creation_requested",
+                self.handle_epic_creation_requested
+            )
+            
+            self.message_bus_enabled = True
+            logger.info(f"✅ Message Bus Integration geïnitialiseerd voor {self.agent_name}")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Fout bij initialiseren van Message Bus Integration voor {self.agent_name}: {e}")
+            return False
 
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -561,6 +624,15 @@ StrategiePartner Agent Commands:
   trace-performance [performance_metrics] - Trace performance analysis
   trace-error [error_data] - Trace error analysis
   tracing-summary          - Show tracing summary
+
+🔌 Message Bus Integration:
+  initialize-message-bus    - Initialize Message Bus integration
+  message-bus-status        - Show Message Bus status and metrics
+  publish-event             - Publish events to Message Bus
+  subscribe-event           - Subscribe to events from other agents
+  list-events               - List available events
+  event-history             - Show event history
+  performance-metrics       - Show performance metrics
         """
         print(help_text)
 
@@ -1588,82 +1660,182 @@ StrategiePartner Agent Commands:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, send_slack_message, message)
 
-    def handle_alignment_check_completed(self, event):
+    async def handle_alignment_check_completed(self, event):
         """Handle alignment check completed event."""
+        # Update strategy history
+        self.strategy_history.append({
+            "action": "alignment_check_completed",
+            "timestamp": datetime.now().isoformat(),
+            "event_data": event,
+            "status": "completed"
+        })
+        
         try:
             logger.info(f"Alignment check completed: {event}")
+            # Log metric with the exact event data as expected by tests
             self.monitor.log_metric("alignment_check", event)
             allowed = self.policy_engine.evaluate_policy("alignment", event)
             logger.info(f"Policy evaluation result: {allowed}")
+            
+            # Publish follow-up event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("alignment_check_processed", {
+                        "event_data": event,
+                        "policy_result": allowed,
+                        "timestamp": datetime.now().isoformat()
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to publish alignment_check_processed event: {e}")
+            
+            return {"status": "processed", "event": "alignment_check_completed", "policy_result": allowed}
         except Exception as e:
             logger.error(f"Error handling alignment check completed: {e}")
+            return {"status": "error", "event": "alignment_check_completed", "error": str(e)}
 
-    def handle_strategy_development_requested(self, event):
+    async def handle_strategy_development_requested(self, event):
         """Handle strategy development requested event."""
+        # Update strategy history
+        self.strategy_history.append({
+            "action": "strategy_development_requested",
+            "timestamp": datetime.now().isoformat(),
+            "event_data": event,
+            "status": "processing"
+        })
+        
+        # Update performance metrics
+        self.performance_metrics["strategies_developed"] += 1
+        
         try:
             logger.info(f"Strategy development requested: {event}")
             strategy_name = event.get("strategy_name", "Default Strategy")
-            self.develop_strategy(strategy_name)
+            # Call develop_strategy with the exact strategy name as expected by tests
+            result = await self.develop_strategy(strategy_name)
+            
+            # Publish follow-up event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("strategy_development_completed", {
+                        "strategy_name": strategy_name,
+                        "result": result,
+                        "timestamp": datetime.now().isoformat()
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to publish strategy_development_completed event: {e}")
+            
+            return {"status": "processed", "event": "strategy_development_requested", "result": result}
         except Exception as e:
             logger.error(f"Error handling strategy development requested: {e}")
+            return {"status": "error", "event": "strategy_development_requested", "error": str(e)}
 
-    def handle_idea_validation_requested(self, event):
+    async def handle_idea_validation_requested(self, event):
         """Handle idea validation requested event."""
+        # Update strategy history
+        self.strategy_history.append({
+            "action": "idea_validation_requested",
+            "timestamp": datetime.now().isoformat(),
+            "event_data": event,
+            "status": "processing"
+        })
+        
+        # Update performance metrics
+        self.performance_metrics["ideas_validated"] += 1
+        
         try:
             logger.info(f"Idea validation requested: {event}")
             idea_description = event.get("idea_description", "A new mobile app for task management")
             result = self.validate_idea(idea_description)
             
-            # Publish validation result
-            publish("idea_validation_completed", {
-                "agent": "StrategiePartnerAgent",
-                "idea_description": idea_description,
-                "validation_result": result,
-                "timestamp": datetime.now().isoformat()
-            })
+            # Publish follow-up event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("idea_validation_completed", {
+                        "agent": "StrategiePartnerAgent",
+                        "idea_description": idea_description,
+                        "validation_result": result,
+                        "timestamp": datetime.now().isoformat()
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to publish idea_validation_completed event: {e}")
             
             logger.info(f"Idea validation completed: {result}")
+            return {"status": "processed", "event": "idea_validation_requested", "result": result}
         except Exception as e:
             logger.error(f"Error handling idea validation requested: {e}")
+            return {"status": "error", "event": "idea_validation_requested", "error": str(e)}
 
-    def handle_idea_refinement_requested(self, event):
+    async def handle_idea_refinement_requested(self, event):
         """Handle idea refinement requested event."""
+        # Update strategy history
+        self.strategy_history.append({
+            "action": "idea_refinement_requested",
+            "timestamp": datetime.now().isoformat(),
+            "event_data": event,
+            "status": "processing"
+        })
+        
+        # Update performance metrics
+        self.performance_metrics["ideas_refined"] += 1
+        
         try:
             logger.info(f"Idea refinement requested: {event}")
             idea_description = event.get("idea_description", "A mobile app")
             refinement_data = event.get("refinement_data", {})
             result = self.refine_idea(idea_description, refinement_data)
             
-            # Publish refinement result
-            publish("idea_refinement_completed", {
-                "agent": "StrategiePartnerAgent",
-                "idea_description": idea_description,
-                "refinement_result": result,
-                "timestamp": datetime.now().isoformat()
-            })
+            # Publish follow-up event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("idea_refinement_completed", {
+                        "agent": "StrategiePartnerAgent",
+                        "idea_description": idea_description,
+                        "refinement_result": result,
+                        "timestamp": datetime.now().isoformat()
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to publish idea_refinement_completed event: {e}")
             
             logger.info(f"Idea refinement completed: {result}")
+            return {"status": "processed", "event": "idea_refinement_requested", "result": result}
         except Exception as e:
             logger.error(f"Error handling idea refinement requested: {e}")
+            return {"status": "error", "event": "idea_refinement_requested", "error": str(e)}
 
-    def handle_epic_creation_requested(self, event):
+    async def handle_epic_creation_requested(self, event):
         """Handle epic creation requested event."""
+        # Update strategy history
+        self.strategy_history.append({
+            "action": "epic_creation_requested",
+            "timestamp": datetime.now().isoformat(),
+            "event_data": event,
+            "status": "processing"
+        })
+        
+        # Update performance metrics
+        self.performance_metrics["epics_created"] += 1
+        
         try:
             logger.info(f"Epic creation requested: {event}")
             validated_idea = event.get("validated_idea", {})
             result = self.create_epic_from_idea(validated_idea)
             
-            # Publish epic creation result
-            publish("epic_creation_completed", {
-                "agent": "StrategiePartnerAgent",
-                "validated_idea": validated_idea,
-                "epic_result": result,
-                "timestamp": datetime.now().isoformat()
-            })
+            # Publish follow-up event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("epic_creation_completed", {
+                        "agent": "StrategiePartnerAgent",
+                        "validated_idea": validated_idea,
+                        "epic_result": result,
+                        "timestamp": datetime.now().isoformat()
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to publish epic_creation_completed event: {e}")
             
             logger.info(f"Epic creation completed: {result}")
+            return {"status": "processed", "event": "epic_creation_requested", "result": result}
         except Exception as e:
             logger.error(f"Error handling epic creation requested: {e}")
+            return {"status": "error", "event": "epic_creation_requested", "error": str(e)}
 
     async def run(self):
         """Start the agent in event listening mode."""
@@ -1675,6 +1847,9 @@ StrategiePartner Agent Commands:
         
         # Initialize tracing capabilities
         await self.initialize_tracing()
+        
+        # Initialize Message Bus Integration
+        await self.initialize_message_bus_integration()
         
         print("🎯 StrategiePartner Agent is running...")
         print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
@@ -1707,7 +1882,10 @@ def main():
                                "show-risk-register", "show-strategy-guide", "test", "collaborate", "run",
                                "initialize-mcp", "use-mcp-tool", "get-mcp-status", "use-strategy-mcp-tools", 
                                "check-dependencies", "enhanced-collaborate", "enhanced-security", "enhanced-performance",
-                               "trace-operation", "trace-performance", "trace-error", "tracing-summary"])
+                               "trace-operation", "trace-performance", "trace-error", "tracing-summary",
+                               # Message Bus Integration Commands
+                               "initialize-message-bus", "message-bus-status", "publish-event", "subscribe-event",
+                               "list-events", "event-history", "performance-metrics"])
     parser.add_argument("--strategy-name", default="Digital Transformation Strategy", help="Strategy name")
     parser.add_argument("--sector", default="Technology", help="Market sector")
     parser.add_argument("--competitor", default="Main Competitor", help="Competitor name")
@@ -1715,6 +1893,9 @@ def main():
     parser.add_argument("--idea-description", default="A new mobile app for task management", help="Idea description")
     parser.add_argument("--refinement-data", default='{"problem_statement": "Users need better task organization"}', help="Refinement data as JSON")
     parser.add_argument("--validated-idea", default='{"validation_status": "ready_for_development"}', help="Validated idea as JSON")
+    # Message Bus arguments
+    parser.add_argument("--event-type", help="Event type for Message Bus")
+    parser.add_argument("--event-data", help="Event data for Message Bus")
 
     args = parser.parse_args()
 
@@ -1824,6 +2005,57 @@ def main():
                 print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
                 print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
                 print(f"Agent: {agent.agent_name}")
+        
+        # Message Bus Integration Commands
+        elif args.command == "initialize-message-bus":
+            result = asyncio.run(agent.initialize_message_bus_integration())
+            print(json.dumps(result, indent=2))
+        
+        elif args.command == "message-bus-status":
+            status = {
+                "message_bus_enabled": agent.message_bus_enabled,
+                "message_bus_integration": "Initialized" if agent.message_bus_integration else "Not initialized",
+                "performance_metrics": agent.performance_metrics,
+                "strategy_history_count": len(agent.strategy_history),
+                "market_data_count": len(agent.market_data),
+                "competitive_data_count": len(agent.competitive_data),
+                "risk_register_count": len(agent.risk_register)
+            }
+            print(json.dumps(status, indent=2))
+        
+        elif args.command == "publish-event":
+            if not args.event_type:
+                print("Error: event-type is required")
+                return
+            event_data = json.loads(args.event_data) if args.event_data else {}
+            result = asyncio.run(agent.message_bus_integration.publish_event(args.event_type, event_data))
+            print(json.dumps(result, indent=2))
+        
+        elif args.command == "subscribe-event":
+            if not args.event_type:
+                print("Error: event-type is required")
+                return
+            result = asyncio.run(agent.message_bus_integration.subscribe_event(args.event_type))
+            print(json.dumps(result, indent=2))
+        
+        elif args.command == "list-events":
+            events = [
+                "strategy_development_requested", "idea_validation_requested", "idea_refinement_requested",
+                "epic_creation_requested", "alignment_check_completed", "market_analysis_completed",
+                "competitive_analysis_completed", "risk_assessment_completed"
+            ]
+            print(json.dumps({"available_events": events}, indent=2))
+        
+        elif args.command == "event-history":
+            history = {
+                "strategy_history": agent.strategy_history[-10:],  # Last 10 entries
+                "total_strategies": len(agent.strategy_history)
+            }
+            print(json.dumps(history, indent=2))
+        
+        elif args.command == "performance-metrics":
+            print(json.dumps(agent.performance_metrics, indent=2))
+        
         else:
             print(f"Unknown command: {args.command}")
             agent.show_help()

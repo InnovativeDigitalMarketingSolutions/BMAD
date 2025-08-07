@@ -1,0 +1,67 @@
+{
+  "policy_id": "advanced_resource_management",
+  "policy_name": "Advanced Resource Management",
+  "policy_type": "resource_limits",
+  "version": "2.0.0",
+  "rules": [
+    {
+      "rule_id": "resource_thresholds",
+      "rule_name": "Resource Threshold Monitoring",
+      "policy_type": "resource_limits",
+      "conditions": [
+        {
+          "condition_id": "cpu_limit",
+          "condition_type": "resource_based",
+          "parameters": {
+            "cpu_threshold": 80
+          },
+          "description": "CPU usage threshold",
+          "severity": "high",
+          "enabled": true
+        },
+        {
+          "condition_id": "memory_limit",
+          "condition_type": "resource_based",
+          "parameters": {
+            "memory_threshold": 85
+          },
+          "description": "Memory usage threshold",
+          "severity": "high",
+          "enabled": true
+        },
+        {
+          "condition_id": "api_limit",
+          "condition_type": "resource_based",
+          "parameters": {
+            "api_calls_limit": 1000
+          },
+          "description": "API calls limit",
+          "severity": "medium",
+          "enabled": true
+        }
+      ],
+      "actions": [
+        "allow",
+        "monitor"
+      ],
+      "priority": 150,
+      "enabled": true,
+      "description": "Resource usage monitoring and limits",
+      "metadata": {}
+    }
+  ],
+  "parent_policy": null,
+  "inheritance_rules": {},
+  "status": "active",
+  "created_at": "2025-08-06T13:41:08.275800",
+  "updated_at": "2025-08-06T13:41:08.275802",
+  "expires_at": null,
+  "metadata": {
+    "category": "performance",
+    "tags": [
+      "resource_management",
+      "monitoring",
+      "limits"
+    ]
+  }
+}

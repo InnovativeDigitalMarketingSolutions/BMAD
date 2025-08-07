@@ -1,0 +1,70 @@
+{
+  "policy_id": "advanced_access_control",
+  "policy_name": "Advanced Access Control",
+  "policy_type": "access_control",
+  "version": "2.0.0",
+  "rules": [
+    {
+      "rule_id": "time_based_access",
+      "rule_name": "Time-based Access Control",
+      "policy_type": "access_control",
+      "conditions": [
+        {
+          "condition_id": "business_hours",
+          "condition_type": "time_based",
+          "parameters": {
+            "time_window": {
+              "start": "09:00:00",
+              "end": "17:00:00"
+            },
+            "day_of_week": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ]
+          },
+          "description": "Allow access during business hours",
+          "severity": "medium",
+          "enabled": true
+        },
+        {
+          "condition_id": "role_check",
+          "condition_type": "role_based",
+          "parameters": {
+            "required_roles": [
+              "admin",
+              "manager",
+              "developer"
+            ]
+          },
+          "description": "Check user roles",
+          "severity": "high",
+          "enabled": true
+        }
+      ],
+      "actions": [
+        "allow"
+      ],
+      "priority": 200,
+      "enabled": true,
+      "description": "Time and role-based access control",
+      "metadata": {}
+    }
+  ],
+  "parent_policy": null,
+  "inheritance_rules": {},
+  "status": "active",
+  "created_at": "2025-08-07T10:10:15.616145",
+  "updated_at": "2025-08-07T10:10:15.616149",
+  "expires_at": null,
+  "metadata": {
+    "category": "security",
+    "tags": [
+      "access_control",
+      "time_based",
+      "role_based"
+    ]
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "policy_id": "test_approval",
+  "policy_name": "Test Approval Policy",
+  "policy_type": "workflow_policies",
+  "version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "test_coverage",
+      "rule_name": "Test Coverage Requirements",
+      "policy_type": "workflow_policies",
+      "conditions": [
+        {
+          "condition_id": "coverage_requirements",
+          "condition_type": "context_based",
+          "parameters": {
+            "min_coverage": 80,
+            "unit_tests": true,
+            "integration_tests": true
+          },
+          "description": "Test coverage requirements",
+          "severity": "medium",
+          "enabled": true
+        }
+      ],
+      "actions": [
+        "allow"
+      ],
+      "priority": 150,
+      "enabled": true,
+      "description": "Test approval requirements",
+      "metadata": {}
+    }
+  ],
+  "parent_policy": null,
+  "inheritance_rules": {},
+  "status": "active",
+  "created_at": "2025-08-07T09:03:44.139268",
+  "updated_at": "2025-08-07T09:03:44.139269",
+  "expires_at": null,
+  "metadata": {
+    "category": "testing",
+    "tags": [
+      "test",
+      "coverage",
+      "approval"
+    ]
+  }
+}

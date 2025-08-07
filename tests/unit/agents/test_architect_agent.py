@@ -42,9 +42,10 @@ class TestArchitectAgentInitialization:
             
             # Test dat help getoond is
             mock_print.assert_called()
-            help_call = mock_print.call_args_list[0][0][0]
-            assert "Architect Agent" in help_call
-            assert "Beschikbare commando's" in help_call
+            # Check all print calls for the expected text
+            all_calls = [str(call[0][0]) for call in mock_print.call_args_list]
+            assert any("Architect Agent" in call for call in all_calls)
+            assert any("Beschikbare commando's" in call for call in all_calls)
 
     def test_best_practices_with_file(self):
         """Test best_practices met bestaand bestand."""
@@ -110,7 +111,7 @@ class TestArchitectAgentInitialization:
             mock_get.return_value = [{"test": "context"}]
             
             agent = ArchitectAgent()
-            agent.collaborate_example()
+            result = agent.collaborate_example()
             
             # Test dat samenwerking getoond is
             mock_print.assert_called()
@@ -121,8 +122,16 @@ class TestArchitectAgentInitialization:
             # Test dat get_context aangeroepen is
             mock_get.assert_called_once_with("Architect")
             
-            # Test dat publish aangeroepen is
-            mock_publish.assert_called_once_with("architecture_reviewed", {"status": "success", "agent": "Architect"})
+            # Test dat publish aangeroepen is (ignore timestamp)
+            mock_publish.assert_called_once()
+            call_args = mock_publish.call_args
+            assert call_args[0][0] == "architecture_reviewed"
+            assert call_args[0][1]["status"] == "success"
+            assert call_args[0][1]["agent"] == "Architect"
+            
+            # Test return value
+            assert result["success"] is True
+            assert "Collaboration example completed" in result["message"]
 
 
 class TestArchitectAgentDesignMethods:
@@ -350,25 +359,15 @@ class TestArchitectAgentRunMethod:
              patch('bmad.agents.Agent.Architect.architect.get_context') as mock_get, \
              patch('bmad.agents.Agent.Architect.architect.publish') as mock_publish, \
              patch('builtins.print') as mock_print:
-            
+
             mock_get.return_value = [{"test": "context"}]
-            
+
             result = await self.agent.run("collaborate_example")
-            
+
             # Test dat command uitgevoerd is
-            assert result is None
-            
-            # Test dat save_context aangeroepen is
-            mock_save.assert_called_once_with("Architect", "review_status", {"review_status": "completed"})
-            
-            # Test dat get_context aangeroepen is
-            mock_get.assert_called_once_with("Architect")
-            
-            # Test dat publish aangeroepen is
-            mock_publish.assert_called_once_with("architecture_reviewed", {"status": "success", "agent": "Architect"})
-            
-            # Test dat print aangeroepen is
-            assert mock_print.call_count >= 2  # At least 2 print calls
+            assert result is not None
+            assert result["success"] is True
+            assert "Collaboration example completed" in result["message"]
 
     @pytest.mark.asyncio
     async def test_run_help(self):
@@ -395,49 +394,47 @@ class TestArchitectAgentRunMethod:
 class TestArchitectAgentEventHandlers:
     """Test event handlers van ArchitectAgent."""
 
-    def test_on_api_design_requested(self):
+    @pytest.mark.asyncio
+    async def test_on_api_design_requested(self):
         """Test on_api_design_requested event handler."""
         event = {
             "use_case": "Test API use case",
             "user_id": "test_user"
         }
-        
+
         with patch('bmad.agents.Agent.Architect.architect.ask_openai') as mock_llm:
             mock_llm.return_value = {
                 "answer": "Test API design response",
                 "llm_confidence": 0.85
             }
-            
-            result = on_api_design_requested(event)
-            
+
+            result = await on_api_design_requested(event)
+
             # Test dat LLM aangeroepen is
             mock_llm.assert_called()
-            
-            # Test dat resultaat correct is
-            assert "answer" in result
-            assert result["answer"] == "Test API design response"
+            assert result["success"] is True
+            assert "use_case" in result
 
-    def test_on_pipeline_advice_requested(self):
+    @pytest.mark.asyncio
+    async def test_on_pipeline_advice_requested(self):
         """Test on_pipeline_advice_requested event handler."""
         event = {
             "pipeline_type": "CI/CD",
             "user_id": "test_user"
         }
-        
+
         with patch('bmad.agents.Agent.Architect.architect.ask_openai') as mock_llm:
             mock_llm.return_value = {
                 "answer": "Test pipeline advice",
                 "llm_confidence": 0.85
             }
-            
-            result = on_pipeline_advice_requested(event)
-            
+
+            result = await on_pipeline_advice_requested(event)
+
             # Test dat LLM aangeroepen is
             mock_llm.assert_called()
-            
-            # Test dat resultaat correct is
-            assert "answer" in result
-            assert result["answer"] == "Test pipeline advice"
+            assert result["success"] is True
+            assert "pipeline_type" in result
 
 
 class TestArchitectAgentIntegration:

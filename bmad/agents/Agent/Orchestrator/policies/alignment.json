@@ -1,0 +1,48 @@
+{
+  "policy_id": "alignment",
+  "policy_name": "Strategic Alignment Policy",
+  "policy_type": "behavior_rules",
+  "version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "strategic_check",
+      "rule_name": "Strategic Alignment Check",
+      "policy_type": "behavior_rules",
+      "conditions": [
+        {
+          "condition_id": "business_objectives",
+          "condition_type": "context_based",
+          "parameters": {
+            "business_value": true,
+            "market_fit": true,
+            "resource_allocation": true
+          },
+          "description": "Strategic alignment",
+          "severity": "medium",
+          "enabled": true
+        }
+      ],
+      "actions": [
+        "allow"
+      ],
+      "priority": 100,
+      "enabled": true,
+      "description": "Strategic alignment requirements",
+      "metadata": {}
+    }
+  ],
+  "parent_policy": null,
+  "inheritance_rules": {},
+  "status": "active",
+  "created_at": "2025-08-07T09:34:32.603517",
+  "updated_at": "2025-08-07T09:34:32.603518",
+  "expires_at": null,
+  "metadata": {
+    "category": "strategy",
+    "tags": [
+      "strategy",
+      "alignment",
+      "business"
+    ]
+  }
+}

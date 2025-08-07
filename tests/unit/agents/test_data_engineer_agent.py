@@ -263,17 +263,23 @@ class TestDataEngineerAgent:
         # Verify the method was called
         mock_collaborate.assert_called_once()
 
-    def test_handle_data_quality_check_requested(self, agent):
+    @pytest.mark.asyncio
+    async def test_handle_data_quality_check_requested(self, agent):
         """Test handle_data_quality_check_requested method."""
-        test_event = {"data_summary": "Test data"}
-        result = agent.handle_data_quality_check_requested(test_event)
-        assert result is None
+        with patch.object(agent.monitor, 'log_metric') as mock_log_metric:
+            test_event = {"data_summary": "Test data"}
+            result = await agent.handle_data_quality_check_requested(test_event)
+            assert result is None
+            mock_log_metric.assert_called_once()
 
-    def test_handle_explain_pipeline(self, agent):
+    @pytest.mark.asyncio
+    async def test_handle_explain_pipeline(self, agent):
         """Test handle_explain_pipeline method."""
-        test_event = {"pipeline_code": "Test pipeline code"}
-        result = agent.handle_explain_pipeline(test_event)
-        assert result is None
+        with patch.object(agent.monitor, 'log_metric') as mock_log_metric:
+            test_event = {"pipeline_code": "Test pipeline code"}
+            result = await agent.handle_explain_pipeline(test_event)
+            assert result is None
+            mock_log_metric.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_run(self, agent):
@@ -527,13 +533,35 @@ class TestDataEngineerAgent:
         test_data = {"pipeline_name": "Test Pipeline", "status": "active"}
         agent._export_json(test_data)
 
-    def test_handle_data_quality_check_requested_invalid_event_type(self, agent):
+    @pytest.mark.asyncio
+    async def test_handle_data_quality_check_requested_invalid_event_type(self, agent):
         """Test handle_data_quality_check_requested with invalid event type."""
-        agent.handle_data_quality_check_requested("invalid event")  # Should handle gracefully
+        result = await agent.handle_data_quality_check_requested("invalid event")  # Should handle gracefully
+        assert result is None
 
-    def test_handle_explain_pipeline_invalid_event_type(self, agent):
+    @pytest.mark.asyncio
+    async def test_handle_explain_pipeline_invalid_event_type(self, agent):
         """Test handle_explain_pipeline with invalid event type."""
-        agent.handle_explain_pipeline("invalid event")  # Should handle gracefully 
+        result = await agent.handle_explain_pipeline("invalid event")  # Should handle gracefully
+        assert result is None
+
+    @pytest.mark.asyncio
+    async def test_handle_pipeline_build_requested(self, agent):
+        """Test handle_pipeline_build_requested method."""
+        with patch.object(agent.monitor, 'log_metric') as mock_log_metric:
+            test_event = {"pipeline_name": "Test Pipeline", "pipeline_type": "etl"}
+            result = await agent.handle_pipeline_build_requested(test_event)
+            assert result is None
+            mock_log_metric.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_handle_monitoring_requested(self, agent):
+        """Test handle_monitoring_requested method."""
+        with patch.object(agent.monitor, 'log_metric') as mock_log_metric:
+            test_event = {"pipeline_id": "pipeline_001", "monitoring_type": "performance"}
+            result = await agent.handle_monitoring_requested(test_event)
+            assert result is None
+            mock_log_metric.assert_called_once() 
 
 
 class TestDataEngineerAgentCLI:

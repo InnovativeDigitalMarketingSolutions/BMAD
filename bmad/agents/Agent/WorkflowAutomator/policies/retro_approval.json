@@ -1,0 +1,48 @@
+{
+  "policy_id": "retro_approval",
+  "policy_name": "Retrospective Approval Policy",
+  "policy_type": "behavior_rules",
+  "version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "retrospective_criteria",
+      "rule_name": "Retrospective Criteria Check",
+      "policy_type": "behavior_rules",
+      "conditions": [
+        {
+          "condition_id": "retro_requirements",
+          "condition_type": "context_based",
+          "parameters": {
+            "team_participation": true,
+            "action_items": true,
+            "follow_up": true
+          },
+          "description": "Retrospective requirements",
+          "severity": "medium",
+          "enabled": true
+        }
+      ],
+      "actions": [
+        "allow"
+      ],
+      "priority": 100,
+      "enabled": true,
+      "description": "Retrospective approval requirements",
+      "metadata": {}
+    }
+  ],
+  "parent_policy": null,
+  "inheritance_rules": {},
+  "status": "active",
+  "created_at": "2025-08-07T10:10:15.619215",
+  "updated_at": "2025-08-07T10:10:15.619216",
+  "expires_at": null,
+  "metadata": {
+    "category": "retrospective",
+    "tags": [
+      "retrospective",
+      "approval",
+      "improvement"
+    ]
+  }
+}

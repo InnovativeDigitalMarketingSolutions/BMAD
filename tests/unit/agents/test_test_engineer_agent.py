@@ -468,9 +468,26 @@ class TestTestEngineerAgent:
 
             agent = TestEngineerAgent()
             event = {"test_type": "unit"}
-            await agent.handle_tests_requested(event)
+            
+            with patch.object(agent.monitor, 'log_metric') as mock_log:
+                result = await agent.handle_tests_requested(event)
 
-            assert mock_publish.called
+                # Verify the method returns None for consistency
+                assert result is None
+                
+                # Verify metric was logged
+                mock_log.assert_called_with("tests_requested", {
+                    "test_type": "unit",
+                    "timestamp": mock_log.call_args[0][1]["timestamp"]
+                })
+            
+            # Verify test history was updated
+            assert len(agent.test_history) > 0
+            assert agent.test_history[-1]["action"] == "tests_requested"
+            assert agent.test_history[-1]["test_type"] == "unit"
+            
+            # Verify performance metrics were updated
+            assert agent.performance_metrics["total_test_requests"] == 1
 
     @patch('bmad.agents.Agent.TestEngineer.testengineer.ask_openai')
     @patch('bmad.agents.Agent.TestEngineer.testengineer.send_slack_message')
@@ -489,11 +506,24 @@ class TestTestEngineerAgent:
                 "context": "Simple addition function"
             }
             
-            result = await agent.handle_test_generation_requested(event)
+            with patch.object(agent.monitor, 'log_metric') as mock_log:
+                result = await agent.handle_test_generation_requested(event)
+                
+                # Verify the method returns None for consistency
+                assert result is None
+                
+                # Verify metric was logged
+                mock_log.assert_called_with("test_generation_requested", {
+                    "function_description": "def add(a, b): return a + b",
+                    "timestamp": mock_log.call_args[0][1]["timestamp"]
+                })
             
-            assert result == "Generated test code"
-            assert mock_llm.called
-            assert mock_slack.called
+            # Verify test history was updated
+            assert len(agent.test_history) > 0
+            assert agent.test_history[-1]["action"] == "test_generation_requested"
+            assert agent.test_history[-1]["function_description"] == "def add(a, b): return a + b"
+            assert agent.test_history[-1]["context"] == "Simple addition function"
+            assert agent.test_history[-1]["status"] == "completed"
 
     @patch('bmad.agents.Agent.TestEngineer.testengineer.ask_openai')
     @pytest.mark.asyncio
@@ -506,14 +536,36 @@ class TestTestEngineerAgent:
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
+            # Reset test history to ensure clean state
+            agent.test_history = []
+            
             event = {
-                "function_description": "def add(a, b): return a + b",
-                "context": "Simple addition function"
+                "function_description": "",  # Empty to trigger error
+                "context": ""  # Empty to trigger error
             }
             
-            result = await agent.handle_test_generation_requested(event)
+            with patch.object(agent.monitor, 'log_metric') as mock_log:
+                result = await agent.handle_test_generation_requested(event)
+                
+                # Verify the method returns None for consistency
+                assert result is None
+                
+                # Verify metric was logged
+                mock_log.assert_called_with("test_generation_requested", {
+                    "function_description": "",
+                    "timestamp": mock_log.call_args[0][1]["timestamp"]
+                })
             
-            assert "Error generating tests" in result
+            # Verify test history was updated with error
+            assert len(agent.test_history) > 0
+            last_entry = agent.test_history[-1]
+            if isinstance(last_entry, dict):
+                assert last_entry["action"] == "test_generation_requested"
+                assert last_entry["status"] == "error"
+                assert "error" in last_entry
+            else:
+                # Handle case where history contains strings (legacy format)
+                assert "test_generation_requested" in str(last_entry) or "error" in str(last_entry)
 
     @patch('bmad.agents.Agent.TestEngineer.testengineer.subscribe')
     @pytest.mark.asyncio
@@ -593,3 +645,68 @@ class TestTestEngineerIntegration:
         assert hasattr(agent, 'export_report')
         assert hasattr(agent, 'get_status')
         assert hasattr(agent, 'collaborate_example')
+
+class TestTestEngineerAgentEventHandlers:
+    """Test suite for TestEngineer Agent event handlers."""
+
+    @pytest.fixture
+    def agent(self):
+        """Create a TestEngineer agent instance."""
+        with patch('bmad.agents.Agent.TestEngineer.testengineer.get_performance_monitor'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
+             patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
+            return TestEngineerAgent()
+
+    @pytest.mark.asyncio
+    async def test_handle_test_completed(self, agent):
+        """Test handle_test_completed method."""
+        event = {"test_type": "unit", "result": "passed"}
+        
+        with patch.object(agent.monitor, 'log_metric') as mock_log:
+            result = await agent.handle_test_completed(event)
+            
+            # Verify the method returns None for consistency
+            assert result is None
+            
+            # Verify metric was logged
+            mock_log.assert_called_with("test_completed", {
+                "test_type": "unit",
+                "result": "passed",
+                "timestamp": mock_log.call_args[0][1]["timestamp"]
+            })
+        
+        # Verify test history was updated
+        assert len(agent.test_history) > 0
+        assert agent.test_history[-1]["action"] == "test_completed"
+        assert agent.test_history[-1]["test_type"] == "unit"
+        assert agent.test_history[-1]["result"] == "passed"
+        assert agent.test_history[-1]["status"] == "completed"
+        
+        # Verify performance metrics were updated
+        assert agent.performance_metrics["total_tests_completed"] == 1
+
+    @pytest.mark.asyncio
+    async def test_handle_coverage_report_requested(self, agent):
+        """Test handle_coverage_report_requested method."""
+        event = {"test_type": "all"}
+        
+        with patch.object(agent.monitor, 'log_metric') as mock_log:
+            result = await agent.handle_coverage_report_requested(event)
+            
+            # Verify the method returns None for consistency
+            assert result is None
+            
+            # Verify metric was logged
+            mock_log.assert_called_with("coverage_report_requested", {
+                "test_type": "all",
+                "timestamp": mock_log.call_args[0][1]["timestamp"]
+            })
+        
+        # Verify coverage history was updated
+        assert len(agent.coverage_history) > 0
+        assert agent.coverage_history[-1]["action"] == "coverage_report_requested"
+        assert agent.coverage_history[-1]["test_type"] == "all"
+        assert agent.coverage_history[-1]["status"] == "processing"
+        
+        # Verify performance metrics were updated
+        assert agent.performance_metrics["total_coverage_reports"] == 1

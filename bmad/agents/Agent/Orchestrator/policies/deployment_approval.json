@@ -1,0 +1,48 @@
+{
+  "policy_id": "deployment_approval",
+  "policy_name": "Deployment Approval Policy",
+  "policy_type": "workflow_policies",
+  "version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "infrastructure_deployment",
+      "rule_name": "Infrastructure Deployment Check",
+      "policy_type": "workflow_policies",
+      "conditions": [
+        {
+          "condition_id": "deployment_criteria",
+          "condition_type": "context_based",
+          "parameters": {
+            "environment": "production",
+            "backup_required": true,
+            "rollback_plan": true
+          },
+          "description": "Deployment approval criteria",
+          "severity": "high",
+          "enabled": true
+        }
+      ],
+      "actions": [
+        "allow"
+      ],
+      "priority": 200,
+      "enabled": true,
+      "description": "Infrastructure deployment requirements",
+      "metadata": {}
+    }
+  ],
+  "parent_policy": null,
+  "inheritance_rules": {},
+  "status": "active",
+  "created_at": "2025-08-07T09:34:32.603822",
+  "updated_at": "2025-08-07T09:34:32.603823",
+  "expires_at": null,
+  "metadata": {
+    "category": "devops",
+    "tags": [
+      "deployment",
+      "infrastructure",
+      "approval"
+    ]
+  }
+}

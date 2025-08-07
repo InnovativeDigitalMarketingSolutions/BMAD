@@ -35,6 +35,13 @@ commands:
   - list-platforms: "List supported platforms"
   - show-templates: "Show available templates"
   - export-app: "Export app configuration"
+  # Message Bus Commands
+  - message-bus-status: "Show Message Bus status"
+  - publish-event: "Publish event to Message Bus"
+  - subscribe-event: "Subscribe to event"
+  - list-events: "List supported events"
+  - event-history: "Show event history"
+  - performance-metrics: "Show performance metrics"
   # Enhanced MCP Phase 2 Commands
   - enhanced-collaborate: "Enhanced inter-agent communication"
   - enhanced-security: "Enhanced security validation"

@@ -56,7 +56,7 @@
 - [x] **Status**: ✅ **VOLTOOID**
 - [x] **Actie**: MCP integration guides geraadpleegd:
   - `docs/guides/MCP_INTEGRATION_GUIDE.md` - MCP integration patterns
-  - `docs/guides/MCP_TROUBLESHOOTING_GUIDE.md` - Common issues en solutions
+  - `docs/guides/AGENT_ENHANCEMENT_WORKFLOW.md` - Common issues en troubleshooting
   - `docs/guides/LESSONS_LEARNED_GUIDE.md` - Lessons from previous MCP integrations
 - [x] **Resultaat**: Comprehensive MCP integration strategy ontwikkeld
 

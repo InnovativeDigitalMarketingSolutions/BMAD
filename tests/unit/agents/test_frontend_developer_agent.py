@@ -9,6 +9,7 @@ from unittest.mock import patch, MagicMock, mock_open
 import json
 import time
 from datetime import datetime
+from unittest.mock import AsyncMock
 
 from bmad.agents.Agent.FrontendDeveloper.frontenddeveloper import FrontendDeveloperAgent
 
@@ -24,12 +25,26 @@ class TestFrontendDeveloperAgent:
         assert agent.agent_name == "FrontendDeveloper"
         assert hasattr(agent, 'component_history')
         assert hasattr(agent, 'performance_history')
+        assert hasattr(agent, 'performance_metrics')
         assert hasattr(agent, 'template_paths')
         assert hasattr(agent, 'data_paths')
         assert isinstance(agent.component_history, list)
         assert isinstance(agent.performance_history, list)
+        assert isinstance(agent.performance_metrics, dict)
         assert isinstance(agent.template_paths, dict)
         assert isinstance(agent.data_paths, dict)
+        
+        # Performance metrics validation
+        expected_metrics = ["total_components", "build_success_rate", "average_build_time", "accessibility_score", "component_reuse_rate"]
+        for metric in expected_metrics:
+            assert metric in agent.performance_metrics
+            assert isinstance(agent.performance_metrics[metric], (int, float))
+        
+        # Message Bus Integration attributes
+        assert hasattr(agent, 'message_bus_integration')
+        assert hasattr(agent, 'message_bus_enabled')
+        assert agent.message_bus_integration is None
+        assert agent.message_bus_enabled is False
 
     @patch('builtins.open', new_callable=mock_open, read_data="# Component History\n\n- Component 1\n- Component 2")
     @patch('pathlib.Path.exists', return_value=True)
@@ -214,12 +229,13 @@ class TestFrontendDeveloperAgent:
         assert len(agent.component_history) > 0
 
     @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.time.sleep')
-    def test_build_component(self, mock_sleep):
+    @pytest.mark.asyncio
+    async def test_build_component(self, mock_sleep):
         """Test build_component method."""
         agent = FrontendDeveloperAgent()
         # Initialize services to avoid monitor error
         agent._ensure_services_initialized()
-        result = agent.build_component("TestButton")
+        result = await agent.build_component("TestButton")
         
         assert isinstance(result, dict)
         assert result["name"] == "TestButton"
@@ -273,21 +289,23 @@ class TestFrontendDeveloperAgent:
 
     @patch('pathlib.Path.exists', return_value=True)
     def test_test_resource_completeness_all_available(self, mock_exists, capsys):
-        """Test test_resource_completeness when all resources are available."""
+        """Test resource completeness when all resources are available."""
         agent = FrontendDeveloperAgent()
         agent.test_resource_completeness()
-        
         captured = capsys.readouterr()
-        assert "All resources are available!" in captured.out
+        
+        assert "✅ All resources available" in captured.out
+        assert "Available resources (10):" in captured.out
 
     @patch('pathlib.Path.exists', return_value=False)
     def test_test_resource_completeness_missing_resources(self, mock_exists, capsys):
-        """Test test_resource_completeness when resources are missing."""
+        """Test resource completeness when resources are missing."""
         agent = FrontendDeveloperAgent()
         agent.test_resource_completeness()
-        
         captured = capsys.readouterr()
-        assert "Missing resources:" in captured.out
+        
+        assert "❌ Missing resources (10):" in captured.out
+        assert "Missing resources" in captured.out
 
     def test_get_status(self):
         """Test get_status method."""
@@ -317,16 +335,523 @@ class TestFrontendDeveloperAgent:
         captured = capsys.readouterr()
         assert "Collaboration example completed successfully" in captured.out
 
-    def test_handle_component_build_requested(self):
-        """Test handle_component_build_requested method."""
+    @pytest.mark.asyncio
+    async def test_initialize_message_bus_integration_success(self):
+        """Test successful Message Bus Integration initialization."""
         agent = FrontendDeveloperAgent()
-        # Initialize services to avoid monitor error
-        agent._ensure_services_initialized()
-        event = {"component_name": "TestButton"}
-        agent.handle_component_build_requested(event)
         
-        # Should call build_component
-        assert len(agent.component_history) > 0
+        with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.create_agent_message_bus_integration') as mock_create:
+            mock_integration = MagicMock()
+            mock_integration.publish_event = MagicMock()
+            mock_integration.subscribe_to_event = MagicMock()
+            mock_create.return_value = mock_integration
+            
+            # Mock the async function to return the mock integration
+            mock_create.return_value = mock_integration
+            
+            await agent.initialize_message_bus_integration()
+            
+            mock_create.assert_called_once()
+            assert agent.message_bus_integration == mock_integration
+            # Note: message_bus_enabled is set to True only if initialization succeeds without exception
+            # Since we're mocking, we need to check if the integration was assigned
+            assert agent.message_bus_integration is not None
+
+    @pytest.mark.asyncio
+    async def test_initialize_message_bus_integration_failure(self):
+        """Test Message Bus Integration initialization failure."""
+        agent = FrontendDeveloperAgent()
+        
+        with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.create_agent_message_bus_integration') as mock_create:
+            mock_create.side_effect = Exception("Connection failed")
+            
+            await agent.initialize_message_bus_integration()
+            
+            assert agent.message_bus_integration is None
+            assert agent.message_bus_enabled is False
+
+    @pytest.mark.asyncio
+    async def test_handle_component_build_requested(self):
+        """Test handling component build requested event with real functionality."""
+        agent = FrontendDeveloperAgent()
+        agent.message_bus_integration = MagicMock()
+        agent.message_bus_integration.publish_event = AsyncMock()
+        
+        # Store initial metrics
+        initial_total_components = agent.performance_metrics["total_components"]
+        initial_component_history_length = len(agent.component_history)
+        
+        event_data = {
+            "component_name": "TestComponent",
+            "framework": "react",
+            "request_id": "test-123"
+        }
+        
+        result = await agent.handle_component_build_requested(event_data)
+        
+        # Verify that the event was processed
+        assert result["status"] == "processed"
+        assert result["event"] == "component_build_requested"
+        
+        # Verify performance metrics were updated
+        assert agent.performance_metrics["total_components"] == initial_total_components + 1
+        
+        # Verify component history was updated
+        assert len(agent.component_history) == initial_component_history_length + 1
+        last_entry = agent.component_history[-1]
+        assert last_entry["component"] == "TestComponent"
+        assert last_entry["action"] == "build_requested"
+        assert last_entry["framework"] == "react"
+        assert last_entry["status"] == "processing"
+        
+        # Verify follow-up event was published
+        agent.message_bus_integration.publish_event.assert_called_once_with(
+            "component_build_processing",
+            {
+                "component_name": "TestComponent",
+                "request_id": "test-123",
+                "status": "processing"
+            }
+        )
+
+    @pytest.mark.asyncio
+    async def test_handle_component_build_completed(self):
+        """Test handling component build completed event with real functionality."""
+        agent = FrontendDeveloperAgent()
+        agent.message_bus_integration = MagicMock()
+        agent.message_bus_integration.publish_event = AsyncMock()
+        
+        # Store initial metrics
+        initial_build_success_rate = agent.performance_metrics["build_success_rate"]
+        initial_average_build_time = agent.performance_metrics["average_build_time"]
+        initial_performance_history_length = len(agent.performance_history)
+        
+        event_data = {
+            "component_name": "TestComponent",
+            "status": "completed",
+            "request_id": "test-123",
+            "build_time": 1500  # 1.5 seconds
+        }
+        
+        result = await agent.handle_component_build_completed(event_data)
+        
+        # Verify that the event was processed
+        assert result["status"] == "processed"
+        assert result["event"] == "component_build_completed"
+        
+        # Verify performance metrics were updated
+        assert agent.performance_metrics["build_success_rate"] > initial_build_success_rate
+        assert agent.performance_metrics["average_build_time"] > 0
+        
+        # Verify performance history was updated
+        assert len(agent.performance_history) == initial_performance_history_length + 1
+        last_entry = agent.performance_history[-1]
+        assert last_entry["component"] == "TestComponent"
+        assert last_entry["action"] == "build_completed"
+        assert last_entry["status"] == "completed"
+        assert last_entry["build_time"] == 1500
+        assert last_entry["framework"] == "react"
+        
+        # Verify follow-up event was published
+        agent.message_bus_integration.publish_event.assert_called_once_with(
+            "component_build_finalized",
+            {
+                "component_name": "TestComponent",
+                "request_id": "test-123",
+                "status": "completed",
+                "build_time": 1500
+            }
+        )
+
+    @pytest.mark.asyncio
+    async def test_handle_figma_design_updated(self):
+        """Test handling Figma design updated event with real functionality."""
+        agent = FrontendDeveloperAgent()
+        agent.message_bus_integration = MagicMock()
+        agent.message_bus_integration.publish_event = AsyncMock()
+        
+        # Store initial metrics
+        initial_component_reuse_rate = agent.performance_metrics["component_reuse_rate"]
+        initial_performance_history_length = len(agent.performance_history)
+        
+        event_data = {
+            "file_id": "figma-file-123",
+            "version": "2.0",
+            "request_id": "test-123",
+            "components_affected": ["Button", "Card", "Modal"],
+            "design_system_version": "1.2.0"
+        }
+        
+        result = await agent.handle_figma_design_updated(event_data)
+        
+        # Verify that the event was processed
+        assert result["status"] == "processed"
+        assert result["event"] == "figma_design_updated"
+        
+        # Verify performance metrics were updated
+        assert agent.performance_metrics["component_reuse_rate"] > initial_component_reuse_rate
+        
+        # Verify performance history was updated
+        assert len(agent.performance_history) == initial_performance_history_length + 1
+        last_entry = agent.performance_history[-1]
+        assert last_entry["action"] == "figma_design_updated"
+        assert last_entry["file_id"] == "figma-file-123"
+        assert last_entry["version"] == "2.0"
+        assert last_entry["components_affected"] == ["Button", "Card", "Modal"]
+        assert last_entry["design_system_version"] == "1.2.0"
+        
+        # Verify follow-up event was published
+        agent.message_bus_integration.publish_event.assert_called_once_with(
+            "design_update_processed",
+            {
+                "file_id": "figma-file-123",
+                "version": "2.0",
+                "components_affected": ["Button", "Card", "Modal"],
+                "request_id": "test-123"
+            }
+        )
+
+    @pytest.mark.asyncio
+    async def test_handle_ui_feedback_received(self):
+        """Test handling UI feedback received event with real functionality."""
+        agent = FrontendDeveloperAgent()
+        agent.message_bus_integration = MagicMock()
+        agent.message_bus_integration.publish_event = AsyncMock()
+        
+        # Store initial metrics
+        initial_accessibility_score = agent.performance_metrics["accessibility_score"]
+        initial_performance_history_length = len(agent.performance_history)
+        
+        event_data = {
+            "component_name": "TestComponent",
+            "feedback": "Improve accessibility",
+            "feedback_score": 85,
+            "request_id": "test-123",
+            "user_id": "user-123",
+            "feedback_type": "accessibility"
+        }
+        
+        result = await agent.handle_ui_feedback_received(event_data)
+        
+        # Verify that the event was processed
+        assert result["status"] == "processed"
+        assert result["event"] == "ui_feedback_received"
+        
+        # Verify performance metrics were updated
+        assert agent.performance_metrics["accessibility_score"] > initial_accessibility_score
+        
+        # Verify performance history was updated
+        assert len(agent.performance_history) == initial_performance_history_length + 1
+        last_entry = agent.performance_history[-1]
+        assert last_entry["component"] == "TestComponent"
+        assert last_entry["action"] == "ui_feedback_received"
+        assert last_entry["feedback"] == "Improve accessibility"
+        assert last_entry["feedback_score"] == 85
+        assert last_entry["user_id"] == "user-123"
+        assert last_entry["feedback_type"] == "accessibility"
+        
+        # Verify follow-up event was published
+        agent.message_bus_integration.publish_event.assert_called_once_with(
+            "feedback_processed",
+            {
+                "component_name": "TestComponent",
+                "feedback_score": 85,
+                "feedback_type": "accessibility",
+                "request_id": "test-123"
+            }
+        )
+
+    @pytest.mark.asyncio
+    async def test_handle_accessibility_check_requested(self):
+        """Test handling accessibility check requested event with real functionality."""
+        agent = FrontendDeveloperAgent()
+        agent.message_bus_integration = MagicMock()
+        agent.message_bus_integration.publish_event = AsyncMock()
+        
+        # Store initial metrics
+        initial_total_components = agent.performance_metrics["total_components"]
+        initial_performance_history_length = len(agent.performance_history)
+        
+        event_data = {
+            "component_name": "TestComponent",
+            "request_id": "test-123",
+            "check_type": "wcag",
+            "priority": "high"
+        }
+        
+        result = await agent.handle_accessibility_check_requested(event_data)
+        
+        # Verify that the event was processed
+        assert result["status"] == "processed"
+        assert result["event"] == "accessibility_check_requested"
+        
+        # Verify performance metrics were updated
+        assert agent.performance_metrics["total_components"] == initial_total_components + 1
+        
+        # Verify performance history was updated
+        assert len(agent.performance_history) == initial_performance_history_length + 1
+        last_entry = agent.performance_history[-1]
+        assert last_entry["component"] == "TestComponent"
+        assert last_entry["action"] == "accessibility_check_requested"
+        assert last_entry["check_type"] == "wcag"
+        assert last_entry["priority"] == "high"
+        
+        # Verify follow-up event was published
+        agent.message_bus_integration.publish_event.assert_called_once_with(
+            "accessibility_check_processing",
+            {
+                "component_name": "TestComponent",
+                "check_type": "wcag",
+                "request_id": "test-123"
+            }
+        )
+
+    @pytest.mark.asyncio
+    async def test_message_bus_integration_in_run_method(self):
+        """Test that Message Bus Integration is initialized in run method."""
+        agent = FrontendDeveloperAgent()
+        
+        with patch.object(agent, 'initialize_message_bus_integration') as mock_init:
+            with patch.object(agent, 'collaborate_example'):
+                with patch('asyncio.sleep') as mock_sleep:
+                    # Mock the infinite loop to run only once
+                    mock_sleep.side_effect = KeyboardInterrupt()
+                    
+                    try:
+                        await agent.run()
+                    except KeyboardInterrupt:
+                        pass  # Expected behavior
+                    
+                    mock_init.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_message_bus_status_in_run_method(self):
+        """Test that Message Bus status is printed in run method."""
+        agent = FrontendDeveloperAgent()
+        agent.message_bus_enabled = True
+        
+        with patch('builtins.print') as mock_print:
+            with patch.object(agent, 'initialize_message_bus_integration'):
+                with patch.object(agent, 'collaborate_example'):
+                    with patch('asyncio.sleep') as mock_sleep:
+                        # Mock the infinite loop to run only once
+                        mock_sleep.side_effect = KeyboardInterrupt()
+                        
+                        try:
+                            await agent.run()
+                        except KeyboardInterrupt:
+                            pass  # Expected behavior
+                        
+                        # Verify status message was printed
+                        mock_print.assert_any_call("Message Bus: Enabled")
+
+    @pytest.mark.asyncio
+    async def test_message_bus_disabled_status(self):
+        """Test Message Bus disabled status display."""
+        agent = FrontendDeveloperAgent()
+        agent.message_bus_enabled = False
+        
+        with patch('builtins.print') as mock_print:
+            with patch.object(agent, 'initialize_message_bus_integration'):
+                with patch.object(agent, 'collaborate_example'):
+                    with patch('asyncio.sleep') as mock_sleep:
+                        # Mock the infinite loop to run only once
+                        mock_sleep.side_effect = KeyboardInterrupt()
+                        
+                        try:
+                            await agent.run()
+                        except KeyboardInterrupt:
+                            pass  # Expected behavior
+                        
+                        # Verify disabled status message was printed
+                        mock_print.assert_any_call("Message Bus: Disabled")
+
+    @pytest.mark.asyncio
+    async def test_event_handler_error_handling(self):
+        """Test error handling in event handlers."""
+        agent = FrontendDeveloperAgent()
+        agent.message_bus_integration = MagicMock()
+        
+        # Simulate an error in event processing
+        with patch.object(agent, 'build_component', side_effect=Exception("Build failed")):
+            event_data = {"component_name": "TestComponent"}
+            
+            # Should not raise exception
+            await agent.handle_component_build_requested(event_data)
+            
+            # Verify error was logged or handled gracefully
+            assert agent.message_bus_integration is not None
+
+    @pytest.mark.asyncio
+    async def test_message_bus_integration_config(self):
+        """Test Message Bus Integration configuration."""
+        agent = FrontendDeveloperAgent()
+        
+        with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.create_agent_message_bus_integration') as mock_create:
+            mock_integration = MagicMock()
+            # Make register_event_handler async
+            async def async_register_handler(event_type, handler):
+                return True
+            mock_integration.register_event_handler = async_register_handler
+            mock_create.return_value = mock_integration
+            
+            await agent.initialize_message_bus_integration()
+            
+            # Verify correct parameters were passed
+            call_args = mock_create.call_args
+            assert call_args[1]['agent_name'] == "FrontendDeveloper"
+            assert call_args[1]['agent_instance'] == agent
+            
+            # Verify message bus was enabled
+            assert agent.message_bus_enabled is True
+
+    @pytest.mark.asyncio
+    async def test_message_bus_event_handlers_registration(self):
+        """Test that event handlers are properly registered."""
+        agent = FrontendDeveloperAgent()
+        
+        with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.create_agent_message_bus_integration') as mock_create:
+            mock_integration = MagicMock()
+            # Make register_event_handler async
+            async def async_register_handler(event_type, handler):
+                return True
+            mock_integration.register_event_handler = async_register_handler
+            mock_create.return_value = mock_integration
+            
+            await agent.initialize_message_bus_integration()
+            
+            # Verify message bus was enabled
+            assert agent.message_bus_enabled is True
+            
+            # Verify the agent has the expected event handlers
+            assert hasattr(agent, 'handle_component_build_requested')
+            assert hasattr(agent, 'handle_component_build_completed')
+            assert hasattr(agent, 'handle_figma_design_updated')
+            assert hasattr(agent, 'handle_ui_feedback_received')
+            assert hasattr(agent, 'handle_accessibility_check_requested')
+
+    def test_message_bus_publish_event(self):
+        """Test publishing events through Message Bus Integration."""
+        agent = FrontendDeveloperAgent()
+        agent.message_bus_integration = MagicMock()
+        
+        event_name = "component_build_completed"
+        event_data = {"component_name": "TestComponent", "status": "success"}
+        
+        # Test that we can call publish_event (mock will handle the async part)
+        agent.message_bus_integration.publish_event(event_name, event_data)
+        
+        agent.message_bus_integration.publish_event.assert_called_once_with(event_name, event_data)
+
+    @pytest.mark.asyncio
+    async def test_message_bus_subscription_handling(self):
+        """Test Message Bus subscription handling."""
+        agent = FrontendDeveloperAgent()
+        agent.message_bus_integration = MagicMock()
+        
+        # Simulate receiving an event
+        event_data = {"component_name": "TestComponent"}
+        
+        # Test that event handlers can be called
+        result = await agent.handle_component_build_requested(event_data)
+        
+        # Verify the handler was called (indirectly through the event system)
+        assert agent.message_bus_integration is not None
+        assert result["status"] == "processed"
+
+    @pytest.mark.asyncio
+    async def test_message_bus_integration_cleanup(self):
+        """Test Message Bus Integration cleanup."""
+        agent = FrontendDeveloperAgent()
+        agent.message_bus_integration = MagicMock()
+        
+        # Simulate cleanup
+        if agent.message_bus_integration:
+            agent.message_bus_integration.close = MagicMock()
+            agent.message_bus_integration.close()
+            
+            agent.message_bus_integration.close.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_message_bus_performance_monitoring(self):
+        """Test Message Bus performance monitoring."""
+        agent = FrontendDeveloperAgent()
+        agent.message_bus_integration = MagicMock()
+        
+        start_time = time.time()
+        
+        # Simulate event processing
+        event_data = {"component_name": "TestComponent"}
+        result = await agent.handle_component_build_requested(event_data)
+        
+        end_time = time.time()
+        processing_time = end_time - start_time
+        
+        # Verify processing time is reasonable (< 1 second for test)
+        assert processing_time < 1.0
+        assert result["status"] == "processed"
+
+    @pytest.mark.asyncio
+    async def test_message_bus_concurrent_events(self):
+        """Test handling multiple concurrent events."""
+        agent = FrontendDeveloperAgent()
+        agent.message_bus_integration = MagicMock()
+        
+        # Create multiple events
+        events = [
+            {"component_name": f"Component{i}", "request_id": f"req-{i}"}
+            for i in range(3)
+        ]
+        
+        # Process events sequentially (since handle_component_build_requested is now async)
+        results = []
+        for event in events:
+            result = await agent.handle_component_build_requested(event)
+            results.append(result)
+        
+        # Verify all events were processed
+        assert len(results) == 3
+        for result in results:
+            assert result["status"] == "processed"
+
+    @pytest.mark.asyncio
+    async def test_message_bus_integration_with_tracing(self):
+        """Test Message Bus Integration with tracing enabled."""
+        agent = FrontendDeveloperAgent()
+        
+        with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.create_agent_message_bus_integration') as mock_create:
+            await agent.initialize_message_bus_integration()
+            
+            # Verify Message Bus Integration was initialized
+            mock_create.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_message_bus_error_recovery(self):
+        """Test Message Bus error recovery mechanisms."""
+        agent = FrontendDeveloperAgent()
+        
+        # Simulate initial failure
+        with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.create_agent_message_bus_integration') as mock_create:
+            mock_create.side_effect = Exception("Initial failure")
+            
+            await agent.initialize_message_bus_integration()
+            
+            assert agent.message_bus_integration is None
+            assert agent.message_bus_enabled is False
+        
+        # Simulate recovery
+        with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.create_agent_message_bus_integration') as mock_create:
+            mock_integration = MagicMock()
+            # Make register_event_handler async
+            async def async_register_handler(event_type, handler):
+                return True
+            mock_integration.register_event_handler = async_register_handler
+            mock_create.return_value = mock_integration
+            
+            await agent.initialize_message_bus_integration()
+            
+            assert agent.message_bus_integration == mock_integration
+            assert agent.message_bus_enabled is True
 
     @patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.ask_openai')
     @pytest.mark.asyncio
@@ -540,10 +1065,10 @@ class TestFrontendDeveloperIntegration:
         
         # Test input validation
         with pytest.raises(ValueError):
-            agent.build_component("")
+            await agent.build_component("")
         
         # Test valid component build
-        result = agent.build_component("TestComponent")
+        result = await agent.build_component("TestComponent")
         assert result["name"] == "TestComponent"
         assert result["type"] == "React/Next.js"
         

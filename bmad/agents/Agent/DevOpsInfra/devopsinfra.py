@@ -43,17 +43,26 @@ from bmad.core.mcp.enhanced_mcp_integration import (
 # Tracing Integration
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 
+# Message Bus Integration
+from bmad.agents.core.communication.agent_message_bus_integration import (
+    AgentMessageBusIntegration,
+    create_agent_message_bus_integration
+)
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-class DevOpsInfraAgent:
+class DevOpsInfraAgent(AgentMessageBusIntegration):
     """
     DevOps Infrastructure Agent voor BMAD.
     Gespecialiseerd in infrastructure management, CI/CD pipelines, en deployment automation.
     """
     
     def __init__(self):
+        # Initialize parent class with agent name and instance
+        super().__init__("DevOpsInfra", self)
+        
         self.framework_manager = get_framework_templates_manager()
         try:
             self.devops_template = self.framework_manager.get_framework_template('devops')
@@ -89,6 +98,22 @@ class DevOpsInfraAgent:
         self._load_infrastructure_history()
         self._load_incident_history()
         
+        # Performance metrics
+        self.performance_metrics = {
+            "pipeline_execution_time": 0.0,
+            "deployment_success_rate": 0.0,
+            "incident_response_time": 0.0,
+            "infrastructure_uptime": 0.0,
+            "monitoring_accuracy": 0.0,
+            "automation_level": 0.0,
+            "security_compliance_score": 0.0,
+            "resource_utilization": 0.0,
+            "deployment_frequency": 0.0,
+            "mean_time_to_recovery": 0.0,
+            "change_failure_rate": 0.0,
+            "lead_time_for_changes": 0.0
+        }
+        
         # MCP Integration
         self.mcp_client: Optional[MCPClient] = None
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
@@ -102,6 +127,10 @@ class DevOpsInfraAgent:
         # Tracing Integration
         self.tracer: Optional[BMADTracer] = None
         self.tracing_enabled = False
+        
+        # Message Bus Integration
+        self.message_bus_integration: Optional[AgentMessageBusIntegration] = None
+        self.message_bus_enabled = False
         
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
     
@@ -159,6 +188,39 @@ class DevOpsInfraAgent:
         except Exception as e:
             logger.warning(f"Tracing initialization failed for DevOpsInfra: {e}")
             self.tracing_enabled = False
+
+    async def initialize_message_bus_integration(self):
+        """Initialize Message Bus Integration for the agent."""
+        try:
+            self.message_bus_integration = create_agent_message_bus_integration(
+                agent_name=self.agent_name,
+                agent_instance=self
+            )
+            
+            # Register event handlers for DevOps-specific events
+            await self.message_bus_integration.register_event_handler(
+                "pipeline_advice_requested", 
+                self.on_pipeline_advice_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "incident_response_requested", 
+                self.on_incident_response_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "infrastructure_deployment_requested",
+                self.handle_infrastructure_deployment_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "infrastructure_monitoring_requested",
+                self.handle_monitoring_requested
+            )
+            
+            self.message_bus_enabled = True
+            logger.info(f"✅ Message Bus Integration geïnitialiseerd voor {self.agent_name}")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Fout bij initialiseren van Message Bus Integration voor {self.agent_name}: {e}")
+            return False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -469,7 +531,16 @@ class DevOpsInfraAgent:
                     lines = content.split("\n")
                     for line in lines:
                         if line.strip().startswith("- "):
-                            self.infrastructure_history.append(line.strip()[2:])
+                            # Support both string and dictionary formats
+                            entry = line.strip()[2:]
+                            try:
+                                # Try to parse as JSON (dictionary)
+                                import json
+                                parsed_entry = json.loads(entry)
+                                self.infrastructure_history.append(parsed_entry)
+                            except (json.JSONDecodeError, ValueError):
+                                # Fall back to string format
+                                self.infrastructure_history.append(entry)
         except Exception as e:
             logger.warning(f"Could not load infrastructure history: {e}")
 
@@ -480,7 +551,11 @@ class DevOpsInfraAgent:
             with open(self.data_paths["history"], "w") as f:
                 f.write("# Infrastructure History\n\n")
                 for infra in self.infrastructure_history[-50:]:  # Keep last 50 entries
-                    f.write(f"- {infra}\n")
+                    if isinstance(infra, dict):
+                        import json
+                        f.write(f"- {json.dumps(infra)}\n")
+                    else:
+                        f.write(f"- {infra}\n")
         except Exception as e:
             logger.error(f"Could not save infrastructure history: {e}")
 
@@ -493,7 +568,16 @@ class DevOpsInfraAgent:
                     lines = content.split("\n")
                     for line in lines:
                         if line.strip().startswith("- "):
-                            self.incident_history.append(line.strip()[2:])
+                            # Support both string and dictionary formats
+                            entry = line.strip()[2:]
+                            try:
+                                # Try to parse as JSON (dictionary)
+                                import json
+                                parsed_entry = json.loads(entry)
+                                self.incident_history.append(parsed_entry)
+                            except (json.JSONDecodeError, ValueError):
+                                # Fall back to string format
+                                self.incident_history.append(entry)
         except Exception as e:
             logger.warning(f"Could not load incident history: {e}")
 
@@ -504,7 +588,11 @@ class DevOpsInfraAgent:
             with open(self.data_paths["incident-history"], "w") as f:
                 f.write("# Incident History\n\n")
                 for incident in self.incident_history[-50:]:  # Keep last 50 incidents
-                    f.write(f"- {incident}\n")
+                    if isinstance(incident, dict):
+                        import json
+                        f.write(f"- {json.dumps(incident)}\n")
+                    else:
+                        f.write(f"- {incident}\n")
         except Exception as e:
             logger.error(f"Could not save incident history: {e}")
 
@@ -524,6 +612,25 @@ DevOps Infrastructure Agent Commands:
   export-report [format]  - Export infrastructure report (format: md, csv, json)
   test                    - Test resource completeness
   collaborate             - Demonstrate collaboration with other agents
+  run                     - Run the agent with full integration
+
+Enhanced MCP Phase 2 Commands:
+  enhanced-collaborate    - Enhanced collaboration with other agents
+  enhanced-security       - Enhanced security validation
+  enhanced-performance    - Enhanced performance optimization
+  trace-operation         - Trace infrastructure operations
+  trace-performance       - Trace performance metrics
+  trace-error             - Trace error analysis
+  tracing-summary         - Show tracing status
+
+Message Bus Integration Commands:
+  initialize-message-bus  - Initialize Message Bus integration
+  message-bus-status      - Show Message Bus status
+  publish-event           - Publish infrastructure event
+  subscribe-event         - Show subscribed events
+  list-events             - List supported events
+  event-history           - Show event history
+  performance-metrics     - Show performance metrics
         """
         print(help_text)
 
@@ -1259,44 +1366,357 @@ DevOps Infrastructure Agent Commands:
         context = get_context("DevOpsInfra")
         print(f"Opgehaalde context: {context}")
 
-    def on_pipeline_advice_requested(self, event):
+    async def on_pipeline_advice_requested(self, event):
         """Handle pipeline advice request from other agents."""
-        logger.info(f"Pipeline advice requested: {event}")
-        pipeline_config = event.get("pipeline_config", "Sample CI/CD pipeline")
-        self.pipeline_advice(pipeline_config)
+        try:
+            logger.info(f"Pipeline advice requested: {event}")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+            
+            # Log metric for pipeline advice requested
+            self.monitor.log_metric("pipeline_advice_requested", {
+                "pipeline_config": event.get("pipeline_config", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update infrastructure history
+            history_entry = {
+                "action": "pipeline_advice_requested",
+                "timestamp": datetime.now().isoformat(),
+                "pipeline_config": event.get("pipeline_config", "Sample CI/CD pipeline"),
+                "status": "processing"
+            }
+            self.infrastructure_history.append(history_entry)
+            self._save_infrastructure_history()
+            
+            # Process pipeline advice request
+            pipeline_config = event.get("pipeline_config", "Sample CI/CD pipeline")
+            result = self.pipeline_advice(pipeline_config)
+            
+            # Publish follow-up event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("pipeline_advice_completed", {
+                        "pipeline_config": pipeline_config,
+                        "timestamp": datetime.now().isoformat(),
+                        "status": "completed"
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to publish pipeline_advice_completed event: {e}")
+            
+            # Return None for consistency with other event handlers
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error in pipeline advice event handler: {e}")
+            return None
 
-    def on_incident_response_requested(self, event):
+    async def on_incident_response_requested(self, event):
         """Handle incident response request from other agents."""
-        logger.info(f"Incident response requested: {event}")
-        incident_desc = event.get("incident_desc", "Sample incident description")
-        self.incident_response(incident_desc)
+        try:
+            logger.info(f"Incident response requested: {event}")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+            
+            # Log metric for incident response requested
+            self.monitor.log_metric("incident_response_requested", {
+                "incident_desc": event.get("incident_desc", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update incident history
+            incident_entry = {
+                "action": "incident_response_requested",
+                "timestamp": datetime.now().isoformat(),
+                "incident_desc": event.get("incident_desc", "Sample incident description"),
+                "status": "processing"
+            }
+            self.incident_history.append(incident_entry)
+            self._save_incident_history()
+            
+            # Process incident response request
+            incident_desc = event.get("incident_desc", "Sample incident description")
+            result = self.incident_response(incident_desc)
+            
+            # Publish follow-up event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("incident_response_completed", {
+                        "incident_desc": incident_desc,
+                        "timestamp": datetime.now().isoformat(),
+                        "status": "completed"
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to publish incident_response_completed event: {e}")
+            
+            # Return None for consistency with other event handlers
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error in incident response event handler: {e}")
+            return None
 
-    def on_feedback_sentiment_analyzed(self, event):
+    async def on_feedback_sentiment_analyzed(self, event):
         """Handle feedback sentiment analysis from other agents."""
-        sentiment = event.get("sentiment", "")
-        motivatie = event.get("motivatie", "")
-        feedback = event.get("feedback", "")
-        if sentiment == "negatief":
-            prompt = f"Bedenk een DevOps-actie of monitoringvoorstel op basis van deze negatieve feedback: '{feedback}'. Motivatie: {motivatie}. Geef alleen het voorstel als JSON."
-            structured_output = '{"devops_voorstel": "..."}'
-            result = ask_openai(prompt, structured_output=structured_output)
-            logger.info(f"[DevOpsInfra][LLM DevOps Voorstel]: {result}")
+        try:
+            logger.info(f"Feedback sentiment analyzed: {event}")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+            
+            # Log metric for feedback sentiment analyzed
+            self.monitor.log_metric("feedback_sentiment_analyzed", {
+                "sentiment": event.get("sentiment", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update incident history for feedback processing
+            feedback_entry = {
+                "action": "feedback_sentiment_analyzed",
+                "timestamp": datetime.now().isoformat(),
+                "sentiment": event.get("sentiment", ""),
+                "motivatie": event.get("motivatie", ""),
+                "feedback": event.get("feedback", ""),
+                "status": "processing"
+            }
+            self.incident_history.append(feedback_entry)
+            self._save_incident_history()
+            
+            # Process feedback sentiment
+            sentiment = event.get("sentiment", "")
+            motivatie = event.get("motivatie", "")
+            feedback = event.get("feedback", "")
+            
+            if sentiment == "negatief":
+                prompt = f"Bedenk een DevOps-actie of monitoringvoorstel op basis van deze negatieve feedback: '{feedback}'. Motivatie: {motivatie}. Geef alleen het voorstel als JSON."
+                structured_output = '{"devops_voorstel": "..."}'
+                result = ask_openai(prompt, structured_output=structured_output)
+                logger.info(f"[DevOpsInfra][LLM DevOps Voorstel]: {result}")
+            
+            # Publish follow-up event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("feedback_processing_completed", {
+                        "sentiment": sentiment,
+                        "timestamp": datetime.now().isoformat(),
+                        "status": "completed"
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to publish feedback_processing_completed event: {e}")
+            
+            # Return None for consistency with other event handlers
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error in feedback sentiment event handler: {e}")
+            return None
 
-    def handle_build_triggered(self, event):
+    async def handle_build_triggered(self, event):
         """Handle build trigger event."""
-        logger.info("[DevOpsInfra] Build gestart...")
-        # Simuleer build (in productie: start build pipeline)
-        time.sleep(2)
-        publish("tests_requested", {"desc": "Tests uitvoeren"})
-        logger.info("[DevOpsInfra] Build afgerond, tests_requested gepubliceerd.")
+        try:
+            logger.info("[DevOpsInfra] Build gestart...")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+            
+            # Log metric for build triggered
+            self.monitor.log_metric("build_triggered", {
+                "build_type": event.get("build_type", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update infrastructure history
+            build_entry = {
+                "action": "build_triggered",
+                "timestamp": datetime.now().isoformat(),
+                "build_type": event.get("build_type", "unknown"),
+                "status": "processing"
+            }
+            self.infrastructure_history.append(build_entry)
+            self._save_infrastructure_history()
+            
+            # Simuleer build (in productie: start build pipeline)
+            await asyncio.sleep(2)
+            
+            # Publish follow-up events
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("tests_requested", {"desc": "Tests uitvoeren"})
+                    await self.message_bus_integration.publish_event("build_completed", {
+                        "build_type": event.get("build_type", "unknown"),
+                        "timestamp": datetime.now().isoformat(),
+                        "status": "completed"
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to publish build events: {e}")
+            
+            logger.info("[DevOpsInfra] Build afgerond, tests_requested gepubliceerd.")
+            
+            # Return None for consistency with other event handlers
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error in build triggered event handler: {e}")
+            return None
 
-    def handle_deployment_executed(self, event):
+    async def handle_deployment_executed(self, event):
         """Handle deployment execution event."""
-        logger.info("[DevOpsInfra] Deployment gestart...")
-        # Simuleer deployment (in productie: start deployment pipeline)
-        time.sleep(2)
-        publish("deployment_completed", {"desc": "Deployment afgerond"})
-        logger.info("[DevOpsInfra] Deployment afgerond, deployment_completed gepubliceerd.")
+        try:
+            logger.info("[DevOpsInfra] Deployment gestart...")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+            
+            # Log metric for deployment executed
+            self.monitor.log_metric("deployment_executed", {
+                "deployment_type": event.get("deployment_type", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update infrastructure history
+            deployment_entry = {
+                "action": "deployment_executed",
+                "timestamp": datetime.now().isoformat(),
+                "deployment_type": event.get("deployment_type", "unknown"),
+                "status": "processing"
+            }
+            self.infrastructure_history.append(deployment_entry)
+            self._save_infrastructure_history()
+            
+            # Simuleer deployment (in productie: start deployment pipeline)
+            await asyncio.sleep(2)
+            
+            # Publish follow-up events
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("deployment_completed", {"desc": "Deployment afgerond"})
+                except Exception as e:
+                    logger.warning(f"Failed to publish deployment_completed event: {e}")
+            
+            logger.info("[DevOpsInfra] Deployment afgerond, deployment_completed gepubliceerd.")
+            
+            # Return None for consistency with other event handlers
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error in deployment executed event handler: {e}")
+            return None
+
+    async def handle_infrastructure_deployment_requested(self, event):
+        """Handle infrastructure deployment requested event."""
+        try:
+            logger.info(f"Infrastructure deployment requested: {event}")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+            
+            # Log metric for infrastructure deployment requested
+            self.monitor.log_metric("infrastructure_deployment_requested", {
+                "infrastructure_type": event.get("infrastructure_type", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update infrastructure history
+            infra_entry = {
+                "action": "infrastructure_deployment_requested",
+                "timestamp": datetime.now().isoformat(),
+                "infrastructure_type": event.get("infrastructure_type", "kubernetes"),
+                "status": "processing"
+            }
+            self.infrastructure_history.append(infra_entry)
+            self._save_infrastructure_history()
+            
+            # Perform infrastructure deployment based on event data
+            infrastructure_type = event.get("infrastructure_type", "kubernetes")
+            deployment_config = event.get("deployment_config", {})
+            
+            # Simulate infrastructure deployment
+            deployment_result = await self.deploy_infrastructure(infrastructure_type)
+            
+            # Publish follow-up event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("infrastructure_deployment_completed", {
+                        "request_id": event.get("request_id"),
+                        "infrastructure_type": infrastructure_type,
+                        "result": deployment_result
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to publish infrastructure_deployment_completed event: {e}")
+            
+            # Return None for consistency with other event handlers
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error handling infrastructure deployment request: {e}")
+            return None
+
+    async def handle_monitoring_requested(self, event):
+        """Handle infrastructure monitoring requested event."""
+        try:
+            logger.info(f"Infrastructure monitoring requested: {event}")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+            
+            # Log metric for monitoring requested
+            self.monitor.log_metric("monitoring_requested", {
+                "infrastructure_id": event.get("infrastructure_id", "unknown"),
+                "monitoring_type": event.get("monitoring_type", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update infrastructure history
+            monitoring_entry = {
+                "action": "monitoring_requested",
+                "timestamp": datetime.now().isoformat(),
+                "infrastructure_id": event.get("infrastructure_id", "infra_001"),
+                "monitoring_type": event.get("monitoring_type", "performance"),
+                "status": "processing"
+            }
+            self.infrastructure_history.append(monitoring_entry)
+            self._save_infrastructure_history()
+            
+            # Perform infrastructure monitoring based on event data
+            infrastructure_id = event.get("infrastructure_id", "infra_001")
+            monitoring_type = event.get("monitoring_type", "performance")
+            
+            # Simulate monitoring
+            monitoring_result = self.monitor_infrastructure(infrastructure_id)
+            
+            # Publish follow-up event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("infrastructure_monitoring_completed", {
+                        "request_id": event.get("request_id"),
+                        "infrastructure_id": infrastructure_id,
+                        "result": monitoring_result
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to publish infrastructure_monitoring_completed event: {e}")
+            
+            # Return None for consistency with other event handlers
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error handling monitoring request: {e}")
+            return None
 
     async def run(self):
         """Run the agent and listen for events met MCP integration."""
@@ -1305,9 +1725,10 @@ DevOps Infrastructure Agent Commands:
         await self.initialize_enhanced_mcp()
         await self.initialize_tracing()
         
-        def sync_handler(event):
-            asyncio.run(self.on_pipeline_advice_requested(event))
-
+        # Initialize Message Bus Integration
+        await self.initialize_message_bus_integration()
+        
+        # Register event handlers
         subscribe("pipeline_advice_requested", self.on_pipeline_advice_requested)
         subscribe("incident_response_requested", self.on_incident_response_requested)
         subscribe("feedback_sentiment_analyzed", self.on_feedback_sentiment_analyzed)
@@ -1315,6 +1736,10 @@ DevOps Infrastructure Agent Commands:
         subscribe("deployment_executed", self.handle_deployment_executed)
 
         logger.info("DevOpsInfraAgent ready and listening for events...")
+        print("🛠️ DevOpsInfra is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        print("Message Bus: Enabled" if self.message_bus_enabled else "Message Bus: Disabled")
         await self.collaborate_example()
         
         try:
@@ -1337,7 +1762,11 @@ def main():
                        choices=["help", "pipeline-advice", "incident-response", "deploy-infrastructure",
                                "monitor-infrastructure", "show-infrastructure-history", "show-incident-history",
                                "show-best-practices", "show-changelog", "export-report", "test",
-                               "collaborate", "run"])
+                               "collaborate", "run",
+                               "enhanced-collaborate", "enhanced-security", "enhanced-performance",
+                               "trace-operation", "trace-performance", "trace-error", "tracing-summary",
+                               "initialize-message-bus", "message-bus-status", "publish-event", "subscribe-event",
+                               "list-events", "event-history", "performance-metrics"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--pipeline-config", default="Sample CI/CD pipeline", help="Pipeline configuration for analysis")
     parser.add_argument("--incident-desc", default="Sample incident description", help="Incident description for response")
@@ -1376,6 +1805,109 @@ def main():
         agent.test_resource_completeness()
     elif args.command == "collaborate":
         agent.collaborate_example()
+    # Enhanced MCP Phase 2 Commands
+    elif args.command == "enhanced-collaborate":
+        result = asyncio.run(agent.enhanced_mcp.communicate_with_agents(
+            ["ReleaseManager", "QualityGuardian", "TestEngineer", "DataEngineer"], 
+            {"type": "infrastructure_coordination", "content": {"coordination_type": "devops_management"}}
+        ))
+        print(json.dumps(result, indent=2))
+    elif args.command == "enhanced-security":
+        result = asyncio.run(agent.enhanced_mcp.enhanced_security_validation({
+            "infrastructure_data": {"pipelines": [], "deployments": [], "incidents": []},
+            "security_requirements": ["infrastructure_security", "deployment_security", "access_control"]
+        }))
+        print(json.dumps(result, indent=2))
+    elif args.command == "enhanced-performance":
+        result = asyncio.run(agent.enhanced_mcp.enhanced_performance_optimization({
+            "infrastructure_data": {"pipelines": [], "deployments": [], "incidents": []},
+            "performance_metrics": {"deployment_speed": 85.5, "uptime": 99.9}
+        }))
+        print(json.dumps(result, indent=2))
+    elif args.command == "trace-operation":
+        result = asyncio.run(agent.trace_infrastructure_deployment({
+            "operation_type": "infrastructure_deployment",
+            "infrastructure_type": args.infrastructure_type,
+            "deployments": list(agent.infrastructure_history)
+        }))
+        print(json.dumps(result, indent=2))
+    elif args.command == "trace-performance":
+        result = asyncio.run(agent.trace_pipeline_optimization({
+            "operation_type": "performance_analysis",
+            "performance_metrics": {"deployment_speed": 85.5, "uptime": 99.9}
+        }))
+        print(json.dumps(result, indent=2))
+    elif args.command == "trace-error":
+        result = asyncio.run(agent.trace_devops_error({
+            "operation_type": "error_analysis",
+            "error_data": {"error_type": "deployment_failure", "error_message": "Infrastructure deployment failed"}
+        }))
+        print(json.dumps(result, indent=2))
+    elif args.command == "tracing-summary":
+        print("Tracing Summary for DevOpsInfra:")
+        print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+        print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+        print(f"Agent: {agent.agent_name}")
+    elif args.command == "initialize-message-bus":
+        asyncio.run(agent.initialize_message_bus_integration())
+        print("✅ Message Bus Integration initialized successfully")
+    elif args.command == "message-bus-status":
+        print("🚀 DevOpsInfra Agent Message Bus Status:")
+        print(f"✅ Message Bus Integration: {'Enabled' if agent.message_bus_enabled else 'Disabled'}")
+        print(f"✅ Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+        print(f"✅ Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+        print(f"📊 Performance Metrics: {len(agent.performance_metrics)} metrics tracked")
+        print(f"📝 Infrastructure History: {len(agent.infrastructure_history)} entries")
+        print(f"⚡ Incident History: {len(agent.incident_history)} entries")
+    elif args.command == "publish-event":
+        if len(sys.argv) < 4:
+            print("❌ Usage: publish-event <event_type> <event_data_json>")
+            return
+        event_type = sys.argv[2]
+        try:
+            event_data = json.loads(sys.argv[3])
+            asyncio.run(agent.message_bus_integration.publish_event(event_type, event_data))
+            print(f"✅ Event '{event_type}' published successfully")
+        except json.JSONDecodeError:
+            print("❌ Invalid JSON format for event_data")
+    elif args.command == "subscribe-event":
+        if len(sys.argv) < 3:
+            print("❌ Usage: subscribe-event <event_type>")
+            return
+        event_type = sys.argv[2]
+        print(f"📡 Subscribing to event: {event_type}")
+        # Event handlers are already registered in initialize_message_bus_integration
+    elif args.command == "list-events":
+        print("🚀 DevOpsInfra Agent Supported Events:")
+        print("📥 Input Events:")
+        print("  - pipeline_advice_requested")
+        print("  - incident_response_requested")
+        print("  - infrastructure_deployment_requested")
+        print("  - monitoring_requested")
+        print("  - build_triggered")
+        print("  - deployment_executed")
+        print("  - feedback_sentiment_analyzed")
+        print("📤 Output Events:")
+        print("  - pipeline_advice_provided")
+        print("  - incident_response_completed")
+        print("  - infrastructure_deployed")
+        print("  - monitoring_configured")
+        print("  - build_completed")
+        print("  - deployment_completed")
+    elif args.command == "event-history":
+        print("📝 Infrastructure History:")
+        for entry in agent.infrastructure_history[-10:]:  # Show last 10 entries
+            print(f"  - {entry}")
+        print("\n⚡ Incident History:")
+        for entry in agent.incident_history[-10:]:  # Show last 10 entries
+            print(f"  - {entry}")
+    elif args.command == "performance-metrics":
+        print("📊 DevOpsInfra Agent Performance Metrics:")
+        for metric, value in agent.performance_metrics.items():
+            if isinstance(value, float):
+                print(f"  • {metric}: {value:.2f}")
+            else:
+                print(f"  • {metric}: {value}")
     elif args.command == "run":
         asyncio.run(agent.run())
 
