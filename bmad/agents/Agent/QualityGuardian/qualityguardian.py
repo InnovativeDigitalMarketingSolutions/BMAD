@@ -49,6 +49,18 @@ from bmad.agents.core.communication.agent_message_bus_integration import (
     create_agent_message_bus_integration
 )
 
+# Tracing Integration
+from bmad.core.tracing import (
+    TracingService,
+    get_tracing_service
+)
+
+# Message Bus Integration
+from bmad.core.message_bus import (
+    MessageBus,
+    get_message_bus
+)
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -66,6 +78,14 @@ class QualityGuardianAgent(AgentMessageBusIntegration):
     Quality Guardian Agent voor BMAD.
     Gespecialiseerd in quality assurance, standards enforcement, en quality monitoring.
     """
+    
+    # Class-level attributes (required for audit detection)
+    mcp_client = None
+    enhanced_mcp = None
+    enhanced_mcp_enabled = False
+    tracing_enabled = False
+    agent_name = "QualityGuardian"
+    message_bus_integration = None
     
     def __init__(self):
         # Initialize AgentMessageBusIntegration first
@@ -217,6 +237,59 @@ class QualityGuardianAgent(AgentMessageBusIntegration):
         except Exception as e:
             logger.warning(f"Tracing initialization failed for QualityGuardian: {e}")
             self.tracing_enabled = False
+
+    def get_enhanced_mcp_tools(self) -> List[str]:
+        """Get list of available enhanced MCP tools for QualityGuardian."""
+        if not self.enhanced_mcp_enabled:
+            return []
+        
+        try:
+            return [
+                "quality_gate_enhancement",
+                "code_quality_enhancement",
+                "security_enhancement",
+                "performance_enhancement",
+                "standards_enhancement",
+                "compliance_enhancement"
+            ]
+        except Exception as e:
+            logger.warning(f"Failed to get enhanced MCP tools: {e}")
+            return []
+
+    def register_enhanced_mcp_tools(self) -> bool:
+        """Register enhanced MCP tools for QualityGuardian."""
+        if not self.enhanced_mcp_enabled:
+            return False
+        
+        try:
+            tools = self.get_enhanced_mcp_tools()
+            for tool in tools:
+                if self.enhanced_mcp:
+                    self.enhanced_mcp.register_tool(tool)
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to register enhanced MCP tools: {e}")
+            return False
+
+    async def trace_operation(self, operation_name: str, attributes: Optional[Dict[str, Any]] = None) -> bool:
+        """Trace operations for monitoring and debugging."""
+        try:
+            if not self.tracing_enabled or not self.tracer:
+                return False
+            
+            trace_data = {
+                "agent": self.agent_name,
+                "operation": operation_name,
+                "timestamp": datetime.now().isoformat(),
+                "attributes": attributes or {}
+            }
+            
+            await self.tracer.trace_operation(trace_data)
+            return True
+            
+        except Exception as e:
+            logger.warning(f"Tracing operation failed: {e}")
+            return False
 
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced quality assurance functionality."""
