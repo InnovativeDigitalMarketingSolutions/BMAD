@@ -65,6 +65,7 @@ class ProductOwnerAgent(AgentMessageBusIntegration):
     message_bus_integration = None
     
     def __init__(self):
+        """Initialize ProductOwner agent met MCP integration."""
         super().__init__("ProductOwner")
         self.framework_manager = get_framework_templates_manager()
         try:
@@ -73,7 +74,6 @@ class ProductOwnerAgent(AgentMessageBusIntegration):
             self.product_owner_template = None
         self.lessons_learned = []
 
-        """Initialize ProductOwner agent met MCP integration."""
         self.agent_name = "ProductOwnerAgent"
         self.story_history = []
         self.vision_history = []
