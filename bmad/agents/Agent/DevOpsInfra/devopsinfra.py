@@ -531,7 +531,16 @@ class DevOpsInfraAgent(AgentMessageBusIntegration):
                     lines = content.split("\n")
                     for line in lines:
                         if line.strip().startswith("- "):
-                            self.infrastructure_history.append(line.strip()[2:])
+                            # Support both string and dictionary formats
+                            entry = line.strip()[2:]
+                            try:
+                                # Try to parse as JSON (dictionary)
+                                import json
+                                parsed_entry = json.loads(entry)
+                                self.infrastructure_history.append(parsed_entry)
+                            except (json.JSONDecodeError, ValueError):
+                                # Fall back to string format
+                                self.infrastructure_history.append(entry)
         except Exception as e:
             logger.warning(f"Could not load infrastructure history: {e}")
 
@@ -542,7 +551,11 @@ class DevOpsInfraAgent(AgentMessageBusIntegration):
             with open(self.data_paths["history"], "w") as f:
                 f.write("# Infrastructure History\n\n")
                 for infra in self.infrastructure_history[-50:]:  # Keep last 50 entries
-                    f.write(f"- {infra}\n")
+                    if isinstance(infra, dict):
+                        import json
+                        f.write(f"- {json.dumps(infra)}\n")
+                    else:
+                        f.write(f"- {infra}\n")
         except Exception as e:
             logger.error(f"Could not save infrastructure history: {e}")
 
@@ -555,7 +568,16 @@ class DevOpsInfraAgent(AgentMessageBusIntegration):
                     lines = content.split("\n")
                     for line in lines:
                         if line.strip().startswith("- "):
-                            self.incident_history.append(line.strip()[2:])
+                            # Support both string and dictionary formats
+                            entry = line.strip()[2:]
+                            try:
+                                # Try to parse as JSON (dictionary)
+                                import json
+                                parsed_entry = json.loads(entry)
+                                self.incident_history.append(parsed_entry)
+                            except (json.JSONDecodeError, ValueError):
+                                # Fall back to string format
+                                self.incident_history.append(entry)
         except Exception as e:
             logger.warning(f"Could not load incident history: {e}")
 
@@ -566,7 +588,11 @@ class DevOpsInfraAgent(AgentMessageBusIntegration):
             with open(self.data_paths["incident-history"], "w") as f:
                 f.write("# Incident History\n\n")
                 for incident in self.incident_history[-50:]:  # Keep last 50 incidents
-                    f.write(f"- {incident}\n")
+                    if isinstance(incident, dict):
+                        import json
+                        f.write(f"- {json.dumps(incident)}\n")
+                    else:
+                        f.write(f"- {incident}\n")
         except Exception as e:
             logger.error(f"Could not save incident history: {e}")
 
@@ -1340,49 +1366,280 @@ Message Bus Integration Commands:
         context = get_context("DevOpsInfra")
         print(f"Opgehaalde context: {context}")
 
-    def on_pipeline_advice_requested(self, event):
+    async def on_pipeline_advice_requested(self, event):
         """Handle pipeline advice request from other agents."""
-        logger.info(f"Pipeline advice requested: {event}")
-        pipeline_config = event.get("pipeline_config", "Sample CI/CD pipeline")
-        self.pipeline_advice(pipeline_config)
+        try:
+            logger.info(f"Pipeline advice requested: {event}")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+            
+            # Log metric for pipeline advice requested
+            self.monitor.log_metric("pipeline_advice_requested", {
+                "pipeline_config": event.get("pipeline_config", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update infrastructure history
+            history_entry = {
+                "action": "pipeline_advice_requested",
+                "timestamp": datetime.now().isoformat(),
+                "pipeline_config": event.get("pipeline_config", "Sample CI/CD pipeline"),
+                "status": "processing"
+            }
+            self.infrastructure_history.append(history_entry)
+            self._save_infrastructure_history()
+            
+            # Process pipeline advice request
+            pipeline_config = event.get("pipeline_config", "Sample CI/CD pipeline")
+            result = self.pipeline_advice(pipeline_config)
+            
+            # Publish follow-up event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("pipeline_advice_completed", {
+                        "pipeline_config": pipeline_config,
+                        "timestamp": datetime.now().isoformat(),
+                        "status": "completed"
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to publish pipeline_advice_completed event: {e}")
+            
+            # Return None for consistency with other event handlers
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error in pipeline advice event handler: {e}")
+            return None
 
-    def on_incident_response_requested(self, event):
+    async def on_incident_response_requested(self, event):
         """Handle incident response request from other agents."""
-        logger.info(f"Incident response requested: {event}")
-        incident_desc = event.get("incident_desc", "Sample incident description")
-        self.incident_response(incident_desc)
+        try:
+            logger.info(f"Incident response requested: {event}")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+            
+            # Log metric for incident response requested
+            self.monitor.log_metric("incident_response_requested", {
+                "incident_desc": event.get("incident_desc", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update incident history
+            incident_entry = {
+                "action": "incident_response_requested",
+                "timestamp": datetime.now().isoformat(),
+                "incident_desc": event.get("incident_desc", "Sample incident description"),
+                "status": "processing"
+            }
+            self.incident_history.append(incident_entry)
+            self._save_incident_history()
+            
+            # Process incident response request
+            incident_desc = event.get("incident_desc", "Sample incident description")
+            result = self.incident_response(incident_desc)
+            
+            # Publish follow-up event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("incident_response_completed", {
+                        "incident_desc": incident_desc,
+                        "timestamp": datetime.now().isoformat(),
+                        "status": "completed"
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to publish incident_response_completed event: {e}")
+            
+            # Return None for consistency with other event handlers
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error in incident response event handler: {e}")
+            return None
 
-    def on_feedback_sentiment_analyzed(self, event):
+    async def on_feedback_sentiment_analyzed(self, event):
         """Handle feedback sentiment analysis from other agents."""
-        sentiment = event.get("sentiment", "")
-        motivatie = event.get("motivatie", "")
-        feedback = event.get("feedback", "")
-        if sentiment == "negatief":
-            prompt = f"Bedenk een DevOps-actie of monitoringvoorstel op basis van deze negatieve feedback: '{feedback}'. Motivatie: {motivatie}. Geef alleen het voorstel als JSON."
-            structured_output = '{"devops_voorstel": "..."}'
-            result = ask_openai(prompt, structured_output=structured_output)
-            logger.info(f"[DevOpsInfra][LLM DevOps Voorstel]: {result}")
+        try:
+            logger.info(f"Feedback sentiment analyzed: {event}")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+            
+            # Log metric for feedback sentiment analyzed
+            self.monitor.log_metric("feedback_sentiment_analyzed", {
+                "sentiment": event.get("sentiment", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update incident history for feedback processing
+            feedback_entry = {
+                "action": "feedback_sentiment_analyzed",
+                "timestamp": datetime.now().isoformat(),
+                "sentiment": event.get("sentiment", ""),
+                "motivatie": event.get("motivatie", ""),
+                "feedback": event.get("feedback", ""),
+                "status": "processing"
+            }
+            self.incident_history.append(feedback_entry)
+            self._save_incident_history()
+            
+            # Process feedback sentiment
+            sentiment = event.get("sentiment", "")
+            motivatie = event.get("motivatie", "")
+            feedback = event.get("feedback", "")
+            
+            if sentiment == "negatief":
+                prompt = f"Bedenk een DevOps-actie of monitoringvoorstel op basis van deze negatieve feedback: '{feedback}'. Motivatie: {motivatie}. Geef alleen het voorstel als JSON."
+                structured_output = '{"devops_voorstel": "..."}'
+                result = ask_openai(prompt, structured_output=structured_output)
+                logger.info(f"[DevOpsInfra][LLM DevOps Voorstel]: {result}")
+            
+            # Publish follow-up event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("feedback_processing_completed", {
+                        "sentiment": sentiment,
+                        "timestamp": datetime.now().isoformat(),
+                        "status": "completed"
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to publish feedback_processing_completed event: {e}")
+            
+            # Return None for consistency with other event handlers
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error in feedback sentiment event handler: {e}")
+            return None
 
-    def handle_build_triggered(self, event):
+    async def handle_build_triggered(self, event):
         """Handle build trigger event."""
-        logger.info("[DevOpsInfra] Build gestart...")
-        # Simuleer build (in productie: start build pipeline)
-        time.sleep(2)
-        publish("tests_requested", {"desc": "Tests uitvoeren"})
-        logger.info("[DevOpsInfra] Build afgerond, tests_requested gepubliceerd.")
+        try:
+            logger.info("[DevOpsInfra] Build gestart...")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+            
+            # Log metric for build triggered
+            self.monitor.log_metric("build_triggered", {
+                "build_type": event.get("build_type", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update infrastructure history
+            build_entry = {
+                "action": "build_triggered",
+                "timestamp": datetime.now().isoformat(),
+                "build_type": event.get("build_type", "unknown"),
+                "status": "processing"
+            }
+            self.infrastructure_history.append(build_entry)
+            self._save_infrastructure_history()
+            
+            # Simuleer build (in productie: start build pipeline)
+            await asyncio.sleep(2)
+            
+            # Publish follow-up events
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("tests_requested", {"desc": "Tests uitvoeren"})
+                    await self.message_bus_integration.publish_event("build_completed", {
+                        "build_type": event.get("build_type", "unknown"),
+                        "timestamp": datetime.now().isoformat(),
+                        "status": "completed"
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to publish build events: {e}")
+            
+            logger.info("[DevOpsInfra] Build afgerond, tests_requested gepubliceerd.")
+            
+            # Return None for consistency with other event handlers
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error in build triggered event handler: {e}")
+            return None
 
-    def handle_deployment_executed(self, event):
+    async def handle_deployment_executed(self, event):
         """Handle deployment execution event."""
-        logger.info("[DevOpsInfra] Deployment gestart...")
-        # Simuleer deployment (in productie: start deployment pipeline)
-        time.sleep(2)
-        publish("deployment_completed", {"desc": "Deployment afgerond"})
-        logger.info("[DevOpsInfra] Deployment afgerond, deployment_completed gepubliceerd.")
+        try:
+            logger.info("[DevOpsInfra] Deployment gestart...")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+            
+            # Log metric for deployment executed
+            self.monitor.log_metric("deployment_executed", {
+                "deployment_type": event.get("deployment_type", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update infrastructure history
+            deployment_entry = {
+                "action": "deployment_executed",
+                "timestamp": datetime.now().isoformat(),
+                "deployment_type": event.get("deployment_type", "unknown"),
+                "status": "processing"
+            }
+            self.infrastructure_history.append(deployment_entry)
+            self._save_infrastructure_history()
+            
+            # Simuleer deployment (in productie: start deployment pipeline)
+            await asyncio.sleep(2)
+            
+            # Publish follow-up events
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("deployment_completed", {"desc": "Deployment afgerond"})
+                except Exception as e:
+                    logger.warning(f"Failed to publish deployment_completed event: {e}")
+            
+            logger.info("[DevOpsInfra] Deployment afgerond, deployment_completed gepubliceerd.")
+            
+            # Return None for consistency with other event handlers
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error in deployment executed event handler: {e}")
+            return None
 
     async def handle_infrastructure_deployment_requested(self, event):
         """Handle infrastructure deployment requested event."""
-        logger.info(f"Infrastructure deployment requested: {event}")
         try:
+            logger.info(f"Infrastructure deployment requested: {event}")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+            
+            # Log metric for infrastructure deployment requested
+            self.monitor.log_metric("infrastructure_deployment_requested", {
+                "infrastructure_type": event.get("infrastructure_type", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update infrastructure history
+            infra_entry = {
+                "action": "infrastructure_deployment_requested",
+                "timestamp": datetime.now().isoformat(),
+                "infrastructure_type": event.get("infrastructure_type", "kubernetes"),
+                "status": "processing"
+            }
+            self.infrastructure_history.append(infra_entry)
+            self._save_infrastructure_history()
+            
             # Perform infrastructure deployment based on event data
             infrastructure_type = event.get("infrastructure_type", "kubernetes")
             deployment_config = event.get("deployment_config", {})
@@ -1390,18 +1647,52 @@ Message Bus Integration Commands:
             # Simulate infrastructure deployment
             deployment_result = await self.deploy_infrastructure(infrastructure_type)
             
-            await publish("infrastructure_deployment_completed", {
-                "request_id": event.get("request_id"),
-                "infrastructure_type": infrastructure_type,
-                "result": deployment_result
-            })
+            # Publish follow-up event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("infrastructure_deployment_completed", {
+                        "request_id": event.get("request_id"),
+                        "infrastructure_type": infrastructure_type,
+                        "result": deployment_result
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to publish infrastructure_deployment_completed event: {e}")
+            
+            # Return None for consistency with other event handlers
+            return None
+            
         except Exception as e:
             logger.error(f"Error handling infrastructure deployment request: {e}")
+            return None
 
     async def handle_monitoring_requested(self, event):
         """Handle infrastructure monitoring requested event."""
-        logger.info(f"Infrastructure monitoring requested: {event}")
         try:
+            logger.info(f"Infrastructure monitoring requested: {event}")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+            
+            # Log metric for monitoring requested
+            self.monitor.log_metric("monitoring_requested", {
+                "infrastructure_id": event.get("infrastructure_id", "unknown"),
+                "monitoring_type": event.get("monitoring_type", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update infrastructure history
+            monitoring_entry = {
+                "action": "monitoring_requested",
+                "timestamp": datetime.now().isoformat(),
+                "infrastructure_id": event.get("infrastructure_id", "infra_001"),
+                "monitoring_type": event.get("monitoring_type", "performance"),
+                "status": "processing"
+            }
+            self.infrastructure_history.append(monitoring_entry)
+            self._save_infrastructure_history()
+            
             # Perform infrastructure monitoring based on event data
             infrastructure_id = event.get("infrastructure_id", "infra_001")
             monitoring_type = event.get("monitoring_type", "performance")
@@ -1409,13 +1700,23 @@ Message Bus Integration Commands:
             # Simulate monitoring
             monitoring_result = self.monitor_infrastructure(infrastructure_id)
             
-            await publish("infrastructure_monitoring_completed", {
-                "request_id": event.get("request_id"),
-                "infrastructure_id": infrastructure_id,
-                "result": monitoring_result
-            })
+            # Publish follow-up event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("infrastructure_monitoring_completed", {
+                        "request_id": event.get("request_id"),
+                        "infrastructure_id": infrastructure_id,
+                        "result": monitoring_result
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to publish infrastructure_monitoring_completed event: {e}")
+            
+            # Return None for consistency with other event handlers
+            return None
+            
         except Exception as e:
             logger.error(f"Error handling monitoring request: {e}")
+            return None
 
     async def run(self):
         """Run the agent and listen for events met MCP integration."""
@@ -1427,9 +1728,7 @@ Message Bus Integration Commands:
         # Initialize Message Bus Integration
         await self.initialize_message_bus_integration()
         
-        def sync_handler(event):
-            asyncio.run(self.on_pipeline_advice_requested(event))
-
+        # Register event handlers
         subscribe("pipeline_advice_requested", self.on_pipeline_advice_requested)
         subscribe("incident_response_requested", self.on_incident_response_requested)
         subscribe("feedback_sentiment_analyzed", self.on_feedback_sentiment_analyzed)
