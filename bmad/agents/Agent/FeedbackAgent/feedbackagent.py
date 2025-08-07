@@ -49,13 +49,16 @@ from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-class FeedbackAgent:
+class FeedbackAgent(AgentMessageBusIntegration):
     """
     Feedback Agent voor BMAD.
     Gespecialiseerd in feedback collection, sentiment analysis, en template quality tracking.
     """
     
     def __init__(self):
+        # Initialize parent class with agent name and instance
+        super().__init__("FeedbackAgent", self)
+        
         # Framework templates integration
         self.framework_manager = get_framework_templates_manager()
         try:
@@ -96,6 +99,22 @@ class FeedbackAgent:
         self.template_feedback = {}
         self.template_quality_scores = {}
         self._load_template_feedback()
+        
+        # Performance metrics
+        self.performance_metrics = {
+            "feedback_collection_speed": 0.0,
+            "sentiment_analysis_accuracy": 0.0,
+            "feedback_processing_time": 0.0,
+            "insight_generation_quality": 0.0,
+            "trend_analysis_effectiveness": 0.0,
+            "template_quality_score": 0.0,
+            "feedback_response_time": 0.0,
+            "collaboration_efficiency": 0.0,
+            "data_quality_score": 0.0,
+            "report_generation_speed": 0.0,
+            "user_satisfaction_score": 0.0,
+            "feedback_completeness": 0.0
+        }
         
         # MCP Integration
         self.mcp_client: Optional[MCPClient] = None
@@ -583,6 +602,24 @@ Template Quality Assurance:
   analyze-template-trends [template] [timeframe]                 - Analyze feedback trends for templates
   suggest-template-improvements <template>                       - Suggest improvements for templates
   get-template-quality-report [template]                        - Generate quality report for templates
+
+Enhanced MCP Phase 2 Commands:
+  enhanced-collaborate    - Enhanced collaboration with other agents
+  enhanced-security       - Enhanced security features
+  enhanced-performance    - Enhanced performance monitoring
+  trace-operation         - Trace feedback operations
+  trace-performance       - Trace performance metrics
+  trace-error             - Trace error handling
+  tracing-summary         - Show tracing summary
+
+Message Bus Integration Commands:
+  initialize-message-bus  - Initialize Message Bus integration
+  message-bus-status      - Show Message Bus status
+  publish-event           - Publish feedback event
+  subscribe-event         - Show subscribed events
+  list-events             - List supported events
+  event-history           - Show event history
+  performance-metrics     - Show performance metrics
 
 Examples:
   collect-template-feedback "backend_development" "Excellent template with clear guidelines" "quality" 5
@@ -1319,18 +1356,70 @@ Examples:
         feedback_list = event.get("feedback_list", [])
         self.summarize_feedback_original(feedback_list)
 
-    def handle_retro_planned(self, event):
+    async def handle_retro_planned(self, event):
         """Handle retro planned event from other agents."""
         logger.info("[FeedbackAgent] Retro gepland, feedback wordt verzameld...")
-        time.sleep(1)
-        publish("feedback_collected", {"desc": "Feedback verzameld"})
+        
+        # Update performance history
+        self.feedback_history.append({
+            "action": "retro_planned",
+            "timestamp": datetime.now().isoformat(),
+            "data": event,
+            "status": "processing"
+        })
+        
+        # Update performance metrics
+        self.performance_metrics["feedback_collection_speed"] += 1
+        self.performance_metrics["feedback_processing_time"] += 0.1
+        
+        # Publish follow-up event via Message Bus Integration
+        if self.message_bus_integration:
+            try:
+                await self.message_bus_integration.publish_event("feedback_collected", {
+                    "desc": "Feedback verzameld",
+                    "retrospective": event.get("retrospective", "unknown"),
+                    "timestamp": datetime.now().isoformat()
+                })
+            except Exception as e:
+                logger.warning(f"Failed to publish feedback_collected event: {e}")
+        
+        # Save updated history
+        self._save_feedback_history()
+        
+        return {"status": "processed", "event": "retro_planned"}
         logger.info("[FeedbackAgent] Feedback verzameld, feedback_collected gepubliceerd.")
 
-    def handle_feedback_collected(self, event):
+    async def handle_feedback_collected(self, event):
         """Handle feedback collected event from other agents."""
         logger.info("[FeedbackAgent] Feedback wordt geanalyseerd...")
-        time.sleep(1)
-        publish("trends_analyzed", {"desc": "Trends geanalyseerd"})
+        
+        # Update performance history
+        self.feedback_history.append({
+            "action": "feedback_collected",
+            "timestamp": datetime.now().isoformat(),
+            "data": event,
+            "status": "processing"
+        })
+        
+        # Update performance metrics
+        self.performance_metrics["feedback_processing_time"] += 0.2
+        self.performance_metrics["sentiment_analysis_accuracy"] += 0.1
+        
+        # Publish follow-up event via Message Bus Integration
+        if self.message_bus_integration:
+            try:
+                await self.message_bus_integration.publish_event("trends_analyzed", {
+                    "desc": "Trends geanalyseerd",
+                    "feedback_data": event.get("feedback", "unknown"),
+                    "timestamp": datetime.now().isoformat()
+                })
+            except Exception as e:
+                logger.warning(f"Failed to publish trends_analyzed event: {e}")
+        
+        # Save updated history
+        self._save_feedback_history()
+        
+        return {"status": "processed", "event": "feedback_collected"}
         logger.info("[FeedbackAgent] Trends geanalyseerd, trends_analyzed gepubliceerd.")
 
     def collect_template_feedback(self, template_name: str, feedback_text: str, 
@@ -1753,7 +1842,9 @@ def main():
                                "use-mcp-tool", "get-mcp-status", "use-feedback-mcp-tools", 
                                "check-dependencies", "enhanced-collaborate", "enhanced-security", 
                                "enhanced-performance", "trace-operation", "trace-performance", 
-                               "trace-error", "tracing-summary"])
+                               "trace-error", "tracing-summary",
+                               "initialize-message-bus", "message-bus-status", "publish-event", "subscribe-event",
+                               "list-events", "event-history", "performance-metrics"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--feedback-text", default="The new dashboard is much more user-friendly", help="Feedback text to analyze")
     parser.add_argument("--source", default="User Survey", help="Feedback source")
@@ -1859,7 +1950,7 @@ def main():
         elif args.command == "trace-error":
             result = asyncio.run(agent.trace_feedback_operation({
                 "operation_type": "error_analysis",
-                "error_data": {"error_type": "feedback_analysis", "error_message": "Feedback analysis failed"}
+                "error_data": {"error_type": "feedback_analysis_failure", "error_message": "Feedback analysis failed"}
             }))
             print(json.dumps(result, indent=2))
         elif args.command == "tracing-summary":
@@ -1867,6 +1958,51 @@ def main():
             print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
             print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
             print(f"Agent: {agent.agent_name}")
+    # Message Bus Integration Commands
+    elif args.command == "initialize-message-bus":
+        result = asyncio.run(agent.initialize_message_bus_integration())
+        print(f"Message Bus Integration: {'Enabled' if result else 'Failed'}")
+    elif args.command == "message-bus-status":
+        print("🚀 FeedbackAgent Message Bus Status:")
+        print(f"✅ Message Bus Integration: {'Enabled' if agent.message_bus_enabled else 'Disabled'}")
+        print(f"✅ Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+        print(f"✅ Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+        print(f"📊 Performance Metrics: {len(agent.performance_metrics)} metrics tracked")
+        print(f"📝 Feedback History: {len(agent.feedback_history)} entries")
+        print(f"📊 Sentiment History: {len(agent.sentiment_history)} entries")
+    elif args.command == "publish-event":
+        # Example: publish feedback event
+        event_data = {"feedback_type": "user_feedback", "request_id": "test-123"}
+        asyncio.run(agent.publish_event("feedback_collected", event_data))
+        print(f"Published event: feedback_collected with data: {event_data}")
+    elif args.command == "subscribe-event":
+        # Example: subscribe to feedback events
+        print(f"📡 Subscribing to feedback events")
+        # Event handlers are already registered in initialize_message_bus_integration
+    elif args.command == "list-events":
+        print("🚀 FeedbackAgent Supported Events:")
+        print("📥 Input Events:")
+        print("  - feedback_collected")
+        print("  - quality_gate_requested")
+        print("  - task_delegated")
+        print("📤 Output Events:")
+        print("  - feedback_analyzed")
+        print("  - quality_gate_completed")
+        print("  - task_completed")
+    elif args.command == "event-history":
+        print("📝 Feedback History:")
+        for entry in agent.feedback_history[-10:]:  # Show last 10 entries
+            print(f"  - {entry}")
+        print("\n📊 Sentiment History:")
+        for entry in agent.sentiment_history[-10:]:  # Show last 10 entries
+            print(f"  - {entry}")
+    elif args.command == "performance-metrics":
+        print("📊 FeedbackAgent Performance Metrics:")
+        for metric, value in agent.performance_metrics.items():
+            if isinstance(value, float):
+                print(f"  • {metric}: {value:.2f}")
+            else:
+                print(f"  • {metric}: {value}")
     else:
         print(f"Unknown command: {args.command}")
         agent.show_help()

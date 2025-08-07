@@ -1,0 +1,30 @@
+{
+  "name": "AgentStatus_sprite",
+  "sprite_type": "SpriteType.COMPONENT",
+  "component_name": "AgentStatus",
+  "states": [
+    "SpriteState.DEFAULT",
+    "SpriteState.LOADING",
+    "SpriteState.ERROR"
+  ],
+  "attributes": {},
+  "accessibility_checks": [
+    "aria-label",
+    "role",
+    "status-indicator"
+  ],
+  "visual_checks": [
+    "color-contrast",
+    "status-colors",
+    "spacing"
+  ],
+  "interaction_tests": [
+    "click",
+    "hover",
+    "focus",
+    "keyboard"
+  ],
+  "screenshot_path": null,
+  "baseline_path": null,
+  "metadata": {}
+}
