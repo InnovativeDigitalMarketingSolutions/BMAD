@@ -50,13 +50,16 @@ from bmad.agents.core.communication.agent_message_bus_integration import (
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-class DataEngineerAgent:
+class DataEngineerAgent(AgentMessageBusIntegration):
     """
     Data Engineer Agent voor BMAD.
     Gespecialiseerd in data pipeline development, ETL processes, en data architecture.
     """
     
     def __init__(self):
+        # Initialize parent class with agent name and instance
+        super().__init__("DataEngineer", self)
+        
         self.framework_manager = get_framework_templates_manager()
         try:
             self.data_engineer_template = self.framework_manager.get_framework_template('data_engineer')
@@ -91,6 +94,22 @@ class DataEngineerAgent:
         self.quality_history = []
         self._load_pipeline_history()
         self._load_quality_history()
+        
+        # Performance metrics
+        self.performance_metrics = {
+            "pipeline_execution_time": 0.0,
+            "data_quality_score": 0.0,
+            "etl_processing_speed": 0.0,
+            "data_accuracy": 0.0,
+            "pipeline_reliability": 0.0,
+            "data_freshness": 0.0,
+            "processing_efficiency": 0.0,
+            "error_rate": 0.0,
+            "data_completeness": 0.0,
+            "pipeline_throughput": 0.0,
+            "data_consistency": 0.0,
+            "monitoring_effectiveness": 0.0
+        }
         
         # MCP Integration
         self.mcp_client: Optional[MCPClient] = None
@@ -474,10 +493,13 @@ Enhanced MCP Phase 2 Commands:
   tracing-summary         - Show tracing summary
 
 Message Bus Integration Commands:
-  initialize-message-bus  - Initialize Message Bus Integration
-  message-bus-status      - Show Message Bus Integration status
+  initialize-message-bus  - Initialize Message Bus integration
+  message-bus-status      - Show Message Bus status
   publish-event           - Publish data event
-  subscribe-event         - Subscribe to data events
+  subscribe-event         - Show subscribed events
+  list-events             - List supported events
+  event-history           - Show event history
+  performance-metrics     - Show performance metrics
         """
         print(help_text)
 
@@ -1111,7 +1133,8 @@ def main():
                                "collaborate", "run", "enhanced-collaborate", "enhanced-security", 
                                "enhanced-performance", "trace-operation", "trace-performance", 
                                "trace-error", "tracing-summary",
-                               "initialize-message-bus", "message-bus-status", "publish-event", "subscribe-event"])
+                               "initialize-message-bus", "message-bus-status", "publish-event", "subscribe-event",
+                               "list-events", "event-history", "performance-metrics"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--data-summary", default="Sample data summary", help="Data summary for quality check")
     parser.add_argument("--pipeline-code", default="Sample ETL pipeline", help="Pipeline code to explain")
@@ -1204,7 +1227,13 @@ def main():
             result = asyncio.run(agent.initialize_message_bus_integration())
             print(f"Message Bus Integration: {'Enabled' if result else 'Failed'}")
         elif args.command == "message-bus-status":
-            print(f"Message Bus Integration: {'Enabled' if agent.message_bus_enabled else 'Disabled'}")
+            print("🚀 DataEngineer Agent Message Bus Status:")
+            print(f"✅ Message Bus Integration: {'Enabled' if agent.message_bus_enabled else 'Disabled'}")
+            print(f"✅ Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+            print(f"✅ Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+            print(f"📊 Performance Metrics: {len(agent.performance_metrics)} metrics tracked")
+            print(f"📝 Pipeline History: {len(agent.pipeline_history)} entries")
+            print(f"📊 Quality History: {len(agent.quality_history)} entries")
         elif args.command == "publish-event":
             # Example: publish data quality check requested event
             event_data = {"data_summary": "Sample data", "request_id": "test-123"}
@@ -1212,6 +1241,34 @@ def main():
             print(f"Published event: data_quality_check_requested with data: {event_data}")
         elif args.command == "subscribe-event":
             # Example: subscribe to data events
+            print(f"📡 Subscribing to data events")
+            # Event handlers are already registered in initialize_message_bus_integration
+        elif args.command == "list-events":
+            print("🚀 DataEngineer Agent Supported Events:")
+            print("📥 Input Events:")
+            print("  - data_quality_check_requested")
+            print("  - explain_pipeline_requested")
+            print("  - pipeline_build_requested")
+            print("  - monitoring_requested")
+            print("📤 Output Events:")
+            print("  - data_quality_check_completed")
+            print("  - pipeline_explanation_provided")
+            print("  - pipeline_built")
+            print("  - monitoring_configured")
+        elif args.command == "event-history":
+            print("📝 Pipeline History:")
+            for entry in agent.pipeline_history[-10:]:  # Show last 10 entries
+                print(f"  - {entry}")
+            print("\n📊 Quality History:")
+            for entry in agent.quality_history[-10:]:  # Show last 10 entries
+                print(f"  - {entry}")
+        elif args.command == "performance-metrics":
+            print("📊 DataEngineer Agent Performance Metrics:")
+            for metric, value in agent.performance_metrics.items():
+                if isinstance(value, float):
+                    print(f"  • {metric}: {value:.2f}")
+                else:
+                    print(f"  • {metric}: {value}")
             def event_handler(event):
                 print(f"Received event: {event}")
             subscribe("data_quality_check_completed", event_handler)
