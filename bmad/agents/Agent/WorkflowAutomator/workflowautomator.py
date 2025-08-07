@@ -111,10 +111,13 @@ class Workflow:
     error_message: Optional[str] = None
 
 
-class WorkflowAutomatorAgent:
+class WorkflowAutomatorAgent(AgentMessageBusIntegration):
     """Workflow Automation Agent for orchestrating agent workflows."""
     
     def __init__(self):
+        # Initialize parent class
+        super().__init__("WorkflowAutomator", self)
+        
         # Set agent name
         self.agent_name = "WorkflowAutomator"
         
@@ -158,7 +161,20 @@ class WorkflowAutomatorAgent:
         # Initialize workflow data structures
         self.workflows: Dict[str, Workflow] = {}
         self.execution_history: List[Dict[str, Any]] = []
-        self.performance_metrics: Dict[str, Any] = {}
+        self.performance_metrics = {
+            "total_workflows": 0,
+            "completed_workflows": 0,
+            "failed_workflows": 0,
+            "average_execution_time": 0.0,
+            "parallel_executions": 0,
+            "conditional_executions": 0,
+            "auto_recoveries": 0,
+            "optimizations_applied": 0,
+            "scheduled_workflows": 0,
+            "paused_workflows": 0,
+            "cancelled_workflows": 0,
+            "success_rate": 0.0
+        }
         self.scheduled_workflows: Dict[str, Dict[str, Any]] = {}
         
         # Resource paths
@@ -570,9 +586,28 @@ class WorkflowAutomatorAgent:
   show-performance-metrics  - Show workflow performance metrics
   show-automation-stats     - Show automation statistics
 
+🔌 Message Bus Integration:
+  initialize-message-bus    - Initialize Message Bus integration
+  message-bus-status        - Show Message Bus status and metrics
+  publish-event             - Publish events to Message Bus
+  subscribe-event           - Subscribe to events from other agents
+  list-events               - List available events
+  event-history             - Show event history
+  performance-metrics       - Show performance metrics
+
+🚀 Enhanced MCP Phase 2:
+  enhanced-collaborate      - Enhanced collaboration with other agents
+  enhanced-security         - Security-aware operations
+  enhanced-performance      - Performance-optimized operations
+  trace-operation           - Trace specific operations
+  trace-performance         - Performance tracing
+  trace-error               - Error tracing and logging
+  tracing-summary           - Overview of tracing data
+
 🔧 Utility:
   test               - Test resource completeness
   help               - Show this help message
+  run                - Run the agent
         """
         print(help_text)
         return help_text
@@ -1071,7 +1106,7 @@ class WorkflowAutomatorAgent:
                 "status": "failed"
             }
     
-    def parallel_execution(self, workflow_ids: List[str]) -> Dict[str, Any]:
+    async def parallel_execution(self, workflow_ids: List[str]) -> Dict[str, Any]:
         """Execute workflows in parallel for better performance."""
         try:
             if not workflow_ids:
@@ -1083,7 +1118,7 @@ class WorkflowAutomatorAgent:
             # Execute workflows in parallel (simplified)
             for workflow_id in workflow_ids:
                 if workflow_id in self.workflows:
-                    result = self.execute_workflow(workflow_id)
+                    result = await self.execute_workflow(workflow_id)
                     results.append(result)
                 else:
                     results.append({
@@ -1215,54 +1250,146 @@ class WorkflowAutomatorAgent:
     
     def _subscribe_to_events(self) -> None:
         """Subscribe to relevant events."""
-        self.message_bus.subscribe("workflow_execution_requested", self.handle_workflow_execution_requested)
-        self.message_bus.subscribe("workflow_pause_requested", self.handle_workflow_pause_requested)
-        self.message_bus.subscribe("workflow_resume_requested", self.handle_workflow_resume_requested)
-        self.message_bus.subscribe("workflow_cancel_requested", self.handle_workflow_cancel_requested)
-        self.message_bus.subscribe("workflow_optimization_requested", self.handle_workflow_optimization_requested)
-        self.message_bus.subscribe("workflow_monitoring_requested", self.handle_workflow_monitoring_requested)
+        if self.message_bus_integration:
+            self.message_bus_integration.subscribe_event("workflow_execution_requested", self.handle_workflow_execution_requested)
+            self.message_bus_integration.subscribe_event("workflow_pause_requested", self.handle_workflow_pause_requested)
+            self.message_bus_integration.subscribe_event("workflow_resume_requested", self.handle_workflow_resume_requested)
+            self.message_bus_integration.subscribe_event("workflow_cancel_requested", self.handle_workflow_cancel_requested)
+            self.message_bus_integration.subscribe_event("workflow_optimization_requested", self.handle_workflow_optimization_requested)
+            self.message_bus_integration.subscribe_event("workflow_monitoring_requested", self.handle_workflow_monitoring_requested)
     
-    def handle_workflow_execution_requested(self, event_data: Dict[str, Any]) -> None:
+    async def handle_workflow_execution_requested(self, event_data: Dict[str, Any]) -> Dict[str, Any]:
         """Handle workflow execution requested event."""
+        # Update performance history
+        self.execution_history.append({
+            "action": "workflow_execution_requested",
+            "timestamp": datetime.now().isoformat(),
+            "workflow_id": event_data.get("workflow_id", "unknown"),
+            "status": "processing"
+        })
+        
+        # Update performance metrics
+        self.performance_metrics["total_workflows"] += 1
+        
         workflow_id = event_data.get("workflow_id")
         if workflow_id:
-            result = self.execute_workflow(workflow_id)
+            result = await self.execute_workflow(workflow_id)
             self.logger.info(f"Workflow execution requested: {result}")
+            
+            # Publish follow-up event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("workflow_execution_completed", {
+                        "workflow_id": workflow_id,
+                        "status": result.get("status", "unknown")
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to publish workflow_execution_completed event: {e}")
+            
+            return {"status": "processed", "event": "workflow_execution_requested", "result": result}
+        return {"status": "error", "event": "workflow_execution_requested", "message": "No workflow_id provided"}
     
-    def handle_workflow_pause_requested(self, event_data: Dict[str, Any]) -> None:
+    async def handle_workflow_pause_requested(self, event_data: Dict[str, Any]) -> Dict[str, Any]:
         """Handle workflow pause requested event."""
+        # Update performance history
+        self.execution_history.append({
+            "action": "workflow_pause_requested",
+            "timestamp": datetime.now().isoformat(),
+            "workflow_id": event_data.get("workflow_id", "unknown"),
+            "status": "processing"
+        })
+        
         workflow_id = event_data.get("workflow_id")
         if workflow_id:
             result = self.pause_workflow(workflow_id)
             self.logger.info(f"Workflow pause requested: {result}")
+            
+            # Update metrics
+            if result.get("status") == "paused":
+                self.performance_metrics["paused_workflows"] += 1
+            
+            return {"status": "processed", "event": "workflow_pause_requested", "result": result}
+        return {"status": "error", "event": "workflow_pause_requested", "message": "No workflow_id provided"}
     
-    def handle_workflow_resume_requested(self, event_data: Dict[str, Any]) -> None:
+    async def handle_workflow_resume_requested(self, event_data: Dict[str, Any]) -> Dict[str, Any]:
         """Handle workflow resume requested event."""
+        # Update performance history
+        self.execution_history.append({
+            "action": "workflow_resume_requested",
+            "timestamp": datetime.now().isoformat(),
+            "workflow_id": event_data.get("workflow_id", "unknown"),
+            "status": "processing"
+        })
+        
         workflow_id = event_data.get("workflow_id")
         if workflow_id:
             result = self.resume_workflow(workflow_id)
             self.logger.info(f"Workflow resume requested: {result}")
+            
+            return {"status": "processed", "event": "workflow_resume_requested", "result": result}
+        return {"status": "error", "event": "workflow_resume_requested", "message": "No workflow_id provided"}
     
-    def handle_workflow_cancel_requested(self, event_data: Dict[str, Any]) -> None:
+    async def handle_workflow_cancel_requested(self, event_data: Dict[str, Any]) -> Dict[str, Any]:
         """Handle workflow cancel requested event."""
+        # Update performance history
+        self.execution_history.append({
+            "action": "workflow_cancel_requested",
+            "timestamp": datetime.now().isoformat(),
+            "workflow_id": event_data.get("workflow_id", "unknown"),
+            "status": "processing"
+        })
+        
         workflow_id = event_data.get("workflow_id")
         if workflow_id:
             result = self.cancel_workflow(workflow_id)
             self.logger.info(f"Workflow cancel requested: {result}")
+            
+            # Update metrics
+            if result.get("status") == "cancelled":
+                self.performance_metrics["cancelled_workflows"] += 1
+            
+            return {"status": "processed", "event": "workflow_cancel_requested", "result": result}
+        return {"status": "error", "event": "workflow_cancel_requested", "message": "No workflow_id provided"}
     
-    def handle_workflow_optimization_requested(self, event_data: Dict[str, Any]) -> None:
+    async def handle_workflow_optimization_requested(self, event_data: Dict[str, Any]) -> Dict[str, Any]:
         """Handle workflow optimization requested event."""
+        # Update performance history
+        self.execution_history.append({
+            "action": "workflow_optimization_requested",
+            "timestamp": datetime.now().isoformat(),
+            "workflow_id": event_data.get("workflow_id", "unknown"),
+            "status": "processing"
+        })
+        
         workflow_id = event_data.get("workflow_id")
         if workflow_id:
             result = self.optimize_workflow(workflow_id)
             self.logger.info(f"Workflow optimization requested: {result}")
+            
+            # Update metrics
+            if result.get("status") == "optimized":
+                self.performance_metrics["optimizations_applied"] += 1
+            
+            return {"status": "processed", "event": "workflow_optimization_requested", "result": result}
+        return {"status": "error", "event": "workflow_optimization_requested", "message": "No workflow_id provided"}
     
-    def handle_workflow_monitoring_requested(self, event_data: Dict[str, Any]) -> None:
+    async def handle_workflow_monitoring_requested(self, event_data: Dict[str, Any]) -> Dict[str, Any]:
         """Handle workflow monitoring requested event."""
+        # Update performance history
+        self.execution_history.append({
+            "action": "workflow_monitoring_requested",
+            "timestamp": datetime.now().isoformat(),
+            "workflow_id": event_data.get("workflow_id", "unknown"),
+            "status": "processing"
+        })
+        
         workflow_id = event_data.get("workflow_id")
         if workflow_id:
             result = self.monitor_workflow(workflow_id)
             self.logger.info(f"Workflow monitoring requested: {result}")
+            
+            return {"status": "processed", "event": "workflow_monitoring_requested", "result": result}
+        return {"status": "error", "event": "workflow_monitoring_requested", "message": "No workflow_id provided"}
 
     async def run(self):
         """Run the agent with event handling met MCP integration."""
@@ -1285,12 +1412,7 @@ class WorkflowAutomatorAgent:
         logger.info(f"Starting {self.agent_name} agent...")
         
         # Subscribe to events
-        subscribe("workflow_execution_requested", self.handle_workflow_execution_requested)
-        subscribe("workflow_pause_requested", self.handle_workflow_pause_requested)
-        subscribe("workflow_resume_requested", self.handle_workflow_resume_requested)
-        subscribe("workflow_cancel_requested", self.handle_workflow_cancel_requested)
-        subscribe("workflow_optimization_requested", self.handle_workflow_optimization_requested)
-        subscribe("workflow_monitoring_requested", self.handle_workflow_monitoring_requested)
+        self._subscribe_to_events()
         
         logger.info(f"{self.agent_name} agent is running and listening for events...")
         
@@ -1407,7 +1529,19 @@ def main():
     import argparse
     
     parser = argparse.ArgumentParser(description="WorkflowAutomator Agent CLI")
-    parser.add_argument("command", help="Command to execute")
+    parser.add_argument("command", choices=[
+        "help", "run", "test",
+        "create-workflow", "execute-workflow", "optimize-workflow", "monitor-workflow",
+        "schedule-workflow", "pause-workflow", "resume-workflow", "cancel-workflow",
+        "analyze-workflow", "auto-recover", "parallel-execution", "conditional-execution",
+        "show-workflow-history", "show-performance-metrics", "show-automation-stats",
+        # Message Bus Integration Commands
+        "initialize-message-bus", "message-bus-status", "publish-event", "subscribe-event",
+        "list-events", "event-history", "performance-metrics",
+        # Enhanced MCP Phase 2 Commands
+        "enhanced-collaborate", "enhanced-security", "enhanced-performance",
+        "trace-operation", "trace-performance", "trace-error", "tracing-summary"
+    ], help="Command to execute")
     parser.add_argument("--workflow-id", help="Workflow ID")
     parser.add_argument("--name", help="Workflow name")
     parser.add_argument("--description", help="Workflow description")
@@ -1417,6 +1551,9 @@ def main():
     parser.add_argument("--schedule", help="Schedule for workflow")
     parser.add_argument("--condition", help="Execution condition")
     parser.add_argument("--workflow-ids", nargs="+", help="List of workflow IDs for parallel execution")
+    # Message Bus arguments
+    parser.add_argument("--event-type", help="Event type for Message Bus")
+    parser.add_argument("--event-data", help="Event data for Message Bus")
     
     args = parser.parse_args()
     
@@ -1543,6 +1680,54 @@ def main():
         
         elif args.command == "run":
             asyncio.run(agent.run())
+        
+        # Message Bus Integration Commands
+        elif args.command == "initialize-message-bus":
+            result = asyncio.run(agent.initialize_message_bus_integration())
+            print(json.dumps(result, indent=2))
+        
+        elif args.command == "message-bus-status":
+            status = {
+                "message_bus_enabled": agent.message_bus_enabled,
+                "message_bus_integration": "Initialized" if agent.message_bus_integration else "Not initialized",
+                "performance_metrics": agent.performance_metrics,
+                "total_workflows": len(agent.workflows),
+                "execution_history_count": len(agent.execution_history)
+            }
+            print(json.dumps(status, indent=2))
+        
+        elif args.command == "publish-event":
+            if not args.event_type:
+                print("Error: event-type is required")
+                return
+            event_data = json.loads(args.event_data) if args.event_data else {}
+            result = asyncio.run(agent.message_bus_integration.publish_event(args.event_type, event_data))
+            print(json.dumps(result, indent=2))
+        
+        elif args.command == "subscribe-event":
+            if not args.event_type:
+                print("Error: event-type is required")
+                return
+            result = asyncio.run(agent.message_bus_integration.subscribe_event(args.event_type))
+            print(json.dumps(result, indent=2))
+        
+        elif args.command == "list-events":
+            events = [
+                "workflow_execution_requested", "workflow_pause_requested", "workflow_resume_requested",
+                "workflow_cancel_requested", "workflow_optimization_requested", "workflow_monitoring_requested"
+            ]
+            print(json.dumps({"available_events": events}, indent=2))
+        
+        elif args.command == "event-history":
+            history = {
+                "execution_history": agent.execution_history[-10:],  # Last 10 entries
+                "total_entries": len(agent.execution_history)
+            }
+            print(json.dumps(history, indent=2))
+        
+        elif args.command == "performance-metrics":
+            print(json.dumps(agent.performance_metrics, indent=2))
+        
         # Enhanced MCP Phase 2 Commands
         elif args.command in ["enhanced-collaborate", "enhanced-security", "enhanced-performance", 
                              "trace-operation", "trace-performance", "trace-error", "tracing-summary"]:
