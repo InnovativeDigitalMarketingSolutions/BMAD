@@ -34,6 +34,13 @@ Deze guide beschrijft de gestandaardiseerde workflow voor het implementeren van 
 - [ ] **Dependency Review**: Controleer YAML configuratie en dependencies
 - [ ] **Test Coverage Assessment**: Evalueer bestaande test coverage
 
+### 1.1 Agent Completeness Prevention (VERPLICHT)
+- [ ] **Test-Driven Verification**: Gebruik echte test execution als primaire verificatie methode
+- [ ] **Standardized Interface Check**: Verificeer dat agent alle required attributes en methods heeft
+- [ ] **Enhanced MCP Integration Check**: Controleer enhanced MCP integration volgens standaard pattern
+- [ ] **Automated Completeness Verification**: Run automated completeness verification script
+- [ ] **Consistency Check**: Verificeer dat agent dezelfde patterns volgt als andere agents
+
 ### 2. Core Implementation
 - [ ] **Import Updates**: Voeg enhanced MCP en tracing imports toe
 - [ ] **Agent Initialization**: Voeg enhanced MCP en tracing attributes toe
@@ -301,4 +308,5 @@ assert result == "willekeurige_waarde"  # Zonder te begrijpen waarom
 - Lessons Learned Guide: `docs/guides/LESSONS_LEARNED_GUIDE.md`
 - Agent Optimization Guide: `docs/guides/agent-optimization-guide.md`
 - Quality Guide: `docs/guides/QUALITY_GUIDE.md`
-- Test Workflow Guide: `docs/guides/TEST_WORKFLOW_GUIDE.md` 
+- Test Workflow Guide: `docs/guides/TEST_WORKFLOW_GUIDE.md`
+- Agent Completeness Prevention Strategy: `docs/guides/AGENT_COMPLETENESS_PREVENTION_STRATEGY.md` 

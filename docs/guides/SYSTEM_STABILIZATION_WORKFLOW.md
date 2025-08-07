@@ -112,6 +112,13 @@ Deze guide beschrijft de gestandaardiseerde workflow voor het implementeren van 
 4. **Test Thoroughly**: Verifieer dat oplossing geen nieuwe problemen introduceert
 5. **Document Learning**: Update troubleshooting knowledge voor future components
 
+### Agent Completeness Prevention (VERPLICHT)
+1. **Test-Driven Verification**: Gebruik echte test execution als primaire verificatie methode
+2. **Standardized Interface Check**: Verificeer dat agent alle required attributes en methods heeft
+3. **Enhanced MCP Integration Check**: Controleer enhanced MCP integration volgens standaard pattern
+4. **Automated Completeness Verification**: Run automated completeness verification script
+5. **Consistency Check**: Verificeer dat agent dezelfde patterns volgt als andere agents
+
 ## 🚫 Critical DO NOT Rules
 
 ### **NEVER Remove Code Without Analysis**
@@ -144,7 +151,14 @@ assert result == "willekeurige_waarde"  # Zonder te begrijpen waarom
 
 ## Workflow Stappen
 
-### 7. Commit and Push
+### 7. Kanban Board & Master Planning Update (VERPLICHT)
+- [ ] **Kanban Board Update**: Update task status en progress in `docs/deployment/KANBAN_BOARD.md`
+- [ ] **Master Planning Update**: Update progress in `docs/deployment/BMAD_MASTER_PLANNING.md`
+- [ ] **Progress Metrics**: Update alle progress metrics en percentages
+- [ ] **Task Completion**: Mark voltooide taken als ✅ COMPLETED
+- [ ] **Next Priority**: Identificeer en markeer volgende prioriteit taken
+
+### 8. Commit and Push
 - [ ] **Comprehensive Commit**: Gedetailleerde commit message met alle wijzigingen
 - [ ] **Push to Repository**: Push naar GitHub branch
 - [ ] **Progress Update**: Update project documentatie met voortgang
@@ -190,6 +204,10 @@ assert result == "willekeurige_waarde"  # Zonder te begrijpen waarom
 - ✅ Kanban board gesynchroniseerd
 - ✅ Commit en push succesvol
 - ✅ Progress bijgewerkt in project documentatie
+- ✅ Agent Completeness Prevention Strategy geïmplementeerd
+- ✅ Alle agents hebben required attributes en methods
+- ✅ Enhanced MCP Integration consistent across all agents
+- ✅ Tracing Integration consistent across all agents
 
 ## Workflow Compliance
 **CRITICAL**: Deze workflow moet strikt gevolgd worden voor elke system stabilization. Afwijkingen van deze workflow zijn niet toegestaan zonder expliciete toestemming van de gebruiker.
@@ -205,4 +223,5 @@ assert result == "willekeurige_waarde"  # Zonder te begrijpen waarom
 - Best Practices Guide: `docs/guides/BEST_PRACTICES_GUIDE.md`
 - Lessons Learned Guide: `docs/guides/LESSONS_LEARNED_GUIDE.md`
 - Quality Guide: `docs/guides/QUALITY_GUIDE.md`
-- Test Workflow Guide: `docs/guides/TEST_WORKFLOW_GUIDE.md` 
+- Test Workflow Guide: `docs/guides/TEST_WORKFLOW_GUIDE.md`
+- Agent Completeness Prevention Strategy: `docs/guides/AGENT_COMPLETENESS_PREVENTION_STRATEGY.md` 

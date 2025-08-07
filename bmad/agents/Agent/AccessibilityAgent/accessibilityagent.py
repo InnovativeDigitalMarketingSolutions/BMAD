@@ -10,7 +10,7 @@ import logging
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 from bmad.agents.core.agent.agent_performance_monitor import (
     MetricType,
@@ -116,13 +116,19 @@ class AccessibilityAgent:
         self.tracing_enabled = False
         
         # Initialize tracer
-        self.tracer = BMADTracer(config=type("Config", (), {
-            "service_name": "AccessibilityAgent",
-            "service_version": "1.0.0",
-            "environment": "development",
-            "sample_rate": 1.0,
-            "exporters": []
-        })())
+        try:
+            self.tracer = BMADTracer(config=type("Config", (), {
+                "service_name": "AccessibilityAgent",
+                "service_version": "1.0.0",
+                "environment": "development",
+                "sample_rate": 1.0,
+                "exporters": []
+            })())
+            self.tracing_enabled = True
+        except Exception as e:
+            logger.warning(f"Failed to initialize tracer: {e}")
+            self.tracer = None
+            self.tracing_enabled = False
         
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
     
@@ -141,12 +147,13 @@ class AccessibilityAgent:
     async def initialize_enhanced_mcp(self):
         """Initialize enhanced MCP capabilities for Phase 2."""
         try:
+            # Create and initialize enhanced MCP integration
             self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
             self.enhanced_mcp_enabled = await self.enhanced_mcp.initialize_enhanced_mcp()
             
             if self.enhanced_mcp_enabled:
                 self.enhanced_mcp_client = self.enhanced_mcp.mcp_client if self.enhanced_mcp else None
-                logger.info("Enhanced MCP initialized successfully")
+                logger.info("Enhanced MCP initialized successfully for AccessibilityAgent")
             else:
                 logger.warning("Enhanced MCP initialization failed, falling back to standard MCP")
                 
@@ -280,6 +287,57 @@ class AccessibilityAgent:
             enhanced_data["error"] = str(e)
         
         return enhanced_data
+    
+    def get_enhanced_mcp_tools(self) -> List[str]:
+        """Get list of available enhanced MCP tools for this agent."""
+        if not self.enhanced_mcp_enabled:
+            return []
+        
+        try:
+            return [
+                "accessibility_audit_tool",
+                "aria_validation_tool", 
+                "screen_reader_testing_tool",
+                "color_contrast_analyzer",
+                "keyboard_navigation_tester",
+                "focus_management_analyzer"
+            ]
+        except Exception as e:
+            logger.warning(f"Failed to get enhanced MCP tools: {e}")
+            return []
+    
+    def register_enhanced_mcp_tools(self) -> bool:
+        """Register enhanced MCP tools for this agent."""
+        if not self.enhanced_mcp_enabled:
+            return False
+        
+        try:
+            tools = self.get_enhanced_mcp_tools()
+            if self.enhanced_mcp:
+                self.enhanced_mcp.register_tools(tools)
+                logger.info(f"Registered {len(tools)} enhanced MCP tools")
+                return True
+            return False
+        except Exception as e:
+            logger.warning(f"Failed to register enhanced MCP tools: {e}")
+            return False
+    
+    def trace_operation(self, operation_name: str, attributes: Optional[Dict[str, Any]] = None) -> bool:
+        """Trace an operation using the tracing service."""
+        if not self.tracing_enabled or not self.tracer:
+            return False
+        
+        try:
+            if hasattr(self.tracer, 'start_span'):
+                span_id = self.tracer.start_span(operation_name, attributes or {})
+                if span_id:
+                    self.tracer.end_span(span_id)
+                    logger.debug(f"Traced operation: {operation_name}")
+                    return True
+            return False
+        except Exception as e:
+            logger.warning(f"Tracing operation failed: {e}")
+            return False
     
     async def use_accessibility_specific_enhanced_tools(self, accessibility_data: Dict[str, Any]) -> Dict[str, Any]:
         """Use accessibility-specific enhanced MCP tools."""
