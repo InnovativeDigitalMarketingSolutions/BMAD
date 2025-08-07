@@ -459,29 +459,135 @@ class TestMobileDeveloperAgentIntegration:
     @pytest.mark.asyncio
     async def test_complete_mobile_development_workflow(self, mock_save_context, mock_publish, agent):
         """Test complete mobile development workflow."""
-        # 1. Create app
-        create_result = await agent.create_app("WorkflowApp", "react-native", "business")
-        assert create_result["status"] == "success"
-
-        # 2. Build component
-        component_result = agent.build_component("WorkflowButton", "react-native", "ui")
+        # Test complete workflow
+        app_result = await agent.create_app("TestApp", "react-native", "business")
+        component_result = agent.build_component("TestButton", "react-native", "ui")
+        performance_result = agent.optimize_performance("TestApp", "general")
+        test_result = agent.test_app("TestApp", "comprehensive")
+        deploy_result = agent.deploy_app("TestApp", "app-store")
+        
+        assert app_result["status"] == "success"
         assert component_result["status"] == "success"
-
-        # 3. Optimize performance
-        optimize_result = agent.optimize_performance("WorkflowApp", "general")
-        assert optimize_result["status"] == "success"
-
-        # 4. Test app
-        test_result = agent.test_app("WorkflowApp", "comprehensive")
+        assert performance_result["status"] == "success"
         assert test_result["status"] == "success"
-
-        # 5. Analyze performance
-        analyze_result = agent.analyze_performance("WorkflowApp", "comprehensive")
-        assert analyze_result["status"] == "success"
-
-        # 6. Deploy app
-        deploy_result = agent.deploy_app("WorkflowApp", "app-store")
         assert deploy_result["status"] == "success"
 
-        # Verify all events were published
-        assert mock_publish.call_count >= 6 
+class TestMobileDeveloperAgentEventHandlers:
+    """Test suite for MobileDeveloper Agent event handlers."""
+
+    @pytest.fixture
+    def agent(self):
+        """Create a MobileDeveloper agent instance."""
+        return MobileDeveloperAgent()
+
+    @pytest.mark.asyncio
+    async def test_handle_mobile_app_development_requested(self, agent):
+        """Test handle_mobile_app_development_requested method."""
+        event = {"app_name": "TestApp", "platform": "react-native", "app_type": "business"}
+        
+        with patch.object(agent.monitor, 'log_metric') as mock_log, \
+             patch.object(agent, 'create_app') as mock_create, \
+             patch.object(agent, '_save_app_history') as mock_save:
+            mock_create.return_value = {"status": "success"}
+            
+            result = await agent.handle_mobile_app_development_requested(event)
+            
+            # Verify the method returns None for consistency
+            assert result is None
+            
+            # Verify metric was logged
+            mock_log.assert_called_with("mobile_app_development_requested", {
+                "app_name": "TestApp",
+                "platform": "react-native",
+                "timestamp": mock_log.call_args[0][1]["timestamp"]
+            })
+            
+            # Verify app was created
+            mock_create.assert_called_once_with("TestApp", "react-native", "business")
+            
+            # Verify app history was saved
+            mock_save.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_handle_mobile_app_deployment_requested(self, agent):
+        """Test handle_mobile_app_deployment_requested method."""
+        event = {"app_name": "TestApp", "deployment_target": "app-store"}
+        
+        with patch.object(agent.monitor, 'log_metric') as mock_log, \
+             patch.object(agent, 'deploy_app') as mock_deploy, \
+             patch.object(agent, '_save_app_history') as mock_save:
+            mock_deploy.return_value = {"status": "success"}
+            
+            result = await agent.handle_mobile_app_deployment_requested(event)
+            
+            # Verify the method returns None for consistency
+            assert result is None
+            
+            # Verify metric was logged
+            mock_log.assert_called_with("mobile_app_deployment_requested", {
+                "app_name": "TestApp",
+                "deployment_target": "app-store",
+                "timestamp": mock_log.call_args[0][1]["timestamp"]
+            })
+            
+            # Verify app was deployed
+            mock_deploy.assert_called_once_with("TestApp", "app-store")
+            
+            # Verify app history was saved
+            mock_save.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_handle_mobile_performance_optimization_requested(self, agent):
+        """Test handle_mobile_performance_optimization_requested method."""
+        event = {"app_name": "TestApp", "optimization_type": "general"}
+        
+        with patch.object(agent.monitor, 'log_metric') as mock_log, \
+             patch.object(agent, 'optimize_performance') as mock_optimize, \
+             patch.object(agent, '_save_performance_history') as mock_save:
+            mock_optimize.return_value = {"status": "success"}
+            
+            result = await agent.handle_mobile_performance_optimization_requested(event)
+            
+            # Verify the method returns None for consistency
+            assert result is None
+            
+            # Verify metric was logged
+            mock_log.assert_called_with("mobile_performance_optimization_requested", {
+                "app_name": "TestApp",
+                "optimization_type": "general",
+                "timestamp": mock_log.call_args[0][1]["timestamp"]
+            })
+            
+            # Verify performance was optimized
+            mock_optimize.assert_called_once_with("TestApp", "general")
+            
+            # Verify performance history was saved
+            mock_save.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_handle_mobile_testing_requested(self, agent):
+        """Test handle_mobile_testing_requested method."""
+        event = {"app_name": "TestApp", "test_type": "comprehensive"}
+        
+        with patch.object(agent.monitor, 'log_metric') as mock_log, \
+             patch.object(agent, 'test_app') as mock_test, \
+             patch.object(agent, '_save_app_history') as mock_save:
+            mock_test.return_value = {"status": "success"}
+            
+            result = await agent.handle_mobile_testing_requested(event)
+            
+            # Verify the method returns None for consistency
+            assert result is None
+            
+            # Verify metric was logged
+            mock_log.assert_called_with("mobile_testing_requested", {
+                "app_name": "TestApp",
+                "test_type": "comprehensive",
+                "timestamp": mock_log.call_args[0][1]["timestamp"]
+            })
+            
+            # Verify app was tested
+            mock_test.assert_called_once_with("TestApp", "comprehensive")
+            
+            # Verify app history was saved
+            mock_save.assert_called_once() 

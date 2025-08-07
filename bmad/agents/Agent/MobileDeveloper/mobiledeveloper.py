@@ -2328,27 +2328,172 @@ fun {component_name}(
 
     async def handle_mobile_app_development_requested(self, event):
         """Handle mobile app development requested event."""
-        logger.info(f"Mobile app development requested: {event}")
-        # Process mobile app development request
-        return {"status": "processed", "event": "mobile_app_development_requested"}
+        try:
+            logger.info(f"Mobile app development requested: {event}")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+            
+            # Log metric for app development request
+            self.monitor.log_metric("mobile_app_development_requested", {
+                "app_name": event.get("app_name", "unknown"),
+                "platform": event.get("platform", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update app history
+            app_entry = {
+                "action": "mobile_app_development_requested",
+                "app_name": event.get("app_name", "unknown"),
+                "platform": event.get("platform", "unknown"),
+                "timestamp": datetime.now().isoformat(),
+                "status": "requested"
+            }
+            self.app_history.append(app_entry)
+            self._save_app_history()
+            
+            # Process mobile app development request
+            app_name = event.get("app_name", "MyMobileApp")
+            platform = event.get("platform", "react-native")
+            app_type = event.get("app_type", "business")
+            
+            # Create the app
+            result = await self.create_app(app_name, platform, app_type)
+            
+            # Return None for consistency with other event handlers
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error in mobile app development event handler: {e}")
+            return None
 
     async def handle_mobile_app_deployment_requested(self, event):
         """Handle mobile app deployment requested event."""
-        logger.info(f"Mobile app deployment requested: {event}")
-        # Process mobile app deployment request
-        return {"status": "processed", "event": "mobile_app_deployment_requested"}
+        try:
+            logger.info(f"Mobile app deployment requested: {event}")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+            
+            # Log metric for app deployment request
+            self.monitor.log_metric("mobile_app_deployment_requested", {
+                "app_name": event.get("app_name", "unknown"),
+                "deployment_target": event.get("deployment_target", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update app history
+            app_entry = {
+                "action": "mobile_app_deployment_requested",
+                "app_name": event.get("app_name", "unknown"),
+                "deployment_target": event.get("deployment_target", "unknown"),
+                "timestamp": datetime.now().isoformat(),
+                "status": "requested"
+            }
+            self.app_history.append(app_entry)
+            self._save_app_history()
+            
+            # Process mobile app deployment request
+            app_name = event.get("app_name", "MyMobileApp")
+            deployment_target = event.get("deployment_target", "app-store")
+            
+            # Deploy the app
+            result = self.deploy_app(app_name, deployment_target)
+            
+            # Return None for consistency with other event handlers
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error in mobile app deployment event handler: {e}")
+            return None
 
     async def handle_mobile_performance_optimization_requested(self, event):
         """Handle mobile performance optimization requested event."""
-        logger.info(f"Mobile performance optimization requested: {event}")
-        # Process mobile performance optimization request
-        return {"status": "processed", "event": "mobile_performance_optimization_requested"}
+        try:
+            logger.info(f"Mobile performance optimization requested: {event}")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+            
+            # Log metric for performance optimization request
+            self.monitor.log_metric("mobile_performance_optimization_requested", {
+                "app_name": event.get("app_name", "unknown"),
+                "optimization_type": event.get("optimization_type", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update performance history
+            perf_entry = {
+                "action": "mobile_performance_optimization_requested",
+                "app_name": event.get("app_name", "unknown"),
+                "optimization_type": event.get("optimization_type", "unknown"),
+                "timestamp": datetime.now().isoformat(),
+                "status": "requested"
+            }
+            self.performance_history.append(perf_entry)
+            self._save_performance_history()
+            
+            # Process mobile performance optimization request
+            app_name = event.get("app_name", "MyMobileApp")
+            optimization_type = event.get("optimization_type", "general")
+            
+            # Optimize performance
+            result = self.optimize_performance(app_name, optimization_type)
+            
+            # Return None for consistency with other event handlers
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error in mobile performance optimization event handler: {e}")
+            return None
 
     async def handle_mobile_testing_requested(self, event):
         """Handle mobile testing requested event."""
-        logger.info(f"Mobile testing requested: {event}")
-        # Process mobile testing request
-        return {"status": "processed", "event": "mobile_testing_requested"}
+        try:
+            logger.info(f"Mobile testing requested: {event}")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+            
+            # Log metric for mobile testing request
+            self.monitor.log_metric("mobile_testing_requested", {
+                "app_name": event.get("app_name", "unknown"),
+                "test_type": event.get("test_type", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update app history
+            app_entry = {
+                "action": "mobile_testing_requested",
+                "app_name": event.get("app_name", "unknown"),
+                "test_type": event.get("test_type", "unknown"),
+                "timestamp": datetime.now().isoformat(),
+                "status": "requested"
+            }
+            self.app_history.append(app_entry)
+            self._save_app_history()
+            
+            # Process mobile testing request
+            app_name = event.get("app_name", "MyMobileApp")
+            test_type = event.get("test_type", "comprehensive")
+            
+            # Test the app
+            result = self.test_app(app_name, test_type)
+            
+            # Return None for consistency with other event handlers
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error in mobile testing event handler: {e}")
+            return None
 
 def main():
     import asyncio

@@ -117,8 +117,8 @@
   - **Documentation**: ✅ Volledig up-to-date (changelog, .md, agents-overview)
 
 - **MobileDeveloper Agent** - ✅ **FULLY COMPLIANT**
-  - 46/46 tests passing (100% coverage)
-  - 6 event handlers met echte functionaliteit
+  - 50/50 tests passing (100% coverage)
+  - 4 event handlers met echte functionaliteit
   - CLI Extension met 6 Message Bus commands
   - Performance metrics tracking (12 metrics)
   - Cross-platform mobile development support
