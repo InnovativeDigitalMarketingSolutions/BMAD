@@ -399,7 +399,7 @@ class TestStrategiePartnerAgent:
         
         with patch.object(agent.monitor, 'log_metric') as mock_log, \
              patch.object(agent.policy_engine, 'evaluate_policy') as mock_policy:
-            agent.handle_alignment_check_completed(event)
+            await agent.handle_alignment_check_completed(event)
             
             mock_log.assert_called_with("alignment_check", event)
             mock_policy.assert_called()
@@ -412,7 +412,7 @@ class TestStrategiePartnerAgent:
         with patch.object(agent, 'develop_strategy') as mock_develop:
             from unittest.mock import AsyncMock
             mock_develop.return_value = AsyncMock()
-            agent.handle_strategy_development_requested(event)
+            await agent.handle_strategy_development_requested(event)
             mock_develop.assert_called_with("Test Strategy")
 
     # New Idea Validation Tests
@@ -1080,11 +1080,11 @@ class TestStrategiePartnerAgentIntegration:
         event = {"strategy_name": "Test Strategy", "status": "requested"}
         
         with patch.object(agent, 'develop_strategy') as mock_develop:
-            agent.handle_strategy_development_requested(event)
+            await agent.handle_strategy_development_requested(event)
             mock_develop.assert_called()
 
         with patch.object(agent.monitor, 'log_metric') as mock_log:
-            agent.handle_alignment_check_completed(event)
+            await agent.handle_alignment_check_completed(event)
             mock_log.assert_called()
 
     @pytest.mark.asyncio
