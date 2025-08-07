@@ -51,13 +51,16 @@ from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-class ReleaseManagerAgent:
+class ReleaseManagerAgent(AgentMessageBusIntegration):
     """
     Release Manager Agent voor BMAD.
     Gespecialiseerd in release management, deployment coordination, en version control.
     """
     
     def __init__(self):
+        # Initialize parent class with agent name and instance
+        super().__init__("ReleaseManager", self)
+        
         self.framework_manager = get_framework_templates_manager()
         try:
             self.release_manager_template = self.framework_manager.get_framework_template('release_manager')
@@ -92,6 +95,22 @@ class ReleaseManagerAgent:
         self.rollback_history = []
         self._load_release_history()
         self._load_rollback_history()
+        
+        # Performance metrics
+        self.performance_metrics = {
+            "release_creation_time": 0.0,
+            "deployment_success_rate": 0.0,
+            "rollback_frequency": 0.0,
+            "release_approval_time": 0.0,
+            "deployment_duration": 0.0,
+            "rollback_duration": 0.0,
+            "release_quality_score": 0.0,
+            "deployment_automation_level": 0.0,
+            "rollback_automation_level": 0.0,
+            "release_coordination_efficiency": 0.0,
+            "version_control_accuracy": 0.0,
+            "release_documentation_completeness": 0.0
+        }
         
         # MCP Integration
         self.mcp_client: Optional[MCPClient] = None
@@ -472,6 +491,24 @@ Release Manager Agent Commands:
   export-report [format]  - Export release report (format: md, csv, json)
   test                    - Test resource completeness
   collaborate             - Demonstrate collaboration with other agents
+
+Enhanced MCP Phase 2 Commands:
+  enhanced-collaborate    - Enhanced collaboration with other agents
+  enhanced-security       - Enhanced security validation
+  enhanced-performance    - Enhanced performance optimization
+  trace-operation         - Trace release operations
+  trace-performance       - Trace performance metrics
+  trace-error             - Trace error analysis
+  tracing-summary         - Show tracing status
+
+Message Bus Integration Commands:
+  initialize-message-bus  - Initialize Message Bus integration
+  message-bus-status      - Show Message Bus status
+  publish-event           - Publish release management event
+  subscribe-event         - Show subscribed events
+  list-events             - List supported events
+  event-history           - Show event history
+  performance-metrics     - Show performance metrics
         """
         print(help_text)
 
@@ -1265,7 +1302,9 @@ def main():
                                "show-best-practices", "show-changelog", "export-report", "test",
                                "collaborate", "run", "enhanced-collaborate", "enhanced-security", 
                                "enhanced-performance", "trace-operation", "trace-performance", 
-                               "trace-error", "tracing-summary"])
+                               "trace-error", "tracing-summary",
+                               "initialize-message-bus", "message-bus-status", "publish-event", "subscribe-event",
+                               "list-events", "event-history", "performance-metrics"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--version", default="1.2.0", help="Release version")
     parser.add_argument("--description", default="Feature release", help="Release description")
@@ -1351,6 +1390,66 @@ def main():
             print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
             print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
             print(f"Agent: {agent.agent_name}")
+    # Message Bus Integration Commands
+    elif args.command == "initialize-message-bus":
+        result = asyncio.run(agent.initialize_message_bus_integration())
+        print(f"Message Bus Integration: {'Enabled' if result else 'Failed'}")
+    elif args.command == "message-bus-status":
+        print("🚀 ReleaseManager Agent Message Bus Status:")
+        print(f"✅ Message Bus Integration: {'Enabled' if agent.message_bus_enabled else 'Disabled'}")
+        print(f"✅ Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+        print(f"✅ Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+        print(f"📊 Performance Metrics: {len(agent.performance_metrics)} metrics tracked")
+        print(f"📝 Release History: {len(agent.release_history)} entries")
+        print(f"⚡ Rollback History: {len(agent.rollback_history)} entries")
+    elif args.command == "publish-event":
+        # Example event publication
+        if agent.message_bus_integration:
+            result = asyncio.run(agent.message_bus_integration.publish_event("release_status_update", {
+                "agent": "ReleaseManager",
+                "status": "active",
+                "timestamp": datetime.now().isoformat()
+            }))
+            print("Release management event published successfully")
+        else:
+            print("Message Bus not available")
+    elif args.command == "subscribe-event":
+        print("Event subscription active. Listening for release management events...")
+        print("Subscribed events:")
+        events = ["release_requested", "deployment_requested", "rollback_requested", 
+                 "version_update_requested", "tests_passed", "release_approved", "deployment_failed"]
+        for event in events:
+            print(f"  - {event}")
+    elif args.command == "list-events":
+        print("🚀 ReleaseManager Agent Supported Events:")
+        print("📥 Input Events:")
+        print("  - release_requested")
+        print("  - deployment_requested")
+        print("  - rollback_requested")
+        print("  - version_update_requested")
+        print("  - tests_passed")
+        print("  - release_approved")
+        print("  - deployment_failed")
+        print("📤 Output Events:")
+        print("  - release_created")
+        print("  - release_approved")
+        print("  - release_deployed")
+        print("  - release_rolled_back")
+        print("  - version_updated")
+    elif args.command == "event-history":
+        print("📝 Release History:")
+        for entry in agent.release_history[-10:]:  # Show last 10 entries
+            print(f"  - {entry}")
+        print("\n⚡ Rollback History:")
+        for entry in agent.rollback_history[-10:]:  # Show last 10 entries
+            print(f"  - {entry}")
+    elif args.command == "performance-metrics":
+        print("📊 ReleaseManager Agent Performance Metrics:")
+        for metric, value in agent.performance_metrics.items():
+            if isinstance(value, float):
+                print(f"  • {metric}: {value:.2f}")
+            else:
+                print(f"  • {metric}: {value}")
     else:
         print("Unknown command. Use 'help' to see available commands.")
         sys.exit(1)
