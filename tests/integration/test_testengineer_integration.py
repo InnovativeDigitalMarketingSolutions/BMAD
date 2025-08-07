@@ -284,7 +284,7 @@ class TestTestEngineerIntegration:
     @pytest.mark.asyncio
     async def test_collaboration_example(self, test_engineer_agent):
         """Test collaboration example functionality."""
-        result = test_engineer_agent.collaborate_example()
+        result = await test_engineer_agent.collaborate_example()
         
         assert result is not None
         assert "message" in result
