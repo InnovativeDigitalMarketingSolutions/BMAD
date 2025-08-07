@@ -785,6 +785,26 @@ Enhanced MCP Phase 2 Commands:
             logger.error(f"Tracing failed: {e}")
             return {"tracing": "error", "error": str(e)}
 
+    async def trace_operation(self, operation_name: str, attributes: Optional[Dict[str, Any]] = None) -> bool:
+        """Trace operations for monitoring and debugging."""
+        try:
+            if not self.tracing_enabled or not self.tracer:
+                return False
+            
+            trace_data = {
+                "agent": self.agent_name,
+                "operation": operation_name,
+                "timestamp": datetime.now().isoformat(),
+                "attributes": attributes or {}
+            }
+            
+            await self.tracer.trace_operation(trace_data)
+            return True
+            
+        except Exception as e:
+            logger.warning(f"Tracing operation failed: {e}")
+            return False
+
     def manage_escalations(self, escalation_type: str = "workflow_blocked", workflow_name: str = "feature_delivery") -> Dict[str, Any]:
         """Manage escalations with input validation."""
         # Input validation

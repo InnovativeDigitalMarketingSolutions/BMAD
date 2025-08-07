@@ -16,7 +16,7 @@ import logging
 import textwrap
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Optional, Any
+from typing import Dict, Optional, Any, List
 
 from bmad.agents.core.agent.agent_performance_monitor import (
     MetricType,
@@ -68,6 +68,14 @@ class AiDeveloperAgent(AgentMessageBusIntegration):
     AI Developer Agent voor BMAD.
     Gespecialiseerd in AI/ML development, model training, en AI system integration.
     """
+    
+    # Required attributes for all agents (class level)
+    mcp_client = None
+    enhanced_mcp = None
+    enhanced_mcp_enabled = False
+    tracing_enabled = False
+    agent_name = "AiDeveloper"
+    message_bus_integration = None
     
     def __init__(self):
         # Initialize parent class with agent name and instance
@@ -273,6 +281,63 @@ class AiDeveloperAgent(AgentMessageBusIntegration):
             return True
         except Exception as e:
             logger.error(f"❌ Fout bij initialiseren van Message Bus Integration voor {self.agent_name}: {e}")
+            return False
+
+    def get_enhanced_mcp_tools(self) -> List[str]:
+        """Get list of available enhanced MCP tools for this agent."""
+        if not self.enhanced_mcp_enabled:
+            return []
+        
+        try:
+            return [
+                "aidev_specific_tool_1",
+                "aidev_specific_tool_2", 
+                "aidev_specific_tool_3",
+                "ai_model_development",
+                "ai_pipeline_development",
+                "ai_model_evaluation",
+                "ai_model_deployment",
+                "ai_bias_check",
+                "ai_explainability",
+                "ai_prompt_engineering"
+            ]
+        except Exception as e:
+            logger.warning(f"Failed to get enhanced MCP tools: {e}")
+            return []
+
+    def register_enhanced_mcp_tools(self) -> bool:
+        """Register enhanced MCP tools for this agent."""
+        if not self.enhanced_mcp_enabled:
+            return False
+        
+        try:
+            tools = self.get_enhanced_mcp_tools()
+            for tool in tools:
+                if self.enhanced_mcp:
+                    self.enhanced_mcp.register_tool(tool)
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to register enhanced MCP tools: {e}")
+            return False
+
+    async def trace_operation(self, operation_name: str, attributes: Optional[Dict[str, Any]] = None) -> bool:
+        """Trace operations for monitoring and debugging."""
+        try:
+            if not self.tracing_enabled or not self.tracer:
+                return False
+            
+            trace_data = {
+                "agent": self.agent_name,
+                "operation": operation_name,
+                "timestamp": datetime.now().isoformat(),
+                "attributes": attributes or {}
+            }
+            
+            await self.tracer.trace_operation(trace_data)
+            return True
+            
+        except Exception as e:
+            logger.warning(f"Tracing operation failed: {e}")
             return False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:

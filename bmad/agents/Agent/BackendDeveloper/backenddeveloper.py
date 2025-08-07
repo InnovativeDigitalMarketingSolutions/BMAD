@@ -68,13 +68,27 @@ class BackendDeveloperAgent(AgentMessageBusIntegration):
         self.monitor = get_performance_monitor()
         self.policy_engine = get_advanced_policy_engine()
         self.sprite_library = get_sprite_library()
-        self.tracer = BMADTracer(config=type("Config", (), {
-            "service_name": "BackendDeveloperAgent",
-            "service_version": "1.0.0",
-            "environment": "development",
-            "sample_rate": 1.0,
-            "exporters": []
-        })())
+        
+        # Initialize MCP client
+        self.mcp_client = None
+        self.enhanced_mcp = None
+        self.enhanced_mcp_enabled = False
+        
+        # Initialize tracer
+        try:
+            self.tracer = BMADTracer(config=type("Config", (), {
+                "service_name": "BackendDeveloperAgent",
+                "service_version": "1.0.0",
+                "environment": "development",
+                "sample_rate": 1.0,
+                "exporters": []
+            })())
+            self.tracing_enabled = True
+        except Exception as e:
+            logger.warning(f"Failed to initialize tracer: {e}")
+            self.tracer = None
+            self.tracing_enabled = False
+            
         self.workflow = PrefectWorkflowOrchestrator()
 
         # Resource paths
@@ -505,7 +519,7 @@ class BackendDeveloperAgent(AgentMessageBusIntegration):
             
             if self.enhanced_mcp_enabled:
                 # Set enhanced MCP client reference
-                self.enhanced_mcp_client = self.mcp_client
+                self.mcp_client = self.enhanced_mcp.mcp_client if self.enhanced_mcp else None
                 logger.info("Enhanced MCP capabilities initialized successfully")
             else:
                 logger.warning("Enhanced MCP initialization failed, falling back to standard MCP")

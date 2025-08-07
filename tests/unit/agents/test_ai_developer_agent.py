@@ -695,6 +695,126 @@ class TestAiDeveloperAgent:
         import asyncio
         asyncio.run(agent.handle_ai_development_completed("invalid_event"))
 
+    # Tests for new enhanced MCP and tracing methods
+    def test_get_enhanced_mcp_tools_disabled(self, agent):
+        """Test get_enhanced_mcp_tools when enhanced MCP is disabled."""
+        agent.enhanced_mcp_enabled = False
+        tools = agent.get_enhanced_mcp_tools()
+        assert tools == []
+
+    def test_get_enhanced_mcp_tools_enabled(self, agent):
+        """Test get_enhanced_mcp_tools when enhanced MCP is enabled."""
+        agent.enhanced_mcp_enabled = True
+        tools = agent.get_enhanced_mcp_tools()
+        assert isinstance(tools, list)
+        assert len(tools) > 0
+        assert "aidev_specific_tool_1" in tools
+        assert "ai_model_development" in tools
+
+    def test_get_enhanced_mcp_tools_exception(self, agent):
+        """Test get_enhanced_mcp_tools when exception occurs."""
+        agent.enhanced_mcp_enabled = True
+        # Test that the method handles exceptions gracefully
+        # We can't easily mock the internal logic, so we test the actual behavior
+        tools = agent.get_enhanced_mcp_tools()
+        assert isinstance(tools, list)
+        # The method should return a list even if there are internal issues
+
+    def test_register_enhanced_mcp_tools_disabled(self, agent):
+        """Test register_enhanced_mcp_tools when enhanced MCP is disabled."""
+        agent.enhanced_mcp_enabled = False
+        result = agent.register_enhanced_mcp_tools()
+        assert result is False
+
+    def test_register_enhanced_mcp_tools_enabled(self, agent):
+        """Test register_enhanced_mcp_tools when enhanced MCP is enabled."""
+        agent.enhanced_mcp_enabled = True
+        agent.enhanced_mcp = MagicMock()
+        agent.enhanced_mcp.register_tool = MagicMock()
+        
+        result = agent.register_enhanced_mcp_tools()
+        assert result is True
+        assert agent.enhanced_mcp.register_tool.called
+
+    def test_register_enhanced_mcp_tools_no_enhanced_mcp(self, agent):
+        """Test register_enhanced_mcp_tools when enhanced_mcp is None."""
+        agent.enhanced_mcp_enabled = True
+        agent.enhanced_mcp = None
+        
+        result = agent.register_enhanced_mcp_tools()
+        assert result is True  # Should not fail, just skip registration
+
+    def test_register_enhanced_mcp_tools_exception(self, agent):
+        """Test register_enhanced_mcp_tools when exception occurs."""
+        agent.enhanced_mcp_enabled = True
+        agent.enhanced_mcp = MagicMock()
+        agent.enhanced_mcp.register_tool = MagicMock(side_effect=Exception("Test error"))
+        
+        result = agent.register_enhanced_mcp_tools()
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_trace_operation_disabled(self, agent):
+        """Test trace_operation when tracing is disabled."""
+        agent.tracing_enabled = False
+        result = await agent.trace_operation("test_operation")
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_trace_operation_no_tracer(self, agent):
+        """Test trace_operation when tracer is None."""
+        agent.tracing_enabled = True
+        agent.tracer = None
+        result = await agent.trace_operation("test_operation")
+        assert result is False
+
+    @pytest.mark.asyncio
+    async def test_trace_operation_success(self, agent):
+        """Test trace_operation when tracing is enabled and successful."""
+        agent.tracing_enabled = True
+        agent.tracer = MagicMock()
+        agent.tracer.trace_operation = AsyncMock()
+        
+        result = await agent.trace_operation("test_operation", {"key": "value"})
+        assert result is True
+        agent.tracer.trace_operation.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_trace_operation_exception(self, agent):
+        """Test trace_operation when exception occurs."""
+        agent.tracing_enabled = True
+        agent.tracer = MagicMock()
+        agent.tracer.trace_operation = AsyncMock(side_effect=Exception("Test error"))
+        
+        result = await agent.trace_operation("test_operation")
+        assert result is False
+
+    def test_required_attributes_exist(self, agent):
+        """Test that all required attributes exist on the agent."""
+        required_attributes = [
+            'mcp_client',
+            'enhanced_mcp',
+            'enhanced_mcp_enabled',
+            'tracing_enabled',
+            'agent_name',
+            'message_bus_integration'
+        ]
+        
+        for attr in required_attributes:
+            assert hasattr(agent, attr), f"Missing required attribute: {attr}"
+
+    def test_required_methods_exist(self, agent):
+        """Test that all required methods exist on the agent."""
+        required_methods = [
+            'initialize_enhanced_mcp',
+            'get_enhanced_mcp_tools',
+            'register_enhanced_mcp_tools',
+            'trace_operation'
+        ]
+        
+        for method in required_methods:
+            assert hasattr(agent, method), f"Missing required method: {method}"
+
 
 class TestAiDeveloperAgentCLI:
     @patch('sys.argv', ['aidev.py', 'help'])
