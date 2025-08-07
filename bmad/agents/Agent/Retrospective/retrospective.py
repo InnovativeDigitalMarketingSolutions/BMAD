@@ -1217,9 +1217,46 @@ Retrospective Agent Commands:
 
     def on_feedback_sentiment_analyzed(self, event):
         """Handle feedback sentiment analyzed event."""
-        logger.info(f"Feedback sentiment analyzed: {event}")
-        # Process sentiment analysis results
-        return {"status": "processed", "event": "feedback_sentiment_analyzed"}
+        try:
+            logger.info(f"Feedback sentiment analyzed: {event}")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+                
+            # Extract sentiment data
+            sprint_name = event.get("sprint_name", "Unknown Sprint")
+            sentiment = event.get("sentiment", "neutral")
+            
+            # Log metric for sentiment analysis
+            self.monitor.log_metric("sentiment_analysis", {
+                "sprint_name": sprint_name,
+                "sentiment": sentiment,
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update action history with sentiment analysis result
+            sentiment_entry = {
+                "action": "sentiment_analysis_completed",
+                "sprint_name": sprint_name,
+                "sentiment": sentiment,
+                "timestamp": datetime.now().isoformat(),
+                "status": "completed"
+            }
+            self.action_history.append(sentiment_entry)
+            self._save_action_history()
+            
+            # Evaluate policy for sentiment-based actions
+            policy_result = self.policy_engine.evaluate_policy("sentiment_analysis", event)
+            logger.info(f"Policy evaluation result: {policy_result}")
+            
+            # Return None for consistency with other event handlers
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error in sentiment analysis event handler: {e}")
+            return None
 
     async def handle_retrospective_feedback_received(self, event):
         """Handle retrospective feedback received event."""
