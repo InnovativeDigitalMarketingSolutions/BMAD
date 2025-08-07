@@ -27,6 +27,21 @@ commands:
   - show-infrastructure-history: Toon infrastructure wijzigingen historie
   - show-incident-history: Toon incident response historie
   - test: Test resource completeness
+  # Message Bus Commands
+  - message-bus-status: Show Message Bus status
+  - publish-event: Publish event to Message Bus
+  - subscribe-event: Subscribe to event
+  - list-events: List supported events
+  - event-history: Show event history
+  - performance-metrics: Show performance metrics
+  # MCP Phase 2 Enhanced Commands
+  - enhanced-collaborate: Enhanced inter-agent communicatie
+  - enhanced-security: Enhanced security validatie
+  - enhanced-performance: Enhanced performance optimalisatie
+  - trace-operation: Trace infrastructure operations
+  - trace-performance: Get performance metrics
+  - trace-error: Trace error scenarios
+  - tracing-summary: Get tracing summary
 
 dependencies:
   templates:
