@@ -1260,9 +1260,46 @@ RnD Agent Commands:
     # Original functionality preserved
     def handle_experiment_completed(self, event):
         """Handle experiment completed event."""
-        logger.info(f"Experiment completed: {event}")
-        # Process experiment completion
-        return {"status": "processed", "event": "experiment_completed"}
+        try:
+            logger.info(f"Experiment completed: {event}")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+                
+            # Extract experiment data
+            experiment_id = event.get("experiment_id", "unknown")
+            status = event.get("status", "unknown")
+            
+            # Log metric for experiment completion
+            self.monitor.log_metric("experiment_completion", {
+                "experiment_id": experiment_id,
+                "status": status,
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update experiment history with completion result
+            experiment_entry = {
+                "action": "experiment_completed",
+                "experiment_id": experiment_id,
+                "status": status,
+                "timestamp": datetime.now().isoformat(),
+                "completion_status": "completed"
+            }
+            self.experiment_history.append(experiment_entry)
+            self._save_experiment_history()
+            
+            # Evaluate policy for experiment completion
+            policy_result = self.policy_engine.evaluate_policy("experiment_completion", event)
+            logger.info(f"Policy evaluation result: {policy_result}")
+            
+            # Return None for consistency with other event handlers
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error in experiment completion event handler: {e}")
+            return None
 
     async def handle_research_requested(self, event):
         """Handle research requested event."""
