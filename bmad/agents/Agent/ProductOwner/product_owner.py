@@ -374,9 +374,15 @@ class ProductOwnerAgent(AgentMessageBusIntegration):
 
     # Standardized Message Bus Integration Event Handlers
     async def handle_user_story_creation_requested(self, event):
-        """Handle user story creation requested event with performance tracking."""
+        """Handle user story creation requested event with Quality-First implementation."""
         try:
-            logging.info(f"User story creation requested: {event}")
+            # Input validation
+            if not isinstance(event, dict):
+                logger.warning("Invalid event type")
+                return None
+            
+            # Log metric
+            self.monitor.log_metric("user_story_creation_requested", 1, "count", self.agent_name)
             
             # Extract requirement from event
             requirement = event.get("data", {}).get("requirement", "Default requirement")
@@ -385,36 +391,39 @@ class ProductOwnerAgent(AgentMessageBusIntegration):
             # Create user story using existing method
             result = await self.create_user_story(requirement)
             
-            # Update performance metrics
-            self.performance_metrics["user_stories_created"] += 1
-            self.performance_metrics["requirements_gathered"] += 1
-            
-            # Record in story history
-            story_entry = f"{datetime.now().isoformat()}: User story created for requirement: {requirement}"
-            self.story_history.append(story_entry)
+            # Update history
+            history_entry = {
+                "timestamp": datetime.now().isoformat(),
+                "event_type": "user_story_creation_requested",
+                "requirement": requirement,
+                "result": result
+            }
+            self.story_history.append(history_entry)
             self._save_story_history()
             
             # Publish completion event
-            completion_event = {
-                "event_type": "user_story_creation_completed", 
-                "agent": self.agent_name,
-                "data": {
+            if self.message_bus_integration:
+                await self.message_bus_integration.publish_event("user_story_creation_completed", {
                     "requirement": requirement,
-                    "result": result,
-                    "timestamp": datetime.now().isoformat()
-                }
-            }
-            await self.publish_event("user_story_creation_completed", completion_event)
+                    "result": result
+                })
             
-            return {"status": "processed", "event": "user_story_creation_requested", "result": result}
+            return None
+            
         except Exception as e:
-            logging.error(f"Error handling user story creation request: {e}")
-            return {"status": "error", "event": "user_story_creation_requested", "error": str(e)}
+            logger.error(f"Error handling user story creation request: {e}")
+            return None
 
     async def handle_backlog_prioritization_requested(self, event):
-        """Handle backlog prioritization requested event with performance tracking."""
+        """Handle backlog prioritization requested event with Quality-First implementation."""
         try:
-            logging.info(f"Backlog prioritization requested: {event}")
+            # Input validation
+            if not isinstance(event, dict):
+                logger.warning("Invalid event type")
+                return None
+            
+            # Log metric
+            self.monitor.log_metric("backlog_prioritization_requested", 1, "count", self.agent_name)
             
             # Extract backlog items from event
             items = event.get("data", {}).get("items", [])
@@ -430,36 +439,41 @@ class ProductOwnerAgent(AgentMessageBusIntegration):
                     "effort_estimate": f"{2 + i} weeks"
                 })
             
-            # Update performance metrics
-            self.performance_metrics["backlog_items_prioritized"] += len(items)
-            
-            # Record in vision history
-            backlog_entry = f"{datetime.now().isoformat()}: Backlog prioritized with {len(items)} items using {method} method"
-            self.vision_history.append(backlog_entry)
+            # Update history
+            history_entry = {
+                "timestamp": datetime.now().isoformat(),
+                "event_type": "backlog_prioritization_requested",
+                "method": method,
+                "items_count": len(items),
+                "prioritized_items": prioritized_items
+            }
+            self.vision_history.append(history_entry)
             self._save_vision_history()
             
             # Publish completion event
-            completion_event = {
-                "event_type": "backlog_prioritization_completed", 
-                "agent": self.agent_name,
-                "data": {
+            if self.message_bus_integration:
+                await self.message_bus_integration.publish_event("backlog_prioritization_completed", {
                     "method": method,
                     "items_count": len(items),
-                    "prioritized_items": prioritized_items,
-                    "timestamp": datetime.now().isoformat()
-                }
-            }
-            await self.publish_event("backlog_prioritization_completed", completion_event)
+                    "prioritized_items": prioritized_items
+                })
             
-            return {"status": "processed", "event": "backlog_prioritization_requested", "result": prioritized_items}
+            return None
+            
         except Exception as e:
-            logging.error(f"Error handling backlog prioritization request: {e}")
-            return {"status": "error", "event": "backlog_prioritization_requested", "error": str(e)}
+            logger.error(f"Error handling backlog prioritization request: {e}")
+            return None
 
     async def handle_product_vision_generation_requested(self, event):
-        """Handle product vision generation requested event with performance tracking."""
+        """Handle product vision generation requested event with Quality-First implementation."""
         try:
-            logging.info(f"Product vision generation requested: {event}")
+            # Input validation
+            if not isinstance(event, dict):
+                logger.warning("Invalid event type")
+                return None
+            
+            # Log metric
+            self.monitor.log_metric("product_vision_generation_requested", 1, "count", self.agent_name)
             
             # Extract product details from event
             product_name = event.get("data", {}).get("product_name", "BMAD Product")
@@ -483,35 +497,40 @@ class ProductOwnerAgent(AgentMessageBusIntegration):
                 ]
             }
             
-            # Update performance metrics
-            self.performance_metrics["product_visions_generated"] += 1
-            
-            # Record in vision history
-            vision_entry = f"{datetime.now().isoformat()}: Product vision generated for {product_name} - {timeframe} timeframe"
-            self.vision_history.append(vision_entry)
+            # Update history
+            history_entry = {
+                "timestamp": datetime.now().isoformat(),
+                "event_type": "product_vision_generation_requested",
+                "product_name": product_name,
+                "timeframe": timeframe,
+                "vision_data": vision_data
+            }
+            self.vision_history.append(history_entry)
             self._save_vision_history()
             
             # Publish completion event
-            completion_event = {
-                "event_type": "product_vision_generation_completed", 
-                "agent": self.agent_name,
-                "data": {
+            if self.message_bus_integration:
+                await self.message_bus_integration.publish_event("product_vision_generation_completed", {
                     "product_name": product_name,
-                    "vision_data": vision_data,
-                    "timestamp": datetime.now().isoformat()
-                }
-            }
-            await self.publish_event("product_vision_generation_completed", completion_event)
+                    "vision_data": vision_data
+                })
             
-            return {"status": "processed", "event": "product_vision_generation_requested", "result": vision_data}
+            return None
+            
         except Exception as e:
-            logging.error(f"Error handling product vision generation request: {e}")
-            return {"status": "error", "event": "product_vision_generation_requested", "error": str(e)}
+            logger.error(f"Error handling product vision generation request: {e}")
+            return None
 
     async def handle_stakeholder_analysis_requested(self, event):
-        """Handle stakeholder analysis requested event with performance tracking."""
+        """Handle stakeholder analysis requested event with Quality-First implementation."""
         try:
-            logging.info(f"Stakeholder analysis requested: {event}")
+            # Input validation
+            if not isinstance(event, dict):
+                logger.warning("Invalid event type")
+                return None
+            
+            # Log metric
+            self.monitor.log_metric("stakeholder_analysis_requested", 1, "count", self.agent_name)
             
             # Extract stakeholders from event
             stakeholders = event.get("data", {}).get("stakeholders", ["Development Team", "Users", "Management"])
@@ -536,36 +555,41 @@ class ProductOwnerAgent(AgentMessageBusIntegration):
                 analysis_result["communication_plan"][stakeholder] = f"Regular updates via email and meetings"
                 analysis_result["engagement_strategy"][stakeholder] = "Collaborative involvement in product decisions"
             
-            # Update performance metrics
-            self.performance_metrics["stakeholder_analyses_completed"] += 1
-            self.performance_metrics["stakeholder_meetings_conducted"] += len(stakeholders)
-            
-            # Record in vision history
-            analysis_entry = f"{datetime.now().isoformat()}: Stakeholder analysis completed for {len(stakeholders)} stakeholders"
-            self.vision_history.append(analysis_entry)
+            # Update history
+            history_entry = {
+                "timestamp": datetime.now().isoformat(),
+                "event_type": "stakeholder_analysis_requested",
+                "analysis_type": analysis_type,
+                "stakeholders_analyzed": len(stakeholders),
+                "analysis_result": analysis_result
+            }
+            self.vision_history.append(history_entry)
             self._save_vision_history()
             
             # Publish completion event
-            completion_event = {
-                "event_type": "stakeholder_analysis_completed", 
-                "agent": self.agent_name,
-                "data": {
+            if self.message_bus_integration:
+                await self.message_bus_integration.publish_event("stakeholder_analysis_completed", {
                     "analysis_type": analysis_type,
-                    "result": analysis_result,
-                    "timestamp": datetime.now().isoformat()
-                }
-            }
-            await self.publish_event("stakeholder_analysis_completed", completion_event)
+                    "stakeholders_analyzed": len(stakeholders),
+                    "analysis_result": analysis_result
+                })
             
-            return {"status": "processed", "event": "stakeholder_analysis_requested", "result": analysis_result}
+            return None
+            
         except Exception as e:
-            logging.error(f"Error handling stakeholder analysis request: {e}")
-            return {"status": "error", "event": "stakeholder_analysis_requested", "error": str(e)}
+            logger.error(f"Error handling stakeholder analysis request: {e}")
+            return None
 
     async def handle_market_research_requested(self, event):
-        """Handle market research requested event with performance tracking."""
+        """Handle market research requested event with Quality-First implementation."""
         try:
-            logging.info(f"Market research requested: {event}")
+            # Input validation
+            if not isinstance(event, dict):
+                logger.warning("Invalid event type")
+                return None
+            
+            # Log metric
+            self.monitor.log_metric("market_research_requested", 1, "count", self.agent_name)
             
             # Extract research parameters from event
             market_segment = event.get("data", {}).get("market_segment", "Technology")
@@ -596,36 +620,40 @@ class ProductOwnerAgent(AgentMessageBusIntegration):
                 ]
             }
             
-            # Update performance metrics
-            self.performance_metrics["market_analyses_completed"] += 1
-            self.performance_metrics["product_metrics_tracked"] += 1
-            
-            # Record in vision history
-            research_entry = f"{datetime.now().isoformat()}: Market research completed for {market_segment} segment"
-            self.vision_history.append(research_entry)
+            # Update history
+            history_entry = {
+                "timestamp": datetime.now().isoformat(),
+                "event_type": "market_research_requested",
+                "market_segment": market_segment,
+                "research_scope": research_scope,
+                "research_result": research_result
+            }
+            self.vision_history.append(history_entry)
             self._save_vision_history()
             
             # Publish completion event
-            completion_event = {
-                "event_type": "market_research_completed", 
-                "agent": self.agent_name,
-                "data": {
+            if self.message_bus_integration:
+                await self.message_bus_integration.publish_event("market_research_completed", {
                     "market_segment": market_segment,
-                    "result": research_result,
-                    "timestamp": datetime.now().isoformat()
-                }
-            }
-            await self.publish_event("market_research_completed", completion_event)
+                    "research_result": research_result
+                })
             
-            return {"status": "processed", "event": "market_research_requested", "result": research_result}
+            return None
+            
         except Exception as e:
-            logging.error(f"Error handling market research request: {e}")
-            return {"status": "error", "event": "market_research_requested", "error": str(e)}
+            logger.error(f"Error handling market research request: {e}")
+            return None
 
     async def handle_feature_roadmap_update_requested(self, event):
-        """Handle feature roadmap update requested event with performance tracking."""
+        """Handle feature roadmap update requested event with Quality-First implementation."""
         try:
-            logging.info(f"Feature roadmap update requested: {event}")
+            # Input validation
+            if not isinstance(event, dict):
+                logger.warning("Invalid event type")
+                return None
+            
+            # Log metric
+            self.monitor.log_metric("feature_roadmap_update_requested", 1, "count", self.agent_name)
             
             # Extract roadmap parameters from event
             timeframe = event.get("data", {}).get("timeframe", "Q1-Q4")
@@ -658,31 +686,30 @@ class ProductOwnerAgent(AgentMessageBusIntegration):
                     "status": "planned"
                 })
             
-            # Update performance metrics
-            self.performance_metrics["features_planned"] += len(features)
-            self.performance_metrics["roadmap_updates_completed"] += 1
-            
-            # Record in vision history
-            roadmap_entry = f"{datetime.now().isoformat()}: Feature roadmap updated for {timeframe} with {len(features)} features"
-            self.vision_history.append(roadmap_entry)
+            # Update history
+            history_entry = {
+                "timestamp": datetime.now().isoformat(),
+                "event_type": "feature_roadmap_update_requested",
+                "timeframe": timeframe,
+                "features_planned": len(features),
+                "roadmap_update": roadmap_update
+            }
+            self.vision_history.append(history_entry)
             self._save_vision_history()
             
             # Publish completion event
-            completion_event = {
-                "event_type": "feature_roadmap_update_completed", 
-                "agent": self.agent_name,
-                "data": {
+            if self.message_bus_integration:
+                await self.message_bus_integration.publish_event("feature_roadmap_update_completed", {
                     "timeframe": timeframe,
-                    "result": roadmap_update,
-                    "timestamp": datetime.now().isoformat()
-                }
-            }
-            await self.publish_event("feature_roadmap_update_completed", completion_event)
+                    "features_planned": len(features),
+                    "roadmap_update": roadmap_update
+                })
             
-            return {"status": "processed", "event": "feature_roadmap_update_requested", "result": roadmap_update}
+            return None
+            
         except Exception as e:
-            logging.error(f"Error handling feature roadmap update request: {e}")
-            return {"status": "error", "event": "feature_roadmap_update_requested", "error": str(e)}
+            logger.error(f"Error handling feature roadmap update request: {e}")
+            return None
 
     async def initialize_mcp(self):
         """Initialize MCP client and integration."""
