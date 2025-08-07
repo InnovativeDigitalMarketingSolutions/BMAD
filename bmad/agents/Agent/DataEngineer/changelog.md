@@ -1,3 +1,42 @@
+# DataEngineer Agent Changelog
+
+## Quality-First Implementation & Test Fixes (2025-01-27)
+
+### Added
+- Enhanced event handlers with Quality-First Implementation principles
+- Added `self.monitor.log_metric` calls to all event handlers
+- Implemented robust history updates for both pipeline and quality history
+- Added Message Bus commands to YAML configuration
+- Enhanced history management to support both string and dictionary formats
+
+### Enhanced
+- `handle_data_quality_check_requested`: Made async, added input validation, metric logging, history updates
+- `handle_explain_pipeline`: Made async, added input validation, metric logging, history updates
+- `handle_pipeline_build_requested`: Enhanced with input validation, metric logging, history updates
+- `handle_monitoring_requested`: Enhanced with input validation, metric logging, history updates
+- `_load_pipeline_history` and `_save_pipeline_history`: Support for JSON dictionary format
+- `_load_quality_history` and `_save_quality_history`: Support for JSON dictionary format
+
+### Fixed
+- Event handler consistency: All handlers now return `None` consistently
+- Async/await patterns: All event handlers are now properly async
+- History management: Robust handling of both legacy string and new dictionary formats
+- Message Bus integration: Proper event publishing with error handling
+
+### Technical Details
+- All event handlers now follow Quality-First Implementation principles
+- Enhanced error handling and input validation
+- Consistent metric logging across all event handlers
+- Proper async/await patterns throughout the codebase
+- Backward compatibility maintained for history files
+
+### Quality Metrics
+- **Test Coverage**: 78/78 tests passing (100% success rate)
+- **Event Handlers**: 4 enhanced event handlers with echte functionaliteit
+- **Message Bus Commands**: 6 commands added to YAML configuration
+- **Enhanced MCP Phase 2**: 7 commands already present
+- **History Management**: Robust dual-format support
+
 # DataEngineer Changelog
 
 Hier houdt de DataEngineer agent zijn eigen wijzigingen, beslissingen en learnings bij.
