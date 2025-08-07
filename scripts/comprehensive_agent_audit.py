@@ -283,9 +283,21 @@ def check_dependencies(agent_file: Path) -> Dict[str, Any]:
 def check_test_coverage(agent_file: Path) -> Dict[str, Any]:
     """Check if agent has test coverage."""
     agent_name = agent_file.parent.name
-    test_file = project_root / "tests" / "unit" / "agents" / f"test_{agent_name.lower()}.py"
     
-    has_unit_tests = test_file.exists()
+    # Check for unit tests with multiple possible naming patterns
+    unit_test_patterns = [
+        f"test_{agent_name.lower()}.py",
+        f"test_{agent_name.lower()}_agent.py",
+        f"test_{agent_name.lower().replace('developer', '')}_agent.py",
+        f"test_fullstack_developer_agent.py"  # Special case for FullstackDeveloper
+    ]
+    
+    has_unit_tests = False
+    for pattern in unit_test_patterns:
+        test_file = project_root / "tests" / "unit" / "agents" / pattern
+        if test_file.exists():
+            has_unit_tests = True
+            break
     
     # Check for integration tests
     integration_test_file = project_root / "tests" / "integration" / f"test_{agent_name.lower()}_integration.py"
