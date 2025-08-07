@@ -1,0 +1,30 @@
+{
+  "name": "MetricsChart_sprite",
+  "sprite_type": "SpriteType.COMPONENT",
+  "component_name": "MetricsChart",
+  "states": [
+    "SpriteState.DEFAULT",
+    "SpriteState.LOADING",
+    "SpriteState.ERROR"
+  ],
+  "attributes": {},
+  "accessibility_checks": [
+    "aria-label",
+    "chart-description",
+    "keyboard-navigation"
+  ],
+  "visual_checks": [
+    "chart-colors",
+    "data-visibility",
+    "responsive"
+  ],
+  "interaction_tests": [
+    "click",
+    "hover",
+    "focus",
+    "keyboard"
+  ],
+  "screenshot_path": null,
+  "baseline_path": null,
+  "metadata": {}
+}
