@@ -290,7 +290,7 @@ class FullstackDeveloperAgent(AgentMessageBusIntegration):
                 agent_name=self.agent_name,
                 agent_instance=self
             )
-            await self.message_bus_integration.initialize()
+            await self.message_bus_integration.enable()
             self.message_bus_enabled = True
             logger.info("Message Bus Integration initialized successfully for FullstackDeveloper")
         except Exception as e:
