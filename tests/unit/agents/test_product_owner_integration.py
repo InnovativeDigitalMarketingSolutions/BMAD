@@ -162,8 +162,8 @@ class TestProductOwnerAgentIntegration:
         """Test collaborate example functionality."""
         await product_owner_agent.initialize_message_bus()
         
-        # Mock the message bus publish method
-        with patch.object(product_owner_agent.message_bus, 'publish', new_callable=AsyncMock) as mock_publish:
+        # Mock the message bus publish_event method
+        with patch.object(product_owner_agent.message_bus, 'publish_event', new_callable=AsyncMock) as mock_publish:
             await product_owner_agent.collaborate_example()
             
             # Verify event was published
