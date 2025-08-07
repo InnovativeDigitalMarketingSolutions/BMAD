@@ -13,6 +13,7 @@ For detailed analysis of AI integration possibilities, system objectives verific
 
 #### **🚨 CRITICAL SYSTEM STABILIZATION (Priority 0)** 🔄
 **Status**: Ready to start - Critical fixes required before AI integration
+**Workflow**: [System Stabilization Workflow](../guides/SYSTEM_STABILIZATION_WORKFLOW.md)
 
 **0.1 Critical Integration Fixes** 🔄
 - [ ] **Fix Test Infrastructure** - Resolve import errors and test collection issues
@@ -44,6 +45,7 @@ For detailed analysis of AI integration possibilities, system objectives verific
 
 #### **AI Integration Implementation** 🔄
 **Status**: Ready to start - Priority 1 tasks identified
+**Workflow**: [AI Integration Implementation Workflow](../guides/AI_INTEGRATION_IMPLEMENTATION_WORKFLOW.md)
 
 **🚀 IMMEDIATE ACTIONS (Next 2-4 weeks) - PRIORITY 1**
 
@@ -85,6 +87,7 @@ For detailed analysis of AI integration possibilities, system objectives verific
 
 #### **⚡ SYSTEM STABILIZATION & OPTIMIZATION (Priority 2)** 🔄
 **Status**: Ready to start - System reliability and performance improvements
+**Workflow**: [Infrastructure & Deployment Workflow](../guides/INFRASTRUCTURE_DEPLOYMENT_WORKFLOW.md)
 
 **2.1 Error Handling & Resilience Implementation** 🔄
 - [ ] **Circuit Breakers** - Implement circuit breaker pattern
@@ -101,6 +104,7 @@ For detailed analysis of AI integration possibilities, system objectives verific
 - [ ] **Performance Monitoring** - Add performance tracking
 
 **2.3 Advanced Monitoring & Analytics** 🔄
+**Workflow**: [Security & Monitoring Implementation Workflow](../guides/SECURITY_MONITORING_WORKFLOW.md)
 - [ ] **Advanced Metrics Collection** - Comprehensive system metrics
 - [ ] **Predictive Analytics** - Predictive problem detection
 - [ ] **Business Intelligence Dashboard** - Business metrics visualization

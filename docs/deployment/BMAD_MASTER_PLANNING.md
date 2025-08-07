@@ -6,7 +6,14 @@
 **Timeline**: 4-6 maanden
 
 **📋 COMPREHENSIVE ANALYSIS REPORT**
-For detailed analysis of AI integration possibilities, system objectives verification, and current gaps identification, see: **[BMAD Comprehensive Analysis Report](../reports/BMAD_COMPREHENSIVE_ANALYSIS_REPORT.md)**  
+For detailed analysis of AI integration possibilities, system objectives verification, and current gaps identification, see: **[BMAD Comprehensive Analysis Report](../reports/BMAD_COMPREHENSIVE_ANALYSIS_REPORT.md)**
+
+**🔧 WORKFLOW GUIDES**
+- [System Stabilization Workflow](../guides/SYSTEM_STABILIZATION_WORKFLOW.md) - Priority 0 critical system fixes
+- [AI Integration Implementation Workflow](../guides/AI_INTEGRATION_IMPLEMENTATION_WORKFLOW.md) - Priority 1 AI features
+- [Infrastructure & Deployment Workflow](../guides/INFRASTRUCTURE_DEPLOYMENT_WORKFLOW.md) - Priority 2-3 infrastructure
+- [Security & Monitoring Implementation Workflow](../guides/SECURITY_MONITORING_WORKFLOW.md) - Priority 0.4, 2.1, 3.7 security/monitoring
+- [Agent Enhancement Workflow](../guides/AGENT_ENHANCEMENT_WORKFLOW.md) - Agent-specific enhancements  
 
 ## 🎯 Executive Summary
 
@@ -3320,6 +3327,7 @@ bmad/core/security/permission_service.py: 79% (good)
 #### **📋 BACKLOG ITEMS (Prioritized by Business Value)**
 
 ### **🚨 PRIORITY 0: CRITICAL SYSTEM STABILIZATION (Immediate - Before AI Integration)**
+**Workflow**: [System Stabilization Workflow](../guides/SYSTEM_STABILIZATION_WORKFLOW.md)
 
 #### **0.1 Critical Integration Fixes (Week 1)**
 **Business Value**: System stability and functionality restoration
@@ -3398,6 +3406,7 @@ bmad/core/security/permission_service.py: 79% (good)
 - Performance monitoring active
 
 ### **🔥 PRIORITY 1: IMMEDIATE BUSINESS VALUE (Next 2-4 weeks)**
+**Workflow**: [AI Integration Implementation Workflow](../guides/AI_INTEGRATION_IMPLEMENTATION_WORKFLOW.md)
 
 #### **1.1 Conversational AI Interface Implementation (Week 1-2)**
 **Business Value**: Direct user experience improvement, reduced training time
@@ -3502,6 +3511,7 @@ bmad/core/security/permission_service.py: 79% (good)
 - Defect reduction > 20%
 
 ### **⚡ PRIORITY 2: MEDIUM-TERM VALUE (Next 2-3 months)**
+**Workflow**: [Infrastructure & Deployment Workflow](../guides/INFRASTRUCTURE_DEPLOYMENT_WORKFLOW.md)
 
 #### **2.1 Error Handling & Resilience Implementation (Month 1)**
 **Business Value**: System reliability and fault tolerance
@@ -3643,6 +3653,7 @@ bmad/core/security/permission_service.py: 79% (good)
 - Defect reduction > 20%
 
 ### **🚀 PRIORITY 3: LONG-TERM VALUE (Next 6 months)**
+**Workflow**: [Infrastructure & Deployment Workflow](../guides/INFRASTRUCTURE_DEPLOYMENT_WORKFLOW.md)
 
 #### **3.1 Documentation & Maintenance (Month 3)**
 **Business Value**: Complete documentation and maintenance capabilities
