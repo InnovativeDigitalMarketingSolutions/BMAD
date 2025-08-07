@@ -120,11 +120,14 @@ Deze workflow definieert de gestandaardiseerde aanpak voor het implementeren van
 - [ ] **Performance Check**: Run performance analysis
 
 #### **Step 11: Documentation Update**
-- [ ] **Agent Documentation**: Update agent .md file
-- [ ] **Code Documentation**: Update code docstrings
-- [ ] **API Documentation**: Update API documentation
-- [ ] **Usage Examples**: Add usage examples
-- [ ] **Integration Documentation**: Document integration points
+- [ ] **Agent Documentation**: Update agent .md file with changelog and completeness status
+- [ ] **Code Documentation**: Update code docstrings for all new methods
+- [ ] **API Documentation**: Update API documentation with new endpoints
+- [ ] **Usage Examples**: Add usage examples for new functionality
+- [ ] **Integration Documentation**: Document integration points (Enhanced MCP, Tracing, Message Bus)
+- [ ] **Workflow Documentation**: Update workflow files with lessons learned
+- [ ] **Kanban Board**: Update Kanban board with completion status
+- [ ] **Agents Overview**: Update agents-overview.md with current status
 
 #### **Step 12: Resource Verification**
 - [ ] **YAML Configuration**: Verify YAML configuration is complete
