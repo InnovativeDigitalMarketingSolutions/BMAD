@@ -226,6 +226,12 @@ def analyze_agent_completeness(agent_name):
 - [ ] **Dynamic Testing**: Run comprehensive test suite
 - [ ] **Integration Testing**: Test all integrations
 - [ ] **Quality Assurance**: Perform quality assurance checks
+- [ ] **Documentation Update**: Update all relevant documentation
+  - [ ] Agent documentation with changelog
+  - [ ] Workflow files with lessons learned
+  - [ ] Kanban board with completion status
+  - [ ] Agents overview with current status
+- [ ] **Knowledge Transfer**: Document lessons learned for future implementations
 
 ## 🎯 **Success Metrics**
 
@@ -235,6 +241,40 @@ def analyze_agent_completeness(agent_name):
 - **Enhanced MCP Working**: Alle agents moeten werkende enhanced MCP integration hebben
 - **Tracing Integration**: Alle agents moeten werkende tracing capabilities hebben
 - **Message Bus Integration**: Alle agents moeten werkende message bus integration hebben
+
+## 📚 **Documentation Best Practices**
+
+### **Required Documentation Updates**
+Na elke agent implementation moeten de volgende documentatie bestanden bijgewerkt worden:
+
+1. **Agent Documentation** (`bmad/agents/Agent/[AgentName]/[agent].md`)
+   - ✅ Changelog toevoegen met implementatie details
+   - ✅ Completeness status bijwerken
+   - ✅ Nieuwe functionaliteit documenteren
+   - ✅ Integration points documenteren
+
+2. **Workflow Documentation** (`docs/guides/`)
+   - ✅ Lessons learned toevoegen aan workflow files
+   - ✅ Best practices bijwerken
+   - ✅ Process improvements documenteren
+   - ✅ Common issues en solutions documenteren
+
+3. **Project Documentation** (`docs/deployment/`)
+   - ✅ Kanban board bijwerken met completion status
+   - ✅ Progress overview bijwerken
+   - ✅ Implementation status bijwerken
+
+4. **Agents Overview** (`bmad/agents/agents-overview.md`)
+   - ✅ Agent status bijwerken
+   - ✅ Completeness score bijwerken
+   - ✅ Implementation details toevoegen
+
+### **Documentation Quality Standards**
+- **Completeness**: Alle nieuwe functionaliteit moet gedocumenteerd zijn
+- **Accuracy**: Documentatie moet overeenkomen met implementatie
+- **Examples**: Praktische voorbeelden voor alle nieuwe features
+- **Integration**: Documentatie van alle integration points
+- **Troubleshooting**: Common issues en solutions
 
 ## 🔄 **Continuous Improvement**
 
@@ -253,4 +293,36 @@ def analyze_agent_completeness(agent_name):
 - [Lessons Learned Guide](../guides/LESSONS_LEARNED_GUIDE.md)
 - [Best Practices Guide](../guides/BEST_PRACTICES_GUIDE.md)
 - [Agent Enhancement Workflow](../guides/AGENT_ENHANCEMENT_WORKFLOW.md)
-- [System Stabilization Workflow](../guides/SYSTEM_STABILIZATION_WORKFLOW.md) 
+- [System Stabilization Workflow](../guides/SYSTEM_STABILIZATION_WORKFLOW.md)
+
+## 🎓 **Lessons Learned from AiDeveloperAgent Implementation**
+
+### **Key Insights**
+1. **Class-Level Attributes**: Attributes moeten op class niveau gedefinieerd worden, niet alleen in `__init__`
+2. **Test-Driven Discovery**: Echte test execution onthult echte issues die static analysis mist
+3. **Enhanced MCP Integration**: Phase 2 requirements vereisen specifieke methodes en patterns
+4. **Quality-First Approach**: Implementeer echte functionaliteit in plaats van quick fixes
+
+### **Implementation Patterns**
+```python
+# ✅ Correct: Class-level attributes
+class AiDeveloperAgent(AgentMessageBusIntegration):
+    mcp_client = None
+    enhanced_mcp = None
+    enhanced_mcp_enabled = False
+    tracing_enabled = False
+    agent_name = "AiDeveloper"
+    message_bus_integration = None
+    
+    def __init__(self):
+        # Instance-specific initialization
+        pass
+```
+
+### **Common Issues & Solutions**
+- **Issue**: Attributes niet gedetecteerd door audit script
+- **Solution**: Definieer attributes op class niveau, niet alleen in `__init__`
+- **Issue**: Enhanced MCP methodes ontbreken
+- **Solution**: Implementeer standaard enhanced MCP pattern voor alle agents
+- **Issue**: Tracing integration niet werkend
+- **Solution**: Voeg comprehensive tracing capabilities toe met error handling 
