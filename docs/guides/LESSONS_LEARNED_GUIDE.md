@@ -3201,6 +3201,19 @@ async def test_wait_for_hitl_decision_approved(self, agent):
 
 **Best Practice**: Always implement real functionality rather than removing features to make tests pass.
 
+#### 4. Code Preservation & Analysis First Approach
+**Issue**: The temptation to remove `log_metric` calls from agents when the method didn't exist.
+
+**Root Cause**: Following the wrong principle of "remove problematic code" instead of "analyze and implement missing functionality".
+
+**Solution**: 
+- Analyzed that multiple agents needed the `log_metric` functionality
+- Identified it as a core infrastructure requirement
+- Added the missing methods to PerformanceMonitor
+- Enhanced the entire codebase instead of degrading it
+
+**Best Practice**: NEVER remove code without first analyzing if it's needed. When functionality is missing, implement it rather than removing the calls to it.
+
 ### Best Practices Established
 
 #### 1. Core Infrastructure Enhancement
@@ -3218,6 +3231,12 @@ async def test_wait_for_hitl_decision_approved(self, agent):
 - **Error handling**: Add comprehensive try-catch blocks
 - **Performance monitoring**: Integrate real metric tracking
 - **History management**: Maintain audit trails
+
+#### 4. Code Preservation & Analysis First
+- **Analyze before removing**: Never delete code without understanding its purpose
+- **Implement missing functionality**: Add missing methods rather than removing calls
+- **Enhance, don't degrade**: Improve the codebase instead of removing features
+- **Pattern consistency**: Maintain consistent APIs and patterns across agents
 
 ### Implementation Impact
 
@@ -3238,5 +3257,173 @@ async def test_wait_for_hitl_decision_approved(self, agent):
 - **Improved**: Async method patterns
 - **Enhanced**: Error handling standards
 - **Benefit**: More maintainable and consistent codebase
+
+#### 4. Code Preservation Success
+- **Enhanced core infrastructure**: Added missing functionality to PerformanceMonitor
+- **Maintained agent functionality**: Preserved all intended features across agents
+- **Improved system quality**: Enhanced rather than degraded the codebase
+- **Future-proof architecture**: Ready for new requirements and extensions
+
+## CRITICAL BEST PRACTICE: Code Preservation & Analysis First Approach
+
+### Core Principle: "Analyze Before Removing"
+
+**NEVER remove methods, functions, classes, tests, or any code without first conducting a thorough analysis to determine if they are needed.**
+
+### Analysis-First Workflow
+
+#### 1. **Pre-Removal Analysis Checklist**
+Before removing any code, always ask:
+- [ ] **Is this code currently being used?** (Check imports, references, tests)
+- [ ] **Could this code be needed in the future?** (Future features, extensions)
+- [ ] **Is this code part of a larger pattern?** (API consistency, framework requirements)
+- [ ] **Are there tests depending on this code?** (Test coverage implications)
+- [ ] **Is this code documented as required?** (Documentation requirements)
+- [ ] **Could removing this break other parts of the system?** (Dependency analysis)
+
+#### 2. **When Code Appears Unused**
+If code appears unused or problematic:
+
+**DO:**
+- ✅ **Analyze the root cause** of why it appears unused
+- ✅ **Check if it's part of a larger API or pattern**
+- ✅ **Verify if it's needed for future functionality**
+- ✅ **Look for indirect dependencies or references**
+- ✅ **Consider if it's part of a framework requirement**
+- ✅ **Check if it's documented as required functionality**
+
+**DON'T:**
+- ❌ **Remove code just to make tests pass**
+- ❌ **Delete methods because they're not currently called**
+- ❌ **Remove classes because they seem unused**
+- ❌ **Delete tests because they're failing**
+- ❌ **Remove functionality without understanding its purpose**
+
+#### 3. **Implementation Strategy**
+When code is missing or incomplete:
+
+**Step 1: Analysis**
+- Identify what functionality is needed
+- Understand the intended purpose
+- Check similar patterns in the codebase
+- Review documentation and requirements
+
+**Step 2: Implementation**
+- Implement the missing functionality properly
+- Follow existing patterns and conventions
+- Add comprehensive error handling
+- Include proper logging and monitoring
+
+**Step 3: Testing**
+- Write tests for the new functionality
+- Ensure existing tests still pass
+- Verify integration with other components
+- Test error scenarios and edge cases
+
+### Real-World Examples
+
+#### Example 1: Performance Monitor Enhancement
+**Situation**: Multiple agents were using `self.monitor.log_metric()` but this method didn't exist.
+
+**Wrong Approach**: Remove the calls from agents to make tests pass.
+
+**Correct Approach**: 
+- Analyzed that this was a core infrastructure need
+- Added `log_metric()` and `record_metric()` methods to PerformanceMonitor
+- Enhanced the core infrastructure to support all agents
+- Maintained backward compatibility
+
+**Result**: Improved the entire codebase instead of degrading it.
+
+#### Example 2: Async Method Consistency
+**Situation**: `validate_aria()` was sync but called in async event handlers.
+
+**Wrong Approach**: Remove the async calls to make tests pass.
+
+**Correct Approach**:
+- Analyzed the async pattern requirements
+- Made `validate_aria()` async for consistency
+- Updated all related tests to properly await
+- Maintained the intended functionality
+
+**Result**: Consistent async patterns across the codebase.
+
+### Best Practices Established
+
+#### 1. **Code Preservation Principles**
+- **"If in doubt, keep it"**: When uncertain, preserve code
+- **"Analyze before removing"**: Always understand before deleting
+- **"Enhance, don't degrade"**: Improve functionality, don't remove it
+- **"Pattern consistency"**: Maintain consistent patterns across codebase
+
+#### 2. **Analysis Requirements**
+- **Dependency mapping**: Understand what depends on the code
+- **Future-proofing**: Consider future requirements
+- **API consistency**: Maintain consistent APIs
+- **Framework compliance**: Ensure framework requirements are met
+
+#### 3. **Implementation Standards**
+- **Real functionality**: Implement actual business logic
+- **Error handling**: Add comprehensive error handling
+- **Logging**: Include proper logging and monitoring
+- **Testing**: Write comprehensive tests for new functionality
+
+### Quality Metrics for Code Preservation
+
+#### Success Indicators
+- ✅ **No functionality removed** without thorough analysis
+- ✅ **Missing functionality implemented** rather than removed
+- ✅ **Codebase enhanced** instead of degraded
+- ✅ **Patterns maintained** across the system
+- ✅ **Future requirements considered** in decisions
+
+#### Warning Signs
+- ❌ **Tests passing** but functionality missing
+- ❌ **Code removed** without understanding its purpose
+- ❌ **Patterns broken** for short-term fixes
+- ❌ **Documentation requirements ignored**
+- ❌ **Framework compliance compromised**
+
+### Integration with Development Workflow
+
+#### Pre-Implementation Phase
+1. **Analyze requirements** thoroughly
+2. **Identify missing functionality** early
+3. **Plan implementation** before starting
+4. **Consider dependencies** and impacts
+
+#### Implementation Phase
+1. **Implement real functionality** not just mocks
+2. **Follow existing patterns** and conventions
+3. **Add comprehensive error handling**
+4. **Include proper logging and monitoring**
+
+#### Testing Phase
+1. **Write tests for new functionality**
+2. **Ensure existing tests still pass**
+3. **Test error scenarios** and edge cases
+4. **Verify integration** with other components
+
+#### Documentation Phase
+1. **Update changelog** with implementation details
+2. **Document new functionality** thoroughly
+3. **Update lessons learned** with insights
+4. **Maintain consistency** in documentation
+
+### Impact on Project Quality
+
+#### Long-term Benefits
+- **Maintainable codebase**: Consistent patterns and functionality
+- **Future-proof architecture**: Ready for new requirements
+- **Reduced technical debt**: No quick fixes that create problems
+- **Better developer experience**: Clear, consistent APIs
+
+#### Risk Mitigation
+- **No broken functionality**: All features work as intended
+- **Consistent patterns**: Easier to understand and maintain
+- **Proper error handling**: Robust error recovery
+- **Comprehensive testing**: Confidence in code quality
+
+This best practice ensures that we always enhance the codebase rather than degrade it, maintaining high quality and consistency across all components.
 
 ## BackendDeveloper Agent - FULLY COMPLIANT Implementation (Augustus 2025)
