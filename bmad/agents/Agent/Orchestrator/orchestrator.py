@@ -1047,14 +1047,15 @@ Enhanced MCP Phase 2 Commands:
             logger.info("Starting orchestrator collaboration example...")
 
             # Publish workflow start
-            await self.publish_agent_event(
-                EventTypes.WORKFLOW_STARTED,
-                {
-                    "agent": "OrchestratorAgent",
-                    "workflow_type": "feature_delivery",
-                    "timestamp": datetime.now().isoformat()
-                }
-            )
+            if self.message_bus_integration:
+                await self.message_bus_integration.publish_event(
+                    "workflow_started",
+                    {
+                        "agent": "OrchestratorAgent",
+                        "workflow_type": "feature_delivery",
+                        "timestamp": datetime.now().isoformat()
+                    }
+                )
 
             # Monitor workflows
             monitoring_result = self.monitor_workflows()
@@ -1069,25 +1070,27 @@ Enhanced MCP Phase 2 Commands:
             self.manage_escalations("quality_gate_failed", "feature_development")
 
             # Idea validation via StrategiePartner
-            await self.publish_agent_event(
-                EventTypes.IDEA_VALIDATION_REQUESTED,
-                {
-                    "idea_description": "A mobile app for task management",
-                    "agent": "OrchestratorAgent",
-                    "timestamp": datetime.now().isoformat()
-                }
-            )
+            if self.message_bus_integration:
+                await self.message_bus_integration.publish_event(
+                    "idea_validation_requested",
+                    {
+                        "idea_description": "A mobile app for task management",
+                        "agent": "OrchestratorAgent",
+                        "timestamp": datetime.now().isoformat()
+                    }
+                )
 
             # Publish completion
-            await self.publish_agent_event(
-                EventTypes.ORCHESTRATION_COMPLETED,
-                {
-                    "status": "success",
-                    "agent": "OrchestratorAgent",
-                    "workflows_managed": 3,
-                    "escalations_handled": 1
-                }
-            )
+            if self.message_bus_integration:
+                await self.message_bus_integration.publish_event(
+                    "orchestration_completed",
+                    {
+                        "status": "success",
+                        "agent": "OrchestratorAgent",
+                        "workflows_managed": 3,
+                        "escalations_handled": 1
+                    }
+                )
 
             # Save context
             save_context("OrchestratorAgent", "status", {"orchestration_status": "completed"})
@@ -1116,14 +1119,15 @@ Enhanced MCP Phase 2 Commands:
             result = self.start_workflow(workflow_name)
             
             # Publish workflow started event
-            await self.publish_agent_event(
-                EventTypes.WORKFLOW_EXECUTION_STARTED,
-                {
-                    "workflow_name": workflow_name,
-                    "status": "started",
-                    "result": result
-                }
-            )
+            if self.message_bus_integration:
+                await self.message_bus_integration.publish_event(
+                    "workflow_execution_started",
+                    {
+                        "workflow_name": workflow_name,
+                        "status": "started",
+                        "result": result
+                    }
+                )
             
             logger.info(f"Workflow execution started: {workflow_name}")
         except Exception as e:
@@ -1139,8 +1143,9 @@ Enhanced MCP Phase 2 Commands:
             result = self.analyze_metrics("workflow_performance", "30 days")
             
             # Publish optimization completed event
-            await self.publish_agent_event(
-                EventTypes.WORKFLOW_OPTIMIZATION_COMPLETED,
+            if self.message_bus_integration:
+                await self.message_bus_integration.publish_event(
+                    "workflow_optimization_completed",
                 {
                     "workflow_name": workflow_name,
                     "optimization_result": result
@@ -1355,8 +1360,14 @@ Enhanced MCP Phase 2 Commands:
     async def replay_history(self):
         print("Replaying event history...")
         for event in self.event_log:
-            await self.publish_agent_event(event.get("event_type"), event)
-            print(f"Event gereplayed: {event}")
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event(event.get("event_type"), event)
+                    print(f"Event gereplayed: {event}")
+                except Exception as e:
+                    print(f"Error replaying event: {e}")
+            else:
+                print(f"Event gereplayed (no message bus): {event}")
 
     async def wait_for_hitl_decision(self, alert_id, timeout=3600):
         """
@@ -1396,7 +1407,7 @@ Enhanced MCP Phase 2 Commands:
         """Run the agent and listen for events."""
         logger.info("OrchestratorAgent ready and listening for events...")
         print("[Orchestrator] Ready and listening for events...")
-        self.collaborate_example()
+        asyncio.run(self.collaborate_example())
     
     async def run_async(self):
         """Run the agent with enhanced MCP, tracing, and message bus initialization."""
@@ -1723,7 +1734,7 @@ def main():
     elif args.command == "test":
         agent.test_resource_completeness()
     elif args.command == "collaborate":
-        agent.collaborate_example()
+        asyncio.run(agent.collaborate_example())
     elif args.command == "run":
         agent.run()
     elif args.command == "show-status":
@@ -1733,7 +1744,7 @@ def main():
     elif args.command == "show-history":
         agent.show_history()
     elif args.command == "replay-history":
-        agent.replay_history()
+        asyncio.run(agent.replay_history())
     elif args.command == "show-workflow-status":
         if not args.workflow:
             print("Geef een workflow op met --workflow")
