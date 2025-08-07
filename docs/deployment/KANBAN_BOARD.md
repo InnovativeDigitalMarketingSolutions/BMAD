@@ -233,12 +233,28 @@
   - Quality-first approach toegepast met async event handler consistency en test fixes
   - **Documentation**: ✅ Volledig up-to-date (changelog, .md, agents-overview)
 
+- **Retrospective Agent** - ✅ **FULLY COMPLIANT**
+  - 86/86 tests passing (100% coverage) - **IMPROVED FROM 85/86**
+  - 4 retrospective-specific event handlers met echte functionaliteit (async)
+  - CLI Extension met 6 Message Bus commands + 7 Enhanced MCP commands
+  - Performance metrics tracking (12 retrospective metrics)
+  - Complete retrospective management (feedback analysis, action planning, improvement tracking)
+  - Quality-first approach toegepast met sentiment analysis event handler consistency en test fixes
+  - **Documentation**: ✅ Volledig up-to-date (changelog, .md, agents-overview)
+
+- **RnD Agent** - ✅ **FULLY COMPLIANT**
+  - 87/87 tests passing (100% coverage) - **IMPROVED FROM 86/87**
+  - 5 R&D-specific event handlers met echte functionaliteit (async)
+  - CLI Extension met 6 Message Bus commands + 7 Enhanced MCP commands
+  - Performance metrics tracking (12 R&D metrics)
+  - Complete R&D management (research, experiments, innovation, prototyping)
+  - Quality-first approach toegepast met experiment completion event handler consistency en test fixes
+  - **Documentation**: ✅ Volledig up-to-date (changelog, .md, agents-overview)
+
 **🔄 In Progress:**
 (None - all current agents are completed)
 
 **⏳ Pending:**
-- **Retrospective Agent** - Workflow compliance implementatie
-- **RnD Agent** - Workflow compliance implementatie
 - **AccessibilityAgent Agent** - Workflow compliance implementatie
 
 ### 📋 **BACKLOG TASKS**
@@ -307,9 +323,9 @@
 
 ### **Workflow Compliance Progress**
 - **Total Agents**: 23
-- **Fully Compliant**: 18 (78.3%) - FrontendDeveloper, BackendDeveloper, FullstackDeveloper, TestEngineer, SecurityDeveloper, UXUIDesigner, Architect, QualityGuardian, Scrummaster, ProductOwner, ReleaseManager, DevOpsInfra, DataEngineer, DocumentationAgent, FeedbackAgent, Orchestrator, WorkflowAutomator, StrategiePartner
-- **Partially Compliant**: 5 (21.7%) - Message Bus only
-- **Overall Progress**: 78.3%
+- **Fully Compliant**: 19 (82.6%) - FrontendDeveloper, BackendDeveloper, FullstackDeveloper, TestEngineer, SecurityDeveloper, UXUIDesigner, Architect, QualityGuardian, Scrummaster, ProductOwner, ReleaseManager, DevOpsInfra, DataEngineer, DocumentationAgent, FeedbackAgent, Orchestrator, WorkflowAutomator, StrategiePartner, Retrospective, RnD
+- **Partially Compliant**: 4 (17.4%) - Message Bus only
+- **Overall Progress**: 82.6%
 
 ### **Quality Standards Implementation**
 - **Testing Implementation**: 47.8% (11/23 agents)
@@ -336,7 +352,7 @@
 
 ## 🎯 **Next Sprint Goals**
 
-### **Priority 1: Retrospective Agent**
+### **Priority 1: AccessibilityAgent Agent**
 1. **Testing Implementation** - 24-25 tests voor Message Bus Integration
 2. **CLI Extension** - Message Bus commands implementeren
 3. **Resource Management** - Resource validation implementeren
