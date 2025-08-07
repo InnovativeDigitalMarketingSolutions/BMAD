@@ -34,6 +34,7 @@ class MetricType(Enum):
     SUCCESS_RATE = "success_rate"
     QUEUE_SIZE = "queue_size"
     ACTIVE_TASKS = "active_tasks"
+    CUSTOM = "custom" # Added for custom metrics
 
 class AlertLevel(Enum):
     """Alert levels for performance issues."""
@@ -278,6 +279,42 @@ class PerformanceMonitor:
         # Log metric
         logger.debug(f"Metric recorded: {agent_name} {metric_type.value} = {value} {unit}")
 
+    def log_metric(self, metric_name: str, value: Any, unit: str = "count", agent_name: str = "unknown"):
+        """Log a custom metric for an agent.
+        
+        Args:
+            metric_name: Name of the metric
+            value: Value to log (can be any type, will be converted to float if possible)
+            unit: Unit of measurement
+            agent_name: Name of the agent logging the metric
+        """
+        try:
+            # Convert value to float if possible
+            if isinstance(value, (int, float)):
+                float_value = float(value)
+            elif isinstance(value, dict):
+                # For dict values, use a hash or length as the metric value
+                float_value = float(len(str(value)))
+            else:
+                # For other types, convert to string and use length
+                float_value = float(len(str(value)))
+            
+            # Create a custom metric type
+            custom_metric_type = MetricType.CUSTOM if hasattr(MetricType, 'CUSTOM') else MetricType.THROUGHPUT
+            
+            # Record the metric using the existing private method
+            self._record_metric(agent_name, custom_metric_type, float_value, unit)
+            
+            # Log the metric for debugging
+            logger.debug(f"Custom metric logged: {agent_name} {metric_name} = {value} {unit}")
+            
+        except Exception as e:
+            logger.error(f"Error logging metric {metric_name}: {e}")
+
+    def record_metric(self, metric_name: str, value: Any, unit: str = "count", agent_name: str = "unknown"):
+        """Alias for log_metric for backward compatibility."""
+        return self.log_metric(metric_name, value, unit, agent_name)
+
     def _check_thresholds(self):
         """Check if any metrics exceed thresholds."""
         for agent_name, profile in self.agent_profiles.items():
@@ -451,7 +488,8 @@ class PerformanceMonitor:
             MetricType.ERROR_RATE: "%",
             MetricType.SUCCESS_RATE: "%",
             MetricType.QUEUE_SIZE: "count",
-            MetricType.ACTIVE_TASKS: "count"
+            MetricType.ACTIVE_TASKS: "count",
+            MetricType.CUSTOM: "count" # Added for custom metrics
         }
         return units.get(metric_type, "unknown")
 
