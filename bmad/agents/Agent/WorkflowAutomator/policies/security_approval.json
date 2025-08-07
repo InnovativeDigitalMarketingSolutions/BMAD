@@ -1,0 +1,51 @@
+{
+  "policy_id": "security_approval",
+  "policy_name": "Security Approval Policy",
+  "policy_type": "security_policies",
+  "version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "security_scan_required",
+      "rule_name": "Security Scan Required",
+      "policy_type": "security_policies",
+      "conditions": [
+        {
+          "condition_id": "vulnerability_scan",
+          "condition_type": "context_based",
+          "parameters": {
+            "required_scans": [
+              "owasp",
+              "dependency_check",
+              "sast"
+            ]
+          },
+          "description": "Require security scans",
+          "severity": "high",
+          "enabled": true
+        }
+      ],
+      "actions": [
+        "allow",
+        "audit"
+      ],
+      "priority": 200,
+      "enabled": true,
+      "description": "Security approval for code changes",
+      "metadata": {}
+    }
+  ],
+  "parent_policy": null,
+  "inheritance_rules": {},
+  "status": "active",
+  "created_at": "2025-08-07T10:10:15.616780",
+  "updated_at": "2025-08-07T10:10:15.616781",
+  "expires_at": null,
+  "metadata": {
+    "category": "security",
+    "tags": [
+      "security",
+      "approval",
+      "scan"
+    ]
+  }
+}

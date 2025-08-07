@@ -29,7 +29,20 @@ class TestWorkflowAutomatorAgent:
         # Reset state for each test
         agent.workflows = {}
         agent.execution_history = []
-        agent.performance_metrics = {}
+        agent.performance_metrics = {
+            "total_workflows": 0,
+            "completed_workflows": 0,
+            "failed_workflows": 0,
+            "average_execution_time": 0.0,
+            "parallel_executions": 0,
+            "conditional_executions": 0,
+            "auto_recoveries": 0,
+            "optimizations_applied": 0,
+            "scheduled_workflows": 0,
+            "paused_workflows": 0,
+            "cancelled_workflows": 0,
+            "success_rate": 0.0
+        }
         agent.scheduled_workflows = {}
         return agent
 
@@ -324,7 +337,7 @@ class TestWorkflowAutomatorAgent:
         )
         
         # Execute in parallel
-        result = agent.parallel_execution([workflow1["workflow_id"], workflow2["workflow_id"]])
+        result = await agent.parallel_execution([workflow1["workflow_id"], workflow2["workflow_id"]])
         
         assert result["status"] == "executed"
         assert len(result["results"]) == 2
@@ -392,26 +405,33 @@ class TestWorkflowAutomatorAgent:
         workflow_id = workflow_result["workflow_id"]
         
         event_data = {"workflow_id": workflow_id}
-        agent.handle_workflow_execution_requested(event_data)
-        # Should not raise any exceptions
+        result = await agent.handle_workflow_execution_requested(event_data)
+        assert result["status"] == "processed"
+        assert result["event"] == "workflow_execution_requested"
 
-    def test_handle_workflow_pause_requested(self, agent):
+    @pytest.mark.asyncio
+    async def test_handle_workflow_pause_requested(self, agent):
         """Test workflow pause requested event handler."""
         event_data = {"workflow_id": "test-123"}
-        agent.handle_workflow_pause_requested(event_data)
-        # Should not raise any exceptions
+        result = await agent.handle_workflow_pause_requested(event_data)
+        assert result["status"] == "processed"
+        assert result["event"] == "workflow_pause_requested"
 
-    def test_handle_workflow_resume_requested(self, agent):
+    @pytest.mark.asyncio
+    async def test_handle_workflow_resume_requested(self, agent):
         """Test workflow resume requested event handler."""
         event_data = {"workflow_id": "test-123"}
-        agent.handle_workflow_resume_requested(event_data)
-        # Should not raise any exceptions
+        result = await agent.handle_workflow_resume_requested(event_data)
+        assert result["status"] == "processed"
+        assert result["event"] == "workflow_resume_requested"
 
-    def test_handle_workflow_cancel_requested(self, agent):
+    @pytest.mark.asyncio
+    async def test_handle_workflow_cancel_requested(self, agent):
         """Test workflow cancel requested event handler."""
         event_data = {"workflow_id": "test-123"}
-        agent.handle_workflow_cancel_requested(event_data)
-        # Should not raise any exceptions
+        result = await agent.handle_workflow_cancel_requested(event_data)
+        assert result["status"] == "processed"
+        assert result["event"] == "workflow_cancel_requested"
 
     @pytest.mark.asyncio
     async def test_handle_workflow_optimization_requested(self, agent):
@@ -427,8 +447,9 @@ class TestWorkflowAutomatorAgent:
         workflow_id = workflow_result["workflow_id"]
         
         event_data = {"workflow_id": workflow_id}
-        agent.handle_workflow_optimization_requested(event_data)
-        # Should not raise any exceptions
+        result = await agent.handle_workflow_optimization_requested(event_data)
+        assert result["status"] == "processed"
+        assert result["event"] == "workflow_optimization_requested"
 
     @pytest.mark.asyncio
     async def test_handle_workflow_monitoring_requested(self, agent):
@@ -444,8 +465,9 @@ class TestWorkflowAutomatorAgent:
         workflow_id = workflow_result["workflow_id"]
         
         event_data = {"workflow_id": workflow_id}
-        agent.handle_workflow_monitoring_requested(event_data)
-        # Should not raise any exceptions
+        result = await agent.handle_workflow_monitoring_requested(event_data)
+        assert result["status"] == "processed"
+        assert result["event"] == "workflow_monitoring_requested"
 
     def test_evaluate_condition_true(self, agent):
         """Test condition evaluation with true condition."""

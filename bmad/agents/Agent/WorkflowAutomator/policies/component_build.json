@@ -1,0 +1,47 @@
+{
+  "policy_id": "component_build",
+  "policy_name": "Component Build Policy",
+  "policy_type": "workflow_policies",
+  "version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "component_standards",
+      "rule_name": "Component Standards Check",
+      "policy_type": "workflow_policies",
+      "conditions": [
+        {
+          "condition_id": "accessibility_check",
+          "condition_type": "context_based",
+          "parameters": {
+            "wcag_level": "AA",
+            "responsive_design": true
+          },
+          "description": "Accessibility requirements",
+          "severity": "medium",
+          "enabled": true
+        }
+      ],
+      "actions": [
+        "allow"
+      ],
+      "priority": 150,
+      "enabled": true,
+      "description": "Component build requirements",
+      "metadata": {}
+    }
+  ],
+  "parent_policy": null,
+  "inheritance_rules": {},
+  "status": "active",
+  "created_at": "2025-08-07T10:10:15.617075",
+  "updated_at": "2025-08-07T10:10:15.617075",
+  "expires_at": null,
+  "metadata": {
+    "category": "frontend",
+    "tags": [
+      "component",
+      "accessibility",
+      "responsive"
+    ]
+  }
+}
