@@ -40,17 +40,26 @@ from bmad.core.mcp.enhanced_mcp_integration import (
 )
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 
+# Message Bus Integration
+from bmad.agents.core.communication.agent_message_bus_integration import (
+    AgentMessageBusIntegration,
+    create_agent_message_bus_integration
+)
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-class DataEngineerAgent:
+class DataEngineerAgent(AgentMessageBusIntegration):
     """
     Data Engineer Agent voor BMAD.
     Gespecialiseerd in data pipeline development, ETL processes, en data architecture.
     """
     
     def __init__(self):
+        # Initialize parent class with agent name and instance
+        super().__init__("DataEngineer", self)
+        
         self.framework_manager = get_framework_templates_manager()
         try:
             self.data_engineer_template = self.framework_manager.get_framework_template('data_engineer')
@@ -86,6 +95,22 @@ class DataEngineerAgent:
         self._load_pipeline_history()
         self._load_quality_history()
         
+        # Performance metrics
+        self.performance_metrics = {
+            "pipeline_execution_time": 0.0,
+            "data_quality_score": 0.0,
+            "etl_processing_speed": 0.0,
+            "data_accuracy": 0.0,
+            "pipeline_reliability": 0.0,
+            "data_freshness": 0.0,
+            "processing_efficiency": 0.0,
+            "error_rate": 0.0,
+            "data_completeness": 0.0,
+            "pipeline_throughput": 0.0,
+            "data_consistency": 0.0,
+            "monitoring_effectiveness": 0.0
+        }
+        
         # MCP Integration
         self.mcp_client: Optional[MCPClient] = None
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
@@ -99,6 +124,10 @@ class DataEngineerAgent:
         # Tracing Integration
         self.tracer: Optional[BMADTracer] = None
         self.tracing_enabled = False
+        
+        # Message Bus Integration
+        self.message_bus_integration: Optional[AgentMessageBusIntegration] = None
+        self.message_bus_enabled = False
         
         # Initialize tracer
         self.tracer = BMADTracer(config=type("Config", (), {
@@ -150,6 +179,39 @@ class DataEngineerAgent:
         except Exception as e:
             logger.warning(f"Tracing initialization failed: {e}")
             self.tracing_enabled = False
+
+    async def initialize_message_bus_integration(self):
+        """Initialize Message Bus Integration for the agent."""
+        try:
+            self.message_bus_integration = create_agent_message_bus_integration(
+                agent_name=self.agent_name,
+                agent_instance=self
+            )
+            
+            # Register event handlers for data-specific events
+            await self.message_bus_integration.register_event_handler(
+                "data_quality_check_requested", 
+                self.handle_data_quality_check_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "explain_pipeline_requested", 
+                self.handle_explain_pipeline
+            )
+            await self.message_bus_integration.register_event_handler(
+                "data_pipeline_build_requested",
+                self.handle_pipeline_build_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "data_monitoring_requested",
+                self.handle_monitoring_requested
+            )
+            
+            self.message_bus_enabled = True
+            logger.info(f"✅ Message Bus Integration geïnitialiseerd voor {self.agent_name}")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Fout bij initialiseren van Message Bus Integration voor {self.agent_name}: {e}")
+            return False
 
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -341,7 +403,14 @@ class DataEngineerAgent:
                     lines = content.split("\n")
                     for line in lines:
                         if line.strip().startswith("- "):
-                            self.pipeline_history.append(line.strip()[2:])
+                            entry = line.strip()[2:]
+                            try:
+                                # Try to parse as JSON (dictionary)
+                                parsed_entry = json.loads(entry)
+                                self.pipeline_history.append(parsed_entry)
+                            except json.JSONDecodeError:
+                                # Fall back to string format
+                                self.pipeline_history.append(entry)
         except FileNotFoundError:
             logger.info("Pipeline history file not found, starting with empty history")
         except PermissionError as e:
@@ -360,7 +429,10 @@ class DataEngineerAgent:
             with open(self.data_paths["history"], "w") as f:
                 f.write("# Data Pipeline History\n\n")
                 for pipeline in self.pipeline_history[-50:]:  # Keep last 50 pipelines
-                    f.write(f"- {pipeline}\n")
+                    if isinstance(pipeline, dict):
+                        f.write(f"- {json.dumps(pipeline)}\n")
+                    else:
+                        f.write(f"- {pipeline}\n")
         except PermissionError as e:
             logger.error(f"Permission denied saving pipeline history: {e}")
         except OSError as e:
@@ -377,7 +449,14 @@ class DataEngineerAgent:
                     lines = content.split("\n")
                     for line in lines:
                         if line.strip().startswith("- "):
-                            self.quality_history.append(line.strip()[2:])
+                            entry = line.strip()[2:]
+                            try:
+                                # Try to parse as JSON (dictionary)
+                                parsed_entry = json.loads(entry)
+                                self.quality_history.append(parsed_entry)
+                            except json.JSONDecodeError:
+                                # Fall back to string format
+                                self.quality_history.append(entry)
         except FileNotFoundError:
             logger.info("Quality history file not found, starting with empty history")
         except PermissionError as e:
@@ -396,7 +475,10 @@ class DataEngineerAgent:
             with open(self.data_paths["quality-history"], "w") as f:
                 f.write("# Data Quality History\n\n")
                 for quality in self.quality_history[-50:]:  # Keep last 50 quality checks
-                    f.write(f"- {quality}\n")
+                    if isinstance(quality, dict):
+                        f.write(f"- {json.dumps(quality)}\n")
+                    else:
+                        f.write(f"- {quality}\n")
         except PermissionError as e:
             logger.error(f"Permission denied saving quality history: {e}")
         except OSError as e:
@@ -420,6 +502,24 @@ Data Engineer Agent Commands:
   export-report [format]  - Export pipeline report (format: md, csv, json)
   test                    - Test resource completeness
   collaborate             - Demonstrate collaboration with other agents
+
+Enhanced MCP Phase 2 Commands:
+  enhanced-collaborate    - Enhanced collaboration with other agents
+  enhanced-security       - Enhanced security features
+  enhanced-performance    - Enhanced performance monitoring
+  trace-operation         - Trace data operation
+  trace-performance       - Trace performance metrics
+  trace-error             - Trace error handling
+  tracing-summary         - Show tracing summary
+
+Message Bus Integration Commands:
+  initialize-message-bus  - Initialize Message Bus integration
+  message-bus-status      - Show Message Bus status
+  publish-event           - Publish data event
+  subscribe-event         - Show subscribed events
+  list-events             - List supported events
+  event-history           - Show event history
+  performance-metrics     - Show performance metrics
         """
         print(help_text)
 
@@ -915,27 +1015,185 @@ Data Engineer Agent Commands:
         context = get_context("DataEngineer")
         print(f"Opgehaalde context: {context}")
 
-    def handle_data_quality_check_requested(self, event):
+    async def handle_data_quality_check_requested(self, event):
         """Handle data quality check request from other agents."""
-        # Input validation
-        if not isinstance(event, dict):
-            logger.warning("Invalid event type for data quality check request")
-            return
-        
-        logger.info(f"Data quality check requested: {event}")
-        data_summary = event.get("data_summary", "Sample data summary")
-        self.data_quality_check(data_summary)
+        try:
+            # Input validation
+            if not isinstance(event, dict):
+                logger.warning("Invalid event type for data quality check request")
+                return None
+            
+            # Log metric
+            self.monitor.log_metric("data_quality_check_requested", 1, "count", self.agent_name)
+            
+            logger.info(f"Data quality check requested: {event}")
+            data_summary = event.get("data_summary", "Sample data summary")
+            
+            # Perform data quality check
+            result = self.data_quality_check(data_summary)
+            
+            # Update history
+            history_entry = {
+                "timestamp": datetime.now().isoformat(),
+                "event_type": "data_quality_check_requested",
+                "data_summary": data_summary,
+                "result": result
+            }
+            self.quality_history.append(history_entry)
+            self._save_quality_history()
+            
+            # Publish completion event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("data_quality_check_completed", {
+                        "request_id": event.get("request_id"),
+                        "data_summary": data_summary,
+                        "result": result
+                    })
+                except Exception as e:
+                    logger.error(f"Error publishing data quality check completion: {e}")
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error handling data quality check request: {e}")
+            return None
 
-    def handle_explain_pipeline(self, event):
+    async def handle_explain_pipeline(self, event):
         """Handle pipeline explanation request from other agents."""
-        # Input validation
-        if not isinstance(event, dict):
-            logger.warning("Invalid event type for pipeline explanation request")
-            return
-        
-        logger.info(f"Pipeline explanation requested: {event}")
-        pipeline_code = event.get("pipeline_code", "Sample ETL pipeline")
-        self.explain_pipeline(pipeline_code)
+        try:
+            # Input validation
+            if not isinstance(event, dict):
+                logger.warning("Invalid event type for pipeline explanation request")
+                return None
+            
+            # Log metric
+            self.monitor.log_metric("pipeline_explanation_requested", 1, "count", self.agent_name)
+            
+            logger.info(f"Pipeline explanation requested: {event}")
+            pipeline_code = event.get("pipeline_code", "Sample ETL pipeline")
+            
+            # Perform pipeline explanation
+            result = self.explain_pipeline(pipeline_code)
+            
+            # Update history
+            history_entry = {
+                "timestamp": datetime.now().isoformat(),
+                "event_type": "pipeline_explanation_requested",
+                "pipeline_code": pipeline_code,
+                "result": result
+            }
+            self.pipeline_history.append(history_entry)
+            self._save_pipeline_history()
+            
+            # Publish completion event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("pipeline_explanation_completed", {
+                        "request_id": event.get("request_id"),
+                        "pipeline_code": pipeline_code,
+                        "result": result
+                    })
+                except Exception as e:
+                    logger.error(f"Error publishing pipeline explanation completion: {e}")
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error handling pipeline explanation request: {e}")
+            return None
+
+    async def handle_pipeline_build_requested(self, event):
+        """Handle data pipeline build requested event."""
+        try:
+            # Input validation
+            if not isinstance(event, dict):
+                logger.warning("Invalid event type for pipeline build request")
+                return None
+            
+            # Log metric
+            self.monitor.log_metric("pipeline_build_requested", 1, "count", self.agent_name)
+            
+            logger.info(f"Data pipeline build requested: {event}")
+            pipeline_name = event.get("pipeline_name", "ETL Pipeline")
+            pipeline_type = event.get("pipeline_type", "etl")
+            
+            # Perform pipeline build
+            build_result = await self.build_pipeline(pipeline_name)
+            
+            # Update history
+            history_entry = {
+                "timestamp": datetime.now().isoformat(),
+                "event_type": "pipeline_build_requested",
+                "pipeline_name": pipeline_name,
+                "pipeline_type": pipeline_type,
+                "result": build_result
+            }
+            self.pipeline_history.append(history_entry)
+            self._save_pipeline_history()
+            
+            # Publish completion event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("data_pipeline_build_completed", {
+                        "request_id": event.get("request_id"),
+                        "pipeline_name": pipeline_name,
+                        "result": build_result
+                    })
+                except Exception as e:
+                    logger.error(f"Error publishing pipeline build completion: {e}")
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error handling pipeline build request: {e}")
+            return None
+
+    async def handle_monitoring_requested(self, event):
+        """Handle data monitoring requested event."""
+        try:
+            # Input validation
+            if not isinstance(event, dict):
+                logger.warning("Invalid event type for monitoring request")
+                return None
+            
+            # Log metric
+            self.monitor.log_metric("data_monitoring_requested", 1, "count", self.agent_name)
+            
+            logger.info(f"Data monitoring requested: {event}")
+            pipeline_id = event.get("pipeline_id", "pipeline_001")
+            monitoring_type = event.get("monitoring_type", "performance")
+            
+            # Perform monitoring
+            monitoring_result = self.monitor_pipeline(pipeline_id)
+            
+            # Update history
+            history_entry = {
+                "timestamp": datetime.now().isoformat(),
+                "event_type": "data_monitoring_requested",
+                "pipeline_id": pipeline_id,
+                "monitoring_type": monitoring_type,
+                "result": monitoring_result
+            }
+            self.pipeline_history.append(history_entry)
+            self._save_pipeline_history()
+            
+            # Publish completion event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("data_monitoring_completed", {
+                        "request_id": event.get("request_id"),
+                        "pipeline_id": pipeline_id,
+                        "result": monitoring_result
+                    })
+                except Exception as e:
+                    logger.error(f"Error publishing monitoring completion: {e}")
+            
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error handling monitoring request: {e}")
+            return None
 
     async def run(self):
         """Run the agent and listen for events met MCP integration."""
@@ -948,15 +1206,15 @@ Data Engineer Agent Commands:
         # Initialize tracing capabilities
         await self.initialize_tracing()
         
+        # Initialize Message Bus Integration
+        await self.initialize_message_bus_integration()
+        
         print("📊 DataEngineer is running...")
         print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
         print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        print("Message Bus: Enabled" if self.message_bus_enabled else "Message Bus: Disabled")
         
-        def sync_handler(event):
-            asyncio.run(self.handle_data_quality_check_requested(event))
-
-        subscribe("data_quality_check_requested", self.handle_data_quality_check_requested)
-        subscribe("explain_pipeline", self.handle_explain_pipeline)
+        # Event handlers are already registered in initialize_message_bus_integration
 
         logger.info("DataEngineerAgent ready and listening for events...")
         await self.collaborate_example()
@@ -979,9 +1237,13 @@ Data Engineer Agent Commands:
         # Initialize tracing capabilities
         await self.initialize_tracing()
         
+        # Initialize Message Bus Integration
+        await self.initialize_message_bus_integration()
+        
         print("📊 DataEngineer is running...")
         print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
         print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        print("Message Bus: Enabled" if self.message_bus_enabled else "Message Bus: Disabled")
         
         logger.info("DataEngineerAgent ready and listening for events...")
         await self.collaborate_example()
@@ -1006,7 +1268,9 @@ def main():
                                "show-best-practices", "show-changelog", "export-report", "test",
                                "collaborate", "run", "enhanced-collaborate", "enhanced-security", 
                                "enhanced-performance", "trace-operation", "trace-performance", 
-                               "trace-error", "tracing-summary"])
+                               "trace-error", "tracing-summary",
+                               "initialize-message-bus", "message-bus-status", "publish-event", "subscribe-event",
+                               "list-events", "event-history", "performance-metrics"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--data-summary", default="Sample data summary", help="Data summary for quality check")
     parser.add_argument("--pipeline-code", default="Sample ETL pipeline", help="Pipeline code to explain")
@@ -1094,6 +1358,57 @@ def main():
                 print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
                 print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
                 print(f"Agent: {agent.agent_name}")
+        # Message Bus Integration Commands
+        elif args.command == "initialize-message-bus":
+            result = asyncio.run(agent.initialize_message_bus_integration())
+            print(f"Message Bus Integration: {'Enabled' if result else 'Failed'}")
+        elif args.command == "message-bus-status":
+            print("🚀 DataEngineer Agent Message Bus Status:")
+            print(f"✅ Message Bus Integration: {'Enabled' if agent.message_bus_enabled else 'Disabled'}")
+            print(f"✅ Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+            print(f"✅ Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+            print(f"📊 Performance Metrics: {len(agent.performance_metrics)} metrics tracked")
+            print(f"📝 Pipeline History: {len(agent.pipeline_history)} entries")
+            print(f"📊 Quality History: {len(agent.quality_history)} entries")
+        elif args.command == "publish-event":
+            # Example: publish data quality check requested event
+            event_data = {"data_summary": "Sample data", "request_id": "test-123"}
+            asyncio.run(publish("data_quality_check_requested", event_data))
+            print(f"Published event: data_quality_check_requested with data: {event_data}")
+        elif args.command == "subscribe-event":
+            # Example: subscribe to data events
+            print(f"📡 Subscribing to data events")
+            # Event handlers are already registered in initialize_message_bus_integration
+        elif args.command == "list-events":
+            print("🚀 DataEngineer Agent Supported Events:")
+            print("📥 Input Events:")
+            print("  - data_quality_check_requested")
+            print("  - explain_pipeline_requested")
+            print("  - pipeline_build_requested")
+            print("  - monitoring_requested")
+            print("📤 Output Events:")
+            print("  - data_quality_check_completed")
+            print("  - pipeline_explanation_provided")
+            print("  - pipeline_built")
+            print("  - monitoring_configured")
+        elif args.command == "event-history":
+            print("📝 Pipeline History:")
+            for entry in agent.pipeline_history[-10:]:  # Show last 10 entries
+                print(f"  - {entry}")
+            print("\n📊 Quality History:")
+            for entry in agent.quality_history[-10:]:  # Show last 10 entries
+                print(f"  - {entry}")
+        elif args.command == "performance-metrics":
+            print("📊 DataEngineer Agent Performance Metrics:")
+            for metric, value in agent.performance_metrics.items():
+                if isinstance(value, float):
+                    print(f"  • {metric}: {value:.2f}")
+                else:
+                    print(f"  • {metric}: {value}")
+            def event_handler(event):
+                print(f"Received event: {event}")
+            subscribe("data_quality_check_completed", event_handler)
+            print("Subscribed to data_quality_check_completed events")
         else:
             print("Unknown command. Use 'help' to see available commands.")
             sys.exit(1)

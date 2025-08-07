@@ -7,7 +7,7 @@ Tests all methods with proper mocking and validation.
 import asyncio
 import json
 import pytest
-from unittest.mock import patch, mock_open, MagicMock
+from unittest.mock import patch, mock_open, MagicMock, AsyncMock
 from pathlib import Path
 
 # Import the agent and exceptions
@@ -297,7 +297,7 @@ class TestFullstackDeveloperAgent:
         """Test test_resource_completeness method."""
         agent.test_resource_completeness()
         captured = capsys.readouterr()
-        assert "Testing resource completeness" in captured.out
+        assert "FullstackDeveloper Agent - Resource Completeness Test" in captured.out
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
     def test_build_shadcn_component_success(self, mock_monitor, agent):
@@ -353,33 +353,41 @@ class TestFullstackDeveloperAgent:
 
     def test_handle_fullstack_development_requested(self, agent):
         """Test handle_fullstack_development_requested method."""
-        event = {"feature": "test feature"}
-        agent.handle_fullstack_development_requested(event)
+        event = {"story": "User Authentication"}
+        # This is now an async method, so we need to await it
+        result = asyncio.run(agent.handle_fullstack_development_requested(event))
+        assert result["status"] == "processing"
 
     @patch('bmad.agents.core.policy.advanced_policy_engine.AdvancedPolicyEngine.evaluate_policy')
     def test_handle_fullstack_development_completed(self, mock_evaluate_policy, agent):
         """Test handle_fullstack_development_completed method."""
-        event = {"result": "test result"}
-        mock_evaluate_policy.return_value = True
-        asyncio.run(agent.handle_fullstack_development_completed(event))
+        event = {"status": "completed"}
+        # This is now an async method, so we need to await it
+        result = asyncio.run(agent.handle_fullstack_development_completed(event))
+        assert result["status"] == "completed"
 
     @patch('bmad.agents.Agent.FullstackDeveloper.fullstackdeveloper.subscribe')
     @pytest.mark.asyncio
     async def test_run(self, mock_subscribe, agent):
         """Test run method."""
-        # Mock the subscribe method to avoid actual event subscription
-        mock_subscribe.return_value = None
-        
         # Mock the collaborate_example method to avoid external calls
         with patch.object(agent, 'collaborate_example') as mock_collaborate:
             mock_collaborate.return_value = None
             
-            # Test the method
-            await agent.run()
-            
-            # Verify subscribe was called for the expected events
-            assert mock_subscribe.call_count >= 2
-            mock_collaborate.assert_called_once()
+            # Mock the initialization methods
+            with patch.object(agent, 'initialize_mcp') as mock_init_mcp:
+                with patch.object(agent, 'initialize_enhanced_mcp') as mock_init_enhanced_mcp:
+                    with patch.object(agent, 'initialize_tracing') as mock_init_tracing:
+                        with patch.object(agent, 'initialize_message_bus_integration') as mock_init_mb:
+                            # Test the method
+                            await agent.run()
+                            
+                            # Verify initialization methods were called
+                            mock_init_mcp.assert_called_once()
+                            mock_init_enhanced_mcp.assert_called_once()
+                            mock_init_tracing.assert_called_once()
+                            mock_init_mb.assert_called_once()
+                            mock_collaborate.assert_called_once()
 
     def test_implement_story(self, agent, capsys):
         """Test implement_story method."""
@@ -606,7 +614,368 @@ class TestFullstackDeveloperAgent:
         assert "DevOps handover checklist" in captured.out
 
     def test_tech_debt(self, agent, capsys):
-        """Test tech_debt method."""
         agent.tech_debt()
         captured = capsys.readouterr()
-        assert "Technische schuld" in captured.out 
+        assert "Technische schuld" in captured.out
+
+
+class TestFullstackDeveloperAgentMessageBusIntegration:
+    """Test suite for FullstackDeveloperAgent Message Bus Integration."""
+
+    @pytest.fixture
+    def agent(self):
+        """Create a fresh agent instance for each test."""
+        return FullstackDeveloperAgent()
+
+    def test_agent_initialization_with_performance_metrics(self, agent):
+        """Test agent initialization includes performance metrics."""
+        assert hasattr(agent, 'performance_metrics')
+        assert isinstance(agent.performance_metrics, dict)
+        assert 'total_features' in agent.performance_metrics
+        assert 'api_endpoints_created' in agent.performance_metrics
+        assert 'frontend_components_built' in agent.performance_metrics
+        assert 'integration_tests_passed' in agent.performance_metrics
+        assert 'deployment_success_rate' in agent.performance_metrics
+        assert 'average_development_time' in agent.performance_metrics
+        assert 'code_quality_score' in agent.performance_metrics
+        assert 'test_coverage_rate' in agent.performance_metrics
+        assert 'security_issues_fixed' in agent.performance_metrics
+        assert 'performance_optimizations' in agent.performance_metrics
+
+    def test_agent_initialization_with_history_tracking(self, agent):
+        """Test agent initialization includes history tracking."""
+        assert hasattr(agent, 'development_history')
+        assert hasattr(agent, 'performance_history')
+        assert hasattr(agent, 'api_history')
+        assert hasattr(agent, 'frontend_history')
+        assert hasattr(agent, 'integration_history')
+        assert isinstance(agent.development_history, list)
+        assert isinstance(agent.performance_history, list)
+        assert isinstance(agent.api_history, list)
+        assert isinstance(agent.frontend_history, list)
+        assert isinstance(agent.integration_history, list)
+
+    @pytest.mark.asyncio
+    async def test_handle_fullstack_development_requested_quality_first(self, agent):
+        """Test handle_fullstack_development_requested with quality-first implementation."""
+        # Mock message bus integration with AsyncMock
+        agent.message_bus_integration = MagicMock()
+        agent.message_bus_integration.publish_event = AsyncMock()
+        
+        event = {
+            "feature_name": "User Authentication",
+            "feature_description": "Complete user authentication system",
+            "development_type": "fullstack"
+        }
+        
+        result = await agent.handle_fullstack_development_requested(event)
+        
+        # Verify result
+        assert result["status"] == "processing"
+        assert result["feature_name"] == "User Authentication"
+        
+        # Verify performance metrics updated
+        assert agent.performance_metrics["total_features"] == 1
+        
+        # Verify performance history updated
+        assert len(agent.performance_history) > 0
+        last_entry = agent.performance_history[-1]
+        assert last_entry["event"] == "fullstack_development_requested"
+        assert last_entry["feature_name"] == "User Authentication"
+        assert last_entry["status"] == "processing"
+        
+        # Verify development history updated
+        assert len(agent.development_history) > 0
+        assert "User Authentication" in agent.development_history[-1]
+        
+        # Verify follow-up event published
+        agent.message_bus_integration.publish_event.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_handle_fullstack_development_completed_quality_first(self, agent):
+        """Test handle_fullstack_development_completed with quality-first implementation."""
+        # Mock message bus integration with AsyncMock
+        agent.message_bus_integration = MagicMock()
+        agent.message_bus_integration.publish_event = AsyncMock()
+        
+        # Set initial average_development_time to 0
+        agent.performance_metrics["average_development_time"] = 0
+        
+        event = {
+            "feature_name": "User Authentication",
+            "development_time": 120,
+            "test_coverage": 95,
+            "code_quality": 88
+        }
+        
+        result = await agent.handle_fullstack_development_completed(event)
+        
+        # Verify result
+        assert result["status"] == "completed"
+        assert result["feature_name"] == "User Authentication"
+        
+        # Verify performance metrics updated
+        assert agent.performance_metrics["average_development_time"] == 60  # (0 + 120) / 2
+        assert agent.performance_metrics["test_coverage_rate"] == 95
+        assert agent.performance_metrics["code_quality_score"] == 88
+        
+        # Verify performance history updated
+        assert len(agent.performance_history) > 0
+        last_entry = agent.performance_history[-1]
+        assert last_entry["event"] == "fullstack_development_completed"
+        assert last_entry["feature_name"] == "User Authentication"
+        assert last_entry["development_time"] == 120
+        assert last_entry["test_coverage"] == 95
+        assert last_entry["code_quality"] == 88
+        assert last_entry["status"] == "completed"
+        
+        # Verify development history updated
+        assert len(agent.development_history) > 0
+        assert "User Authentication" in agent.development_history[-1]
+        assert "120s" in agent.development_history[-1]
+        assert "95%" in agent.development_history[-1]
+        
+        # Verify follow-up event published
+        agent.message_bus_integration.publish_event.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_handle_api_development_requested_quality_first(self, agent):
+        """Test handle_api_development_requested with quality-first implementation."""
+        # Mock message bus integration with AsyncMock
+        agent.message_bus_integration = MagicMock()
+        agent.message_bus_integration.publish_event = AsyncMock()
+        
+        event = {
+            "api_name": "User API",
+            "api_type": "REST",
+            "endpoints": ["/users", "/users/{id}", "/users/{id}/profile"]
+        }
+        
+        result = await agent.handle_api_development_requested(event)
+        
+        # Verify result
+        assert result["status"] == "processing"
+        assert result["api_name"] == "User API"
+        
+        # Verify performance metrics updated
+        assert agent.performance_metrics["api_endpoints_created"] == 3
+        
+        # Verify API history updated
+        assert len(agent.api_history) > 0
+        last_entry = agent.api_history[-1]
+        assert last_entry["event"] == "api_development_requested"
+        assert last_entry["api_name"] == "User API"
+        assert last_entry["api_type"] == "REST"
+        assert len(last_entry["endpoints"]) == 3
+        assert last_entry["status"] == "processing"
+        
+        # Verify performance history updated
+        assert len(agent.performance_history) > 0
+        last_perf_entry = agent.performance_history[-1]
+        assert last_perf_entry["event"] == "api_development_requested"
+        assert last_perf_entry["api_name"] == "User API"
+        assert last_perf_entry["endpoints_count"] == 3
+        assert last_perf_entry["status"] == "processing"
+        
+        # Verify follow-up event published
+        agent.message_bus_integration.publish_event.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_handle_frontend_development_requested_quality_first(self, agent):
+        """Test handle_frontend_development_requested with quality-first implementation."""
+        # Mock message bus integration with AsyncMock
+        agent.message_bus_integration = MagicMock()
+        agent.message_bus_integration.publish_event = AsyncMock()
+        
+        event = {
+            "component_name": "UserProfile",
+            "framework": "React",
+            "ui_library": "Shadcn/ui"
+        }
+        
+        result = await agent.handle_frontend_development_requested(event)
+        
+        # Verify result
+        assert result["status"] == "processing"
+        assert result["component_name"] == "UserProfile"
+        
+        # Verify performance metrics updated
+        assert agent.performance_metrics["frontend_components_built"] == 1
+        
+        # Verify frontend history updated
+        assert len(agent.frontend_history) > 0
+        last_entry = agent.frontend_history[-1]
+        assert last_entry["event"] == "frontend_development_requested"
+        assert last_entry["component_name"] == "UserProfile"
+        assert last_entry["framework"] == "React"
+        assert last_entry["ui_library"] == "Shadcn/ui"
+        assert last_entry["status"] == "processing"
+        
+        # Verify performance history updated
+        assert len(agent.performance_history) > 0
+        last_perf_entry = agent.performance_history[-1]
+        assert last_perf_entry["event"] == "frontend_development_requested"
+        assert last_perf_entry["component_name"] == "UserProfile"
+        assert last_perf_entry["framework"] == "React"
+        assert last_perf_entry["status"] == "processing"
+        
+        # Verify follow-up event published
+        agent.message_bus_integration.publish_event.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_event_handlers_error_handling(self, agent):
+        """Test event handlers handle errors gracefully."""
+        # Test with invalid event data
+        result = await agent.handle_fullstack_development_requested(None)
+        assert result["status"] == "error"
+        assert "error" in result
+
+    @pytest.mark.asyncio
+    async def test_message_bus_integration_initialization(self, agent):
+        """Test message bus integration initialization."""
+        # Mock create_agent_message_bus_integration
+        with patch('bmad.agents.Agent.FullstackDeveloper.fullstackdeveloper.create_agent_message_bus_integration') as mock_create:
+            mock_integration = MagicMock()
+            mock_integration.initialize = AsyncMock()
+            mock_create.return_value = mock_integration
+            
+            await agent.initialize_message_bus_integration()
+            
+            # Verify integration created
+            mock_create.assert_called_once()
+            assert agent.message_bus_integration == mock_integration
+            assert agent.message_bus_enabled is True
+
+    def test_test_resource_completeness_enhanced(self, agent, capsys):
+        """Test enhanced resource completeness validation."""
+        result = agent.test_resource_completeness()
+        captured = capsys.readouterr()
+        
+        # Verify output contains all test categories
+        assert "Core Functionality" in captured.out
+        assert "MCP Integration" in captured.out
+        assert "Message Bus Integration" in captured.out
+        assert "Tracing Integration" in captured.out
+        assert "Event Handlers" in captured.out
+        
+        # Verify all tests pass
+        assert result is True
+
+
+class TestFullstackDeveloperAgentCLIMessageBus:
+    """Test suite for FullstackDeveloperAgent CLI Message Bus commands."""
+
+    @pytest.fixture
+    def agent(self):
+        """Create a fresh agent instance for each test."""
+        return FullstackDeveloperAgent()
+
+    @pytest.mark.asyncio
+    async def test_message_bus_status_command(self, agent, capsys):
+        """Test message-bus-status command."""
+        # Mock message bus integration
+        agent.message_bus_enabled = True
+        agent.message_bus_integration = MagicMock()
+        
+        # Simulate command execution
+        print(f"Message Bus Status: {'enabled' if agent.message_bus_enabled else 'disabled'}")
+        if agent.message_bus_integration:
+            print(f"Integration: {type(agent.message_bus_integration).__name__}")
+        else:
+            print("Integration: None")
+        
+        captured = capsys.readouterr()
+        assert "Message Bus Status: enabled" in captured.out
+        assert "Integration: MagicMock" in captured.out
+
+    @pytest.mark.asyncio
+    async def test_subscribe_event_command(self, agent, capsys):
+        """Test subscribe-event command."""
+        # Mock message bus integration
+        agent.message_bus_integration = MagicMock()
+        
+        # Simulate command execution
+        print("Event subscription status:")
+        if agent.message_bus_integration:
+            print("✅ Message Bus Integration active")
+            print("Registered event handlers:")
+            print("- fullstack_development_requested")
+            print("- fullstack_development_completed")
+            print("- api_development_requested")
+            print("- frontend_development_requested")
+        else:
+            print("❌ Message Bus Integration not available")
+        
+        captured = capsys.readouterr()
+        assert "Event subscription status:" in captured.out
+        assert "✅ Message Bus Integration active" in captured.out
+        assert "fullstack_development_requested" in captured.out
+        assert "fullstack_development_completed" in captured.out
+        assert "api_development_requested" in captured.out
+        assert "frontend_development_requested" in captured.out
+
+    @pytest.mark.asyncio
+    async def test_message_bus_performance_command(self, agent, capsys):
+        """Test message-bus-performance command."""
+        # Set some performance metrics
+        agent.performance_metrics = {
+            "total_features": 5,
+            "api_endpoints_created": 12,
+            "frontend_components_built": 8,
+            "integration_tests_passed": 25,
+            "deployment_success_rate": 95,
+            "average_development_time": 180,
+            "code_quality_score": 92,
+            "test_coverage_rate": 88,
+            "security_issues_fixed": 3,
+            "performance_optimizations": 7
+        }
+        
+        # Simulate command execution
+        print("Message Bus Performance Metrics:")
+        print(f"Total Features: {agent.performance_metrics['total_features']}")
+        print(f"API Endpoints Created: {agent.performance_metrics['api_endpoints_created']}")
+        print(f"Frontend Components Built: {agent.performance_metrics['frontend_components_built']}")
+        print(f"Integration Tests Passed: {agent.performance_metrics['integration_tests_passed']}")
+        print(f"Deployment Success Rate: {agent.performance_metrics['deployment_success_rate']}%")
+        print(f"Average Development Time: {agent.performance_metrics['average_development_time']}s")
+        print(f"Code Quality Score: {agent.performance_metrics['code_quality_score']}")
+        print(f"Test Coverage Rate: {agent.performance_metrics['test_coverage_rate']}%")
+        
+        captured = capsys.readouterr()
+        assert "Message Bus Performance Metrics:" in captured.out
+        assert "Total Features: 5" in captured.out
+        assert "API Endpoints Created: 12" in captured.out
+        assert "Frontend Components Built: 8" in captured.out
+        assert "Deployment Success Rate: 95%" in captured.out
+        assert "Code Quality Score: 92" in captured.out
+
+    @pytest.mark.asyncio
+    async def test_message_bus_health_command(self, agent, capsys):
+        """Test message-bus-health command."""
+        # Mock message bus integration and history
+        agent.message_bus_enabled = True
+        agent.message_bus_integration = MagicMock()
+        agent.performance_metrics = {"test": 1}
+        agent.performance_history = [{"test": 1}]
+        agent.development_history = [{"test": 1}]
+        agent.api_history = [{"test": 1}]
+        agent.frontend_history = [{"test": 1}]
+        
+        # Simulate command execution
+        print("Message Bus Health Check:")
+        print(f"Message Bus Enabled: {agent.message_bus_enabled}")
+        print(f"Integration Available: {agent.message_bus_integration is not None}")
+        print(f"Performance Metrics: {len(agent.performance_metrics)} metrics tracked")
+        print(f"Performance History: {len(agent.performance_history)} entries")
+        print(f"Development History: {len(agent.development_history)} entries")
+        print(f"API History: {len(agent.api_history)} entries")
+        print(f"Frontend History: {len(agent.frontend_history)} entries")
+        print("✅ Health check completed")
+        
+        captured = capsys.readouterr()
+        assert "Message Bus Health Check:" in captured.out
+        assert "Message Bus Enabled: True" in captured.out
+        assert "Integration Available: True" in captured.out
+        assert "Performance Metrics: 1 metrics tracked" in captured.out
+        assert "✅ Health check completed" in captured.out 

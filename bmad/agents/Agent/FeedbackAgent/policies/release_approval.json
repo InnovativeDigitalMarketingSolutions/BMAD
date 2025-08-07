@@ -1,0 +1,48 @@
+{
+  "policy_id": "release_approval",
+  "policy_name": "Release Approval Policy",
+  "policy_type": "workflow_policies",
+  "version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "release_criteria",
+      "rule_name": "Release Criteria Check",
+      "policy_type": "workflow_policies",
+      "conditions": [
+        {
+          "condition_id": "release_requirements",
+          "condition_type": "context_based",
+          "parameters": {
+            "tests_passed": true,
+            "code_review": true,
+            "security_scan": true
+          },
+          "description": "Release approval requirements",
+          "severity": "critical",
+          "enabled": true
+        }
+      ],
+      "actions": [
+        "allow"
+      ],
+      "priority": 250,
+      "enabled": true,
+      "description": "Release approval requirements",
+      "metadata": {}
+    }
+  ],
+  "parent_policy": null,
+  "inheritance_rules": {},
+  "status": "active",
+  "created_at": "2025-08-07T09:24:44.774131",
+  "updated_at": "2025-08-07T09:24:44.774132",
+  "expires_at": null,
+  "metadata": {
+    "category": "release",
+    "tags": [
+      "release",
+      "approval",
+      "deployment"
+    ]
+  }
+}

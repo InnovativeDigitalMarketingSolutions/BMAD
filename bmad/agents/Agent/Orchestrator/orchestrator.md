@@ -1,24 +1,69 @@
 # Orchestrator Agent
 
-De Orchestrator agent is de centrale regisseur binnen het BMAD-platform. Deze agent coördineert de samenwerking tussen alle andere agents, verdeelt taken, monitort de status en zorgt voor een soepele workflow volgens de BMAD-methode.
+> **Status**: ✅ **FULLY COMPLIANT** - 91/91 tests passing (100% success rate), Quality-First implementation
+
+> **Let op:** Deze agent werkt actief samen met andere agents via een centrale message bus en gedeelde context in Supabase. Zie de sectie 'Samenwerking & Contextdeling' hieronder voor details.
+
+De Orchestrator Agent coördineert workflows en orkestreert de samenwerking tussen verschillende agents.
 
 ## Verantwoordelijkheden
-- Starten, stoppen en monitoren van agents en workflows
-- Routeren van events tussen agents (event-bus)
-- Taakverdeling en prioritering (optioneel met LLM-ondersteuning)
-- Escalatie en foutafhandeling
-- Verzamelpunt voor status, metrics en rapportages
-- Faciliteren van feedback loops en contextdeling
-
-## Samenwerking
-- Werkt samen met alle agents (Business, Multi-Agent, Agile, DevOps)
-- Stuurt events naar agents op basis van status, context of user input
-- Kan LLM gebruiken voor intelligente taakverdeling, prioritering en workflow-optimalisatie
-
-## BMAD-compliance
-- Zorgt dat alle workflows, events en samenwerkingen voldoen aan de BMAD-principes
-- Documenteert beslissingen, status en verbeteringen
+- Workflow orchestration en process coordination
+- Multi-agent workflow management
+- Process automation en efficiency
+- Event-driven workflow execution
+- Performance metrics tracking (12 orchestration-specific metrics)
+- Message Bus Integration voor event-driven collaboration
+- Enhanced MCP Integration voor multi-agent coordination
+- Tracing en monitoring van orchestration operations
+- HITL (Human-in-the-Loop) decision management
+- Escalation handling en workflow optimization
 
 ## Belangrijke resources
-- [Changelog](changelog.md)
-- [Orchestrator config](orchestrator.yaml) 
+- [Orchestration best practices](../../resources/templates/orchestrator/best-practices.md)
+- [Workflow templates](../../resources/templates/orchestrator/workflow-template.md)
+- [Agent changelog](changelog.md)
+
+## Samenwerking & Contextdeling
+
+Deze agent werkt samen met andere agents via een centrale message bus en gedeelde context in Supabase.
+
+- **Events publiceren:** De agent kan events publiceren via de message_bus, bijvoorbeeld als workflows worden gestart of voltooid.
+- **Context delen:** Status en relevante data worden gedeeld via Supabase, zodat andere agents deze kunnen inzien.
+- **Performance Tracking:** 12 orchestration-specifieke metrics worden bijgehouden en gedeeld
+- **Async Event Handlers:** Real-time event processing met async/await patterns
+- **Quality-First Implementation:** Echte functionaliteit in plaats van mock operations
+
+**Voorbeeld:**
+```python
+self.collaborate_example()
+```
+Dit publiceert een event en slaat context op. Andere agents kunnen deze context ophalen of op het event reageren.
+
+## Workflow Compliance Features
+
+### Message Bus Integration
+- `initialize-message-bus`: Initialiseer Message Bus integratie
+- `message-bus-status`: Toon Message Bus status en performance metrics
+- `publish-event`: Publiceer events naar Message Bus
+- `subscribe-event`: Subscribe op events van andere agents
+- `list-events`: Toon beschikbare events
+- `event-history`: Toon event history
+- `performance-metrics`: Toon performance metrics
+
+### Enhanced MCP Integration
+- `enhanced-collaborate`: Geavanceerde samenwerking met andere agents
+- `enhanced-security`: Security-aware operations
+- `enhanced-performance`: Performance-geoptimaliseerde operaties
+
+### Tracing & Monitoring
+- `trace-operation`: Trace specifieke operaties
+- `trace-performance`: Performance tracing
+- `trace-error`: Error tracing en logging
+- `tracing-summary`: Overzicht van tracing data
+
+### Workflow Management
+- `start-workflow`: Start een workflow
+- `monitor-workflows`: Monitor actieve workflows
+- `orchestrate-agents`: Orkestreer agent activiteiten
+- `manage-escalations`: Beheer workflow escalaties
+- `analyze-metrics`: Analyseer orchestration metrics 

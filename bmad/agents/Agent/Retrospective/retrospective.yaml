@@ -32,6 +32,13 @@ commands:
   - export-report: Export rapport
   - collaborate: Demonstrate collaboration
   - run: Run agent met MCP integration
+  # Message Bus Integration Commands
+  - message-bus-status: Toon Message Bus status en connectivity
+  - publish-event: Publish event naar Message Bus
+  - subscribe-events: Subscribe naar Message Bus events
+  - event-history: Toon event history en metrics
+  - performance-metrics: Toon performance metrics
+  - resource-validation: Valideer agent resources
   # MCP Phase 2 Enhanced Commands
   - enhanced-collaborate: Enhanced inter-agent communicatie
   - enhanced-security: Enhanced security validatie
@@ -45,8 +52,13 @@ dependencies:
   templates:
     - resources/templates/retrospective/best-practices.md
     - resources/templates/retrospective/retro-template.md
+    - resources/templates/retrospective/action-plan-template.md
+    - resources/templates/retrospective/feedback-template.md
+    - resources/templates/retrospective/improvement-template.md
+    - resources/templates/retrospective/retro-checklist-template.md
     - resources/templates/retrospective/retro-export-template.md
     - resources/templates/retrospective/retro-export-template.csv
   data:
-    - resources/data/retrospective/retro-changelog.md
+    - resources/data/retrospective/changelog.md
     - resources/data/retrospective/retro-history.md
+    - resources/data/retrospective/action-history.md

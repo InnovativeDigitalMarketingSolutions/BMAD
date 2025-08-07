@@ -1,0 +1,75 @@
+{
+  "policy_id": "composite_security_policy",
+  "policy_name": "Composite Security Policy",
+  "policy_type": "composite_policy",
+  "version": "1.0.0",
+  "rules": [
+    {
+      "rule_id": "security_composite",
+      "rule_name": "Multi-factor Security Check",
+      "policy_type": "composite_policy",
+      "conditions": [
+        {
+          "condition_id": "composite_security",
+          "condition_type": "composite",
+          "parameters": {
+            "operator": "AND",
+            "conditions": [
+              {
+                "condition_id": "role_check",
+                "condition_type": "role_based",
+                "parameters": {
+                  "required_roles": [
+                    "admin",
+                    "security_officer"
+                  ]
+                },
+                "description": "Security role check",
+                "severity": "critical",
+                "enabled": true
+              },
+              {
+                "condition_id": "time_check",
+                "condition_type": "time_based",
+                "parameters": {
+                  "time_window": {
+                    "start": "00:00:00",
+                    "end": "23:59:59"
+                  }
+                },
+                "description": "24/7 access",
+                "severity": "medium",
+                "enabled": true
+              }
+            ]
+          },
+          "description": "Composite security conditions",
+          "severity": "critical",
+          "enabled": true
+        }
+      ],
+      "actions": [
+        "allow",
+        "audit"
+      ],
+      "priority": 300,
+      "enabled": true,
+      "description": "Multi-factor security policy",
+      "metadata": {}
+    }
+  ],
+  "parent_policy": null,
+  "inheritance_rules": {},
+  "status": "active",
+  "created_at": "2025-08-07T08:04:36.618692",
+  "updated_at": "2025-08-07T08:04:36.618692",
+  "expires_at": null,
+  "metadata": {
+    "category": "security",
+    "tags": [
+      "composite",
+      "multi_factor",
+      "audit"
+    ]
+  }
+}

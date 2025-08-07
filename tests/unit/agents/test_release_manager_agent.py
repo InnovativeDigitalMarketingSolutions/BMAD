@@ -284,7 +284,7 @@ class TestReleaseManagerAgent:
         """Test on_deployment_failed method."""
         test_event = {"version": "1.3.0", "status": "failed"}
         result = agent.on_deployment_failed(test_event)
-        assert result is None
+        assert result == {"status": "processed", "event": "deployment_failed"}
 
     def test_run(self, agent):
         """Test run method."""

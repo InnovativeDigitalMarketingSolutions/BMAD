@@ -38,7 +38,9 @@ class FrameworkTemplatesManager:
             "scrummaster": self.frameworks_path / "scrummaster_template.md",
             "release_manager": self.frameworks_path / "release_manager_template.md",
             "architecture": self.frameworks_path / "architecture_template.md",
-            "devops": self.frameworks_path / "devops_template.md"
+            "devops": self.frameworks_path / "devops_template.md",
+            "feedback_agent": self.frameworks_path / "feedback_agent_template.md",
+            "security": self.frameworks_path / "security_template.md"
         }
         
         # Validate template paths

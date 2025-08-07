@@ -467,35 +467,197 @@ class TestDevOpsInfraAgentEventHandlers:
             self.agent = DevOpsInfraAgent()
             self.mock_monitor = mock_monitor.return_value
 
-    def test_on_pipeline_advice_requested(self):
+    @pytest.mark.asyncio
+    async def test_on_pipeline_advice_requested(self):
         """Test on_pipeline_advice_requested event handler."""
+        # Reset history for clean test state
+        self.agent.infrastructure_history = []
+        
         test_event = {"pipeline_config": "Test pipeline"}
-        result = self.agent.on_pipeline_advice_requested(test_event)
-        assert result is None
+        
+        with patch.object(self.agent.monitor, 'log_metric') as mock_log, \
+             patch.object(self.agent, 'pipeline_advice') as mock_pipeline:
+            mock_pipeline.return_value = {"status": "success"}
+            
+            result = await self.agent.on_pipeline_advice_requested(test_event)
+            
+            # Verify the method returns None for consistency
+            assert result is None
+            
+            # Verify metric was logged
+            mock_log.assert_called_with("pipeline_advice_requested", {
+                "pipeline_config": "Test pipeline",
+                "timestamp": mock_log.call_args[0][1]["timestamp"]
+            })
+            
+            # Verify pipeline_advice was called
+            mock_pipeline.assert_called_once_with("Test pipeline")
+        
+        # Verify infrastructure history was updated
+        assert len(self.agent.infrastructure_history) > 0
+        last_entry = self.agent.infrastructure_history[-1]
+        if isinstance(last_entry, dict):
+            assert last_entry["action"] == "pipeline_advice_requested"
+            assert last_entry["pipeline_config"] == "Test pipeline"
+        else:
+            # Handle case where history contains strings (legacy format)
+            assert "pipeline_advice_requested" in str(last_entry) or "Test pipeline" in str(last_entry)
 
-    def test_on_incident_response_requested(self):
+    @pytest.mark.asyncio
+    async def test_on_incident_response_requested(self):
         """Test on_incident_response_requested event handler."""
-        test_event = {"incident_description": "Test incident"}
-        result = self.agent.on_incident_response_requested(test_event)
-        assert result is None
+        # Reset history for clean test state
+        self.agent.incident_history = []
+        
+        test_event = {"incident_desc": "Test incident"}
+        
+        with patch.object(self.agent.monitor, 'log_metric') as mock_log:
+            result = await self.agent.on_incident_response_requested(test_event)
+            
+            # Verify the method returns None for consistency
+            assert result is None
+            
+            # Verify metric was logged
+            mock_log.assert_called_with("incident_response_requested", {
+                "incident_desc": "Test incident",
+                "timestamp": mock_log.call_args[0][1]["timestamp"]
+            })
+        
+        # Verify incident history was updated
+        assert len(self.agent.incident_history) > 0
+        last_entry = self.agent.incident_history[-1]
+        if isinstance(last_entry, dict):
+            assert last_entry["action"] == "incident_response_requested"
+            assert last_entry["incident_desc"] == "Test incident"
+        else:
+            # Handle case where history contains strings (legacy format)
+            assert "incident_response_requested" in str(last_entry) or "Test incident" in str(last_entry)
 
-    def test_on_feedback_sentiment_analyzed(self):
+    @pytest.mark.asyncio
+    async def test_on_feedback_sentiment_analyzed(self):
         """Test on_feedback_sentiment_analyzed event handler."""
         test_event = {"sentiment": "positive", "feedback": "Great work!"}
-        result = self.agent.on_feedback_sentiment_analyzed(test_event)
-        assert result is None
+        
+        with patch.object(self.agent.monitor, 'log_metric') as mock_log:
+            result = await self.agent.on_feedback_sentiment_analyzed(test_event)
+            
+            # Verify the method returns None for consistency
+            assert result is None
+            
+            # Verify metric was logged
+            mock_log.assert_called_with("feedback_sentiment_analyzed", {
+                "sentiment": "positive",
+                "timestamp": mock_log.call_args[0][1]["timestamp"]
+            })
+        
+        # Verify incident history was updated
+        assert len(self.agent.incident_history) > 0
+        assert self.agent.incident_history[-1]["action"] == "feedback_sentiment_analyzed"
+        assert self.agent.incident_history[-1]["sentiment"] == "positive"
 
-    def test_handle_build_triggered(self):
+    @pytest.mark.asyncio
+    async def test_handle_build_triggered(self):
         """Test handle_build_triggered event handler."""
-        test_event = {"build_id": "build_001", "status": "triggered"}
-        result = self.agent.handle_build_triggered(test_event)
-        assert result is None
+        test_event = {"build_id": "build_001", "build_type": "production"}
+        
+        with patch.object(self.agent.monitor, 'log_metric') as mock_log, \
+             patch('asyncio.sleep') as mock_sleep:
+            result = await self.agent.handle_build_triggered(test_event)
+            
+            # Verify the method returns None for consistency
+            assert result is None
+            
+            # Verify metric was logged
+            mock_log.assert_called_with("build_triggered", {
+                "build_type": "production",
+                "timestamp": mock_log.call_args[0][1]["timestamp"]
+            })
+        
+        # Verify infrastructure history was updated
+        assert len(self.agent.infrastructure_history) > 0
+        assert self.agent.infrastructure_history[-1]["action"] == "build_triggered"
+        assert self.agent.infrastructure_history[-1]["build_type"] == "production"
 
-    def test_handle_deployment_executed(self):
+    @pytest.mark.asyncio
+    async def test_handle_deployment_executed(self):
         """Test handle_deployment_executed event handler."""
-        test_event = {"deployment_id": "deploy_001", "status": "completed"}
-        result = self.agent.handle_deployment_executed(test_event)
-        assert result is None
+        test_event = {"deployment_id": "deploy_001", "deployment_type": "production"}
+        
+        with patch.object(self.agent.monitor, 'log_metric') as mock_log, \
+             patch('asyncio.sleep') as mock_sleep:
+            result = await self.agent.handle_deployment_executed(test_event)
+            
+            # Verify the method returns None for consistency
+            assert result is None
+            
+            # Verify metric was logged
+            mock_log.assert_called_with("deployment_executed", {
+                "deployment_type": "production",
+                "timestamp": mock_log.call_args[0][1]["timestamp"]
+            })
+        
+        # Verify infrastructure history was updated
+        assert len(self.agent.infrastructure_history) > 0
+        assert self.agent.infrastructure_history[-1]["action"] == "deployment_executed"
+        assert self.agent.infrastructure_history[-1]["deployment_type"] == "production"
+
+    @pytest.mark.asyncio
+    async def test_handle_infrastructure_deployment_requested(self):
+        """Test handle_infrastructure_deployment_requested event handler."""
+        test_event = {"infrastructure_type": "kubernetes", "request_id": "req_001"}
+        
+        with patch.object(self.agent.monitor, 'log_metric') as mock_log, \
+             patch.object(self.agent, 'deploy_infrastructure') as mock_deploy:
+            mock_deploy.return_value = {"status": "success"}
+            
+            result = await self.agent.handle_infrastructure_deployment_requested(test_event)
+            
+            # Verify the method returns None for consistency
+            assert result is None
+            
+            # Verify metric was logged
+            mock_log.assert_called_with("infrastructure_deployment_requested", {
+                "infrastructure_type": "kubernetes",
+                "timestamp": mock_log.call_args[0][1]["timestamp"]
+            })
+            
+            # Verify deploy_infrastructure was called
+            mock_deploy.assert_called_once_with("kubernetes")
+        
+        # Verify infrastructure history was updated
+        assert len(self.agent.infrastructure_history) > 0
+        assert self.agent.infrastructure_history[-1]["action"] == "infrastructure_deployment_requested"
+        assert self.agent.infrastructure_history[-1]["infrastructure_type"] == "kubernetes"
+
+    @pytest.mark.asyncio
+    async def test_handle_monitoring_requested(self):
+        """Test handle_monitoring_requested event handler."""
+        test_event = {"infrastructure_id": "infra_002", "monitoring_type": "performance", "request_id": "req_002"}
+        
+        with patch.object(self.agent.monitor, 'log_metric') as mock_log, \
+             patch.object(self.agent, 'monitor_infrastructure') as mock_monitor:
+            mock_monitor.return_value = {"status": "monitoring"}
+            
+            result = await self.agent.handle_monitoring_requested(test_event)
+            
+            # Verify the method returns None for consistency
+            assert result is None
+            
+            # Verify metric was logged
+            mock_log.assert_called_with("monitoring_requested", {
+                "infrastructure_id": "infra_002",
+                "monitoring_type": "performance",
+                "timestamp": mock_log.call_args[0][1]["timestamp"]
+            })
+            
+            # Verify monitor_infrastructure was called
+            mock_monitor.assert_called_once_with("infra_002")
+        
+        # Verify infrastructure history was updated
+        assert len(self.agent.infrastructure_history) > 0
+        assert self.agent.infrastructure_history[-1]["action"] == "monitoring_requested"
+        assert self.agent.infrastructure_history[-1]["infrastructure_id"] == "infra_002"
+        assert self.agent.infrastructure_history[-1]["monitoring_type"] == "performance"
 
 
 class TestDevOpsInfraAgentCollaboration:

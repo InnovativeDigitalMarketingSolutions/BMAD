@@ -51,19 +51,28 @@ from bmad.core.mcp.enhanced_mcp_integration import (
 )
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 
+# Message Bus Integration
+from bmad.agents.core.communication.agent_message_bus_integration import (
+    AgentMessageBusIntegration,
+    create_agent_message_bus_integration
+)
+
 load_dotenv()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-class DocumentationAgent:
+class DocumentationAgent(AgentMessageBusIntegration):
     """
     Documentation Agent voor BMAD.
     Gespecialiseerd in documentatie generatie, API docs, user guides, en technical documentation.
     """
     
     def __init__(self):
+        # Initialize parent class with agent name and instance
+        super().__init__("DocumentationAgent", self)
+        
         # Set agent name
         self.agent_name = "DocumentationAgent"
         self.monitor = PerformanceOptimizer()
@@ -92,6 +101,22 @@ class DocumentationAgent:
         self._load_docs_history()
         self._load_figma_history()
         
+        # Performance metrics
+        self.performance_metrics = {
+            "documentation_quality_score": 0.0,
+            "api_docs_generation_time": 0.0,
+            "user_guide_creation_time": 0.0,
+            "technical_docs_accuracy": 0.0,
+            "figma_documentation_speed": 0.0,
+            "changelog_summarization_quality": 0.0,
+            "documentation_completeness": 0.0,
+            "export_generation_speed": 0.0,
+            "collaboration_efficiency": 0.0,
+            "documentation_maintenance_score": 0.0,
+            "content_consistency": 0.0,
+            "user_satisfaction_score": 0.0
+        }
+        
         # MCP Integration
         self.mcp_client: Optional[MCPClient] = None
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
@@ -105,6 +130,10 @@ class DocumentationAgent:
         # Tracing Integration
         self.tracer: Optional[BMADTracer] = None
         self.tracing_enabled = False
+        
+        # Message Bus Integration
+        self.message_bus_integration: Optional[AgentMessageBusIntegration] = None
+        self.message_bus_enabled = False
         
         # Initialize tracer
         self.tracer = BMADTracer(config=type("Config", (), {
@@ -414,6 +443,24 @@ DocumentationAgent Commands:
   test                    - Test resource completeness
   collaborate             - Demonstrate collaboration with other agents
   run                     - Run the agent and listen for events
+
+Enhanced MCP Phase 2 Commands:
+  enhanced-collaborate    - Enhanced collaboration with other agents
+  enhanced-security       - Enhanced security features
+  enhanced-performance    - Enhanced performance monitoring
+  trace-operation         - Trace documentation operations
+  trace-performance       - Trace performance metrics
+  trace-error             - Trace error handling
+  tracing-summary         - Show tracing summary
+
+Message Bus Integration Commands:
+  initialize-message-bus  - Initialize Message Bus integration
+  message-bus-status      - Show Message Bus status
+  publish-event           - Publish documentation event
+  subscribe-event         - Show subscribed events
+  list-events             - List supported events
+  event-history           - Show event history
+  performance-metrics     - Show performance metrics
         """
         print(help_text)
 
@@ -1379,7 +1426,9 @@ def main():
                                "use-mcp-tool", "get-mcp-status", "use-documentation-mcp-tools", 
                                "check-dependencies", "enhanced-collaborate", "enhanced-security", 
                                "enhanced-performance", "trace-operation", "trace-performance", 
-                               "trace-error", "tracing-summary"])
+                               "trace-error", "tracing-summary",
+                               "initialize-message-bus", "message-bus-status", "publish-event", "subscribe-event",
+                               "list-events", "event-history", "performance-metrics"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--figma-file-id", help="Figma file ID for documentation")
     parser.add_argument("--api-name", default="BMAD API", help="API name for documentation")
@@ -1467,7 +1516,7 @@ def main():
         elif args.command == "trace-error":
             result = asyncio.run(agent.trace_documentation_operation({
                 "operation_type": "error_analysis",
-                "error_data": {"error_type": "documentation_generation", "error_message": "Documentation generation failed"}
+                "error_data": {"error_type": "documentation_failure", "error_message": "Documentation generation failed"}
             }))
             print(json.dumps(result, indent=2))
         elif args.command == "tracing-summary":
@@ -1475,6 +1524,51 @@ def main():
             print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
             print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
             print(f"Agent: {agent.agent_name}")
+    # Message Bus Integration Commands
+    elif args.command == "initialize-message-bus":
+        result = asyncio.run(agent.initialize_message_bus_integration())
+        print(f"Message Bus Integration: {'Enabled' if result else 'Failed'}")
+    elif args.command == "message-bus-status":
+        print("🚀 DocumentationAgent Message Bus Status:")
+        print(f"✅ Message Bus Integration: {'Enabled' if agent.message_bus_enabled else 'Disabled'}")
+        print(f"✅ Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+        print(f"✅ Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+        print(f"📊 Performance Metrics: {len(agent.performance_metrics)} metrics tracked")
+        print(f"📝 Documentation History: {len(agent.docs_history)} entries")
+        print(f"🎨 Figma History: {len(agent.figma_history)} entries")
+    elif args.command == "publish-event":
+        # Example: publish documentation event
+        event_data = {"doc_type": "api_docs", "request_id": "test-123"}
+        asyncio.run(publish("documentation_requested", event_data))
+        print(f"Published event: documentation_requested with data: {event_data}")
+    elif args.command == "subscribe-event":
+        # Example: subscribe to documentation events
+        print(f"📡 Subscribing to documentation events")
+        # Event handlers are already registered in initialize_message_bus_integration
+    elif args.command == "list-events":
+        print("🚀 DocumentationAgent Supported Events:")
+        print("📥 Input Events:")
+        print("  - documentation_requested")
+        print("  - figma_documentation_requested")
+        print("  - summarize_changelogs")
+        print("📤 Output Events:")
+        print("  - documentation_completed")
+        print("  - figma_documentation_completed")
+        print("  - changelog_summarized")
+    elif args.command == "event-history":
+        print("📝 Documentation History:")
+        for entry in agent.docs_history[-10:]:  # Show last 10 entries
+            print(f"  - {entry}")
+        print("\n🎨 Figma History:")
+        for entry in agent.figma_history[-10:]:  # Show last 10 entries
+            print(f"  - {entry}")
+    elif args.command == "performance-metrics":
+        print("📊 DocumentationAgent Performance Metrics:")
+        for metric, value in agent.performance_metrics.items():
+            if isinstance(value, float):
+                print(f"  • {metric}: {value:.2f}")
+            else:
+                print(f"  • {metric}: {value}")
     else:
         print(f"Unknown command: {args.command}")
         agent.show_help()

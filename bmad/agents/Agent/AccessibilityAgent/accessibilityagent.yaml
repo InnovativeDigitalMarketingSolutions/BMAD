@@ -45,6 +45,13 @@ commands:
   - trace-performance: Get performance metrics
   - trace-error: Trace error scenarios
   - tracing-summary: Get tracing summary
+  # Message Bus Commands
+  - message-bus-status: Get Message Bus integration status
+  - publish-event: Publish event to Message Bus
+  - subscribe-events: Subscribe to Message Bus events
+  - event-history: Get Message Bus event history
+  - performance-metrics: Get Message Bus performance metrics
+  - resource-validation: Validate Message Bus resources
 
 dependencies:
   templates:

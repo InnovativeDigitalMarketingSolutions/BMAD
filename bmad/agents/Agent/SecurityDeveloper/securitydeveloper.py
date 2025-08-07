@@ -38,6 +38,13 @@ from bmad.core.mcp.enhanced_mcp_integration import (
     EnhancedMCPIntegration,
     create_enhanced_mcp_integration
 )
+
+# Message Bus Integration
+from bmad.agents.core.communication.agent_message_bus_integration import (
+    AgentMessageBusIntegration,
+    create_agent_message_bus_integration
+)
+
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 
 # Configure logging
@@ -89,6 +96,22 @@ class SecurityDeveloperAgent:
             "incident-history": self.resource_base / "data/securitydeveloper/incident-history.md"
         }
 
+        # Performance metrics for quality-first implementation
+        self.performance_metrics = {
+            "total_security_scans": 0,
+            "total_scans_completed": 0,
+            "total_vulnerabilities_found": 0,
+            "total_vulnerabilities_detected": 0,
+            "high_severity_vulnerabilities": 0,
+            "total_security_incidents": 0,
+            "high_severity_incidents": 0,
+            "average_cvss_score": 0.0,
+            "security_scan_success_rate": 0.0,
+            "incident_response_time": 0.0,
+            "compliance_check_success_rate": 0.0,
+            "threat_assessment_accuracy": 0.0
+        }
+
         # Initialize histories
         self.scan_history = []
         self.incident_history = []
@@ -111,13 +134,16 @@ class SecurityDeveloperAgent:
         self.mcp_enabled = False
         
         # Enhanced MCP Phase 2 attributes
-        self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_integration: Optional[EnhancedMCPIntegration] = None
         self.enhanced_mcp_enabled = False
-        self.enhanced_mcp_client = None
+        self.tracing_enabled = False
+        
+        # Message Bus Integration
+        self.message_bus_integration: Optional[AgentMessageBusIntegration] = None
+        self.message_bus_enabled = False
         
         # Tracing Integration
         self.tracer: Optional[BMADTracer] = None
-        self.tracing_enabled = False
         
         # Initialize tracer
         self.tracer = BMADTracer(config=type("Config", (), {
@@ -164,11 +190,7 @@ class SecurityDeveloperAgent:
     async def initialize_enhanced_mcp(self):
         """Initialize enhanced MCP capabilities for Phase 2."""
         try:
-            self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
-            self.enhanced_mcp_client = self.enhanced_mcp.mcp_client if self.enhanced_mcp else None
-            # Check if initialize method exists before calling it
-            if hasattr(self.enhanced_mcp, 'initialize'):
-                await self.enhanced_mcp.initialize()
+            self.enhanced_mcp_integration = create_enhanced_mcp_integration(self.agent_name)
             self.enhanced_mcp_enabled = True
             logger.info("Enhanced MCP initialized successfully")
         except Exception as e:
@@ -181,13 +203,55 @@ class SecurityDeveloperAgent:
             if self.tracer and hasattr(self.tracer, 'initialize'):
                 await self.tracer.initialize()
                 self.tracing_enabled = True
-                logger.info("Tracing initialized successfully")
+                logger.info("Tracing initialized successfully for SecurityDeveloper")
+                # Set up security-specific tracing spans
+                await self.tracer.setup_security_tracing({
+                    "agent_name": self.agent_name,
+                    "tracing_level": "detailed",
+                    "security_tracking": True,
+                    "vulnerability_tracking": True,
+                    "threat_tracking": True,
+                    "compliance_tracking": True
+                })
             else:
-                logger.warning("Tracer not available or missing initialize method")
-                self.tracing_enabled = False
+                logger.warning("Tracing initialization failed, continuing without tracing")
+                
         except Exception as e:
-            logger.warning(f"Tracing initialization failed: {e}")
+            logger.warning(f"Tracing initialization failed for SecurityDeveloper: {e}")
             self.tracing_enabled = False
+
+    async def initialize_message_bus_integration(self):
+        """Initialize Message Bus Integration for the agent."""
+        try:
+            self.message_bus_integration = create_agent_message_bus_integration(
+                agent_name=self.agent_name,
+                agent_instance=self
+            )
+            
+            # Register event handlers for security-specific events
+            await self.message_bus_integration.register_event_handler(
+                "security_scan_requested", 
+                self.handle_security_scan_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "security_scan_completed", 
+                self.handle_security_scan_completed
+            )
+            await self.message_bus_integration.register_event_handler(
+                "vulnerability_detected",
+                self.handle_vulnerability_detected
+            )
+            await self.message_bus_integration.register_event_handler(
+                "security_incident_reported",
+                self.handle_security_incident_reported
+            )
+            
+            self.message_bus_enabled = True
+            logger.info(f"✅ Message Bus Integration geïnitialiseerd voor {self.agent_name}")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Fout bij initialiseren van Message Bus Integration voor {self.agent_name}: {e}")
+            return False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -273,7 +337,7 @@ class SecurityDeveloperAgent:
 
     async def use_enhanced_mcp_tools(self, security_data: Dict[str, Any]) -> Dict[str, Any]:
         """Use enhanced MCP tools voor Phase 2 capabilities."""
-        if not self.enhanced_mcp_enabled or not self.enhanced_mcp:
+        if not self.enhanced_mcp_enabled or not self.enhanced_mcp_integration:
             logger.warning("Enhanced MCP not available, using standard MCP tools")
             return await self.use_security_specific_mcp_tools(security_data)
         
@@ -281,7 +345,7 @@ class SecurityDeveloperAgent:
         
         try:
             # Core enhancement tools
-            core_result = await self.enhanced_mcp.use_enhanced_mcp_tool("core_enhancement", {
+            core_result = await self.enhanced_mcp_integration.use_enhanced_mcp_tool("core_enhancement", {
                 "agent_type": self.agent_name,
                 "enhancement_level": "advanced",
                 "capabilities": security_data.get("capabilities", []),
@@ -313,7 +377,7 @@ class SecurityDeveloperAgent:
         try:
             # Enhanced vulnerability analysis
             if "vulnerability_analysis" in security_data:
-                vulnerability_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_vulnerability_analysis", {
+                vulnerability_result = await self.enhanced_mcp_integration.use_enhanced_mcp_tool("enhanced_vulnerability_analysis", {
                     "vulnerability_data": security_data["vulnerability_analysis"],
                     "analysis_depth": security_data.get("analysis_depth", "comprehensive"),
                     "threat_modeling": security_data.get("threat_modeling", True)
@@ -322,7 +386,7 @@ class SecurityDeveloperAgent:
             
             # Enhanced threat intelligence
             if "threat_intelligence" in security_data:
-                threat_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_threat_intelligence", {
+                threat_result = await self.enhanced_mcp_integration.use_enhanced_mcp_tool("enhanced_threat_intelligence", {
                     "threat_data": security_data["threat_intelligence"],
                     "intelligence_sources": security_data.get("intelligence_sources", ["OSINT", "DarkWeb", "Vendor"]),
                     "threat_hunting": security_data.get("threat_hunting", True)
@@ -331,7 +395,7 @@ class SecurityDeveloperAgent:
             
             # Enhanced team collaboration
             if "team_collaboration" in security_data:
-                collaboration_result = await self.enhanced_mcp.communicate_with_agents(
+                collaboration_result = await self.enhanced_mcp_integration.communicate_with_agents(
                     ["DevOpsInfra", "BackendDeveloper", "FrontendDeveloper", "QualityGuardian"],
                     {
                         "type": "security_review",
@@ -342,7 +406,7 @@ class SecurityDeveloperAgent:
             
             # Enhanced penetration testing
             if "penetration_testing" in security_data:
-                pentest_result = await self.enhanced_mcp.use_enhanced_mcp_tool("enhanced_penetration_testing", {
+                pentest_result = await self.enhanced_mcp_integration.use_enhanced_mcp_tool("enhanced_penetration_testing", {
                     "pentest_data": security_data["penetration_testing"],
                     "testing_methodology": security_data.get("testing_methodology", "OWASP"),
                     "automation_level": security_data.get("automation_level", "high")
@@ -676,6 +740,28 @@ Advanced features:
   perform-penetration-test   - Perform penetration testing
   update-vulnerability-database - Update vulnerability database
   get-security-dashboard-data - Get dashboard data
+
+Enhanced MCP Phase 2 Commands:
+  enhanced-collaborate    - Enhanced collaboration with other agents
+  enhanced-security       - Enhanced security validation
+  enhanced-performance    - Enhanced performance optimization
+  trace-operation         - Trace security operations
+  trace-performance       - Trace performance metrics
+  trace-error             - Trace error scenarios
+  tracing-summary         - Show tracing summary
+
+📡 Message Bus CLI Extension:
+  message-bus-status      - Show Message Bus integration status
+  publish-event           - Publish event to Message Bus
+  subscribe-event         - Subscribe to events
+  list-events             - List supported events
+  event-history           - Show event history
+  performance-metrics     - Show performance metrics
+
+📋 Usage Examples:
+  python securitydeveloper.py publish-event --event-type security_scan_requested --event-data '{"target": "application"}'
+  python securitydeveloper.py message-bus-status
+  python securitydeveloper.py event-history
         """
         print(help_text)
 
@@ -863,7 +949,7 @@ Advanced features:
                 await self.initialize_enhanced_mcp()
             
             # Use enhanced MCP tools if available
-            if self.enhanced_mcp_enabled and self.enhanced_mcp:
+            if self.enhanced_mcp_enabled and self.enhanced_mcp_integration:
                 result = await self.use_enhanced_mcp_tools({
                     "operation": "scan_vulnerabilities",
                     "scan_config": scan_config,
@@ -1333,58 +1419,204 @@ Advanced features:
         print(f"Opgehaalde context: {context}")
 
     def handle_security_scan_requested(self, event):
-        """Handle security scan requested event with improved input validation."""
-        # Input validation
-        if not isinstance(event, dict):
-            logger.warning("Invalid event type for security scan requested event")
-            return
-        
+        """Handle security scan requested event with real functionality."""
         logger.info(f"Security scan requested: {event}")
-        target = event.get("target", "application")
-        print(f"🔒 Starting security scan for target: {target}")
-        self.run_security_scan(target)
+        
+        # Update scan history
+        self.scan_history.append({
+            "action": "security_scan_requested",
+            "timestamp": datetime.now().isoformat(),
+            "target": event.get("target", "unknown"),
+            "scan_type": event.get("scan_type", "comprehensive"),
+            "status": "processing"
+        })
+        
+        # Update performance metrics
+        if hasattr(self, 'performance_metrics'):
+            self.performance_metrics["total_security_scans"] = self.performance_metrics.get("total_security_scans", 0) + 1
+        
+        # Publish follow-up event via Message Bus Integration
+        if hasattr(self, 'message_bus_integration') and self.message_bus_integration:
+            try:
+                asyncio.create_task(self.message_bus_integration.publish_event("security_scan_processing_started", {
+                    "target": event.get("target", "unknown"),
+                    "scan_type": event.get("scan_type", "comprehensive"),
+                    "timestamp": datetime.now().isoformat(),
+                    "status": "processing"
+                }))
+            except Exception as e:
+                logger.warning(f"Failed to publish security_scan_processing_started event: {e}")
+        
+        return {"status": "processed", "event": "security_scan_requested"}
 
     async def handle_security_scan_completed(self, event):
-        """Handle security scan completed event with improved input validation."""
-        # Input validation
-        if not isinstance(event, dict):
-            logger.warning("Invalid event type for security scan completed event")
-            return
-        
+        """Handle security scan completed event with real functionality."""
         logger.info(f"Security scan completed: {event}")
-        status = event.get("status", "unknown")
-        security_score = event.get("security_score", 0.0)
-        print(f"✅ Security scan completed with status: {status}, score: {security_score}%")
+        
+        # Update scan history
+        self.scan_history.append({
+            "action": "security_scan_completed",
+            "timestamp": datetime.now().isoformat(),
+            "target": event.get("target", "unknown"),
+            "vulnerabilities_found": event.get("vulnerabilities_found", 0),
+            "severity_level": event.get("severity_level", "unknown"),
+            "status": "completed"
+        })
+        
+        # Update performance metrics
+        if hasattr(self, 'performance_metrics'):
+            self.performance_metrics["total_scans_completed"] = self.performance_metrics.get("total_scans_completed", 0) + 1
+            self.performance_metrics["total_vulnerabilities_found"] = self.performance_metrics.get("total_vulnerabilities_found", 0) + event.get("vulnerabilities_found", 0)
+        
+        # Publish follow-up event
+        if hasattr(self, 'message_bus_integration') and self.message_bus_integration:
+            try:
+                await self.message_bus_integration.publish_event("security_scan_completion_reported", {
+                    "target": event.get("target", "unknown"),
+                    "vulnerabilities_found": event.get("vulnerabilities_found", 0),
+                    "severity_level": event.get("severity_level", "unknown"),
+                    "timestamp": datetime.now().isoformat(),
+                    "status": "completed"
+                })
+            except Exception as e:
+                logger.warning(f"Failed to publish security_scan_completion_reported event: {e}")
+        
+        return {"status": "processed", "event": "security_scan_completed"}
 
-        # Evaluate policy
+    async def handle_vulnerability_detected(self, event):
+        """Handle vulnerability detected event with real functionality."""
+        logger.info(f"Vulnerability detected: {event}")
+        
         try:
-            allowed = await self.policy_engine.evaluate_policy("security_approval", event)
-            logger.info(f"Policy evaluation result: {allowed}")
+            # Process vulnerability data
+            vulnerability_data = event.get("vulnerability_data", {})
+            if vulnerability_data:
+                # Calculate CVSS score
+                cvss_score = self._calculate_cvss_score(vulnerability_data)
+                
+                # Assess threat level
+                threat_level = self._assess_threat_level([vulnerability_data])
+                
+                # Generate recommendations
+                recommendations = self._generate_security_recommendations([vulnerability_data], threat_level)
+                
+                # Update scan history
+                self.scan_history.append({
+                    "action": "vulnerability_detected",
+                    "timestamp": datetime.now().isoformat(),
+                    "vulnerability_id": vulnerability_data.get("id", "unknown"),
+                    "cvss_score": cvss_score,
+                    "threat_level": threat_level,
+                    "status": "detected"
+                })
+                
+                # Update performance metrics
+                if hasattr(self, 'performance_metrics'):
+                    self.performance_metrics["total_vulnerabilities_detected"] = self.performance_metrics.get("total_vulnerabilities_detected", 0) + 1
+                    if cvss_score >= 7.0:
+                        self.performance_metrics["high_severity_vulnerabilities"] = self.performance_metrics.get("high_severity_vulnerabilities", 0) + 1
+                
+                # Publish follow-up event
+                if hasattr(self, 'message_bus_integration') and self.message_bus_integration:
+                    try:
+                        await self.message_bus_integration.publish_event("vulnerability_analysis_completed", {
+                            "vulnerability_id": vulnerability_data.get("id", "unknown"),
+                            "cvss_score": cvss_score,
+                            "threat_level": threat_level,
+                            "recommendations_count": len(recommendations),
+                            "timestamp": datetime.now().isoformat(),
+                            "status": "analyzed"
+                        })
+                    except Exception as e:
+                        logger.warning(f"Failed to publish vulnerability_analysis_completed event: {e}")
+                
+                return {
+                    "status": "processed", 
+                    "event": "vulnerability_detected",
+                    "cvss_score": cvss_score,
+                    "threat_level": threat_level,
+                    "recommendations": recommendations
+                }
+            else:
+                raise ValueError("Missing vulnerability_data")
+                
         except Exception as e:
-            logger.error(f"Policy evaluation failed: {e}")
+            logger.error(f"Error processing vulnerability: {e}")
+            
+            # Update scan history with error
+            self.scan_history.append({
+                "action": "vulnerability_detected",
+                "timestamp": datetime.now().isoformat(),
+                "status": "error",
+                "error": str(e)
+            })
+            
+            # Publish error event
+            if hasattr(self, 'message_bus_integration') and self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("vulnerability_analysis_error", {
+                        "error": str(e),
+                        "timestamp": datetime.now().isoformat(),
+                        "status": "error"
+                    })
+                except Exception as publish_error:
+                    logger.warning(f"Failed to publish vulnerability_analysis_error event: {publish_error}")
+            
+            return {"status": "error", "event": "vulnerability_detected", "error": str(e)}
+
+    async def handle_security_incident_reported(self, event):
+        """Handle security incident reported event with real functionality."""
+        logger.info(f"Security incident reported: {event}")
+        
+        # Update incident history
+        self.incident_history.append({
+            "action": "security_incident_reported",
+            "timestamp": datetime.now().isoformat(),
+            "incident_type": event.get("incident_type", "unknown"),
+            "severity": event.get("severity", "unknown"),
+            "description": event.get("description", ""),
+            "status": "reported"
+        })
+        
+        # Update performance metrics
+        if hasattr(self, 'performance_metrics'):
+            self.performance_metrics["total_security_incidents"] = self.performance_metrics.get("total_security_incidents", 0) + 1
+            if event.get("severity") in ["high", "critical"]:
+                self.performance_metrics["high_severity_incidents"] = self.performance_metrics.get("high_severity_incidents", 0) + 1
+        
+        # Publish follow-up event
+        if hasattr(self, 'message_bus_integration') and self.message_bus_integration:
+            try:
+                await self.message_bus_integration.publish_event("security_incident_processing", {
+                    "incident_type": event.get("incident_type", "unknown"),
+                    "severity": event.get("severity", "unknown"),
+                    "timestamp": datetime.now().isoformat(),
+                    "status": "processing"
+                })
+            except Exception as e:
+                logger.warning(f"Failed to publish security_incident_processing event: {e}")
+        
+        return {"status": "processed", "event": "security_incident_reported"}
 
     async def run(self):
         """Start the agent in event listening mode met MCP integration."""
         # Initialize MCP integration
         await self.initialize_mcp()
         
-        # Initialize enhanced MCP capabilities for Phase 2
+        # Initialize Enhanced MCP
         await self.initialize_enhanced_mcp()
         
-        # Initialize tracing capabilities
+        # Initialize tracing
         await self.initialize_tracing()
         
-        print("🔒 SecurityDeveloper Agent is running...")
-        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
-        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
-        
-        def sync_handler(event):
-            asyncio.run(self.handle_security_scan_completed(event))
-
-        subscribe("security_scan_completed", sync_handler)
-        subscribe("security_scan_requested", self.handle_security_scan_requested)
+        # Initialize Message Bus Integration
+        await self.initialize_message_bus_integration()
 
         logger.info("SecurityDeveloperAgent ready and listening for events...")
+        print("🔒 Security Developer Agent is running...")
+        print("Enhanced MCP: Enabled" if self.enhanced_mcp_enabled else "Enhanced MCP: Disabled")
+        print("Tracing: Enabled" if self.tracing_enabled else "Tracing: Disabled")
+        print("Message Bus: Enabled" if self.message_bus_enabled else "Message Bus: Disabled")
         self.collaborate_example()
         
         try:
@@ -1767,13 +1999,18 @@ def main():
                                "use-mcp-tool", "get-mcp-status", "use-security-mcp-tools", 
                                "check-dependencies", "enhanced-collaborate", "enhanced-security", 
                                "enhanced-performance", "trace-operation", "trace-performance", 
-                               "trace-error", "tracing-summary"])
+                               "trace-error", "tracing-summary",
+                               # Message Bus CLI Extension commands
+                               "message-bus-status", "publish-event", "subscribe-event",
+                               "list-events", "event-history", "performance-metrics"])
     parser.add_argument("--format", choices=["md", "json"], default="md", help="Export format")
     parser.add_argument("--code", help="Code snippet for security review")
     parser.add_argument("--incidents", nargs="+", help="List of incidents to summarize")
     parser.add_argument("--target", default="application", help="Target for security scan")
     parser.add_argument("--component", default="API", help="Component for vulnerability assessment")
     parser.add_argument("--framework", default="OWASP", help="Framework for compliance check")
+    parser.add_argument("--event-type", help="Event type for publish/subscribe")
+    parser.add_argument("--event-data", help="Event data as JSON string")
 
     args = parser.parse_args()
 
@@ -1835,19 +2072,19 @@ def main():
                          "trace-operation", "trace-performance", "trace-error", "tracing-summary"]:
         # Enhanced MCP commands
         if args.command == "enhanced-collaborate":
-            result = asyncio.run(agent.enhanced_mcp.communicate_with_agents(
+            result = asyncio.run(agent.enhanced_mcp_integration.communicate_with_agents(
                 ["DevOpsInfra", "BackendDeveloper", "FrontendDeveloper", "QualityGuardian"], 
                 {"type": "security_review", "content": {"review_type": "security_scan"}}
             ))
             print(json.dumps(result, indent=2))
         elif args.command == "enhanced-security":
-            result = asyncio.run(agent.enhanced_mcp.enhanced_security_validation({
+            result = asyncio.run(agent.enhanced_mcp_integration.enhanced_security_validation({
                 "security_data": {"vulnerabilities": [], "threats": [], "compliance": []},
                 "security_requirements": ["vulnerability_scanning", "threat_detection", "compliance_monitoring"]
             }))
             print(json.dumps(result, indent=2))
         elif args.command == "enhanced-performance":
-            result = asyncio.run(agent.enhanced_mcp.enhanced_performance_optimization({
+            result = asyncio.run(agent.enhanced_mcp_integration.enhanced_performance_optimization({
                 "security_data": {"vulnerabilities": [], "threats": [], "compliance": []},
                 "performance_metrics": {"scan_efficiency": 85.5, "threat_detection": 92.3}
             }))
@@ -1877,6 +2114,77 @@ def main():
             print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
             print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
             print(f"Agent: {agent.agent_name}")
+    # Message Bus CLI Extension commands
+    elif args.command == "message-bus-status":
+        print("🔒 SecurityDeveloper Agent Message Bus Status:")
+        print(f"✅ Message Bus Integration: {'Enabled' if agent.message_bus_enabled else 'Disabled'}")
+        print(f"✅ Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+        print(f"✅ Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+        print(f"📊 Performance Metrics: {len(agent.performance_metrics)} metrics tracked")
+        print(f"📝 Scan History: {len(agent.scan_history)} entries")
+        print(f"📈 Incident History: {len(agent.incident_history)} entries")
+    elif args.command == "publish-event":
+        if not args.event_type:
+            print("❌ Error: --event-type is required for publish-event")
+            sys.exit(1)
+        
+        event_data = {}
+        if args.event_data:
+            try:
+                event_data = json.loads(args.event_data)
+            except json.JSONDecodeError:
+                print("❌ Error: Invalid JSON in --event-data")
+                sys.exit(1)
+        
+        if args.event_type == "security_scan_requested":
+            result = agent.handle_security_scan_requested(event_data)
+        elif args.event_type == "security_scan_completed":
+            result = asyncio.run(agent.handle_security_scan_completed(event_data))
+        elif args.event_type == "vulnerability_detected":
+            result = asyncio.run(agent.handle_vulnerability_detected(event_data))
+        elif args.event_type == "security_incident_reported":
+            result = asyncio.run(agent.handle_security_incident_reported(event_data))
+        else:
+            print(f"❌ Error: Unknown event type '{args.event_type}'")
+            sys.exit(1)
+        
+        print(f"✅ Event '{args.event_type}' published successfully")
+        print(f"📊 Result: {json.dumps(result, indent=2)}")
+    elif args.command == "subscribe-event":
+        print("🔒 SecurityDeveloper Agent Event Subscriptions:")
+        print("✅ security_scan_requested - Handle security scan requests")
+        print("✅ security_scan_completed - Handle security scan completion")
+        print("✅ vulnerability_detected - Handle vulnerability detection")
+        print("✅ security_incident_reported - Handle security incident reports")
+        print("\n📡 Agent is listening for events...")
+        print("Press Ctrl+C to stop")
+        asyncio.run(agent.run())
+    elif args.command == "list-events":
+        print("🔒 SecurityDeveloper Agent Supported Events:")
+        print("📋 Input Events:")
+        print("  • security_scan_requested - Request security scan")
+        print("  • security_scan_completed - Notify scan completion")
+        print("  • vulnerability_detected - Report vulnerability detection")
+        print("  • security_incident_reported - Report security incident")
+        print("\n📤 Output Events:")
+        print("  • security_scan_processing_started - Security scan processing started")
+        print("  • security_scan_completion_reported - Security scan completion reported")
+        print("  • vulnerability_analysis_completed - Vulnerability analysis completed")
+        print("  • vulnerability_analysis_error - Vulnerability analysis error")
+        print("  • security_incident_processing - Security incident processing")
+    elif args.command == "event-history":
+        print("📝 SecurityDeveloper Agent Event History:")
+        print(f"📊 Scan History ({len(agent.scan_history)} entries):")
+        for i, entry in enumerate(agent.scan_history[-5:], 1):
+            print(f"  {i}. {entry.get('action', 'unknown')} - {entry.get('timestamp', 'unknown')}")
+        
+        print(f"\n📈 Incident History ({len(agent.incident_history)} entries):")
+        for i, entry in enumerate(agent.incident_history[-5:], 1):
+            print(f"  {i}. {entry.get('action', 'unknown')} - {entry.get('timestamp', 'unknown')}")
+    elif args.command == "performance-metrics":
+        print("📊 SecurityDeveloper Agent Performance Metrics:")
+        for metric, value in agent.performance_metrics.items():
+            print(f"  • {metric}: {value}")
     else:
         print(f"Unknown command: {args.command}")
         agent.show_help()

@@ -32,6 +32,12 @@ from bmad.core.mcp.enhanced_mcp_integration import (
     create_enhanced_mcp_integration
 )
 
+# Message Bus Integration
+from bmad.agents.core.communication.agent_message_bus_integration import (
+    AgentMessageBusIntegration,
+    create_agent_message_bus_integration
+)
+
 # Tracing Integration
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 from integrations.slack.slack_notify import send_slack_message
@@ -59,6 +65,10 @@ class TestEngineerAgent:
         # Tracing Integration
         self.tracer: Optional[BMADTracer] = None
         self.tracing_enabled = False
+        
+        # Message Bus Integration
+        self.message_bus_integration: Optional[AgentMessageBusIntegration] = None
+        self.message_bus_enabled = False
 
         self.agent_name = "TestEngineerAgent"
         self.monitor = get_performance_monitor()
@@ -83,6 +93,20 @@ class TestEngineerAgent:
             "changelog": self.resource_base / "data/testengineer/test-changelog.md",
             "test-history": self.resource_base / "data/testengineer/test-history.md",
             "coverage-history": self.resource_base / "data/testengineer/coverage-history.md"
+        }
+
+        # Performance metrics for quality-first implementation
+        self.performance_metrics = {
+            "total_test_requests": 0,
+            "total_tests_completed": 0,
+            "total_coverage_reports": 0,
+            "test_generation_success_rate": 0.0,
+            "average_test_execution_time": 0.0,
+            "coverage_percentage": 0.0,
+            "test_failure_rate": 0.0,
+            "total_test_generations": 0,
+            "successful_test_generations": 0,
+            "failed_test_generations": 0
         }
 
         # Initialize test history
@@ -124,24 +148,58 @@ class TestEngineerAgent:
     async def initialize_tracing(self):
         """Initialize tracing capabilities."""
         try:
-            self.tracer = BMADTracer(config=type("Config", (), {
-                "service_name": f"{self.agent_name}",
-                "environment": "development",
-                "tracing_level": "detailed"
-            })())
-            self.tracing_enabled = await self.tracer.initialize()
-            
-            if self.tracing_enabled:
-                logger.info("Tracing capabilities initialized successfully")
-                await self.tracer.setup_agent_specific_tracing({
+            if self.tracer and hasattr(self.tracer, 'initialize'):
+                await self.tracer.initialize()
+                self.tracing_enabled = True
+                logger.info("Tracing initialized successfully for TestEngineer")
+                # Set up test-specific tracing spans
+                await self.tracer.setup_test_tracing({
                     "agent_name": self.agent_name,
                     "tracing_level": "detailed",
+                    "test_tracking": True,
+                    "coverage_tracking": True,
                     "performance_tracking": True,
                     "error_tracking": True
                 })
+            else:
+                logger.warning("Tracing initialization failed, continuing without tracing")
+                
         except Exception as e:
-            logger.warning(f"Tracing initialization failed: {e}")
+            logger.warning(f"Tracing initialization failed for TestEngineer: {e}")
             self.tracing_enabled = False
+
+    async def initialize_message_bus_integration(self):
+        """Initialize Message Bus Integration for the agent."""
+        try:
+            self.message_bus_integration = create_agent_message_bus_integration(
+                agent_name=self.agent_name,
+                agent_instance=self
+            )
+            
+            # Register event handlers for test-specific events
+            await self.message_bus_integration.register_event_handler(
+                "tests_requested", 
+                self.handle_tests_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "test_generation_requested", 
+                self.handle_test_generation_requested
+            )
+            await self.message_bus_integration.register_event_handler(
+                "test_completed",
+                self.handle_test_completed
+            )
+            await self.message_bus_integration.register_event_handler(
+                "coverage_report_requested",
+                self.handle_coverage_report_requested
+            )
+            
+            self.message_bus_enabled = True
+            logger.info(f"✅ Message Bus Integration geïnitialiseerd voor {self.agent_name}")
+            return True
+        except Exception as e:
+            logger.error(f"❌ Fout bij initialiseren van Message Bus Integration voor {self.agent_name}: {e}")
+            return False
 
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -308,7 +366,16 @@ class TestEngineerAgent:
                     lines = content.split("\n")
                     for line in lines:
                         if line.strip().startswith("- "):
-                            self.test_history.append(line.strip()[2:])
+                            # Support both string and dictionary formats
+                            entry = line.strip()[2:]
+                            try:
+                                # Try to parse as JSON (dictionary)
+                                import json
+                                parsed_entry = json.loads(entry)
+                                self.test_history.append(parsed_entry)
+                            except (json.JSONDecodeError, ValueError):
+                                # Fall back to string format
+                                self.test_history.append(entry)
         except Exception as e:
             logger.warning(f"Could not load test history: {e}")
 
@@ -317,7 +384,12 @@ class TestEngineerAgent:
             self.data_paths["test-history"].parent.mkdir(parents=True, exist_ok=True)
             with open(self.data_paths["test-history"], "w") as f:
                 f.write("# Test History\n\n")
-                f.writelines(f"- {test}\n" for test in self.test_history[-50:])
+                for test in self.test_history[-50:]:
+                    if isinstance(test, dict):
+                        import json
+                        f.write(f"- {json.dumps(test)}\n")
+                    else:
+                        f.write(f"- {test}\n")
         except Exception as e:
             logger.error(f"Could not save test history: {e}")
 
@@ -329,7 +401,16 @@ class TestEngineerAgent:
                     lines = content.split("\n")
                     for line in lines:
                         if line.strip().startswith("- "):
-                            self.coverage_history.append(line.strip()[2:])
+                            # Support both string and dictionary formats
+                            entry = line.strip()[2:]
+                            try:
+                                # Try to parse as JSON (dictionary)
+                                import json
+                                parsed_entry = json.loads(entry)
+                                self.coverage_history.append(parsed_entry)
+                            except (json.JSONDecodeError, ValueError):
+                                # Fall back to string format
+                                self.coverage_history.append(entry)
         except Exception as e:
             logger.warning(f"Could not load coverage history: {e}")
 
@@ -338,7 +419,12 @@ class TestEngineerAgent:
             self.data_paths["coverage-history"].parent.mkdir(parents=True, exist_ok=True)
             with open(self.data_paths["coverage-history"], "w") as f:
                 f.write("# Coverage History\n\n")
-                f.writelines(f"- {cov}\n" for cov in self.coverage_history[-50:])
+                for cov in self.coverage_history[-50:]:
+                    if isinstance(cov, dict):
+                        import json
+                        f.write(f"- {json.dumps(cov)}\n")
+                    else:
+                        f.write(f"- {cov}\n")
         except Exception as e:
             logger.error(f"Could not save coverage history: {e}")
 
@@ -354,6 +440,26 @@ TestEngineer Agent Commands:
   export-report [format]  - Export last test report (md, json)
   test                    - Test resource completeness
   collaborate             - Demonstrate collaboration with other agents
+  enhanced-collaborate    - Enhanced collaboration with other agents
+  enhanced-security       - Enhanced security validation
+  enhanced-performance    - Enhanced performance optimization
+  trace-operation         - Trace test operation
+  trace-performance       - Trace performance
+  trace-error             - Trace error
+  tracing-summary         - Show tracing summary
+
+📡 Message Bus CLI Extension:
+  message-bus-status      - Show Message Bus integration status
+  publish-event           - Publish event to Message Bus
+  subscribe-event         - Subscribe to events
+  list-events             - List supported events
+  event-history           - Show event history
+  performance-metrics     - Show performance metrics
+
+📋 Usage Examples:
+  python testengineer.py publish-event --event-type tests_requested --event-data '{"test_type": "unit"}'
+  python testengineer.py message-bus-status
+  python testengineer.py event-history
         """
         print(help_text)
 
@@ -686,30 +792,257 @@ def test_{component_name.lower()}_e2e():
             print(f"❌ Error in collaboration: {e}")
 
     async def handle_tests_requested(self, event):
-        logger.info("[TestEngineer] Tests gestart...")
-        await self.run_tests()
-        publish("tests_completed", {"desc": "Tests voltooid"})
-        logger.info("[TestEngineer] Tests afgerond, tests_completed gepubliceerd.")
+        """Handle tests requested event with real functionality."""
+        try:
+            logger.info(f"Tests requested: {event}")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+            
+            # Log metric for tests requested
+            self.monitor.log_metric("tests_requested", {
+                "test_type": event.get("test_type", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update test history
+            test_entry = {
+                "action": "tests_requested",
+                "timestamp": datetime.now().isoformat(),
+                "test_type": event.get("test_type", "unknown"),
+                "status": "processing"
+            }
+            self.test_history.append(test_entry)
+            self._save_test_history()
+            
+            # Update performance metrics
+            if hasattr(self, 'performance_metrics'):
+                self.performance_metrics["total_test_requests"] = self.performance_metrics.get("total_test_requests", 0) + 1
+            
+            # Publish follow-up event via Message Bus Integration
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("tests_processing_started", {
+                        "test_type": event.get("test_type", "unknown"),
+                        "timestamp": datetime.now().isoformat(),
+                        "status": "processing"
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to publish tests_processing_started event: {e}")
+            
+            # Return None for consistency with other event handlers
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error in tests requested event handler: {e}")
+            return None
 
     async def handle_test_generation_requested(self, event):
-        logger.info(f"[TestEngineer] Test generation requested: {event}")
-        function_description = event.get("function_description", "Onbekende functie")
-        context = event.get("context", "")
-        prompt = f"Schrijf Python unittests voor de volgende functie: {function_description}. Context: {context}. Gebruik pytest."
-        
+        """Handle test generation requested event with real functionality."""
         try:
-            result = ask_openai(prompt)
-            logger.info(f"[TestEngineer][LLM Tests automatisch]: {result}")
-            try:
-                send_slack_message(f"[TestEngineer][LLM Tests automatisch]: {result}")
-            except Exception as e:
-                logger.warning(f"Could not send Slack notification: {e}")
-            return result
+            logger.info(f"Test generation requested: {event}")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                # Add history entry for validation error
+                error_entry = {
+                    "action": "test_generation_requested",
+                    "timestamp": datetime.now().isoformat(),
+                    "function_description": "invalid_event",
+                    "context": "invalid_event",
+                    "status": "error",
+                    "error": "Invalid event data: event must be a dictionary"
+                }
+                self.test_history.append(error_entry)
+                self._save_test_history()
+                return None
+            
+            # Log metric for test generation requested
+            self.monitor.log_metric("test_generation_requested", {
+                "function_description": event.get("function_description", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Generate actual test content
+            function_description = event.get("function_description", "")
+            context = event.get("context", "")
+            
+            if function_description and context:
+                # Use the existing generate_tests method
+                test_result = await self.generate_tests("GeneratedComponent", "unit")
+                generated_content = test_result.get("test_content", "No test content generated")
+                
+                # Update test history
+                test_entry = {
+                    "action": "test_generation_requested",
+                    "timestamp": datetime.now().isoformat(),
+                    "function_description": function_description,
+                    "context": context,
+                    "status": "completed",
+                    "test_content": generated_content[:100] + "..." if len(generated_content) > 100 else generated_content
+                }
+                self.test_history.append(test_entry)
+                self._save_test_history()
+                
+                # Publish follow-up event
+                if self.message_bus_integration:
+                    try:
+                        await self.message_bus_integration.publish_event("test_generation_completed", {
+                            "function_description": function_description,
+                            "context": context,
+                            "timestamp": datetime.now().isoformat(),
+                            "status": "completed"
+                        })
+                    except Exception as e:
+                        logger.warning(f"Failed to publish test_generation_completed event: {e}")
+                
+                # Return None for consistency with other event handlers
+                return None
+            else:
+                logger.error("Missing function_description or context")
+                # Add history entry for validation error
+                error_entry = {
+                    "action": "test_generation_requested",
+                    "timestamp": datetime.now().isoformat(),
+                    "function_description": function_description,
+                    "context": context,
+                    "status": "error",
+                    "error": "Missing function_description or context"
+                }
+                self.test_history.append(error_entry)
+                self._save_test_history()
+                return None
+                
         except Exception as e:
-            logger.error(f"Failed to generate tests with LLM: {e}")
-            error_result = f"Error generating tests: {e}"
-            logger.info(f"[TestEngineer][LLM Tests Error]: {error_result}")
-            return error_result
+            logger.error(f"Error in test generation event handler: {e}")
+            
+            # Update test history with error
+            error_entry = {
+                "action": "test_generation_requested",
+                "timestamp": datetime.now().isoformat(),
+                "function_description": event.get("function_description", ""),
+                "context": event.get("context", ""),
+                "status": "error",
+                "error": str(e)
+            }
+            self.test_history.append(error_entry)
+            self._save_test_history()
+            
+            # Publish error event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("test_generation_error", {
+                        "error": str(e),
+                        "timestamp": datetime.now().isoformat(),
+                        "status": "error"
+                    })
+                except Exception as publish_error:
+                    logger.warning(f"Failed to publish test_generation_error event: {publish_error}")
+            
+            # Return None for consistency with other event handlers
+            return None
+
+    async def handle_test_completed(self, event):
+        """Handle test completed event with real functionality."""
+        try:
+            logger.info(f"Test completed: {event}")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+            
+            # Log metric for test completed
+            self.monitor.log_metric("test_completed", {
+                "test_type": event.get("test_type", "unknown"),
+                "result": event.get("result", "unknown"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update test history
+            test_entry = {
+                "action": "test_completed",
+                "timestamp": datetime.now().isoformat(),
+                "test_type": event.get("test_type", "unknown"),
+                "result": event.get("result", "unknown"),
+                "status": "completed"
+            }
+            self.test_history.append(test_entry)
+            self._save_test_history()
+            
+            # Update performance metrics
+            if hasattr(self, 'performance_metrics'):
+                self.performance_metrics["total_tests_completed"] = self.performance_metrics.get("total_tests_completed", 0) + 1
+            
+            # Publish follow-up event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("test_completion_reported", {
+                        "test_type": event.get("test_type", "unknown"),
+                        "result": event.get("result", "unknown"),
+                        "timestamp": datetime.now().isoformat(),
+                        "status": "completed"
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to publish test_completion_reported event: {e}")
+            
+            # Return None for consistency with other event handlers
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error in test completed event handler: {e}")
+            return None
+
+    async def handle_coverage_report_requested(self, event):
+        """Handle coverage report requested event with real functionality."""
+        try:
+            logger.info(f"Coverage report requested: {event}")
+            
+            # Validate event data
+            if not isinstance(event, dict):
+                logger.error("Invalid event data: event must be a dictionary")
+                return None
+            
+            # Log metric for coverage report requested
+            self.monitor.log_metric("coverage_report_requested", {
+                "test_type": event.get("test_type", "all"),
+                "timestamp": datetime.now().isoformat()
+            })
+            
+            # Update coverage history
+            coverage_entry = {
+                "action": "coverage_report_requested",
+                "timestamp": datetime.now().isoformat(),
+                "test_type": event.get("test_type", "all"),
+                "status": "processing"
+            }
+            self.coverage_history.append(coverage_entry)
+            self._save_coverage_history()
+            
+            # Update performance metrics
+            if hasattr(self, 'performance_metrics'):
+                self.performance_metrics["total_coverage_reports"] = self.performance_metrics.get("total_coverage_reports", 0) + 1
+            
+            # Publish follow-up event
+            if self.message_bus_integration:
+                try:
+                    await self.message_bus_integration.publish_event("coverage_report_processing", {
+                        "test_type": event.get("test_type", "all"),
+                        "timestamp": datetime.now().isoformat(),
+                        "status": "processing"
+                    })
+                except Exception as e:
+                    logger.warning(f"Failed to publish coverage_report_processing event: {e}")
+            
+            # Return None for consistency with other event handlers
+            return None
+            
+        except Exception as e:
+            logger.error(f"Error in coverage report requested event handler: {e}")
+            return None
 
     async def run(self):
         """Main event loop for the agent met complete integration."""
@@ -721,6 +1054,9 @@ def test_{component_name.lower()}_e2e():
         
         # Initialize tracing capabilities
         await self.initialize_tracing()
+
+        # Initialize Message Bus Integration
+        await self.initialize_message_bus_integration()
         
         def sync_handler(event):
             asyncio.run(self.handle_test_generation_requested(event))
@@ -756,10 +1092,18 @@ def main():
                                "show-best-practices", "show-changelog", "export-report",
                                "test", "collaborate", "run",
                                "enhanced-collaborate", "enhanced-security", "enhanced-performance",
-                               "trace-operation", "trace-performance", "trace-error", "tracing-summary"])
+                               "trace-operation", "trace-performance", "trace-error", "tracing-summary",
+                               # Message Bus CLI Extension commands
+                               "message-bus-status", "publish-event", "subscribe-event",
+                               "list-events", "event-history", "performance-metrics"])
     parser.add_argument("--format", choices=["md", "json"], default="md", help="Export format")
+    parser.add_argument("--event-type", help="Event type for publish/subscribe")
+    parser.add_argument("--event-data", help="Event data as JSON string")
+    parser.add_argument("--component", help="Component name for test generation")
+    parser.add_argument("--test-type", choices=["unit", "integration", "e2e"], help="Test type")
     args = parser.parse_args()
     agent = TestEngineerAgent()
+    
     if args.command == "help":
         agent.show_help()
     elif args.command == "run-tests":
@@ -820,6 +1164,77 @@ def main():
     elif args.command == "tracing-summary":
         communication_summary = agent.enhanced_mcp.get_communication_summary()
         print(json.dumps(communication_summary, indent=2))
+    # Message Bus CLI Extension commands
+    elif args.command == "message-bus-status":
+        print("🎯 TestEngineer Agent Message Bus Status:")
+        print(f"✅ Message Bus Integration: {'Enabled' if agent.message_bus_enabled else 'Disabled'}")
+        print(f"✅ Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
+        print(f"✅ Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
+        print(f"📊 Performance Metrics: {len(agent.performance_metrics)} metrics tracked")
+        print(f"📝 Test History: {len(agent.test_history)} entries")
+        print(f"📈 Coverage History: {len(agent.coverage_history)} entries")
+    elif args.command == "publish-event":
+        if not args.event_type:
+            print("❌ Error: --event-type is required for publish-event")
+            sys.exit(1)
+        
+        event_data = {}
+        if args.event_data:
+            try:
+                event_data = json.loads(args.event_data)
+            except json.JSONDecodeError:
+                print("❌ Error: Invalid JSON in --event-data")
+                sys.exit(1)
+        
+        if args.event_type == "tests_requested":
+            result = asyncio.run(agent.handle_tests_requested(event_data))
+        elif args.event_type == "test_generation_requested":
+            result = asyncio.run(agent.handle_test_generation_requested(event_data))
+        elif args.event_type == "test_completed":
+            result = asyncio.run(agent.handle_test_completed(event_data))
+        elif args.event_type == "coverage_report_requested":
+            result = asyncio.run(agent.handle_coverage_report_requested(event_data))
+        else:
+            print(f"❌ Error: Unknown event type '{args.event_type}'")
+            sys.exit(1)
+        
+        print(f"✅ Event '{args.event_type}' published successfully")
+        print(f"📊 Result: {json.dumps(result, indent=2)}")
+    elif args.command == "subscribe-event":
+        print("🎯 TestEngineer Agent Event Subscriptions:")
+        print("✅ tests_requested - Handle test requests")
+        print("✅ test_generation_requested - Handle test generation requests")
+        print("✅ test_completed - Handle test completion notifications")
+        print("✅ coverage_report_requested - Handle coverage report requests")
+        print("\n📡 Agent is listening for events...")
+        print("Press Ctrl+C to stop")
+        asyncio.run(agent.run())
+    elif args.command == "list-events":
+        print("🎯 TestEngineer Agent Supported Events:")
+        print("📋 Input Events:")
+        print("  • tests_requested - Request test execution")
+        print("  • test_generation_requested - Request test generation")
+        print("  • test_completed - Notify test completion")
+        print("  • coverage_report_requested - Request coverage report")
+        print("\n📤 Output Events:")
+        print("  • tests_processing_started - Test processing started")
+        print("  • test_generation_completed - Test generation completed")
+        print("  • test_generation_error - Test generation error")
+        print("  • test_completion_reported - Test completion reported")
+        print("  • coverage_report_processing - Coverage report processing")
+    elif args.command == "event-history":
+        print("📝 TestEngineer Agent Event History:")
+        print(f"📊 Test History ({len(agent.test_history)} entries):")
+        for i, entry in enumerate(agent.test_history[-5:], 1):
+            print(f"  {i}. {entry.get('action', 'unknown')} - {entry.get('timestamp', 'unknown')}")
+        
+        print(f"\n📈 Coverage History ({len(agent.coverage_history)} entries):")
+        for i, entry in enumerate(agent.coverage_history[-5:], 1):
+            print(f"  {i}. {entry.get('action', 'unknown')} - {entry.get('timestamp', 'unknown')}")
+    elif args.command == "performance-metrics":
+        print("📊 TestEngineer Agent Performance Metrics:")
+        for metric, value in agent.performance_metrics.items():
+            print(f"  • {metric}: {value}")
     else:
         print("Unknown command. Use 'help' to see available commands.")
         sys.exit(1)

@@ -4,12 +4,12 @@
 
 Dit document beschrijft de verplichte test workflow voor alle nieuwe functionaliteit en uitbreidingen in het BMAD systeem. Het doel is om ervoor te zorgen dat alle code kwalitatief is geïmplementeerd en goed getest wordt.
 
-**Voor test strategie en filosofie, zie**: `TESTING_STRATEGY.md`  
+**Deze guide bevat complete test strategie en workflow implementatie**  
 **Voor quality assurance, zie**: `QUALITY_GUIDE.md`
 
 ## Test Pyramid Implementatie
 
-Volg de test pyramid strategie zoals beschreven in `TESTING_STRATEGY.md`:
+Volg de test pyramid strategie:
 
 ```
     🔺 E2E Tests (weinig, volledige workflows)
@@ -29,7 +29,7 @@ Volg de test pyramid strategie zoals beschreven in `TESTING_STRATEGY.md`:
 - [ ] **Analyse**: Root cause analysis uitvoeren voor bugs
 - [ ] **Planning**: Test strategie bepalen (unit, integration, e2e)
 - [ ] **Review**: Bestaande guide files raadplegen voor best practices
-- [ ] **Strategy Review**: Bekijk `TESTING_STRATEGY.md` voor test type keuze
+- [ ] **Strategy Review**: Gebruik Test Pyramid Strategy voor test type keuze
 
 ### Tijdens implementatie:
 
@@ -37,7 +37,7 @@ Volg de test pyramid strategie zoals beschreven in `TESTING_STRATEGY.md`:
 - [ ] **Integration Tests**: Schrijven voor API endpoints
 - [ ] **Mocking**: Gebruik AsyncMock voor async functies
 - [ ] **Validation**: Test edge cases en error scenarios
-- [ ] **Pragmatic Mocking**: Volg mocking strategie uit `TESTING_STRATEGY.md`
+- [ ] **Pragmatic Mocking**: Gebruik Test Pyramid mocking strategie
 
 ### Na implementatie:
 
@@ -511,7 +511,7 @@ Deze test workflow zorgt ervoor dat:
 
 ## Referenties
 
-- [TESTING_STRATEGY.md](./TESTING_STRATEGY.md) - Test strategie en filosofie
+- [AGENT_ENHANCEMENT_WORKFLOW.md](./AGENT_ENHANCEMENT_WORKFLOW.md) - Complete agent enhancement en testing workflow
 - [CLI_TESTING_COMPLETE_REPORT.md](../reports/CLI_TESTING_COMPLETE_REPORT.md) - CLI testing success case
 - [CLI_TEST_FAILURES_ANALYSIS.md](../reports/CLI_TEST_FAILURES_ANALYSIS.md) - Test failure analysis
 - [BMAD_MASTER_PLANNING.md](../deployment/BMAD_MASTER_PLANNING.md) - Master planning met test strategie 
@@ -613,3 +613,160 @@ def setup_method(self):
 **Document**: `docs/guides/TEST_WORKFLOW_GUIDE.md`  
 **Status**: ✅ **COMPLETE** - Pragmatische mocking strategie proven successful  
 **Last Update**: 2025-01-27 
+
+## Quality-First Test Implementation
+
+### **Test-Driven Quality Improvement** 🚀
+
+**Best Practice**: Gebruik tests om de kwaliteit van de implementatie te valideren, niet alleen om functionaliteit te testen.
+
+**Core Principles**:
+1. **Fix the Implementation, Not the Tests**: Als tests falen, analyseer wat ze verwachten en implementeer die functionaliteit
+2. **Quality Over Coverage**: Focus op echte functionaliteit, niet alleen test coverage
+3. **Real Functionality**: Implementeer echte functionaliteit in plaats van mock-only implementaties
+4. **Async Correctness**: Gebruik correcte async mocks voor async functies
+5. **Performance Tracking**: Test echte performance tracking en history management
+
+**Implementation Pattern**:
+```python
+# ✅ CORRECT: Quality-First Test Implementation
+@pytest.mark.asyncio
+async def test_message_bus_integration_config(self):
+    """Test Message Bus Integration configuration."""
+    agent = FrontendDeveloperAgent()
+    
+    with patch('bmad.agents.Agent.FrontendDeveloper.frontenddeveloper.create_agent_message_bus_integration') as mock_create:
+        mock_integration = MagicMock()
+        # QUALITY: Correct async mock voor async functie
+        async def async_register_handler(event_type, handler):
+            return True
+        mock_integration.register_event_handler = async_register_handler
+        mock_create.return_value = mock_integration
+        
+        await agent.initialize_message_bus_integration()
+        
+        # QUALITY: Test echte functionaliteit, niet alleen mock calls
+        assert agent.message_bus_enabled is True
+```
+
+**Quality Test Standards**:
+1. **Async Mock Correctness**: Gebruik `async def async_handler()` voor async functies
+2. **Real Functionality Testing**: Test echte functionaliteit, niet alleen mock calls
+3. **Performance Validation**: Test performance history updates
+4. **Component History Validation**: Test component history tracking
+5. **Event Publishing Validation**: Test inter-agent communication
+
+**Anti-Patterns to Avoid**:
+```python
+# ❌ BAD: Incorrect async mock
+mock_integration.register_event_handler = MagicMock()  # Werkt niet voor async
+
+# ❌ BAD: Test alleen mock calls
+assert mock_integration.register_event_handler.call_count == 5  # Test geen echte functionaliteit
+
+# ❌ BAD: Mock-only implementation
+def handle_event(self, event):
+    return {"status": "processed"}  # Geen echte functionaliteit
+```
+
+**Success Criteria**:
+- ✅ Tests valideren echte functionaliteit
+- ✅ Async functies zijn correct gemockt
+- ✅ Performance tracking wordt getest
+- ✅ Component history wordt gevalideerd
+- ✅ Inter-agent communication wordt getest 
+
+## Quality Gates voor Agent Testing
+
+### Minimum Kwaliteitseisen
+- **Test Coverage**: Minimum 80% test coverage voor nieuwe agent features
+- **Test Success Rate**: 100% target voor agent enhancement implementations  
+- **Performance Impact**: Maximum 10% performance degradation na enhancement
+- **Integration Success**: 100% integration success rate met Message Bus en MCP
+
+### Performance Metrics Monitoring
+- **Test Execution Time**: <30 seconden voor complete agent test suite
+- **MCP Initialization Time**: <5 seconden voor MCP client initialization
+- **Memory Usage**: Geen significante memory leaks tijdens test execution
+- **Event Handler Response Time**: <2 seconden voor event processing
+
+### Quality Indicators
+#### ✅ Excellent Quality
+- 100% test success rate
+- >90% code coverage  
+- 0 linting errors
+- Complete documentation
+- Proper async implementation
+- Graceful fallback mechanisms
+
+#### ⚠️ Good Quality  
+- >95% test success rate
+- >70% code coverage
+- <5 linting errors
+- Basic documentation
+- Functional async implementation
+
+#### ❌ Poor Quality
+- <90% test success rate
+- <70% code coverage
+- >10 linting errors
+- Missing documentation
+- Broken async implementation
+
+## Test Pyramid Strategy 
+
+### Test Distribution
+```
+    🔺 E2E Tests (weinig, volledige workflows)
+   🔺🔺 Integration Tests (gemiddeld, echte dependencies)  
+🔺🔺🔺 Unit Tests (veel, gemockt)
+```
+
+### Test Execution Strategy
+
+#### Development Workflow
+```bash
+# Dagelijks: Alleen unit tests (snelle feedback)
+pytest tests/unit/ -v
+
+# Voor commits: Unit + snelle integration tests
+pytest tests/unit/ tests/integration/ -m "not slow" -v
+
+# Voor releases: Alle tests
+pytest tests/ -v --run-integration
+```
+
+#### CI/CD Pipeline
+```yaml
+# Stage 1: Unit Tests (altijd)
+- name: Unit Tests
+  run: pytest tests/unit/ --cov=bmad
+
+# Stage 2: Integration Tests (op staging)
+- name: Integration Tests
+  run: pytest tests/integration/ --run-integration
+
+# Stage 3: E2E Tests (voor releases)
+- name: E2E Tests
+  run: pytest tests/e2e/ --run-e2e
+```
+
+### Unit Tests (Basis - 70% van alle tests)
+- **Doel**: Test individuele componenten in isolatie
+- **Snelheid**: Milliseconden per test
+- **Mocking**: Extensief gebruik van mocks voor dependencies
+- **Coverage**: >90% voor kritieke agent functionality
+
+### Integration Tests (Middenlaag - 20% van alle tests)
+- **Doel**: Test samenwerking tussen componenten
+- **Snelheid**: Seconden per test
+- **Dependencies**: Echte services (database, Message Bus)
+- **Coverage**: Kritieke agent workflows en Message Bus integratie
+
+### E2E Tests (Top - 10% van alle tests)
+- **Doel**: Test complete user journeys
+- **Snelheid**: Minuten per test
+- **Scope**: Volledige agent workflows met alle dependencies
+- **Wanneer**: Major releases, architectuur wijzigingen
+
+## Agent Enhancement Testing Pattern 
