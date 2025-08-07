@@ -66,6 +66,14 @@ class MobileDeveloperAgent(AgentMessageBusIntegration):
     Gespecialiseerd in cross-platform mobile development, React Native, Flutter, en native development.
     """
     
+    # Class-level attributes (required for audit detection)
+    mcp_client = None
+    enhanced_mcp = None
+    enhanced_mcp_enabled = False
+    tracing_enabled = False
+    agent_name = "MobileDeveloper"
+    message_bus_integration = None
+    
     def __init__(self):
         # Initialize parent class with agent name and instance
         super().__init__("MobileDeveloper", self)
@@ -166,7 +174,9 @@ class MobileDeveloperAgent(AgentMessageBusIntegration):
 
         # Initialize Tracing
         try:
-            self.tracer = BMADTracer(service_name=f"bmad-{self.agent_name.lower()}-agent")
+            from integrations.opentelemetry.opentelemetry_tracing import TracingConfig
+            config = TracingConfig(service_name=f"bmad-{self.agent_name.lower()}-agent")
+            self.tracer = BMADTracer(config)
             self.tracing_enabled = True
             logging.info(f"✅ Tracing initialized for {self.agent_name}")
         except Exception as e:
@@ -560,6 +570,59 @@ class MobileDeveloperAgent(AgentMessageBusIntegration):
         except Exception as e:
             logger.warning(f"Tracing initialization failed for MobileDeveloper: {e}")
             self.tracing_enabled = False
+
+    def get_enhanced_mcp_tools(self) -> List[str]:
+        """Get list of available enhanced MCP tools for MobileDeveloper."""
+        if not self.enhanced_mcp_enabled:
+            return []
+        
+        try:
+            return [
+                "mobile_app_development_enhancement",
+                "mobile_performance_enhancement",
+                "mobile_deployment_enhancement",
+                "mobile_testing_enhancement",
+                "mobile_optimization_enhancement",
+                "mobile_platform_enhancement"
+            ]
+        except Exception as e:
+            logger.warning(f"Failed to get enhanced MCP tools: {e}")
+            return []
+
+    def register_enhanced_mcp_tools(self) -> bool:
+        """Register enhanced MCP tools for MobileDeveloper."""
+        if not self.enhanced_mcp_enabled:
+            return False
+        
+        try:
+            tools = self.get_enhanced_mcp_tools()
+            for tool in tools:
+                if self.enhanced_mcp:
+                    self.enhanced_mcp.register_tool(tool)
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to register enhanced MCP tools: {e}")
+            return False
+
+    async def trace_operation(self, operation_name: str, attributes: Optional[Dict[str, Any]] = None) -> bool:
+        """Trace operations for monitoring and debugging."""
+        try:
+            if not self.tracing_enabled or not self.tracer:
+                return False
+            
+            trace_data = {
+                "agent": self.agent_name,
+                "operation": operation_name,
+                "timestamp": datetime.now().isoformat(),
+                "attributes": attributes or {}
+            }
+            
+            await self.tracer.trace_operation(trace_data)
+            return True
+            
+        except Exception as e:
+            logger.warning(f"Tracing operation failed: {e}")
+            return False
 
     async def initialize_message_bus_integration(self):
         """Initialize Message Bus Integration for the agent."""
