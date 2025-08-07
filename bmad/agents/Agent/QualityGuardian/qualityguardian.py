@@ -144,11 +144,11 @@ class QualityGuardianAgent(AgentMessageBusIntegration):
         # MCP Integration
         self.mcp_client: Optional[MCPClient] = None
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
-        self.mcp_enabled = False
+        self.mcp_enabled = True
         
         # Enhanced MCP Integration
         self.enhanced_mcp = None
-        self.enhanced_mcp_enabled = False
+        self.enhanced_mcp_enabled = True
         self.enhanced_mcp_client = None
         
         # Tracing Integration
@@ -157,12 +157,12 @@ class QualityGuardianAgent(AgentMessageBusIntegration):
         
         # Enhanced MCP Phase 2 attributes
         self.enhanced_mcp_integration: Optional[EnhancedMCPIntegration] = None
-        self.enhanced_mcp_enabled = False
+        self.enhanced_mcp_enabled = True
         self.tracing_enabled = False
         
         # Message Bus Integration
         self.message_bus_integration: Optional[AgentMessageBusIntegration] = None
-        self.message_bus_enabled = False
+        self.message_bus_enabled = True
         
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
     
@@ -430,6 +430,45 @@ class QualityGuardianAgent(AgentMessageBusIntegration):
         except Exception as e:
             logger.error(f"Failed to get tracing summary: {e}")
             return {}
+
+    async def get_message_bus_status(self) -> Dict[str, Any]:
+        """Get message bus status for QualityGuardian agent."""
+        return {
+            "agent": self.agent_name,
+            "message_bus_enabled": self.message_bus_enabled,
+            "enhanced_mcp_enabled": self.enhanced_mcp_enabled,
+            "tracing_enabled": self.tracing_enabled,
+            "total_quality_checks": len(self.quality_history),
+            "total_security_scans": len(self.security_history),
+            "total_performance_analyses": len(self.performance_history),
+            "quality_metrics": self.quality_metrics
+        }
+
+    async def get_supported_events(self) -> List[str]:
+        """Get list of supported events for QualityGuardian agent."""
+        return [
+            "quality_gate_check_requested",
+            "code_quality_analysis_requested", 
+            "security_scan_requested",
+            "performance_analysis_requested",
+            "standards_enforcement_requested",
+            "quality_report_generation_requested",
+            "test_completed",
+            "security_scan_completed",
+            "deployment_requested"
+        ]
+
+    async def get_event_history(self) -> List[Dict[str, Any]]:
+        """Get event history for QualityGuardian agent."""
+        history = []
+        history.extend(self.quality_history)
+        history.extend(self.security_history)
+        history.extend(self.performance_history)
+        return history[-10:]  # Return last 10 events
+
+    async def get_performance_metrics(self) -> Dict[str, Any]:
+        """Get performance metrics for QualityGuardian agent."""
+        return self.performance_metrics
 
     def _validate_input(self, value: Any, expected_type: type, param_name: str) -> None:
         """Validate input parameters with type checking."""
