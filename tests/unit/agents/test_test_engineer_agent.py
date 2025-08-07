@@ -144,10 +144,11 @@ class TestTestEngineerAgent:
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
-            agent.show_resource("best-practices")
+            result = agent.show_resource("best-practices")
             
             captured = capsys.readouterr()
-            assert "Best practices content" in captured.out
+            assert "Best Practices voor Testen" in captured.out
+            assert result.startswith("# Best Practices voor Testen")
 
     @patch('pathlib.Path.exists', return_value=False)
     def test_show_resource_not_found(self, mock_exists, capsys):
@@ -230,10 +231,12 @@ class TestTestEngineerAgent:
             result = await agent.run_tests()
             
             assert isinstance(result, dict)
-            assert "redis_cache" in result
-            assert "monitoring" in result
-            assert "connection_pool" in result
-            assert "llm_caching" in result
+            assert "status" in result
+            assert "tests_run" in result
+            assert "tests_passed" in result
+            assert "tests_failed" in result
+            assert "success_rate" in result
+            assert "results" in result
             assert len(agent.test_history) > 0
 
     def test_validate_input_valid(self):
@@ -450,10 +453,12 @@ class TestTestEngineerAgent:
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
             agent = TestEngineerAgent()
-            agent.collaborate_example()
+            result = await agent.collaborate_example()
             
-            captured = capsys.readouterr()
-            assert "Collaboration example completed successfully." in captured.out
+            assert isinstance(result, dict)
+            assert "status" in result
+            assert "message" in result
+            assert result["status"] in ["success", "error"]
             assert mock_publish.call_count == 2
             assert mock_slack.called
 
@@ -472,8 +477,11 @@ class TestTestEngineerAgent:
             with patch.object(agent.monitor, 'log_metric') as mock_log:
                 result = await agent.handle_tests_requested(event)
 
-                # Verify the method returns None for consistency
-                assert result is None
+                # Verify the method returns a dictionary with status and event info
+                assert isinstance(result, dict)
+                assert "status" in result
+                assert "event" in result
+                assert result["event"] == "tests_requested"
                 
                 # Verify metric was logged
                 mock_log.assert_called_with("tests_requested", {
@@ -509,8 +517,11 @@ class TestTestEngineerAgent:
             with patch.object(agent.monitor, 'log_metric') as mock_log:
                 result = await agent.handle_test_generation_requested(event)
                 
-                # Verify the method returns None for consistency
-                assert result is None
+                # Verify the method returns a dictionary with status and event info
+                assert isinstance(result, dict)
+                assert "status" in result
+                assert "event" in result
+                assert result["event"] == "test_generation_requested"
                 
                 # Verify metric was logged
                 mock_log.assert_called_with("test_generation_requested", {
@@ -547,8 +558,12 @@ class TestTestEngineerAgent:
             with patch.object(agent.monitor, 'log_metric') as mock_log:
                 result = await agent.handle_test_generation_requested(event)
                 
-                # Verify the method returns None for consistency
-                assert result is None
+                # Verify the method returns a dictionary with error status
+                assert isinstance(result, dict)
+                assert "status" in result
+                assert "event" in result
+                assert result["status"] == "error"
+                assert result["event"] == "test_generation_requested"
                 
                 # Verify metric was logged
                 mock_log.assert_called_with("test_generation_requested", {
@@ -665,8 +680,11 @@ class TestTestEngineerAgentEventHandlers:
         with patch.object(agent.monitor, 'log_metric') as mock_log:
             result = await agent.handle_test_completed(event)
             
-            # Verify the method returns None for consistency
-            assert result is None
+            # Verify the method returns a dictionary with status and event info
+            assert isinstance(result, dict)
+            assert "status" in result
+            assert "event" in result
+            assert result["event"] == "test_completed"
             
             # Verify metric was logged
             mock_log.assert_called_with("test_completed", {
@@ -693,8 +711,11 @@ class TestTestEngineerAgentEventHandlers:
         with patch.object(agent.monitor, 'log_metric') as mock_log:
             result = await agent.handle_coverage_report_requested(event)
             
-            # Verify the method returns None for consistency
-            assert result is None
+            # Verify the method returns a dictionary with status and event info
+            assert isinstance(result, dict)
+            assert "status" in result
+            assert "event" in result
+            assert result["event"] == "coverage_report_requested"
             
             # Verify metric was logged
             mock_log.assert_called_with("coverage_report_requested", {

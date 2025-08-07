@@ -345,6 +345,7 @@ def run_tests_for_agent(agent_name: str) -> Dict[str, Any]:
             f"test_{agent_name.lower()}.py",
             f"test_{agent_name.lower()}_agent.py",
             f"test_{agent_name.lower().replace('developer', '')}_agent.py",
+            f"test_{agent_name.lower().replace('engineer', '_engineer')}_agent.py",  # Special case for TestEngineer
             f"test_fullstack_developer_agent.py"  # Special case for FullstackDeveloper
         ]
         
