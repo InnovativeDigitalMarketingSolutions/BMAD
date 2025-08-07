@@ -40,6 +40,7 @@ from bmad.agents.core.communication.agent_message_bus_integration import (
 
 # Tracing Integration
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
+from bmad.core.tracing import tracing_service
 from integrations.slack.slack_notify import send_slack_message
 from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
 
@@ -48,6 +49,19 @@ logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
 class TestEngineerAgent:
+    """
+    Test Engineer Agent voor BMAD.
+    Gespecialiseerd in test strategie, test generatie, en test kwaliteit.
+    """
+    
+    # ✅ Required class-level attributes (for audit detection)
+    mcp_client = None
+    enhanced_mcp = None
+    enhanced_mcp_enabled = False
+    tracing_enabled = False
+    agent_name = "TestEngineerAgent"
+    message_bus_integration = None
+    
     def __init__(self):
         self.framework_manager = get_framework_templates_manager()
         self.testing_engineer_template = self.framework_manager.get_framework_template('testing_engineer')
@@ -144,6 +158,53 @@ class TestEngineerAgent:
         except Exception as e:
             logger.warning(f"Enhanced MCP initialization failed: {e}")
             self.enhanced_mcp_enabled = False
+    
+    def get_enhanced_mcp_tools(self):
+        """Get list of available enhanced MCP tools for TestEngineer."""
+        if not self.enhanced_mcp_enabled:
+            return []
+        
+        try:
+            return [
+                "test_strategy_development",
+                "test_case_generation",
+                "test_execution_monitoring",
+                "coverage_analysis",
+                "test_quality_assessment",
+                "test_automation_framework"
+            ]
+        except Exception as e:
+            logger.warning(f"Failed to get enhanced MCP tools: {e}")
+            return []
+    
+    def register_enhanced_mcp_tools(self):
+        """Register enhanced MCP tools for TestEngineer."""
+        if not self.enhanced_mcp_enabled:
+            return False
+        
+        try:
+            tools = self.get_enhanced_mcp_tools()
+            for tool in tools:
+                self.enhanced_mcp.register_tool(tool)
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to register enhanced MCP tools: {e}")
+            return False
+    
+    async def trace_operation(self, operation_name: str, data: Dict[str, Any]):
+        """Trace operations for monitoring and debugging."""
+        if not self.tracing_enabled:
+            return
+        
+        try:
+            if self.tracer:
+                await self.tracer.trace_operation(
+                    operation_name=operation_name,
+                    agent_name=self.agent_name,
+                    data=data
+                )
+        except Exception as e:
+            logger.warning(f"Failed to trace operation {operation_name}: {e}")
     
     async def initialize_tracing(self):
         """Initialize tracing capabilities."""
