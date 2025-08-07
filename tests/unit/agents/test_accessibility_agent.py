@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import patch, mock_open, MagicMock
+from unittest.mock import patch, mock_open, MagicMock, AsyncMock
 from datetime import datetime
 import json
 import csv
@@ -266,20 +266,22 @@ class TestAccessibilityAgent:
             agent.test_shadcn_component("")
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
-    def test_validate_aria(self, mock_monitor, agent):
+    @pytest.mark.asyncio
+    async def test_validate_aria(self, mock_monitor, agent):
         """Test validate_aria method."""
         mock_monitor_instance = MagicMock()
         mock_monitor.return_value = mock_monitor_instance
         
-        result = agent.validate_aria("test code")
-        assert "overall_score" in result
-        assert "aria_issues" in result
+        result = await agent.validate_aria("test code")
+        
+        assert result["validation_type"] == "ARIA attributes"
+        assert result["overall_score"] > 0
 
     @pytest.mark.asyncio
     async def test_validate_aria_invalid_input(self, agent):
         """Test validate_aria with invalid input."""
         with pytest.raises(AccessibilityValidationError):
-            agent.validate_aria(123)
+            await agent.validate_aria(123)
 
     @patch('bmad.agents.core.agent.agent_performance_monitor.get_performance_monitor')
     def test_test_screen_reader(self, mock_monitor, agent):
@@ -397,15 +399,44 @@ class TestAccessibilityAgent:
     async def test_handle_audit_requested(self, agent):
         """Test handle_audit_requested method."""
         event = {"target": "test page"}
-        await agent.handle_audit_requested(event)
+        
+        with patch.object(agent.monitor, 'log_metric') as mock_log, \
+             patch.object(agent, 'run_accessibility_audit') as mock_audit:
+            result = await agent.handle_audit_requested(event)
+            
+            # Verify the method returns None for consistency
+            assert result is None
+            
+            # Verify metric was logged
+            mock_log.assert_called_with("audit_requested", {
+                "target": "test page",
+                "timestamp": mock_log.call_args[0][1]["timestamp"]
+            })
+            
+            # Verify audit was called
+            mock_audit.assert_called_once_with("test page")
 
     @patch('bmad.agents.core.policy.advanced_policy_engine.AdvancedPolicyEngine.evaluate_policy')
-    def test_handle_audit_completed(self, mock_evaluate_policy, agent):
+    @pytest.mark.asyncio
+    async def test_handle_audit_completed(self, mock_evaluate_policy, agent):
         """Test handle_audit_completed method."""
         event = {"audit_result": "test"}
         mock_evaluate_policy.return_value = True
-        import asyncio
-        asyncio.run(agent.handle_audit_completed(event))
+        
+        with patch.object(agent.monitor, 'log_metric') as mock_log:
+            result = await agent.handle_audit_completed(event)
+            
+            # Verify the method returns None for consistency
+            assert result is None
+            
+            # Verify metric was logged
+            mock_log.assert_called_with("audit_completed", {
+                "audit_result": "test",
+                "timestamp": mock_log.call_args[0][1]["timestamp"]
+            })
+            
+            # Verify policy evaluation was called
+            mock_evaluate_policy.assert_called_once()
 
     @pytest.mark.asyncio
     async def test_run(self, agent):
@@ -429,7 +460,7 @@ class TestAccessibilityAgent:
     
         # Test complete workflow
         component_result = agent.test_shadcn_component("Button")  # Sync method
-        aria_result = agent.validate_aria("test code")  # Sync method
+        aria_result = await agent.validate_aria("test code")  # Async method
         audit_result = await agent.run_accessibility_audit("/mock/page")  # Async method
     
         assert component_result["accessibility_score"] > 0
@@ -451,3 +482,57 @@ class TestAccessibilityAgent:
         error = AccessibilityValidationError("Test error")
         assert isinstance(error, AccessibilityError)
         assert isinstance(error, Exception) 
+
+    @pytest.mark.asyncio
+    async def test_handle_validation_requested(self, agent):
+        """Test handle_validation_requested method."""
+        event = {"request_id": "test-123", "component_code": "test code"}
+        
+        with patch.object(agent.monitor, 'log_metric') as mock_log, \
+             patch.object(agent, 'validate_aria', new_callable=AsyncMock) as mock_validate, \
+             patch.object(agent, '_save_audit_history') as mock_save:
+            mock_validate.return_value = {"overall_score": 85}
+            
+            result = await agent.handle_validation_requested(event)
+            
+            # Verify the method returns None for consistency
+            assert result is None
+            
+            # Verify metric was logged
+            mock_log.assert_called_with("validation_requested", {
+                "request_id": "test-123",
+                "timestamp": mock_log.call_args[0][1]["timestamp"]
+            })
+            
+            # Verify validation was called
+            mock_validate.assert_called_once_with("test code")
+            
+            # Verify audit history was saved
+            mock_save.assert_called_once()
+
+    @pytest.mark.asyncio
+    async def test_handle_improvement_requested(self, agent):
+        """Test handle_improvement_requested method."""
+        event = {"request_id": "test-456"}
+        
+        with patch.object(agent.monitor, 'log_metric') as mock_log, \
+             patch.object(agent, 'generate_improvement_report') as mock_report, \
+             patch.object(agent, '_save_audit_history') as mock_save:
+            mock_report.return_value = {"recommendations": ["test"]}
+            
+            result = await agent.handle_improvement_requested(event)
+            
+            # Verify the method returns None for consistency
+            assert result is None
+            
+            # Verify metric was logged
+            mock_log.assert_called_with("improvement_requested", {
+                "request_id": "test-456",
+                "timestamp": mock_log.call_args[0][1]["timestamp"]
+            })
+            
+            # Verify report was generated
+            mock_report.assert_called_once()
+            
+            # Verify audit history was saved
+            mock_save.assert_called_once() 
