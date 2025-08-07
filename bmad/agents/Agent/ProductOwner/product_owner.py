@@ -11,7 +11,7 @@ import sys
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Optional, Union
+from typing import Any, Dict, List, Optional, Union
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../..")))
 from dotenv import load_dotenv
@@ -55,6 +55,14 @@ class ProductOwnerAgent(AgentMessageBusIntegration):
     Product Owner Agent voor BMAD.
     Gespecialiseerd in product management, user stories, en product vision.
     """
+    
+    # ✅ Required class-level attributes (for audit detection)
+    mcp_client = None
+    enhanced_mcp = None
+    enhanced_mcp_enabled = False
+    tracing_enabled = False
+    agent_name = "ProductOwner"
+    message_bus_integration = None
     
     def __init__(self):
         super().__init__("ProductOwner")
@@ -731,12 +739,68 @@ class ProductOwnerAgent(AgentMessageBusIntegration):
             self.enhanced_mcp_enabled = await self.enhanced_mcp.initialize_enhanced_mcp()
             
             if self.enhanced_mcp_enabled:
+                self.mcp_client = self.enhanced_mcp.mcp_client if self.enhanced_mcp else None
                 logging.info("Enhanced MCP capabilities initialized successfully")
             else:
                 logging.warning("Enhanced MCP initialization failed, falling back to standard MCP")
         except Exception as e:
             logging.warning(f"Enhanced MCP initialization failed: {e}")
             self.enhanced_mcp_enabled = False
+    
+    def get_enhanced_mcp_tools(self) -> List[str]:
+        """Get list of available enhanced MCP tools for this agent."""
+        if not self.enhanced_mcp_enabled:
+            return []
+        
+        try:
+            return [
+                "user_story_creation",
+                "product_vision_generation",
+                "backlog_management",
+                "stakeholder_analysis",
+                "market_research",
+                "feature_roadmap_planning",
+                "product_quality_assessment",
+                "user_feedback_analysis"
+            ]
+        except Exception as e:
+            logging.warning(f"Failed to get enhanced MCP tools: {e}")
+            return []
+    
+    def register_enhanced_mcp_tools(self) -> bool:
+        """Register enhanced MCP tools for this agent."""
+        if not self.enhanced_mcp_enabled:
+            return False
+        
+        try:
+            tools = self.get_enhanced_mcp_tools()
+            for tool in tools:
+                if self.enhanced_mcp:
+                    self.enhanced_mcp.register_tool(tool)
+            return True
+        except Exception as e:
+            logging.warning(f"Failed to register enhanced MCP tools: {e}")
+            return False
+    
+    async def trace_operation(self, operation_name: str, attributes: Optional[Dict[str, Any]] = None) -> bool:
+        """Trace operations for monitoring and debugging."""
+        try:
+            if not self.tracing_enabled or not self.tracer:
+                return False
+            
+            trace_data = {
+                "agent": self.agent_name,
+                "operation": operation_name,
+                "timestamp": datetime.now().isoformat(),
+                "attributes": attributes or {}
+            }
+            
+            await self.tracer.trace_operation(trace_data)
+            return True
+            
+        except Exception as e:
+            logging.warning(f"Tracing operation failed: {e}")
+            return False
     
     async def initialize_tracing(self):
         """Initialize tracing capabilities."""
