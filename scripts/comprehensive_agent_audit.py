@@ -113,7 +113,7 @@ def check_documentation_completeness(agent_file: Path) -> Dict[str, Any]:
 def check_resource_availability(agent_file: Path) -> Dict[str, Any]:
     """Check if agent has required resources."""
     agent_name = agent_file.parent.name
-    resource_dir = project_root / "bmad" / "agents" / "resources"
+    resource_dir = project_root / "bmad" / "resources"
     
     # Check for YAML configuration
     yaml_file = agent_file.parent / f"{agent_name.lower()}.yaml"
@@ -123,12 +123,108 @@ def check_resource_availability(agent_file: Path) -> Dict[str, Any]:
     md_file = agent_file.parent / f"{agent_name.lower()}.md"
     has_md = md_file.exists()
     
-    # Check for templates
-    template_dir = resource_dir / "templates" / agent_name.lower()
+    # Check for templates - handle special cases for agent names
+    template_name = agent_name.lower()
+    if template_name == "aideveloper":
+        template_name = "ai"
+    elif template_name == "backenddeveloper":
+        template_name = "backenddeveloper"
+    elif template_name == "frontenddeveloper":
+        template_name = "frontenddeveloper"
+    elif template_name == "fullstackdeveloper":
+        template_name = "fullstackdeveloper"
+    elif template_name == "mobiledeveloper":
+        template_name = "mobiledeveloper"
+    elif template_name == "dataengineer":
+        template_name = "dataengineer"
+    elif template_name == "testengineer":
+        template_name = "testengineer"
+    elif template_name == "securitydeveloper":
+        template_name = "securitydeveloper"
+    elif template_name == "uxuidesigner":
+        template_name = "uxuidesigner"
+    elif template_name == "accessibilityagent":
+        template_name = "accessibilityagent"
+    elif template_name == "documentationagent":
+        template_name = "documentationagent"
+    elif template_name == "feedbackagent":
+        template_name = "feedbackagent"
+    elif template_name == "qualityguardian":
+        template_name = "qualityguardian"
+    elif template_name == "workflowautomator":
+        template_name = "workflowautomator"
+    elif template_name == "orchestrator":
+        template_name = "orchestrator"
+    elif template_name == "rnd":
+        template_name = "rnd"
+    elif template_name == "retrospective":
+        template_name = "retrospective"
+    elif template_name == "releasemanager":
+        template_name = "releasemanager"
+    elif template_name == "devopsinfra":
+        template_name = "devopsinfra"
+    elif template_name == "scrummaster":
+        template_name = "scrummaster"
+    elif template_name == "strategiepartner":
+        template_name = "strategiepartner"
+    elif template_name == "architect":
+        template_name = "architect"
+    elif template_name == "productowner":
+        template_name = "productowner"
+    
+    template_dir = resource_dir / "templates" / template_name
     has_templates = template_dir.exists() and any(template_dir.iterdir())
     
-    # Check for data files
-    data_dir = resource_dir / "data" / agent_name.lower()
+    # Check for data files - handle special cases for agent names
+    data_name = agent_name.lower()
+    if data_name == "aideveloper":
+        data_name = "ai"
+    elif data_name == "backenddeveloper":
+        data_name = "backenddeveloper"
+    elif data_name == "frontenddeveloper":
+        data_name = "frontenddeveloper"
+    elif data_name == "fullstackdeveloper":
+        data_name = "fullstackdeveloper"
+    elif data_name == "mobiledeveloper":
+        data_name = "mobiledeveloper"
+    elif data_name == "dataengineer":
+        data_name = "dataengineer"
+    elif data_name == "testengineer":
+        data_name = "testengineer"
+    elif data_name == "securitydeveloper":
+        data_name = "securitydeveloper"
+    elif data_name == "uxuidesigner":
+        data_name = "uxuidesigner"
+    elif data_name == "accessibilityagent":
+        data_name = "accessibilityagent"
+    elif data_name == "documentationagent":
+        data_name = "documentationagent"
+    elif data_name == "feedbackagent":
+        data_name = "feedbackagent"
+    elif data_name == "qualityguardian":
+        data_name = "qualityguardian"
+    elif data_name == "workflowautomator":
+        data_name = "workflowautomator"
+    elif data_name == "orchestrator":
+        data_name = "orchestrator"
+    elif data_name == "rnd":
+        data_name = "rnd"
+    elif data_name == "retrospective":
+        data_name = "retrospective"
+    elif data_name == "releasemanager":
+        data_name = "releasemanager"
+    elif data_name == "devopsinfra":
+        data_name = "devopsinfra"
+    elif data_name == "scrummaster":
+        data_name = "scrummaster"
+    elif data_name == "strategiepartner":
+        data_name = "strategiepartner"
+    elif data_name == "architect":
+        data_name = "architect"
+    elif data_name == "productowner":
+        data_name = "productowner"
+    
+    data_dir = resource_dir / "data" / data_name
     has_data = data_dir.exists() and any(data_dir.iterdir())
     
     return {

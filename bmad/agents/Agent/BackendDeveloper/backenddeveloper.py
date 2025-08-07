@@ -44,6 +44,18 @@ from bmad.core.mcp.enhanced_mcp_integration import (
     create_enhanced_mcp_integration
 )
 
+# Tracing Integration
+from bmad.core.tracing import (
+    TracingService,
+    get_tracing_service
+)
+
+# Message Bus Integration
+from bmad.core.message_bus import (
+    MessageBus,
+    get_message_bus
+)
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
@@ -71,6 +83,21 @@ class BackendDeveloperAgent(AgentMessageBusIntegration):
     message_bus_integration = None
     
     def __init__(self):
+        """
+        Initialize the BackendDeveloperAgent with all required components.
+        
+        Sets up:
+        - Parent class initialization
+        - Framework templates manager
+        - Performance monitoring
+        - Policy engine
+        - Sprite library
+        - MCP client and enhanced MCP
+        - Tracing capabilities
+        - Resource paths and data files
+        - Performance metrics
+        - Message bus integration
+        """
         # Initialize parent class
         super().__init__("BackendDeveloper", self)
         

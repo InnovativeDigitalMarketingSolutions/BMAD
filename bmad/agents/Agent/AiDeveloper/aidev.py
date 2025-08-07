@@ -45,6 +45,18 @@ from bmad.core.mcp.enhanced_mcp_integration import (
 )
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 
+# Tracing Integration
+from bmad.core.tracing import (
+    TracingService,
+    get_tracing_service
+)
+
+# Message Bus Integration
+from bmad.core.message_bus import (
+    MessageBus,
+    get_message_bus
+)
+
 # Message Bus Integration
 from bmad.agents.core.communication.agent_message_bus_integration import (
     AgentMessageBusIntegration,
@@ -78,6 +90,7 @@ class AiDeveloperAgent(AgentMessageBusIntegration):
     message_bus_integration = None
     
     def __init__(self):
+        """Initialize the AiDeveloperAgent with all required components."""
         # Initialize parent class with agent name and instance
         super().__init__("AiDeveloper", self)
         
@@ -714,6 +727,7 @@ class AiDeveloperAgent(AgentMessageBusIntegration):
             logger.error(f"Could not save model history: {e}")
 
     def show_help(self):
+        """Display help information for the AiDeveloper agent."""
         help_text = """
 AiDeveloper Agent Commands:
   help                    - Show this help message
@@ -942,6 +956,7 @@ Message Bus Integration Commands:
         print("\n" + "=" * 50)
 
     def show_experiment_history(self):
+        """Display the experiment history for AI models."""
         if not self.experiment_history:
             print("No experiment history available.")
             return
@@ -951,6 +966,7 @@ Message Bus Integration Commands:
             print(f"{i}. {exp}")
 
     def show_model_history(self):
+        """Display the model history for AI models."""
         if not self.model_history:
             print("No model history available.")
             return
@@ -1057,6 +1073,7 @@ Message Bus Integration Commands:
             print(f"Error saving report: {e}")
 
     def test_resource_completeness(self):
+        """Test the completeness of AI development resources."""
         print("Testing resource completeness...")
         missing_resources = []
 
@@ -1199,6 +1216,7 @@ Message Bus Integration Commands:
 
     async def run(self):
         def sync_handler(event):
+            """Synchronous event handler for AI development events."""
             asyncio.run(self.handle_ai_development_completed(event))
 
         subscribe("ai_development_completed", sync_handler)
@@ -1413,6 +1431,7 @@ Message Bus Integration Commands:
             }
 
     def vector_search(self):
+        """Perform vector search operations for AI models."""
         print(
             textwrap.dedent(
                 """
@@ -1425,6 +1444,7 @@ Message Bus Integration Commands:
         )
 
     def ai_endpoint(self):
+        """Create and manage AI endpoints."""
         print(
             textwrap.dedent(
                 """
@@ -1490,6 +1510,7 @@ Message Bus Integration Commands:
             }
 
     def experiment_log(self):
+        """Log AI experiments and results."""
         print(
             textwrap.dedent(
                 """
@@ -1503,6 +1524,7 @@ Message Bus Integration Commands:
         )
 
     def monitoring(self):
+        """Monitor AI model performance and metrics."""
         print(
             textwrap.dedent(
                 """
@@ -1515,6 +1537,7 @@ Message Bus Integration Commands:
         )
 
     def doc(self):
+        """Generate documentation for AI models and experiments."""
         print(
             textwrap.dedent(
                 """
@@ -1528,6 +1551,7 @@ Message Bus Integration Commands:
         )
 
     def review(self):
+        """Review AI models and experiments."""
         print(
             textwrap.dedent(
                 """
@@ -1541,6 +1565,7 @@ Message Bus Integration Commands:
         )
 
     def blockers(self):
+        """Identify and handle AI development blockers."""
         print(
             textwrap.dedent(
                 """
@@ -1552,6 +1577,7 @@ Message Bus Integration Commands:
         )
 
     def build_etl_pipeline(self):
+        """Build ETL pipelines for AI data processing."""
         print(
             textwrap.dedent(
                 """
@@ -1583,6 +1609,7 @@ Message Bus Integration Commands:
         )
 
     def deploy_model(self):
+        """Deploy AI models to production."""
         print(
             textwrap.dedent(
                 """
@@ -1596,6 +1623,7 @@ Message Bus Integration Commands:
         )
 
     def version_model(self):
+        """Version control AI models."""
         print(
             textwrap.dedent(
                 """
@@ -1611,6 +1639,7 @@ Message Bus Integration Commands:
         )
 
     def auto_evaluate(self):
+        """Automatically evaluate AI model performance."""
         print(
             textwrap.dedent(
                 """
@@ -1624,6 +1653,7 @@ Message Bus Integration Commands:
         )
 
     def bias_check(self):
+        """Check AI models for bias and fairness."""
         print(
             textwrap.dedent(
                 """
@@ -1636,6 +1666,7 @@ Message Bus Integration Commands:
         )
 
     def explain(self):
+        """Generate explanations for AI model predictions."""
         print(
             textwrap.dedent(
                 """
@@ -1649,6 +1680,7 @@ Message Bus Integration Commands:
         )
 
     def model_card(self):
+        """Generate model cards for AI models."""
         print(
             textwrap.dedent(
                 """
@@ -1663,6 +1695,7 @@ Message Bus Integration Commands:
         )
 
     def prompt_eval(self):
+        """Evaluate prompt performance and quality."""
         print(
             textwrap.dedent(
                 """
@@ -1676,6 +1709,7 @@ Message Bus Integration Commands:
         )
 
     def retrain(self):
+        """Retrain AI models with new data."""
         print(
             textwrap.dedent(
                 """
