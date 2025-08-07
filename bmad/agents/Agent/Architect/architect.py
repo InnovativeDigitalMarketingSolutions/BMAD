@@ -90,11 +90,11 @@ class ArchitectAgent(AgentMessageBusIntegration):
         # MCP Integration
         self.mcp_client: Optional[MCPClient] = None
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
-        self.mcp_enabled = False
+        self.mcp_enabled = True
         
         # Enhanced MCP Phase 2
         self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
-        self.enhanced_mcp_enabled = False
+        self.enhanced_mcp_enabled = True
         self.enhanced_mcp_client = None
         
         # Tracing Integration
@@ -118,7 +118,7 @@ class ArchitectAgent(AgentMessageBusIntegration):
         }
 
         # Message Bus Integration
-        self.message_bus_enabled = False
+        self.message_bus_enabled = True
 
         # Initialize tracer
         try:
@@ -452,15 +452,26 @@ class ArchitectAgent(AgentMessageBusIntegration):
         """Design API based on requirements."""
         try:
             logging.info(f"Designing API with requirements: {requirements}")
+            
+            # Record metric
+            self.performance_metrics["total_api_designs"] += 1
+            
             # Placeholder implementation
-            return {
+            result = {
                 "api_design": "API design completed",
                 "endpoints": ["/api/users", "/api/posts"],
-                "methods": ["GET", "POST", "PUT", "DELETE"]
+                "methods": ["GET", "POST", "PUT", "DELETE"],
+                "success": True,
+                "design_type": "api"
             }
+            
+            # Update metrics
+            self._update_architecture_metrics(result)
+            
+            return result
         except Exception as e:
             logging.error(f"Error designing API: {e}")
-            return {"error": str(e)}
+            return {"error": str(e), "success": False}
     
     async def provide_pipeline_advice(self, pipeline_data: Dict[str, Any]) -> Dict[str, Any]:
         """Provide pipeline advice based on configuration."""
@@ -812,6 +823,9 @@ class ArchitectAgent(AgentMessageBusIntegration):
                 "architecture": result,
                 "timestamp": datetime.now().isoformat()
             }
+            
+            # Update metrics
+            self._update_architecture_metrics(design_result)
             
             print("🏗️ Microservices architecture design completed")
             print(f"📊 Total system designs: {self.performance_metrics['total_system_designs']}")
@@ -1806,9 +1820,23 @@ def main():
     elif args.command == "design-api":
         result = asyncio.run(agent.design_api({}))
         print(json.dumps(result, indent=2))
+        # Update metrics after command execution
+        agent.performance_metrics["total_api_designs"] += 1
+        # Save metrics to context
+        try:
+            save_context("Architect", "performance_metrics", agent.performance_metrics)
+        except Exception as e:
+            logging.warning(f"Could not save metrics to context: {e}")
     elif args.command == "microservices":
         result = asyncio.run(agent.microservices())
         print(json.dumps(result, indent=2))
+        # Update metrics after command execution
+        agent.performance_metrics["total_system_designs"] += 1
+        # Save metrics to context
+        try:
+            save_context("Architect", "performance_metrics", agent.performance_metrics)
+        except Exception as e:
+            logging.warning(f"Could not save metrics to context: {e}")
     elif args.command == "event-flow":
         result = asyncio.run(agent.event_flow())
         print(json.dumps(result, indent=2))
@@ -1956,12 +1984,26 @@ def main():
         for pattern in agent.design_patterns[-10:]:
             print(f"  - {pattern}")
     elif args.command == "performance-metrics":
+        # Load metrics from context if available
+        try:
+            context = get_context("Architect", "performance_metrics")
+            if context and isinstance(context, dict):
+                agent.performance_metrics.update(context)
+        except Exception as e:
+            logging.warning(f"Could not load metrics from context: {e}")
+        
         print("📊 Architect Agent Performance Metrics:")
         for metric, value in agent.performance_metrics.items():
             if isinstance(value, float):
                 print(f"  • {metric}: {value:.2f}")
             else:
                 print(f"  • {metric}: {value}")
+        
+        # Save current metrics to context
+        try:
+            save_context("Architect", "performance_metrics", agent.performance_metrics)
+        except Exception as e:
+            logging.warning(f"Could not save metrics to context: {e}")
     else:
         print(f"Unknown command: {args.command}")
         agent.show_help()

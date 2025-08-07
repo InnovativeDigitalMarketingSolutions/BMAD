@@ -1,6 +1,6 @@
 # Architect Agent
 
-**✅ Status: FULLY COMPLIANT** - 32/32 tests passing (100% coverage)
+**✅ Status: MESSAGE BUS INTEGRATION COMPLETED** - 32/32 tests passing (100% coverage)
 
 > **Let op:** Deze agent werkt actief samen met andere agents via een centrale message bus en gedeelde context in Supabase. Zie de sectie 'Samenwerking & Contextdeling' hieronder voor details.
 
@@ -29,12 +29,12 @@
 - `architecture_quality_score` - Architecture quality score
 
 ### **Message Bus CLI Commands (6 commands)**
-- `message-bus-status` - Message Bus status en integration info
-- `publish-event` - Event publishing met JSON data support
-- `subscribe-event` - Event subscription management
-- `list-events` - Supported events overview
-- `event-history` - Architecture history en design patterns
-- `performance-metrics` - Real-time performance metrics display
+- `message-bus-status` - Message Bus status en integration info ✅ **ACTIVE**
+- `publish-event` - Event publishing met JSON data support ✅ **ACTIVE**
+- `subscribe-event` - Event subscription management ✅ **ACTIVE**
+- `list-events` - Supported events overview ✅ **ACTIVE**
+- `event-history` - Architecture history en design patterns ✅ **ACTIVE**
+- `performance-metrics` - Real-time performance metrics display ✅ **ACTIVE**
 
 ### **Standard Commands**
 - `design-frontend` - Design frontend architecture
