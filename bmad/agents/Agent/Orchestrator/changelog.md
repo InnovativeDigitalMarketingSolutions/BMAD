@@ -71,3 +71,19 @@ Hier houdt de Orchestrator Agent agent zijn eigen wijzigingen, beslissingen en l
 - **Async Patterns**: Consistente async/await implementatie in alle methodes
 - **Test Quality**: Kwalitatieve tests die echte functionaliteit verifiëren
 - **Documentation**: Volledige documentatie updates met nieuwe test resultaten 
+
+## [2025-08-08] Completeness 1.0 – Wrapper, MCP tools, Tracing en Subscriptions
+
+### Added
+- `get_enhanced_mcp_tools` en `register_enhanced_mcp_tools` toegevoegd
+- `subscribe_to_event(event_type, callback)` passthrough (via integration; fallback core) toegevoegd
+- Tracing-initialisatie verbeterd: veilige creatie van `BMADTracer` met `initialize()`
+
+### Changed
+- Workflow-publicaties in `start_workflow` via `publish_agent_event(...)` (wrapper‑contract, consistente payload)
+
+### Tests
+- Integratietests groen (5/5)
+
+### Impact
+- Agent is volledig wrapper‑compliant en voldoet aan de Agent Completeness Prevention Strategy (score 1.0) 
