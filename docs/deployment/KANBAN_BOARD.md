@@ -40,6 +40,15 @@ For detailed analysis of AI integration possibilities, system objectives verific
   - [ ] Architect: idem
   - [ ] Orchestrator: idem
 
+##### P0 Fixes (API & Tests) — Toegevoegd
+- [x] Fix tests die `flask` global mocketen (veroorzaakte `ModuleNotFoundError: 'flask' is not a package`)
+  - Aanpassing: opt-in via env `MOCK_FLASK_FOR_TESTS` in `tests/unit/core/test_api_security.py`
+- [x] DEV_MODE: schakel rate limiting uit in dev, en lever consistente metrics payload
+  - `/api/metrics` levert `BMADMetrics`-vorm; extra `/api/metrics-lite` zonder auth/limiting voor dev
+- [x] Vite proxy naar backend 5003 en frontend fetch naar relative `/api/*`
+- [ ] P1: Rate limit headers in responses (X-RateLimit-*) consistent configureren buiten DEV
+- [ ] P1: Security headers verifiëren op alle endpoints met echte client i.p.v. mocks
+
 #### Wave 2 (P1): Reliability, Contracttests & Config (Backlog)
 - [ ] Contracttests EventTypes + Hypothesis property-based tests
 - [ ] Resilience policies (retries, circuit breaker, bulkheads)
