@@ -6,6 +6,7 @@ For detailed analysis of AI integration possibilities, system objectives verific
 ## 🎯 **Current Sprint: System Stabilization & AI Integration**
 
 > Let op: Hoofdlijnen voor AI Integration staan hieronder bij "AI Integration Implementation". De volledige, gedetailleerde roadmap vind je onderaan in "AI-Integration & Enhancement Opportunities".
+> Best practices per taakcluster: zie `docs/guides/BEST_PRACTICES_GUIDE.md` (sectie "Sprint 2025-08-09 — Best Practices per taakcluster").
 
 ### ✅ **COMPLETED TASKS**
 
@@ -14,6 +15,7 @@ For detailed analysis of AI integration possibilities, system objectives verific
 ### 🔄 **IN PROGRESS TASKS**
 
 #### Wave 1 (P0): Core Quality Gates & Event Foundations
+(Referentie: Best Practices → P0: Core Quality Gates & Event Foundations)
 - [ ] CI/Pre-commit gates: black/ruff (of flake8), mypy, pytest -q
   - [ ] Voeg wrapper-check toe aan CI (fail on direct publish)
   - [ ] Voeg schema-checks, safety/pip-audit, gitleaks, SBOM (CycloneDX) toe
@@ -50,23 +52,27 @@ For detailed analysis of AI integration possibilities, system objectives verific
 - [ ] P1: Security headers verifiëren op alle endpoints met echte client i.p.v. mocks
 
 #### Wave 2 (P1): Reliability, Contracttests & Config (Backlog)
+(Referentie: Best Practices → Wave 2: Reliability, Contracttests & Config)
 - [ ] Contracttests EventTypes + Hypothesis property-based tests
 - [ ] Resilience policies (retries, circuit breaker, bulkheads)
 - [ ] Config/secrets via pydantic Settings
 - [ ] Healthchecks & metrics per agent
 
 #### Wave 3 (P1–P2): Transports, E2E en Security Scans (Backlog)
+(Referentie: Best Practices → Wave 3: Transports, E2E & Security Scans)
 - [ ] Pluggable transports (in-memory → Redis; Kafka optioneel)
 - [ ] E2E cross-agent workflows (3 scenario’s)
 - [ ] Security scans (gitleaks, safety/pip-audit, SBOM, Trivy)
 - [ ] ADR’s events/transports/tracing/resilience
 
 #### Wave 4 (P2): AI Guardrails & Evaluatieharnas (Backlog)
+(Referentie: Best Practices → Wave 4: AI Guardrails & Evaluatie)
 - [ ] Prompt library + guardrails
 - [ ] Offline eval sets + cost/latency dashboards
 - [ ] Fallback- en canary-modellen
 
 #### **🚨 CRITICAL SYSTEM STABILIZATION (Priority 0)** 🔄
+(Referentie: Best Practices → P0: Critical Integration Fixes)
 **Status**: Ready to start - Critical fixes required before AI integration
 **Workflow**: [System Stabilization Workflow](../guides/SYSTEM_STABILIZATION_WORKFLOW.md)
 

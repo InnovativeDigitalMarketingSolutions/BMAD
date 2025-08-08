@@ -3621,3 +3621,83 @@ self.tracing_enabled = True
 - ❌ Direct `publish(...)` in agents → gebruik wrapper (`publish_agent_event`) of `message_bus_integration`
 - ❌ Sync wrappers voor async methodes → await direct; gebruik `asyncio.to_thread` voor sync fallbacks
 - ❌ Await op tracer met sync API → gebruik adapter of call sync shutdown buiten await
+
+## 🧠 Sprint 2025-08-09 — Best Practices per taakcluster
+
+### P0: Core Quality Gates & Event Foundations
+- CI/Pre-commit
+  - Gebruik pre-commit met: ruff/black, mypy (strict), pytest -q, safety/pip-audit, gitleaks, CycloneDX SBOM
+  - Voeg wrapper-enforcement toe: blokkeer directe `publish(` via `scripts/check_no_direct_publish.py`
+- Event schemas (contract-first)
+  - Definieer Pydantic modellen per kern-event (Completed/Failed varianten), versieer ze (v1/v2)
+  - Valideer in `publish_agent_event` wrapper, en voeg property-based tests (Hypothesis) toe
+- Tracing/Correlation
+  - Standaardiseer `correlation_id` ↔ trace-id; voeg `request_id` toe aan payloads
+  - Gebruik `BMADTracer` via async adapter; markeer errors met error-span en status
+
+### P0: Critical Integration Fixes (Tests & Infra)
+- Test collection stabiliteit
+  - Root `conftest.py` zet projectroot/`tests` op `sys.path`; `pytest.ini` gebruikt `[pytest]` en `testpaths = tests`
+  - Isoleer microservices tests uit core run; maak per-service `pytest.ini`
+- Dependencies
+  - Gebruik `dev-requirements.txt` met gepinde versies; zet `.venv` op in CI
+  - Minimaliseer global mocking; gebruik `patch`/`AsyncMock` gericht
+
+### Agent Completeness Implementation (alle agents)
+- Interface
+  - Class-level attributes: `mcp_client`, `enhanced_mcp`, `enhanced_mcp_enabled`, `tracing_enabled`, `agent_name`, `message_bus_integration`, `message_bus_enabled`
+  - Methods: `initialize_enhanced_mcp`, `get_enhanced_mcp_tools`, `register_enhanced_mcp_tools`, `trace_operation`, `subscribe_to_event`
+- Message Bus
+  - Publiceer uitsluitend via `await self.publish_agent_event(...)`; payload minimaal `status` en domeinspecifieke sleutel; optioneel `request_id`
+- Testing & Docs
+  - Voeg success/failure pad tests toe; mock wrapper; update changelog/.md/overview/Kanban in dezelfde PR
+
+### Wave 2: Reliability, Contracttests & Config
+- Resilience
+  - Timeouts, retries met exponential backoff (tenacity), circuit breaker, bulkhead (bounded semaphores)
+  - Idempotency keys voor herhaalde requests; dead-letter queue strategie documenteren
+- Config
+  - Pydantic `BaseSettings` voor env; 12-factor config; secrets via env/secret manager
+
+### Wave 3: Transports, E2E & Security Scans
+- Transports
+  - Pluggable transport-interface; default in-memory; optioneel Redis/Kafka; contracttests per transport
+- E2E & Security
+  - E2E scenario's met data seeding/cleanup; security scans in CI: gitleaks, safety/pip-audit, Trivy, SBOM
+  - CSP/security headers baseline, dependency pinning
+
+### Wave 4: AI Guardrails & Evaluatie
+- Prompts/Guardrails
+  - Prompt library met tests; input/output validators; PII redaction waar nodig
+- Evaluatieharnas
+  - Offline eval sets; latency/cost dashboards; canary/fallback modellen
+
+### Microservices Infrastructure
+- Docker/Kubernetes
+  - Multi-stage builds, non-root, read-only FS, health endpoints; K8s readiness/liveness, resource limits/requests
+- Observability
+  - OpenTelemetry tracing, Prometheus metrics, structured logging (JSON); dashboards en alerts per service
+
+### Security & Monitoring
+- Security
+  - OWASP Top 10 mitigations; RBAC; audit logging; TLS everywhere; key management; secrets rotation
+- Monitoring
+  - SLO/SLI definities; alert rules (burn-rate); incident runbooks; log retentie/pseudonymisatie
+
+### Integration & Performance Testing
+- Integratie
+  - Markeer met `@pytest.mark.integration`; externe sleutels via env; apart CI-stage; geen network in unit CI
+- Performance
+  - Locust/k6 met SLAs; budgetten per endpoint/agent; caching/N+1 eliminatie; DB indexing en pool tuning
+
+### Documentatie & Quality Gates
+- DoR/DoD per taakcluster
+  - DoR: ontwerp + testplan + security review; DoD: tests groen, docs bij, Kanban/overview up-to-date
+- Quality gates
+  - Linting=0 errors, coverage ≥ 70% (kritisch ≥ 90%), alle wrappers/contracttests OK, geen directe `publish(`
+
+### Deployment & Production Readiness
+- Deployment
+  - Blue/green of canary; rollback procedures; infra-as-code; backups/restore testen
+- Readiness checklist
+  - Health/metrics/logging/tracing/security headers/ratelimiting/alerts gedekt; disaster recovery gedocumenteerd
