@@ -13,10 +13,30 @@ For detailed analysis of AI integration possibilities, system objectives verific
 
 #### Wave 1 (P0): Core Quality Gates & Event Foundations
 - [ ] CI/Pre-commit gates: black/ruff (of flake8), mypy, pytest -q
+  - [ ] Voeg wrapper-check toe aan CI (fail on direct publish)
+  - [ ] Voeg schema-checks, safety/pip-audit, gitleaks, SBOM (CycloneDX) toe
 - [ ] Wrapper-enforcement in CI: `scripts/check_no_direct_publish.py`
 - [ ] Event schema’s (pydantic) voor kern-EventTypes (Completed/Failed)
+  - [ ] Definieer pydantic modellen per kern‑event (API_DESIGN_COMPLETED/FAILED, SPRINT_STARTED/COMPLETED, BACKLOG_UPDATED, QUALITY_GATE_* …)
+  - [ ] Contracttests genereren per eventtype
+  - [ ] Integratie in wrapper voor runtime‑validatie
 - [ ] Tracing/Correlation standaard in wrapper (correlation_id ↔ trace-id)
 - [ ] Wrapper-compliance 100% (alle agents)
+  - [ ] ProductOwner: directe publish → `await self.publish_agent_event(...)`
+  - [ ] SecurityDeveloper: idem
+  - [ ] TestEngineer: idem
+  - [ ] FullstackDeveloper: idem
+  - [ ] FrontendDeveloper: idem
+  - [ ] QualityGuardian: idem
+  - [ ] MobileDeveloper: idem
+  - [ ] FeedbackAgent: idem
+  - [ ] Retrospective: idem
+  - [ ] DocumentationAgent: idem
+  - [ ] RnD: idem
+  - [ ] UXUIDesigner: idem
+  - [ ] ReleaseManager: idem
+  - [ ] Architect: idem
+  - [ ] Orchestrator: idem
 
 #### Wave 2 (P1): Reliability, Contracttests & Config (Backlog)
 - [ ] Contracttests EventTypes + Hypothesis property-based tests
