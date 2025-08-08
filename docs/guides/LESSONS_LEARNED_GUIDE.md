@@ -4296,3 +4296,46 @@ def _load_pipeline_history(self):
   - Agents geharmoniseerd: ArchitectAgent (gereviewd en aangepast)
   - Te harmoniseren: overige agents met directe `publish(...)` calls
 - Teststrategie: Tests mocken `publish_agent_event` en asserten op standaardvelden i.p.v. op interne bus-implementatie.
+
+## 🔄 2025-08-09 Updates — Tracing Adapter & Test Infrastructure
+
+### Tracing Adapter for BMADTracer (Async Compatibility)
+- Lesson: BMADTracer init is sync en heeft geen async initialize/shutdown; voor consistente async tests een adapter gebruiken
+- Pattern:
+```python
+class AgentTracerAdapter:
+    def __init__(self, underlying: BMADTracer):
+        self._t = underlying
+    async def initialize(self):
+        return None
+    async def shutdown(self):
+        self._t.shutdown()
+    def __getattr__(self, k):
+        return getattr(self._t, k)
+```
+- Apply: Agents die direct `BMADTracer(...)` instantiëren, wrappen met `AgentTracerAdapter`
+- Benefit: Async test teardown gebruikt `await tracer.shutdown()` zonder type errors; uniforme tracer API
+
+### Standard Tracing Initialization
+- Import: `from integrations.opentelemetry.opentelemetry_tracing import TracingConfig, BMADTracer, ExporterType`
+- Config:
+```python
+cfg = TracingConfig(service_name=f"bmad-{self.agent_name.lower()}-agent", exporters=[ExporterType.CONSOLE])
+self.tracer = AgentTracerAdapter(BMADTracer(cfg))
+self.tracing_enabled = True
+```
+
+### Test Infrastructure Baseline
+- Root `conftest.py` voegt projectroot en `tests/` aan `sys.path` toe
+- `.venv` gebruiken met dev-deps (requests, aiohttp, psutil, click, Flask, flask-cors, PyJWT, PyYAML, fastapi, httpx, uvicorn)
+- `pytest.ini` header `[pytest]`, `testpaths = tests`
+- Microservices tests isoleren van core runs of eigen pytest config
+
+### Completeness Detection (Audit) — Class-Level Attributes
+- Vereist op class-niveau: `mcp_client`, `enhanced_mcp`, `enhanced_mcp_enabled`, `tracing_enabled`, `agent_name`, `message_bus_integration`
+- Architect update: class-level attrs toegevoegd; audit score +0.15 → 0.77
+
+### Deprecated/To Avoid (verouderd)
+- ❌ Direct `publish(...)` in agents → Gebruik wrapper `publish_agent_event` / message_bus_integration
+- ❌ Sync wrappers voor reeds async methodes → await direct; gebruik `asyncio.to_thread` alleen voor sync fallbacks
+- ❌ Tracer direct awaited calls (initialize/shutdown) → gebruik adapter of sync calls extern
