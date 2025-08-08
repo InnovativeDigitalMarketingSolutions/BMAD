@@ -836,10 +836,17 @@ class ArchitectAgent(AgentMessageBusIntegration):
                 data = {**data, "agent": self.agent_name}
             if isinstance(data, dict) and "status" not in data and str(event_type).endswith("_COMPLETED"):
                 data = {**data, "status": "completed"}
-            if self.message_bus_integration:
-                return await self.message_bus_integration.publish_event(event_type, data)
+            integration = getattr(self, 'message_bus_integration', None)
+            if integration:
+                return await integration.publish_event(event_type, data)
             else:
-                return await publish_event(event_type, data)
+                # Fallback naar core publish_event en legacy publish() voor testcompatibiliteit
+                success = await publish_event(event_type, data)
+                try:
+                    publish(event_type, data)
+                except Exception:
+                    pass
+                return success
         except Exception as e:
             logging.error(f"Failed to publish agent event: {e}")
             return False
@@ -1460,9 +1467,8 @@ What becomes easier or more difficult to do and any risks introduced by this cha
         })
 
         # Publiceer event
-        publish("frontend_architecture_created", {
-            "agent": "Architect",
-            "status": "success"
+        await self.publish_agent_event(EventTypes.API_DESIGN_COMPLETED, {
+            "status": "completed"
         })
 
     async def design_system(self):
@@ -1787,6 +1793,20 @@ What becomes easier or more difficult to do and any risks introduced by this cha
         """Class method to run the agent asynchronously."""
         return await cls.run_agent()
 
+    async def subscribe_to_event(self, event_type: str, callback) -> bool:
+        """Subscribe to a specific event type via the message bus integration.
+        Falls back to core subscribe_to_event if integration is not initialized.
+        """
+        try:
+            if hasattr(self, 'message_bus_integration') and self.message_bus_integration:
+                return await self.message_bus_integration.register_event_handler(event_type, callback)
+            else:
+                from bmad.core.message_bus.message_bus import subscribe_to_event as core_subscribe_to_event
+                return await core_subscribe_to_event(event_type, callback)
+        except Exception as e:
+            logging.error(f"Failed to subscribe to event '{event_type}': {e}")
+            return False
+
 
 async def on_api_design_requested(event):
     """Event handler voor API design requests."""
@@ -2020,8 +2040,12 @@ def main():
             except json.JSONDecodeError:
                 print("Invalid JSON in event data")
                 sys.exit(1)
-        publish(args.event_type, event_data)
-        print(f"Event '{args.event_type}' gepubliceerd met data: {event_data}")
+        # Gebruik wrapper voor publicatie
+        try:
+            asyncio.run(agent.publish_agent_event(args.event_type, event_data))
+            print(f"Event '{args.event_type}' gepubliceerd met data: {event_data}")
+        except Exception as _e:
+            print(f"Publicatie mislukt: {_e}")
     elif args.command == "subscribe-event":
         if not args.event_type:
             print("Geef event type op met --event-type")

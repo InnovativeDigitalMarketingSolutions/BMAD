@@ -318,3 +318,8 @@ De Architect Agent genereert output in verschillende formaten:
 - **Design Patterns**: Gedeelde design patterns en best practices
 - **Performance Metrics**: Gedeelde performance data en quality scores
 - **Technical Specifications**: Gedeelde technische specificaties en requirements
+
+**Wrapper & Subscriptions**
+- Events publiceren via `publish_agent_event(event_type, data)` met minimaal `status` en `agent`
+- CLI `publish-event` gebruikt nu intern de wrapper (consistente payload)
+- `subscribe_to_event(event_type, callback)` beschikbaar (passthrough naar Message Bus)

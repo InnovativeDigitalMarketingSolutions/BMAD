@@ -1,18 +1,17 @@
 {
   "events": [
     {
-      "event_type": "component_build_requested",
+      "event_type": "api_design_completed",
       "data": {
-        "agent": "FrontendDeveloperAgent",
-        "component_name": "Button",
-        "timestamp": "2025-08-08T20:06:54.221053"
+        "status": "completed",
+        "agent": "Architect"
       },
       "source_agent": "unknown",
-      "timestamp": "2025-08-08T20:06:54.227106",
-      "event_id": "component_build_requested_1754676414.227115",
+      "timestamp": "2025-08-08T20:24:09.160363",
+      "event_id": "api_design_completed_1754677449.160366",
       "correlation_id": null
     }
   ],
-  "last_updated": "2025-08-08T20:06:54.228184",
+  "last_updated": "2025-08-08T20:24:09.162418",
   "total_events": 1
 }
