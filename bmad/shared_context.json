@@ -1,61 +1,6 @@
 {
   "events": [
     {
-      "event_type": "component_build_requested",
+      "event_type": "market_analyzed",
       "data": {
-        "status": "in_progress",
-        "design_type": "mobile",
-        "component_name": "Button",
-        "timestamp": "2025-08-08T14:51:45.044558",
-        "agent": "UXUIDesigner"
-      },
-      "source_agent": "UXUIDesigner",
-      "timestamp": "2025-08-08T14:51:45.046349",
-      "event_id": "component_build_requested_1754657505.046352",
-      "correlation_id": null
-    },
-    {
-      "event_type": "component_build_completed",
-      "data": {
-        "status": "completed",
-        "design_id": "test_design",
-        "design_type": "component",
-        "timestamp": "2025-08-08T14:51:45.050311",
-        "success": true,
-        "agent": "UXUIDesigner"
-      },
-      "source_agent": "UXUIDesigner",
-      "timestamp": "2025-08-08T14:51:45.050318",
-      "event_id": "component_build_completed_1754657505.050318",
-      "correlation_id": null
-    },
-    {
-      "event_type": "component_build_requested",
-      "data": {
-        "status": "started",
-        "task": "Create Shadcn Button Component",
-        "timestamp": "2025-08-08T14:51:45.057806",
-        "agent": "UXUIDesigner"
-      },
-      "source_agent": "UXUIDesigner",
-      "timestamp": "2025-08-08T14:51:45.057869",
-      "event_id": "component_build_requested_1754657505.05787",
-      "correlation_id": null
-    },
-    {
-      "event_type": "component_build_completed",
-      "data": {
-        "status": "completed",
-        "component": "Button",
-        "accessibility_score": 98,
-        "agent": "UXUIDesigner"
-      },
-      "source_agent": "UXUIDesigner",
-      "timestamp": "2025-08-08T14:51:46.065123",
-      "event_id": "component_build_completed_1754657506.065126",
-      "correlation_id": null
-    }
-  ],
-  "last_updated": "2025-08-08T14:51:46.066325",
-  "total_events": 4
-}
+        "status": 
