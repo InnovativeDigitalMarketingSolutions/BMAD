@@ -74,6 +74,15 @@ class ArchitectAgent(AgentMessageBusIntegration):
     Architect Agent voor BMAD.
     Gespecialiseerd in software architectuur, API design, en system design.
     """
+    # Standardized class-level attributes for completeness checks
+    mcp_client: Optional[MCPClient] = None
+    enhanced_mcp: Optional[Any] = None
+    enhanced_mcp_enabled: bool = False
+    tracing_enabled: bool = False
+    agent_name: str = "Architect"
+    message_bus_integration: Optional[Any] = None
+    message_bus_enabled: bool = False
+    tracer: Optional[Any] = None
     
     def __init__(self):
         super().__init__("Architect")

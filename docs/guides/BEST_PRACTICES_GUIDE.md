@@ -3583,3 +3583,41 @@ Rationale:
 - Uniforme metadata-injectie (agent_name, timestamp)
 - Eenvoudiger tracing en correlatie
 - Duidelijke, voorspelbare payloads voor consumers en tests
+
+## 🔄 2025-08-09 Updates — Tracing & Test Infrastructure
+
+### Tracing Adapter Pattern
+- Gebruik een async-compatibele adapter rond `BMADTracer` voor uniforme APIs in tests:
+```python
+class AgentTracerAdapter:
+    def __init__(self, underlying: BMADTracer):
+        self._t = underlying
+    async def initialize(self):
+        return None
+    async def shutdown(self):
+        self._t.shutdown()
+    def __getattr__(self, k):
+        return getattr(self._t, k)
+```
+- Tracing init:
+```python
+from integrations.opentelemetry.opentelemetry_tracing import TracingConfig, BMADTracer, ExporterType
+cfg = TracingConfig(service_name=f"bmad-{self.agent_name.lower()}-agent", exporters=[ExporterType.CONSOLE])
+self.tracer = AgentTracerAdapter(BMADTracer(cfg))
+self.tracing_enabled = True
+```
+
+### Test Infrastructure Baseline
+- Root `conftest.py`: voeg projectroot en `tests/` toe aan `sys.path`
+- `.venv` met dev dependencies (requests, aiohttp, psutil, click, Flask, flask-cors, PyJWT, PyYAML, fastapi, httpx, uvicorn)
+- `pytest.ini` header `[pytest]`, `testpaths = tests`
+- Isoleer microservices tests van core runs of gebruik per-service pytest config
+
+### Completeness Audit Detectie
+- Class-level vereiste attributen: `mcp_client`, `enhanced_mcp`, `enhanced_mcp_enabled`, `tracing_enabled`, `agent_name`, `message_bus_integration`
+- Consistent implementeren om audit-detectie te garanderen
+
+### Avoid/Deprecated
+- ❌ Direct `publish(...)` in agents → gebruik wrapper (`publish_agent_event`) of `message_bus_integration`
+- ❌ Sync wrappers voor async methodes → await direct; gebruik `asyncio.to_thread` voor sync fallbacks
+- ❌ Await op tracer met sync API → gebruik adapter of call sync shutdown buiten await
