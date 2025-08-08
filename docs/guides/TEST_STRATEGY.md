@@ -105,6 +105,8 @@ tests/
 ### 4.2 Conventies
 - Async: `@pytest.mark.asyncio`; gebruik `AsyncMock` voor async methods
 - Wrapper: mock `publish_agent_event`; payloads controleren op `status` + domeinsleutel + optioneel `request_id`
+- CLI: sync entrypoints gebruiken `asyncio.run(...)` om async paden aan te roepen; in tests mock je dit waar nodig
+- Pragmatische mocking: gebruik `patch.object` voor complexe dependencies
 - Determinisme: vaste seeds; tijd/UUID mocken waar nodig
 - Skip/xfail: alleen met motivatie + ticket; minimaliseer flakiness (retries beperkt)
 - Rapportage: Allure/pytest‑HTML; artefacten per CI‑run bewaren
@@ -157,3 +159,19 @@ python tests/ai_eval/run_subset.py --agent ProductOwner --limit 20
 - CI‑pipeline groen inclusief security scans en SBOM
 
 Deze strategie is bindend voor alle agents, core modules en integraties, en wordt periodiek herzien op basis van lessons learned en productierisico’s. 
+
+## 9. Microservices teststructuur (aanvulling)
+
+```
+microservices/{service-name}/
+├── tests/
+│   ├── unit/
+│   │   └── test_{module_name}.py
+│   ├── integration/
+│   │   └── test_api_endpoints.py
+│   └── performance/
+│       └── test_load.py
+└── test_{service_name}.py
+```
+
+Deze sectie sluit aan bij bestaande workflow‑guides en vervangt oudere, overlapende strategieteksten in workflow‑documenten. 
