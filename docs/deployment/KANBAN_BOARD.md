@@ -82,6 +82,16 @@ For detailed analysis of AI integration possibilities, system objectives verific
 - [ ] **Enable Tracing Integration** - Set `tracing_enabled = True` for all 23 agents
 - [ ] **Fix Pytest Configuration** - Add missing pytest marks and resolve warnings
 
+**Sprint Test Fixes – Executed & Planned (this sprint)**
+- [x] Normalize pytest config header to `[pytest]` (was `[tool:pytest]`) en set `testpaths = tests`
+- [x] Voeg root `conftest.py` toe die projectroot/`tests` aan `sys.path` toevoegt
+- [x] Voeg ontbrekende `__init__.py` toe aan alle testmappen (incl. microservices testdirs)
+- [x] Zet `.venv` op en installeer missende testdeps (requests, aiohttp, psutil, click, Flask, flask-cors, PyJWT, PyYAML, fastapi, httpx, uvicorn)
+- [x] AiDeveloper tracing: introduceer async-compatibele `AgentTracerAdapter` voor `BMADTracer` en herstel `initialize_tracing`
+- [ ] Repliceer tracer-adapter waar agents direct `BMADTracer(...)` gebruiken (inventarisatie + aanpassing)
+- [ ] Voeg `dev-requirements.txt` toe met gepinde versies; update CI om `.venv` te gebruiken
+- [ ] CI: focus-runs per suite (-k per agent/module) en uitsluiten microservices-suites uit core run
+
 **0.2 Test Infrastructure Stabilization** ✅ **COMPLETED**
 - [x] **Fix Import Errors** - Resolve `ModuleNotFoundError` in test files ✅ **COMPLETED**
 - [x] **Fix Test Class Constructors** - Resolve test collection warnings ✅ **COMPLETED**
