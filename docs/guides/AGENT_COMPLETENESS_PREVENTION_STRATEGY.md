@@ -174,6 +174,12 @@ def verify_agent_implementation(agent_class):
             f"Missing methods: {missing_methods}"
         )
     
+    # Extra: Message bus contract
+    if hasattr(agent_class, 'publish_agent_event'):
+        pass  # presence is voldoende; inhoud valideren we in tests
+    else:
+        raise AttributeError("publish_agent_event ontbreekt — gebruik wrapper i.p.v. directe publish")
+    
     return True
 ```
 
@@ -231,6 +237,7 @@ def analyze_agent_completeness(agent_name):
   - [ ] Workflow files with lessons learned
   - [ ] Kanban board with completion status
   - [ ] Agents overview with current status
+- [ ] **Message Bus Contract Check**: Verifieer dat alle events via `publish_agent_event` gaan en dat payloads minimaal `request_id` (indien beschikbaar), `status` en een domeinspecifieke sleutel bevatten
 - [ ] **Knowledge Transfer**: Document lessons learned for future implementations
 
 ## 🎯 **Success Metrics**

@@ -4283,3 +4283,16 @@ def _load_pipeline_history(self):
 - **Performance Monitoring**: Validate metric collection and analysis
 - **User Training**: Prepare documentation for data engineering workflows
 - **Continuous Improvement**: Monitor and optimize data pipeline performance
+
+### Lessons Learned: Uniform Event Contract en Wrapper Gebruik
+
+- Probleem: Inconsistentie in event-publicatie (direct `publish(...)` vanuit agent vs. core wrapper) leidde tot ontbrekende metadata, lastige tracing en uiteenlopende payloads per agent.
+- Oplossing: Verplicht gebruik van `publish_agent_event` van `AgentMessageBusIntegration` + standaard payload: `request_id` (optioneel), `status` (completed/failed), en domeinspecifieke sleutel (`api_design`, `system_design`, etc.).
+- Rationale: 
+  - Consistente metadata-injectie (agent_name, timestamp)
+  - Eenduidige contracten voor consumers/tests
+  - Eenvoudiger observability/tracing
+- Impact:
+  - Agents geharmoniseerd: ArchitectAgent (gereviewd en aangepast)
+  - Te harmoniseren: overige agents met directe `publish(...)` calls
+- Teststrategie: Tests mocken `publish_agent_event` en asserten op standaardvelden i.p.v. op interne bus-implementatie.
