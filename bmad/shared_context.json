@@ -1,6 +1,39 @@
 {
   "events": [
     {
-      "event_type": "market_analyzed",
+      "event_type": "test_execution_requested",
       "data": {
-        "status": 
+        "function_description": "def add(a, b): return a + b",
+        "context": "Eenvoudige optelfunctie",
+        "agent": "TestEngineerAgent"
+      },
+      "source_agent": "unknown",
+      "timestamp": "2025-08-09T00:13:32.458431",
+      "event_id": "test_execution_requested_1754691212.458432",
+      "correlation_id": null
+    },
+    {
+      "event_type": "test_execution_completed",
+      "data": {
+        "status": "completed",
+        "tests_run": 4,
+        "tests_passed": 2,
+        "tests_failed": 2,
+        "results": {
+          "redis_cache": "\u2705 Basic operations werken",
+          "monitoring": "\u26a0\ufe0f Async issues gedetecteerd",
+          "connection_pool": "\u26a0\ufe0f Initialization problemen",
+          "llm_caching": "\u2705 Decorator werkt"
+        },
+        "success_rate": 50.0,
+        "agent": "TestEngineerAgent"
+      },
+      "source_agent": "unknown",
+      "timestamp": "2025-08-09T00:13:33.466585",
+      "event_id": "test_execution_completed_1754691213.466589",
+      "correlation_id": null
+    }
+  ],
+  "last_updated": "2025-08-09T00:13:33.467886",
+  "total_events": 2
+}

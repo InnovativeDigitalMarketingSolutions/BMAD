@@ -193,11 +193,12 @@ Zie de resource-bestanden in `resources/templates/general/` voor actuele templat
 
 Deze agent werkt samen met andere agents via een centrale message bus en gedeelde context in Supabase.
 
-- **Events publiceren:** De agent kan events publiceren via de message_bus, bijvoorbeeld als de backlog is bijgewerkt.
+- **Events publiceren (wrapper):** Gebruik `await self.publish_agent_event(event_type, data)`; payloads bevatten minimaal `status` en `agent`.
+- **Abonneren:** `await self.subscribe_to_event(event_type, handler)` via de integration; CLI/subsystem gebruikt waar nodig ook `subscribe(...)` voor compatibiliteit.
 - **Context delen:** Status en relevante data worden gedeeld via Supabase, zodat andere agents deze kunnen inzien.
 
 **Voorbeeld:**
 ```python
-collaborate_example()
+await self.publish_agent_event(EventTypes.BACKLOG_UPDATE_REQUESTED, {"status": "processing", "agent": self.agent_name})
 ```
-Dit publiceert een event en slaat context op. Andere agents kunnen deze context ophalen of op het event reageren.
+Dit publiceert een event via de wrapper en slaat context op. Andere agents kunnen deze context ophalen of op het event reageren.

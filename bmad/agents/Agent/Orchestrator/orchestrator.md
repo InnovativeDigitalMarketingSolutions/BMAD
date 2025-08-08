@@ -1,6 +1,6 @@
 # Orchestrator Agent
 
-> **Status**: ✅ **FULLY COMPLIANT** - 91/91 tests passing (100% success rate), Quality-First implementation
+> **Status**: ✅ **FULLY COMPLIANT** - Integratietests groen; completeness 1.0 (wrapper, MCP tools, tracing, subscriptions)
 
 > **Let op:** Deze agent werkt actief samen met andere agents via een centrale message bus en gedeelde context in Supabase. Zie de sectie 'Samenwerking & Contextdeling' hieronder voor details.
 
@@ -22,6 +22,18 @@ De Orchestrator Agent coördineert workflows en orkestreert de samenwerking tuss
 - Publiceren via wrapper: agent‑niveau `await self.publish_agent_event(...)`; module‑niveau via `await publish_agent_event(...)` voor out‑of‑class handlers
 - Minimale payload: `status` (bij *_COMPLETED), domeinspecifieke sleutels; `request_id` optioneel
 - Voorbeeld module‑level publish: `await publish_agent_event(EventTypes.WORKFLOW_EXECUTION_REQUESTED, {"workflow_id": id})`
+
+**Wrapper & Subscriptions**
+- Publicatie via `await self.publish_agent_event(event_type, data)` (payload minimaal `status` bij *_COMPLETED en `agent`)
+- CLI `publish-event` en workflowstappen publiceren via de wrapper voor consistentie
+- Abonneren via `await self.subscribe_to_event(event_type, callback)` (passthrough naar Message Bus; fallback core)
+
+**Enhanced MCP Tools**
+- `get_enhanced_mcp_tools()` retourneert o.a.: orchestration_planning, agent_communication, external_tool_discovery/execution, workflow_optimization, performance_tuning
+- `register_enhanced_mcp_tools()` registreert tools indien ondersteund
+
+**Tracing**
+- `initialize_tracing()` maakt de tracer veilig aan en roept `initialize()` aan; `trace_operation()` beschikbaar voor generieke traces
 
 ## Belangrijke resources
 - [Orchestration best practices](../../resources/templates/orchestrator/best-practices.md)

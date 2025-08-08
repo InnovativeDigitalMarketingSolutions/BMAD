@@ -95,6 +95,10 @@ python securitydeveloper.py enhanced-performance
   - `EventTypes.SECURITY_SCAN_REQUESTED`
   - `EventTypes.SECURITY_SCAN_COMPLETED`
 
+**Wrapper & Subscriptions**
+- Publicatie via `publish_agent_event(event_type, data)` met minimaal `status` en `agent` in payload
+- Abonnement via `subscribe_to_event(event_type, callback)` (passthrough naar Message Bus)
+
 ## Collaboration
 Deze agent werkt samen met andere agents via Message Bus en gedeelde context:
 - **BackendDeveloper**: Backend security coordination
