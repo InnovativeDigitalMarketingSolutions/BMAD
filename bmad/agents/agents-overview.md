@@ -124,7 +124,7 @@
 - **Rol**: Security en compliance
 - **Verantwoordelijkheden**: Security scans, vulnerability assessment, compliance checks, incident response
 - **CLI Commando's**: `security-scan`, `vulnerability-assessment`, `compliance-check`, `help`
-- **Events**: `security_scan_completed`, `vulnerability_found`, `incident_reported`
+- **Events**: `security_scan_requested`, `security_scan_completed`, `vulnerability_found`, `incident_reported`
 - **Enhanced MCP Phase 2**: ✅ Volledig geïmplementeerd met advanced tracing en collaboration
 - **✅ Status**: FULLY COMPLIANT - 95/95 tests passing (100% coverage)
 - **Quality-First Implementation**: 4 event handlers met echte functionaliteit, 6 Message Bus CLI commands, 12 performance metrics
