@@ -87,6 +87,8 @@ Deze workflow definieert de gestandaardiseerde aanpak voor het implementeren van
 - [ ] **Event Handling**: Implement event handling capabilities
 - [ ] **Communication Setup**: Setup inter-agent communication
 - [ ] **Error Handling**: Add message bus error handling
+- [ ] **Wrapper Usage**: Gebruik `await self.publish_agent_event(...)` in plaats van directe `publish(...)`
+- [ ] **Payload Contract**: Payload bevat `status`, domeinspecifieke sleutel en optioneel `request_id`
 
 ### **Phase 2: Testing Implementation**
 
@@ -96,6 +98,7 @@ Deze workflow definieert de gestandaardiseerde aanpak voor het implementeren van
 - [ ] **Attribute Tests**: Test all implemented attributes
 - [ ] **Integration Tests**: Test enhanced MCP and tracing integration
 - [ ] **Error Scenario Tests**: Test error handling scenarios
+- [ ] **Wrapper Mocking**: Mock `publish_agent_event` met `AsyncMock`; verifieer payload-contract
 
 #### **Step 8: Integration Test Implementation**
 - [ ] **Integration Test File**: Create integration test file

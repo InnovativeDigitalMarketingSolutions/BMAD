@@ -351,15 +351,16 @@ For detailed analysis of AI integration possibilities, system objectives verific
 
 ### **Message Bus Integration Progress**
 - **Total Agents**: 23
-- **Completed**: 23 (100%)
-- **In Progress**: 0
+- **Completed**: 23 (100%) (legacy metric)
+- **Wrapper Compliance**: In verification (target: 100%)
+- **Direct publish calls**: Must be 0 in agents (enforced)
 - **Not Started**: 0
 
 ### **Workflow Compliance Progress**
 - **Total Agents**: 23
-- **Fully Compliant**: 23 (100%) - FrontendDeveloper, BackendDeveloper, FullstackDeveloper, TestEngineer, SecurityDeveloper, UXUIDesigner, Architect, QualityGuardian, Scrummaster, ProductOwner, ReleaseManager, DevOpsInfra, DataEngineer, DocumentationAgent, FeedbackAgent, Orchestrator, WorkflowAutomator, StrategiePartner, Retrospective, RnD, AccessibilityAgent, MobileDeveloper, TestEngineer, DevOpsInfra, DataEngineer
-- **Partially Compliant**: 0 (0%)
-- **Overall Progress**: 100%
+- **Fully Compliant**: In verification — compliance vereist wrapper-gebruik en payload-contract
+- **Partially Compliant**: In verification
+- **Overall Progress**: Updating after wrapper audit
 
 ### **Quality Standards Implementation**
 - **Testing Implementation**: 47.8% (11/23 agents)
