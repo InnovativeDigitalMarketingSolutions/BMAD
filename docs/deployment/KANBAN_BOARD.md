@@ -32,6 +32,8 @@ For detailed analysis of AI integration possibilities, system objectives verific
   - [ ] FeedbackAgent: idem
   - [ ] Retrospective: idem
   - [x] DocumentationAgent: wrapper-compliance bijgewerkt (tests groen)
+  - [x] UXUIDesigner: wrapper-compliance bijgewerkt (tests groen)
+  - [x] RnD: wrapper-compliance bijgewerkt (tests groen)
   - [ ] RnD: idem
   - [ ] UXUIDesigner: idem
   - [ ] ReleaseManager: idem
@@ -131,15 +133,15 @@ For detailed analysis of AI integration possibilities, system objectives verific
   - [ ] **DocumentationAgent Dependencies** - Add missing imports (Score: 0.6 → Target: 1.0)
   - [x] **DocumentationAgent Test Coverage** - Unit suite groen; wrapper-compliance hersteld
   - [ ] **DocumentationAgent Documentation** - Add missing docstrings (Score: 0.95 → Target: 1.0)
-- [ ] **RnDAgent Completeness** - Add missing `get_enhanced_mcp_tools`, `register_enhanced_mcp_tools`, `trace_operation` methods (Score: 0.51 → Target: 1.0)
-  - [ ] **RnDAgent Resources** - Add missing YAML configs, templates, data files (Score: 0.75 → Target: 1.0)
-  - [ ] **RnDAgent Dependencies** - Add missing imports (Score: 0.6 → Target: 1.0)
-  - [ ] **RnDAgent Test Coverage** - Add missing tests (Score: 0.0 → Target: 1.0)
+- [x] **RnDAgent Completeness** - Add missing `get_enhanced_mcp_tools`, `register_enhanced_mcp_tools`, `trace_operation` methods (Score: 0.51 → Target: 1.0)
+  - [x] **RnDAgent Resources** - Add missing YAML configs, templates, data files (Score: 0.75 → Target: 1.0)
+  - [x] **RnDAgent Dependencies** - Add missing imports (Score: 0.6 → Target: 1.0)
+  - [x] **RnDAgent Test Coverage** - Unit suite groen; wrapper-compliance hersteld
   - [ ] **RnDAgent Documentation** - Add missing docstrings (Score: 0.95 → Target: 1.0)
 - [ ] **UXUIDesignerAgent Completeness** - Add missing `get_enhanced_mcp_tools`, `register_enhanced_mcp_tools`, `trace_operation` methods (Score: 0.51 → Target: 1.0)
-  - [ ] **UXUIDesignerAgent Resources** - Add missing YAML configs, templates, data files (Score: 0.75 → Target: 1.0)
-  - [ ] **UXUIDesignerAgent Dependencies** - Add missing imports (Score: 0.6 → Target: 1.0)
-  - [ ] **UXUIDesignerAgent Test Coverage** - Add missing tests (Score: 0.0 → Target: 1.0)
+  - [x] **UXUIDesignerAgent Resources** - Add missing YAML configs, templates, data files (Score: 0.75 → Target: 1.0)
+  - [x] **UXUIDesignerAgent Dependencies** - Add missing imports (Score: 0.6 → Target: 1.0)
+  - [x] **UXUIDesignerAgent Test Coverage** - Unit suite groen; wrapper-compliance doorgevoerd
   - [ ] **UXUIDesignerAgent Documentation** - Add missing docstrings (Score: 0.647 → Target: 1.0)
 - [ ] **ReleaseManagerAgent Completeness** - Add missing `get_enhanced_mcp_tools`, `register_enhanced_mcp_tools`, `trace_operation` methods (Score: 0.51 → Target: 1.0)
   - [ ] **ReleaseManagerAgent Resources** - Add missing YAML configs, templates, data files (Score: 0.75 → Target: 1.0)
