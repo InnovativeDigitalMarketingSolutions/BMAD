@@ -49,3 +49,16 @@ Hier houdt de SecurityDeveloper agent zijn eigen wijzigingen, beslissingen en le
 - **CLI Extension Value**: Message Bus commands maken agent interactie mogelijk
 - **Performance Tracking**: Metrics tracking verbetert observability en debugging
 - **Error Handling**: Graceful error handling is essentieel voor production readiness 
+
+## [2025-08-08] Wrapper-harmonisatie en workflow alignment
+
+### Enhanced
+- Message Bus publicatie gemigreerd naar `publish_agent_event` met `EventTypes.SECURITY_SCAN_REQUESTED` en `EventTypes.SECURITY_SCAN_COMPLETED`
+- `collaborate_example` voorzien van sync wrapper (`asyncio.run(...)`) die async pad aanroept
+
+### Technical
+- Toevoeging van `publish_agent_event` helper in agent
+- Documentatie bijgewerkt (Message Bus & Event Contract, collaborate_example gedrag)
+
+### Tests
+- Bestaande unit test voor `collaborate_example` groen zonder aanpassing van assertions 

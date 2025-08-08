@@ -88,6 +88,13 @@ python securitydeveloper.py enhanced-performance
 - `vulnerability_analysis_error` - Vulnerability analysis error
 - `security_incident_processing` - Security incident processing
 
+## Message Bus & Event Contract
+- Alle events worden gepubliceerd via de wrapper `publish_agent_event(event_type, data)`.
+- Payloads bevatten minimaal `status` en een domeinspecifieke sleutel; `request_id` optioneel.
+- Voorbeelden:
+  - `EventTypes.SECURITY_SCAN_REQUESTED`
+  - `EventTypes.SECURITY_SCAN_COMPLETED`
+
 ## Collaboration
 Deze agent werkt samen met andere agents via Message Bus en gedeelde context:
 - **BackendDeveloper**: Backend security coordination
@@ -95,6 +102,10 @@ Deze agent werkt samen met andere agents via Message Bus en gedeelde context:
 - **TestEngineer**: Security testing coordination
 - **DevOpsInfra**: Infrastructure security coordination
 - **QualityGuardian**: Security quality metrics sharing
+
+### Voorbeeld (collaborate_example)
+- Sync API: `collaborate_example()` roept intern async pad aan via `asyncio.run(...)`
+- Async pad publiceert events via wrapper en slaat context op
 
 ## Resources
 - [Security checklist](../../resources/templates/securitydeveloper/security-checklist.md)
