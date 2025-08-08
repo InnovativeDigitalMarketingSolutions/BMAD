@@ -31,7 +31,7 @@ For detailed analysis of AI integration possibilities, system objectives verific
   - [ ] MobileDeveloper: idem
   - [ ] FeedbackAgent: idem
   - [ ] Retrospective: idem
-  - [ ] DocumentationAgent: idem
+  - [x] DocumentationAgent: wrapper-compliance bijgewerkt (tests groen)
   - [ ] RnD: idem
   - [ ] UXUIDesigner: idem
   - [ ] ReleaseManager: idem
@@ -129,7 +129,7 @@ For detailed analysis of AI integration possibilities, system objectives verific
 - [ ] **DocumentationAgent Completeness** - Add missing `get_enhanced_mcp_tools`, `register_enhanced_mcp_tools`, `trace_operation` methods (Score: 0.51 → Target: 1.0)
   - [ ] **DocumentationAgent Resources** - Add missing YAML configs, templates, data files (Score: 0.75 → Target: 1.0)
   - [ ] **DocumentationAgent Dependencies** - Add missing imports (Score: 0.6 → Target: 1.0)
-  - [ ] **DocumentationAgent Test Coverage** - Add missing tests (Score: 0.0 → Target: 1.0)
+  - [x] **DocumentationAgent Test Coverage** - Unit suite groen; wrapper-compliance hersteld
   - [ ] **DocumentationAgent Documentation** - Add missing docstrings (Score: 0.95 → Target: 1.0)
 - [ ] **RnDAgent Completeness** - Add missing `get_enhanced_mcp_tools`, `register_enhanced_mcp_tools`, `trace_operation` methods (Score: 0.51 → Target: 1.0)
   - [ ] **RnDAgent Resources** - Add missing YAML configs, templates, data files (Score: 0.75 → Target: 1.0)
