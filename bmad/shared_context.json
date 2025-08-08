@@ -1,6 +1,48 @@
 {
   "events": [
     {
-      "event_type": "market_analyzed",
+      "event_type": "event1",
       "data": {
-        "status": 
+        "test_key": "test_value",
+        "number": 42,
+        "nested": {
+          "key": "value"
+        }
+      },
+      "source_agent": "Agent1",
+      "timestamp": "2025-08-08T19:09:25.709262",
+      "event_id": "event1_1754672965.709263",
+      "correlation_id": null
+    },
+    {
+      "event_type": "event2",
+      "data": {
+        "test_key": "test_value",
+        "number": 42,
+        "nested": {
+          "key": "value"
+        }
+      },
+      "source_agent": "Agent2",
+      "timestamp": "2025-08-08T19:09:25.709757",
+      "event_id": "event2_1754672965.709758",
+      "correlation_id": null
+    },
+    {
+      "event_type": "event1",
+      "data": {
+        "test_key": "test_value",
+        "number": 42,
+        "nested": {
+          "key": "value"
+        }
+      },
+      "source_agent": "Agent3",
+      "timestamp": "2025-08-08T19:09:25.710172",
+      "event_id": "event1_1754672965.710173",
+      "correlation_id": null
+    }
+  ],
+  "last_updated": "2025-08-08T19:09:25.710255",
+  "total_events": 3
+}
