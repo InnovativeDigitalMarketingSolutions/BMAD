@@ -68,6 +68,7 @@ For detailed analysis of AI integration possibilities, system objectives verific
 - [Agent Completeness Prevention Strategy](../guides/AGENT_COMPLETENESS_PREVENTION_STRATEGY.md)
 - [Agent Completeness Implementation Workflow](../guides/AGENT_COMPLETENESS_IMPLEMENTATION_WORKFLOW.md)
 - [Agent Test Coverage Implementation Workflow](../guides/AGENT_TEST_COVERAGE_IMPLEMENTATION_WORKFLOW.md)
+- [BMAD Test Strategy](../guides/TEST_STRATEGY.md)
 
 **Implementation Tasks:**
 - [x] **AiDeveloper Agent Completeness** - Add missing `get_enhanced_mcp_tools`, `register_enhanced_mcp_tools`, `trace_operation` methods ✅ **COMPLETED** (Score: 1.00 - 100% COMPLETE)

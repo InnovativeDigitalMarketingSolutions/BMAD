@@ -1353,7 +1353,7 @@ PRIORITEIT 3: Management Agents (Week 10-11)
 **Timeline**: Week 6-7  
 **Status**: 📋 Planned - Framework ready
 
-**Integration Test Strategy**:
+**Integration Test Strategy** (zie ook `docs/guides/TEST_STRATEGY.md`):
 - **Doel**: Test echte externe service integraties
 - **Scope**: Supabase, OpenRouter, OpenTelemetry, LangGraph, OPA
 - **Execution**: Aparte test suite met echte API keys
@@ -1406,7 +1406,7 @@ pytest tests/ -v --run-integration --run-e2e
 **Timeline**: Week 8-9  
 **Status**: 📋 Planned
 
-**E2E Test Strategy**:
+**E2E Test Strategy** (zie ook `docs/guides/TEST_STRATEGY.md`):
 - **Doel**: Test volledige workflows van begin tot eind
 - **Scope**: Complete user journeys en systeem integratie
 - **Execution**: Volledige systeem setup en teardown
