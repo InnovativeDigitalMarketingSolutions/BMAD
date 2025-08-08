@@ -44,7 +44,7 @@ from bmad.core.mcp.enhanced_mcp_integration import (
     EnhancedMCPIntegration,
     create_enhanced_mcp_integration
 )
-from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
+from integrations.opentelemetry.opentelemetry_tracing import BMADTracer, TracingConfig, ExporterType
 
 # Tracing Integration
 from bmad.core.tracing import (
@@ -75,6 +75,24 @@ class AiDevelopmentError(Exception):
 class AiValidationError(AiDevelopmentError):
     """Exception for AI development validation failures."""
     pass
+
+class AgentTracerAdapter:
+    """Async-compatible wrapper voor BMADTracer met forwarding van attributen."""
+    def __init__(self, underlying_tracer: BMADTracer):
+        self._tracer = underlying_tracer
+
+    async def initialize(self):
+        # BMADTracer initialiseert in __init__; niets te doen
+        return None
+
+    async def shutdown(self):
+        try:
+            self._tracer.shutdown()
+        except Exception:
+            pass
+
+    def __getattr__(self, item):
+        return getattr(self._tracer, item)
 
 class AiDeveloperAgent(AgentMessageBusIntegration):
     """
@@ -162,8 +180,12 @@ class AiDeveloperAgent(AgentMessageBusIntegration):
         self.enhanced_mcp_client = None
         
         # Tracing Integration
-        self.tracer: Optional[BMADTracer] = None
-        self.tracing_enabled = False
+        from integrations.opentelemetry.opentelemetry_tracing import TracingConfig, BMADTracer, ExporterType
+        tracing_config = TracingConfig(service_name=f"bmad-{self.agent_name.lower()}-agent",
+                                       exporters=[ExporterType.CONSOLE])
+        self.tracer = AgentTracerAdapter(BMADTracer(tracing_config))
+        self.tracing_enabled = True
+        logging.info(f"✅ Tracing initialized for {self.agent_name}")
         
         # Performance metrics for quality-first implementation
         self.performance_metrics = {
@@ -207,16 +229,6 @@ class AiDeveloperAgent(AgentMessageBusIntegration):
             self.enhanced_mcp = None
             self.enhanced_mcp_enabled = False
 
-        # Initialize Tracing
-        try:
-            self.tracer = BMADTracer(service_name=f"bmad-{self.agent_name.lower()}-agent")
-            self.tracing_enabled = True
-            logging.info(f"✅ Tracing initialized for {self.agent_name}")
-        except Exception as e:
-            logging.warning(f"Tracing initialization failed for {self.agent_name}: {e}")
-            self.tracer = None
-            self.tracing_enabled = False
-
         # Register event handlers with Message Bus
         if self.message_bus_integration:
             # Event handlers will be registered when needed
@@ -253,13 +265,16 @@ class AiDeveloperAgent(AgentMessageBusIntegration):
     async def initialize_tracing(self):
         """Initialize tracing capabilities."""
         try:
-            if self.tracer and hasattr(self.tracer, 'initialize'):
+            if not self.tracer:
+                from integrations.opentelemetry.opentelemetry_tracing import TracingConfig, BMADTracer, ExporterType
+                config = TracingConfig(service_name=f"bmad-{self.agent_name.lower()}-agent",
+                                        exporters=[ExporterType.CONSOLE])
+                self.tracer = AgentTracerAdapter(BMADTracer(config))
+            # Ensure async-compatible initialize
+            if hasattr(self.tracer, 'initialize'):
                 await self.tracer.initialize()
-                self.tracing_enabled = True
-                logger.info("Tracing initialized successfully")
-            else:
-                logger.warning("Tracer not available or missing initialize method")
-                self.tracing_enabled = False
+            self.tracing_enabled = True
+            logger.info("Tracing initialized successfully")
         except Exception as e:
             logger.warning(f"Tracing initialization failed: {e}")
             self.tracing_enabled = False
