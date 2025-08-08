@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { BMADMetrics } from '@/types/bmad'
 
-const API_BASE = 'http://localhost:5001/api'
+const API_BASE = '/api'
 const API_TIMEOUT = 5000 // 5 seconden timeout
 
 interface MetricsResponse {
