@@ -161,8 +161,7 @@ yarn-error.log*
 .npm
 .yarn-integrity
 
-# Frontend Archive
-frontend/Archive/
+
 
 # Docker
 .dockerignore
@@ -281,3 +280,4 @@ metrics_*.json
 ci_*.log
 cd_*.log
 deploy_*.log 
+
