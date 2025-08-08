@@ -174,6 +174,12 @@ def verify_agent_implementation(agent_class):
             f"Missing methods: {missing_methods}"
         )
     
+    # Extra: Message bus contract
+    if hasattr(agent_class, 'publish_agent_event'):
+        pass  # presence is voldoende; inhoud valideren we in tests
+    else:
+        raise AttributeError("publish_agent_event ontbreekt — gebruik wrapper i.p.v. directe publish")
+    
     return True
 ```
 
@@ -208,6 +214,94 @@ def analyze_agent_completeness(agent_name):
     return {"status": "complete", "agent": agent_name}
 ```
 
+### **6. Message Bus Event Contract & Async Standard**
+
+- Gebruik altijd de wrapper via `AgentMessageBusIntegration`: `await self.publish_agent_event(event_type, data, correlation_id=None)`
+- Publiceer niet direct met `publish(...)` in agents; dit voorkomt ontbrekende metadata en inconsistent contractgebruik
+- Minimale payload-velden voor elk event:
+  - `request_id` (optioneel maar aanbevolen voor correlatie)
+  - `status` ("completed" of "failed")
+  - Domeinspecifieke sleutel met resultaatgegevens (bijv. `api_design`, `system_design`, `architecture_review`, `tech_stack_evaluation`, `pipeline_advice`, `performance_metrics`)
+- Foutpaden publiceren een corresponderend `*_FAILED` event met minstens: `request_id` (indien bekend), `error`, `status: "failed"`
+- Async consistentie:
+  - Event-handlers en samenwerkende flows die events publiceren zijn `async`
+  - Sync aanroeppunten mogen een kleine sync-wrapper bieden die intern `asyncio.run(...)` gebruikt, uitsluitend waar legacy-sync API vereist is
+
+Voorbeeld payload (completed):
+```python
+await self.publish_agent_event(EventTypes.API_DESIGN_COMPLETED, {
+    "request_id": request_id,
+    "status": "completed",
+    "api_design": {"endpoints": [...], "standards": ["REST", "OpenAPI"]},
+    "agent": self.agent_name,
+    "timestamp": datetime.now().isoformat()
+})
+```
+
+Voorbeeld payload (failed):
+```python
+await self.publish_agent_event(EventTypes.API_DESIGN_FAILED, {
+    "request_id": request_id,
+    "status": "failed",
+    "error": str(exc),
+    "agent": self.agent_name,
+    "timestamp": datetime.now().isoformat()
+})
+```
+
+### **7. Testing & Mocking Guidelines**
+
+- Mock in tests de wrapper: `publish_agent_event`, niet de directe `publish`
+- Verifieer minimaal dat payloads `status` bevatten en een domeinspecifieke sleutel; `request_id` indien beschikbaar
+- Gebruik `pytest.mark.asyncio` voor async tests en `AsyncMock` voor async methods
+- Validatie per event-type: controleer dat juiste `EventTypes.*` gebruikt worden
+- Geen “quick & dirty” testaanpassingen: tests reflecteren de gewenste systeemstandaard (wrapper + contract)
+
+Voorbeeld (pytest):
+```python
+with patch.object(agent, 'publish_agent_event', new_callable=AsyncMock) as mock_pub:
+    await agent._handle_api_design_requested({"request_id": "req-1", "use_case": "X"})
+    mock_pub.assert_awaited()
+    args, kwargs = mock_pub.call_args
+    assert args[0] == EventTypes.API_DESIGN_COMPLETED
+    assert args[1]["status"] == "completed"
+```
+
+### **8. Compliance Audit Procedure**
+
+Voer dit per agent uit voordat deze als “compliant” wordt aangemerkt:
+- Statische scan: geen directe `publish(`-calls in agent code
+- Interface check: `publish_agent_event` aanwezig; core interface-attributen en enhanced MCP methods aanwezig
+- Dynamische tests: alle relevante unit- en integratietests groen; mocken via wrapper
+- Event contract check: payloads voldoen aan minimale velden (`status`, domeinspecifiek, optioneel `request_id`)
+- Async consistentie: handlers en publicaties zijn async (of via gecontroleerde sync-wrapper)
+
+### **9. Agent Harmonization Checklist**
+
+- [ ] Vervang directe `publish(...)` door `await self.publish_agent_event(...)`
+- [ ] Voeg (indien ontbrekend) een agent-specifieke `publish_agent_event` wrapper toe die de core `publish_event` aanroept
+- [ ] Uniforme payloads: `status`, domeinspecifieke sleutel, optioneel `request_id`
+- [ ] Voeg failure-events toe waar foutpaden bestaan
+- [ ] Pas tests aan om `publish_agent_event` te mocken en payload te valideren
+- [ ] Controleer enhanced MCP fase 2 methode-aanwezigheid en init-pattern
+- [ ] Documenteer wijzigingen (agent docs, guides, overview)
+
+### **10. Automation Commands**
+
+```bash
+# Activate venv
+source .venv/bin/activate
+
+# Run focused agent tests (voorbeeld voor ArchitectAgent)
+python -m pytest tests/unit/agents/test_architect_integration.py -v --tb=short
+
+# Repo-brede scan op directe publish-calls in agents
+rg "\\bpublish\\(" bmad/agents/Agent -n
+
+# Completeness audit (indien script aanwezig)
+python scripts/comprehensive_agent_audit.py | cat
+```
+
 ## 📋 **Implementation Checklist**
 
 ### **Pre-Implementation**
@@ -220,6 +314,7 @@ def analyze_agent_completeness(agent_name):
 - [ ] **Enhanced MCP Integration**: Follow standard enhanced MCP pattern
 - [ ] **Error Handling**: Implement comprehensive error handling
 - [ ] **Logging**: Add comprehensive logging
+- [ ] **Async Consistency**: Handlers en publicaties zijn async of via gecontroleerde sync-wrapper
 
 ### **Post-Implementation**
 - [ ] **Automated Verification**: Run automated completeness verification
@@ -231,6 +326,7 @@ def analyze_agent_completeness(agent_name):
   - [ ] Workflow files with lessons learned
   - [ ] Kanban board with completion status
   - [ ] Agents overview with current status
+- [ ] **Message Bus Contract Check**: Verifieer dat alle events via `publish_agent_event` gaan en dat payloads minimaal `request_id` (indien beschikbaar), `status` en een domeinspecifieke sleutel bevatten
 - [ ] **Knowledge Transfer**: Document lessons learned for future implementations
 
 ## 🎯 **Success Metrics**
@@ -247,6 +343,7 @@ def analyze_agent_completeness(agent_name):
 - **Enhanced MCP Working**: Alle agents moeten werkende enhanced MCP integration hebben
 - **Tracing Integration**: Alle agents moeten werkende tracing capabilities hebben
 - **Message Bus Integration**: Alle agents moeten werkende message bus integration hebben
+- **No Direct publish Calls**: Geen directe `publish(...)` in agents; alleen via `publish_agent_event`
 
 ## 📚 **Documentation Best Practices**
 

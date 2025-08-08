@@ -187,3 +187,19 @@ class TestTestComponentPerformance:
         
         # Performance assertion (moet binnen 1 seconde)
         assert execution_time < 1.0, f"Performance test failed: {execution_time:.3f}s"
+
+# Async & Wrapper Mocking Example
+import asyncio
+from unittest.mock import AsyncMock
+
+class TestAsyncExamples:
+    @pytest.mark.asyncio
+    async def test_async_wrapper_mock(self):
+        class DummyAgent:
+            async def publish_agent_event(self, event_type: str, data: Dict[str, Any]):
+                return True
+        agent = DummyAgent()
+        agent.publish_agent_event = AsyncMock(return_value=True)
+        result = await agent.publish_agent_event("workflow_started", {"status": "requested"})
+        assert result is True
+        agent.publish_agent_event.assert_awaited_with("workflow_started", {"status": "requested"})

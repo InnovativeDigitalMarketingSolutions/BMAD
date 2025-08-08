@@ -11,6 +11,50 @@ For detailed analysis of AI integration possibilities, system objectives verific
 
 ### 🔄 **IN PROGRESS TASKS**
 
+#### Wave 1 (P0): Core Quality Gates & Event Foundations
+- [ ] CI/Pre-commit gates: black/ruff (of flake8), mypy, pytest -q
+  - [ ] Voeg wrapper-check toe aan CI (fail on direct publish)
+  - [ ] Voeg schema-checks, safety/pip-audit, gitleaks, SBOM (CycloneDX) toe
+- [ ] Wrapper-enforcement in CI: `scripts/check_no_direct_publish.py`
+- [ ] Event schema’s (pydantic) voor kern-EventTypes (Completed/Failed)
+  - [ ] Definieer pydantic modellen per kern‑event (API_DESIGN_COMPLETED/FAILED, SPRINT_STARTED/COMPLETED, BACKLOG_UPDATED, QUALITY_GATE_* …)
+  - [ ] Contracttests genereren per eventtype
+  - [ ] Integratie in wrapper voor runtime‑validatie
+- [ ] Tracing/Correlation standaard in wrapper (correlation_id ↔ trace-id)
+- [ ] Wrapper-compliance 100% (alle agents)
+  - [ ] ProductOwner: directe publish → `await self.publish_agent_event(...)`
+  - [ ] SecurityDeveloper: idem
+  - [ ] TestEngineer: idem
+  - [ ] FullstackDeveloper: idem
+  - [ ] FrontendDeveloper: idem
+  - [ ] QualityGuardian: idem
+  - [ ] MobileDeveloper: idem
+  - [ ] FeedbackAgent: idem
+  - [ ] Retrospective: idem
+  - [ ] DocumentationAgent: idem
+  - [ ] RnD: idem
+  - [ ] UXUIDesigner: idem
+  - [ ] ReleaseManager: idem
+  - [ ] Architect: idem
+  - [ ] Orchestrator: idem
+
+#### Wave 2 (P1): Reliability, Contracttests & Config (Backlog)
+- [ ] Contracttests EventTypes + Hypothesis property-based tests
+- [ ] Resilience policies (retries, circuit breaker, bulkheads)
+- [ ] Config/secrets via pydantic Settings
+- [ ] Healthchecks & metrics per agent
+
+#### Wave 3 (P1–P2): Transports, E2E en Security Scans (Backlog)
+- [ ] Pluggable transports (in-memory → Redis; Kafka optioneel)
+- [ ] E2E cross-agent workflows (3 scenario’s)
+- [ ] Security scans (gitleaks, safety/pip-audit, SBOM, Trivy)
+- [ ] ADR’s events/transports/tracing/resilience
+
+#### Wave 4 (P2): AI Guardrails & Evaluatieharnas (Backlog)
+- [ ] Prompt library + guardrails
+- [ ] Offline eval sets + cost/latency dashboards
+- [ ] Fallback- en canary-modellen
+
 #### **🚨 CRITICAL SYSTEM STABILIZATION (Priority 0)** 🔄
 **Status**: Ready to start - Critical fixes required before AI integration
 **Workflow**: [System Stabilization Workflow](../guides/SYSTEM_STABILIZATION_WORKFLOW.md)
@@ -44,6 +88,7 @@ For detailed analysis of AI integration possibilities, system objectives verific
 - [Agent Completeness Prevention Strategy](../guides/AGENT_COMPLETENESS_PREVENTION_STRATEGY.md)
 - [Agent Completeness Implementation Workflow](../guides/AGENT_COMPLETENESS_IMPLEMENTATION_WORKFLOW.md)
 - [Agent Test Coverage Implementation Workflow](../guides/AGENT_TEST_COVERAGE_IMPLEMENTATION_WORKFLOW.md)
+- [BMAD Test Strategy](../guides/TEST_STRATEGY.md)
 
 **Implementation Tasks:**
 - [x] **AiDeveloper Agent Completeness** - Add missing `get_enhanced_mcp_tools`, `register_enhanced_mcp_tools`, `trace_operation` methods ✅ **COMPLETED** (Score: 1.00 - 100% COMPLETE)
@@ -351,15 +396,16 @@ For detailed analysis of AI integration possibilities, system objectives verific
 
 ### **Message Bus Integration Progress**
 - **Total Agents**: 23
-- **Completed**: 23 (100%)
-- **In Progress**: 0
+- **Completed**: 23 (100%) (legacy metric)
+- **Wrapper Compliance**: In verification (target: 100%)
+- **Direct publish calls**: Must be 0 in agents (enforced)
 - **Not Started**: 0
 
 ### **Workflow Compliance Progress**
 - **Total Agents**: 23
-- **Fully Compliant**: 23 (100%) - FrontendDeveloper, BackendDeveloper, FullstackDeveloper, TestEngineer, SecurityDeveloper, UXUIDesigner, Architect, QualityGuardian, Scrummaster, ProductOwner, ReleaseManager, DevOpsInfra, DataEngineer, DocumentationAgent, FeedbackAgent, Orchestrator, WorkflowAutomator, StrategiePartner, Retrospective, RnD, AccessibilityAgent, MobileDeveloper, TestEngineer, DevOpsInfra, DataEngineer
-- **Partially Compliant**: 0 (0%)
-- **Overall Progress**: 100%
+- **Fully Compliant**: In verification — compliance vereist wrapper-gebruik en payload-contract
+- **Partially Compliant**: In verification
+- **Overall Progress**: Updating after wrapper audit
 
 ### **Quality Standards Implementation**
 - **Testing Implementation**: 47.8% (11/23 agents)

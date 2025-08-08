@@ -99,11 +99,15 @@ def publish(event, data):
             "event": event,
             "data": data
         }
-        context["events"].append(event_obj)
-        
-        # CRITICAL: This is where corruption might occur
-        with open(SARED_CONTEXT_PATH, 'w') as f:
-            json.dump(context, f, indent=2)
+```
+
+> Opmerking (actueel): Dit is een legacy-patroon. In de huidige architectuur publiceren agents via de core message bus wrapper voor consistente metadata en tracing.
+
+```python
+# Updated agent-level pattern (Message Bus wrapper)
+await self.publish_agent_event(EventTypes.CONTEXT_EVENT_RECORDED, data)
+```
+
 ```
 
 #### **Potential Failure Points**

@@ -15,18 +15,19 @@ Het `shared_context.json` bestand is een **kritieke component** van het BMAD sys
 Het bestand fungeert als een **gedistribueerde event bus** die alle agent communicatie coördineert:
 
 ```python
-# Voorbeeld van hoe agents het gebruiken:
-from bmad.agents.core.communication.message_bus import publish, subscribe
+# Voorbeeld van publiceren en abonneren via de agent-wrapper:
+from bmad.core.message_bus import EventTypes
 
-# Agents publiceren events
-publish("component_build_requested", {
+# Agents publiceren events via de agent-wrapper
+await agent.publish_agent_event(EventTypes.COMPONENT_BUILD_REQUESTED, {
     "agent": "FrontendDeveloperAgent",
     "component_name": "Button",
-    "timestamp": "2025-08-05T07:51:36.074552"
+    "timestamp": "2025-08-05T07:51:36.074552",
+    "status": "requested"
 })
 
-# Agents abonneren op events
-subscribe("component_build_completed", handle_component_build_completed)
+# Agents registreren handlers via AgentMessageBusIntegration
+await agent.register_event_handler(EventTypes.COMPONENT_BUILD_COMPLETED, agent._handle_component_build_completed)
 ```
 
 ### **2. Agent Communicatie Protocol**

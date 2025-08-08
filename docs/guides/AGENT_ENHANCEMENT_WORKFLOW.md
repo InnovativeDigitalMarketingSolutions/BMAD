@@ -36,10 +36,11 @@ Deze guide beschrijft de gestandaardiseerde workflow voor het implementeren van 
 
 ### 1.1 Agent Completeness Prevention (VERPLICHT)
 - [ ] **Test-Driven Verification**: Gebruik echte test execution als primaire verificatie methode
-- [ ] **Standardized Interface Check**: Verificeer dat agent alle required attributes en methods heeft
+- [ ] **Standardized Interface Check**: Verifieer dat agent alle required attributes en methods heeft
 - [ ] **Enhanced MCP Integration Check**: Controleer enhanced MCP integration volgens standaard pattern
 - [ ] **Automated Completeness Verification**: Run automated completeness verification script
-- [ ] **Consistency Check**: Verificeer dat agent dezelfde patterns volgt als andere agents
+- [ ] **Consistency Check**: Verifieer dat agent dezelfde patterns volgt als andere agents
+- [ ] **Message Bus Wrapper Compliance**: Geen directe `publish(...)` in agents; gebruik `await self.publish_agent_event(...)` met minimaal `status` + domeinspecifieke sleutel en optioneel `request_id`
 
 ### 2. Core Implementation
 - [ ] **Import Updates**: Voeg enhanced MCP en tracing imports toe
@@ -56,7 +57,7 @@ Deze guide beschrijft de gestandaardiseerde workflow voor het implementeren van 
 ### 4. Testing Implementation
 - [ ] **Test File Creation**: Maak nieuwe test file voor enhanced MCP en tracing
 - [ ] **Comprehensive Test Coverage**: 24-25 tests voor alle nieuwe functionaliteit
-- [ ] **Mocking Strategy**: Gebruik uitgebreide mocking voor dependencies
+- [ ] **Mocking Strategy**: Mock `publish_agent_event` (AsyncMock) i.p.v. directe `publish(...)`
 - [ ] **Regression Testing**: Voer bestaande tests uit om regressies te voorkomen
 
 ### 5. Resource Management
@@ -73,6 +74,14 @@ Deze guide beschrijft de gestandaardiseerde workflow voor het implementeren van 
 - [ ] **Agent Overview**: Update agents-overview.md met message bus integratie status
 - [ ] **Lessons Learned**: Update lessons learned guide met nieuwe ervaringen
 - [ ] **Integration Report**: Maak gedetailleerd integratie rapport
+
+#### **Step 6: Message Bus Integration**
+- [ ] **Message Bus Setup**: Initialize message bus integration
+- [ ] **Event Handling**: Implement event handling capabilities
+- [ ] **Communication Setup**: Setup inter-agent communication
+- [ ] **Error Handling**: Add message bus error handling
+- [ ] **Wrapper Usage**: Alle event-publicaties via `publish_agent_event` (async); geen directe `publish(...)`
+- [ ] **Payload Contract**: Payload bevat minimaal `status` en een domeinspecifieke sleutel; `request_id` indien beschikbaar
 
 ### 7. Agent Documentation Maintenance (VERPLICHT)
 **CRITICAL**: Deze stap is verplicht volgens de Agent Documentation Maintenance workflow.

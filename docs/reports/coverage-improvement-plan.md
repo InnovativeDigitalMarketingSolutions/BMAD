@@ -131,10 +131,11 @@
 ## 🔧 Technical Approach
 
 ### Test Strategy
-1. **Pragmatic Mocking**: Use `patch.object` for complex dependencies
-2. **Async Testing**: Proper `asyncio.run()` for async methods
-3. **Integration Testing**: Mock external services, test internal logic
-4. **Performance Testing**: Realistic benchmarks with proper timeouts
+Verwijzing: `docs/guides/TEST_STRATEGY.md` (centrale strategie met AI‑evaluatie en quality gates)
+1. Pragmatic Mocking
+2. Async Testing
+3. Integration Testing
+4. Performance Testing
 
 ### Quality Focus
 - **Root Cause Analysis**: Fix underlying issues, not just test failures
