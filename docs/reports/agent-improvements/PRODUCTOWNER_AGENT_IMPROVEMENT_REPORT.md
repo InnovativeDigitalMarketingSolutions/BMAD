@@ -121,10 +121,10 @@ def export_report(self, format_type, data):
 
 #### **Improved Collaboration Method**
 ```python
-def collaborate_example(self):
+async def collaborate_example(self):
     """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
     try:
-        publish("backlog_updated", {"status": "success", "agent": "ProductOwner"})
+        await self.publish_agent_event(EventTypes.BACKLOG_UPDATED, {"status": "completed", "agent": "ProductOwner"})
         save_context("ProductOwner", "status", {"backlog_status": "updated"})
         print("Event gepubliceerd en context opgeslagen.")
         context = get_context("ProductOwner")

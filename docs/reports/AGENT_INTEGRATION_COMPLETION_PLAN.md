@@ -98,6 +98,16 @@ class AgentMessageBusIntegration:
         await self.message_bus.publish(event_type, data)
 ```
 
+> Let op: In agent-implementaties publiceren we via een agent-level wrapper voor consistente metadata en tracing.
+
+```python
+class MyAgent(AgentMessageBusIntegration):
+    async def publish_agent_event(self, event_type: str, data: dict, correlation_id: str | None = None) -> bool:
+        # Verrijk payload en roep core publish aan
+        data = {**data, "agent": self.agent_name}
+        return await self.publish_event(event_type, data)
+```
+
 ### **Fase 2: Agent Collaboration (Week 3-4)**
 
 #### **2.1 Collaboration Patterns**
