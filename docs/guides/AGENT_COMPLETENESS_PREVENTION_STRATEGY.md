@@ -257,6 +257,7 @@ await self.publish_agent_event(EventTypes.API_DESIGN_FAILED, {
 - Validatie per event-type: controleer dat juiste `EventTypes.*` gebruikt worden
 - Geen “quick & dirty” testaanpassingen: tests reflecteren de gewenste systeemstandaard (wrapper + contract)
 - Voor agents met core message bus afhankelijkheid: bied een `subscribe_to_event(event_type, callback)` passthrough naar de core `MessageBus.subscribe(...)` zodat integratietests direct kunnen subscriben
+- Tracing initialisatie: maak/instantieer de tracer pas in `initialize_tracing()` (niet in `__init__`) zodat tests `BMADTracer` kunnen patchen en init-flow gecontroleerd kunnen doorlopen
 
 Voorbeeld (pytest):
 ```python
