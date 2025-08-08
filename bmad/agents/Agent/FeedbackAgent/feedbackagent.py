@@ -1854,10 +1854,14 @@ Examples:
         try:
             payload = dict(data) if isinstance(data, dict) else {"data": data}
             # Voeg status toe als het duidelijk een *_COMPLETED event is en status ontbreekt
-            if "status" not in payload and str(event_type).endswith("_completed"):
+            if "status" not in payload and (str(event_type).endswith("_COMPLETED") or str(event_type).endswith("_completed")):
                 payload["status"] = "completed"
-            bus = get_message_bus()
-            return await bus.publish(event_type, payload, source_agent=self.agent_name)
+            # Gebruik core wrapper publish_event via AgentMessageBusIntegration indien beschikbaar
+            if hasattr(self, "message_bus_integration") and self.message_bus_integration:
+                return await self.message_bus_integration.publish_event(event_type, payload)
+            else:
+                from bmad.core.message_bus import publish_event
+                return await publish_event(event_type, payload)
         except Exception as e:
             logger.error(f"Failed to publish event {event_type}: {e}")
             return False
