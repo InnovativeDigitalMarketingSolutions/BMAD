@@ -20,8 +20,8 @@ var/
 sdist/
 develop-eggs/
 .installed.cfg
-lib/
-lib64/
+/lib/
+/lib64/
 
 # Environment variables - SECURITY CRITICAL
 .env
@@ -90,7 +90,7 @@ coverage_report_*.json
 
 # Documentation builds
 docs/_build/
-site/
+/site
 
 # Jupyter Notebook
 .ipynb_checkpoints
@@ -280,8 +280,4 @@ metrics_*.json
 ci_*.log
 cd_*.log
 deploy_*.log 
-
-# Allow tracking frontend src/lib utilities (override global 'lib/' ignore)
-!frontend/BMAD-Dashboard-main/src/lib/
-!frontend/BMAD-Dashboard-main/src/lib/** 
 
