@@ -66,6 +66,15 @@ class ScrummasterAgent(AgentMessageBusIntegration):
     Scrummaster Agent voor BMAD.
     Gespecialiseerd in agile project management, sprint planning, en team facilitation.
     """
+    # Standardized class-level attributes for completeness checks
+    mcp_client: Optional[MCPClient] = None
+    enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+    enhanced_mcp_enabled: bool = False
+    tracing_enabled: bool = False
+    agent_name: str = "Scrummaster"
+    message_bus_integration: Optional[AgentMessageBusIntegration] = None
+    message_bus_enabled: bool = False
+    tracer: Optional[Any] = None
     
     def __init__(self):
         # Initialize AgentMessageBusIntegration first
@@ -200,7 +209,38 @@ class ScrummasterAgent(AgentMessageBusIntegration):
         except Exception as e:
             logger.warning(f"Enhanced MCP initialization failed: {e}")
             self.enhanced_mcp_enabled = False
-    
+
+    def get_enhanced_mcp_tools(self) -> List[str]:
+        """Geef de beschikbare Enhanced MCP tools terug voor de Scrummaster agent."""
+        if not getattr(self, 'enhanced_mcp_enabled', False):
+            return []
+        try:
+            return [
+                "scrum.sprint_planning",
+                "scrum.daily_standup_summary",
+                "scrum.impediment_analysis",
+                "scrum.velocity_analysis",
+                "scrum.team_health_check",
+            ]
+        except Exception as e:
+            logger.warning(f"Failed to get enhanced MCP tools: {e}")
+            return []
+
+    def register_enhanced_mcp_tools(self) -> bool:
+        """Registreer Enhanced MCP tools bij de integratie (indien actief)."""
+        if not getattr(self, 'enhanced_mcp_enabled', False) or not getattr(self, 'enhanced_mcp', None):
+            return False
+        try:
+            tools = self.get_enhanced_mcp_tools()
+            # Sommige integraties gebruiken register_tool; andere accepteren een lijst
+            for tool in tools:
+                if hasattr(self.enhanced_mcp, 'register_tool'):
+                    self.enhanced_mcp.register_tool(tool)
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to register enhanced MCP tools: {e}")
+            return False
+ 
     async def initialize_tracing(self):
         """Initialize tracing capabilities."""
         try:
@@ -1479,6 +1519,47 @@ Message Bus Commands:
             return await publish_event(event_type, event_data, self.agent_name, correlation_id)
         except Exception as e:
             logger.error(f"Failed to publish event {event_type}: {e}")
+            return False
+
+    async def trace_operation(self, operation_name: str, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Generic trace hook voor operationele events."""
+        try:
+            if getattr(self, 'tracing_enabled', False) and getattr(self, 'tracer', None):
+                # Minimale tracing; behoud bestaande tracer API
+                span_name = f"scrum.{operation_name}"
+                if hasattr(self.tracer, 'start_span'):
+                    span = self.tracer.start_span(span_name)
+                    try:
+                        if hasattr(span, 'set_attribute'):
+                            span.set_attribute("agent", self.agent_name)
+                    finally:
+                        if hasattr(span, 'end'):
+                            span.end()
+            return {"operation": operation_name, "agent": self.agent_name, **(data or {})}
+        except Exception as e:
+            logger.warning(f"trace_operation failed: {e}")
+            return {"operation": operation_name, "agent": self.agent_name, "trace": "failed"}
+
+    async def subscribe_to_event(self, event_type: str, callback) -> bool:
+        """Subscribe op een eventtype via message bus integration met core fallback."""
+        try:
+            integration = getattr(self, 'message_bus_integration', None)
+            if integration and hasattr(integration, 'register_event_handler'):
+                return await integration.register_event_handler(event_type, callback)
+            # Fallback naar core subscribe_to_event
+            try:
+                from bmad.core.message_bus.message_bus import subscribe_to_event as core_subscribe_to_event
+                return await core_subscribe_to_event(event_type, callback)
+            except Exception:
+                # Laatste redmiddel: legacy subscribe (sync) indien beschikbaar
+                try:
+                    from bmad.agents.core.communication.message_bus import subscribe as legacy_subscribe
+                    legacy_subscribe(event_type, callback)
+                    return True
+                except Exception:
+                    return False
+        except Exception as e:
+            logger.warning(f"subscribe_to_event failed: {e}")
             return False
 
 def main():
