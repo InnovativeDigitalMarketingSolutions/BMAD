@@ -13,6 +13,7 @@
 - **Message Bus Integration**: ✅ Volledig geïntegreerd met nieuwe message bus systeem
 - **Event Handlers**: 8 handlers voor orchestration, collaboration, workflow management
 - **Enhanced MCP Phase 2**: ✅ Volledig geïmplementeerd met advanced tracing en collaboration
+- **Compliance**: Wrapper‑publicatie via `publish_agent_event`, `subscribe_to_event` passthrough, tracing‑init verbeterd, MCP tools geregistreerd
 
 ## ProductOwner
 **Status**: ✅ FULLY COMPLIANT (Score: 1.00 - 100% Complete)  
@@ -31,7 +32,7 @@
 - ✅ Performance Monitor Complete
 - ✅ Tracing Integration Complete
 
-**Recent Updates**: Message Bus Integration Completion (2025-01-27) - Added Message Bus commands, enhanced all event handlers with Quality-First implementation, integrated Performance Monitor, standardized Message Bus event publishing.
+**Recent Updates**: Wrapper‑publicatie via `publish_agent_event`, `subscribe_to_event` passthrough; documentatie geüpdatet
 
 #### **Architect**
 - **Rol**: Software architectuur en system design
@@ -65,6 +66,7 @@
 - **CLI Commando's**: `build-component`, `build-shadcn-component`, `accessibility-check`, `help`
 - **Events**: `component_built`, `accessibility_check_completed`, `performance_optimized`
 - **Enhanced MCP Phase 2**: ✅ Volledig geïmplementeerd met advanced tracing en collaboration
+- **Compliance**: Wrapper‑publicatie, `subscribe_to_event` passthrough, tracing‑init verbeterd; 88 tests groen
 
 #### **FullstackDeveloper**
 - **Rol**: End-to-end feature development
