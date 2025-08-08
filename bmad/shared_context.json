@@ -1,18 +1,21 @@
 {
   "events": [
     {
-      "event_type": "component_build_requested",
+      "event_type": "documentation_completed",
       "data": {
-        "agent": "FrontendDeveloperAgent",
-        "component_name": "Button",
-        "timestamp": "2025-08-08T13:52:54.459350"
+        "status": "completed",
+        "docs_created": 3,
+        "api_docs": 1,
+        "user_guides": 1,
+        "figma_docs": 1,
+        "agent": "DocumentationAgent"
       },
-      "source_agent": "unknown",
-      "timestamp": "2025-08-08T13:52:54.461355",
-      "event_id": "component_build_requested_1754653974.46136",
+      "source_agent": "DocumentationAgent",
+      "timestamp": "2025-08-08T14:28:04.716576",
+      "event_id": "documentation_completed_1754656084.716577",
       "correlation_id": null
     }
   ],
-  "last_updated": "2025-08-08T13:52:54.472653",
+  "last_updated": "2025-08-08T14:28:04.718941",
   "total_events": 1
 }
