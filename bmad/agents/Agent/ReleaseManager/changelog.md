@@ -37,3 +37,16 @@ Hier houdt de ReleaseManager agent zijn eigen wijzigingen, beslissingen en learn
 - **Event Handlers**: 7 release-specifieke handlers met echte functionaliteit
 - **CLI Commands**: 13 commands totaal (6 Message Bus + 7 Enhanced MCP)
 - **Status**: ✅ **FULLY COMPLIANT** - Workflow compliance implementatie voltooid 
+
+## [2025-08-08] Message Bus Wrapper Compliance
+
+### Changed
+- Vervangen van directe `publish(...)` in `collaborate_example` door `publish_agent_event` wrapper
+- Toegevoegd: `initialize_message_bus_integration` en `publish_agent_event` op de agent
+- CLI voorbeeld `publish-event` laat gebruik van kern `publish_event` zien
+
+### Tests
+- Alle ReleaseManager unit tests groen (80/80)
+
+### Documentatie
+- `releasemanager.md` bijgewerkt met Event Contract & Wrapper sectie 

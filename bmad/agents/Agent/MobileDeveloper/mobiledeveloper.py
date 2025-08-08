@@ -188,17 +188,7 @@ class MobileDeveloperAgent(AgentMessageBusIntegration):
             self.enhanced_mcp = None
             self.enhanced_mcp_enabled = False
 
-        # Initialize Tracing
-        try:
-            from integrations.opentelemetry.opentelemetry_tracing import TracingConfig
-            config = TracingConfig(service_name=f"bmad-{self.agent_name.lower()}-agent")
-            self.tracer = BMADTracer(config)
-            self.tracing_enabled = True
-            logging.info(f"✅ Tracing initialized for {self.agent_name}")
-        except Exception as e:
-            logging.warning(f"Tracing initialization failed for {self.agent_name}: {e}")
-            self.tracer = None
-            self.tracing_enabled = False
+        # Tracing wordt bewust niet in __init__ geactiveerd; dit gebeurt in initialize_tracing()
 
         # Register event handlers with Message Bus
         if self.message_bus_integration:
@@ -567,22 +557,27 @@ class MobileDeveloperAgent(AgentMessageBusIntegration):
     async def initialize_tracing(self):
         """Initialize tracing capabilities."""
         try:
-            if self.tracer and hasattr(self.tracer, 'initialize'):
-                await self.tracer.initialize()
-                self.tracing_enabled = True
-                logger.info("Tracing initialized successfully for MobileDeveloper")
-                # Set up mobile-specific tracing spans
-                await self.tracer.setup_mobile_tracing({
-                    "agent_name": self.agent_name,
-                    "tracing_level": "detailed",
-                    "app_tracking": True,
-                    "performance_tracking": True,
-                    "deployment_tracking": True,
-                    "error_tracking": True
-                })
+            from integrations.opentelemetry.opentelemetry_tracing import TracingConfig
+            config = TracingConfig(service_name=f"bmad-{self.agent_name.lower()}-agent")
+            # Maak of vervang de tracer hier, zodat tests BMADTracer kunnen patchen
+            self.tracer = BMADTracer(config)
+            if hasattr(self.tracer, 'initialize'):
+                init_ok = await self.tracer.initialize()
+                self.tracing_enabled = bool(init_ok)
+                if init_ok and hasattr(self.tracer, 'setup_mobile_tracing'):
+                    await self.tracer.setup_mobile_tracing({
+                        "agent_name": self.agent_name,
+                        "tracing_level": "detailed",
+                        "app_tracking": True,
+                        "performance_tracking": True,
+                        "deployment_tracking": True,
+                        "error_tracking": True
+                    })
+                logger.info("Tracing initialized successfully for MobileDeveloper" if init_ok else "Tracing initialization failed, continuing without tracing")
             else:
+                self.tracing_enabled = False
                 logger.warning("Tracing initialization failed, continuing without tracing")
-                
+         
         except Exception as e:
             logger.warning(f"Tracing initialization failed for MobileDeveloper: {e}")
             self.tracing_enabled = False

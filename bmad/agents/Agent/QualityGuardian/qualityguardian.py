@@ -58,7 +58,8 @@ from bmad.core.tracing import (
 # Message Bus Integration
 from bmad.core.message_bus import (
     MessageBus,
-    get_message_bus
+    get_message_bus,
+    EventTypes
 )
 
 # Configure logging
@@ -1665,10 +1666,10 @@ Examples:
         if not gate_result['all_gates_passed']:
             logger.warning("Quality gates failed - deployment blocked")
             # Notify ReleaseManager about failed gates
-            publish("quality_gates_failed", {"reason": "Quality thresholds not met"})
+            await self.publish_agent_event(EventTypes.QUALITY_GATE_FAILED, {"reason": "Quality thresholds not met"})
         else:
             logger.info("Quality gates passed - deployment approved")
-            publish("quality_gates_passed", {"result": gate_result})
+            await self.publish_agent_event(EventTypes.QUALITY_GATE_PASSED, {"result": gate_result})
 
     async def run(self):
         """Run the agent and listen for events met MCP integration."""
@@ -2583,6 +2584,22 @@ Examples:
         except Exception as e:
             logger.error(f"Error handling quality report generation request: {e}")
             return {"status": "error", "event": "quality_report_generation_requested", "error": str(e)}
+
+    async def publish_agent_event(self, event_type: str, data: Dict[str, Any]) -> bool:
+        try:
+            payload = dict(data) if isinstance(data, dict) else {"data": data}
+            if "agent" not in payload:
+                payload["agent"] = self.agent_name
+            if "status" not in payload and str(event_type).endswith("_COMPLETED"):
+                payload["status"] = "completed"
+            if self.message_bus_integration:
+                return await self.message_bus_integration.publish_event(event_type, payload)
+            else:
+                from bmad.core.message_bus import publish_event
+                return await publish_event(event_type, payload)
+        except Exception as e:
+            logger.error(f"Failed to publish agent event: {e}")
+            return False
 
 def main():
     """Main CLI function with comprehensive error handling."""

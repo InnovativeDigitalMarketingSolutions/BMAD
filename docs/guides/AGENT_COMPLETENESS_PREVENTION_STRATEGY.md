@@ -256,6 +256,8 @@ await self.publish_agent_event(EventTypes.API_DESIGN_FAILED, {
 - Gebruik `pytest.mark.asyncio` voor async tests en `AsyncMock` voor async methods
 - Validatie per event-type: controleer dat juiste `EventTypes.*` gebruikt worden
 - Geen “quick & dirty” testaanpassingen: tests reflecteren de gewenste systeemstandaard (wrapper + contract)
+- Voor agents met core message bus afhankelijkheid: bied een `subscribe_to_event(event_type, callback)` passthrough naar de core `MessageBus.subscribe(...)` zodat integratietests direct kunnen subscriben
+- Tracing initialisatie: maak/instantieer de tracer pas in `initialize_tracing()` (niet in `__init__`) zodat tests `BMADTracer` kunnen patchen en init-flow gecontroleerd kunnen doorlopen
 
 Voorbeeld (pytest):
 ```python
@@ -409,6 +411,10 @@ Na elke agent implementation moeten de volgende documentatie bestanden bijgewerk
 6. **Resource Path Detection**: Audit script moet correcte resource paths detecteren
 7. **Test File Naming**: Integration tests moeten in juiste directory met juiste naam staan
 8. **Documentation Completeness**: Alle methoden moeten docstrings hebben voor 100% coverage
+9. **Orchestrator-specific**: 
+   - Bied `subscribe_to_event` als passthrough zodat tests kunnen subscriben op de core bus
+   - Gebruik overal `await self.publish_agent_event(...)` (ook in `route_event` en `replay_history`), nooit directe `publish_event`
+   - Implementeer `wait_for_hitl_decision` als polling op `MessageBus.get_events(EventTypes.HITL_DECISION)` i.p.v. tijd-gebaseerde simulatie
 
 ### **Implementation Patterns**
 ```python
@@ -433,3 +439,5 @@ class AiDeveloperAgent(AgentMessageBusIntegration):
 - **Solution**: Implementeer standaard enhanced MCP pattern voor alle agents
 - **Issue**: Tracing integration niet werkend
 - **Solution**: Voeg comprehensive tracing capabilities toe met error handling 
+- **Issue**: Orchestrator handelde events via directe `publish_event`
+- **Solution**: Vervang door `publish_agent_event` wrapper en voeg `subscribe_to_event` passthrough toe; poll HITL via core bus 

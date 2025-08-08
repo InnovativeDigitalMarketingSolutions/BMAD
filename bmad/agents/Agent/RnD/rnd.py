@@ -18,6 +18,7 @@ from bmad.agents.core.agent.agent_performance_monitor import (
 )
 from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.core.message_bus import EventTypes, publish_event
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.slack.slack_notify import send_slack_message
@@ -167,30 +168,29 @@ class RnDAgent:
             logger.warning(f"Tracing initialization failed: {e}")
             self.tracing_enabled = False
 
-    async def initialize_message_bus_integration(self):
-        """Initialize Message Bus Integration for the agent."""
+    async def initialize_message_bus_integration(self) -> bool:
         try:
             self.message_bus_integration = create_agent_message_bus_integration(
                 agent_name=self.agent_name,
-                agent_type="rnd",
-                config={
-                    "message_bus_url": "redis://localhost:6379",
-                    "enable_publishing": True,
-                    "enable_subscription": True,
-                    "event_handlers": {
-                        "research_requested": self.handle_research_requested,
-                        "experiment_requested": self.handle_experiment_requested,
-                        "innovation_requested": self.handle_innovation_requested,
-                        "prototype_requested": self.handle_prototype_requested
-                    }
-                }
+                agent_instance=self
             )
-            await self.message_bus_integration.initialize()
-            self.message_bus_enabled = True
-            logger.info("Message Bus Integration initialized successfully for RnD")
+            if hasattr(self.message_bus_integration, "enable"):
+                self.message_bus_enabled = await self.message_bus_integration.enable()
+            else:
+                self.message_bus_enabled = True
+            return self.message_bus_enabled
         except Exception as e:
-            logger.warning(f"Message Bus Integration initialization failed: {e}")
+            logger.warning(f"Message bus integration init failed: {e}")
             self.message_bus_enabled = False
+            return False
+
+    async def publish_agent_event(self, event_type: str, data: Dict[str, Any], request_id: Optional[str] = None) -> bool:
+        try:
+            payload = {"status": data.get("status", "completed"), **data, "agent": self.agent_name}
+            return await publish_event(event_type, payload, source_agent=self.agent_name, correlation_id=request_id)
+        except Exception as e:
+            logger.warning(f"Failed to publish event {event_type}: {e}")
+            return False
     
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
@@ -1220,9 +1220,9 @@ RnD Agent Commands:
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         logger.info("Starting RnD collaboration example...")
 
-        # Publish experiment request
-        publish("experiment_requested", {
-            "agent": "RnDAgent",
+        # Publish experiment request via wrapper
+        await self.publish_agent_event(EventTypes.AI_EXPERIMENT_STARTED, {
+            "status": "started",
             "experiment_type": "AI Automation",
             "timestamp": datetime.now().isoformat()
         })
@@ -1236,10 +1236,9 @@ RnD Agent Commands:
         # Run experiment
         experiment_results = self.run_experiment("exp_12345", "AI Automation Pilot")
 
-        # Publish completion
-        publish("experiment_completed", {
-            "status": "success",
-            "agent": "RnDAgent",
+        # Publish completion via wrapper
+        await self.publish_agent_event(EventTypes.AI_EXPERIMENT_COMPLETED, {
+            "status": "completed",
             "experiment_id": "exp_12345",
             "results": experiment_results["results"]
         })

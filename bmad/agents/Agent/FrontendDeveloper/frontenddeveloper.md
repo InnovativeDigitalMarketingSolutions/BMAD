@@ -1,5 +1,13 @@
 # FrontendDeveloper Agent
 
+## Status
+- ✅ Unit tests groen (63/63)
+
+## Message Bus & Event Contract
+- Publiceren via wrapper: `await self.publish_agent_event(event_type, data)`; in sync paden is een kleine `asyncio.run(...)`-brug toegestaan
+- Minimale payload: `status` (bij *_COMPLETED) + domeinspecifieke sleutel; `request_id` optioneel
+- Gebruikte EventTypes: `COMPONENT_BUILD_REQUESTED`, `COMPONENT_BUILD_COMPLETED`, `ACCESSIBILITY_AUDIT_COMPLETED`
+
 ## Overview
 De FrontendDeveloper Agent is gespecialiseerd in React/Next.js, Shadcn/ui, en moderne frontend development. Deze agent biedt uitgebreide mogelijkheden voor component development, accessibility testing, en design system integratie.
 

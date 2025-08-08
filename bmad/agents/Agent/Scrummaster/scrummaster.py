@@ -18,6 +18,7 @@ from bmad.agents.core.agent.agent_performance_monitor import (
 from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.ai.llm_client import ask_openai
 from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.core.message_bus import EventTypes
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
@@ -1149,7 +1150,7 @@ Message Bus Commands:
             print("All resources are available!")
             return True
 
-    def collaborate_example(self):
+    async def collaborate_example(self):
         """Demonstrate collaboration with other agents."""
         logger.info("Starting collaboration example...")
 
@@ -1175,14 +1176,11 @@ Message Bus Commands:
             # Calculate velocity
             velocity_result = self.calculate_velocity()
             
-            # Publish events
-            publish("sprint_planning_completed", sprint_result)
-            publish("sprint_started", start_result)
-            publish("impediment_tracked", impediment_result)
-            publish("daily_standup_completed", standup_result)
-            publish("impediment_resolved", resolve_result)
-            publish("sprint_completed", end_result)
-            publish("velocity_calculated", velocity_result)
+            # Publish events via standardized wrapper
+            await self.publish_agent_event(EventTypes.SPRINT_STARTED, start_result)
+            await self.publish_agent_event(EventTypes.DAILY_STANDUP_COMPLETED, standup_result)
+            await self.publish_agent_event(EventTypes.SPRINT_COMPLETED, end_result)
+            await self.publish_agent_event(EventTypes.PERFORMANCE_METRICS_UPDATED, velocity_result)
 
             # Notify via Slack
             try:
@@ -1469,6 +1467,20 @@ Message Bus Commands:
         await agent.initialize_mcp()
         print("Scrummaster agent started with MCP integration")
 
+    async def publish_agent_event(self, event_type: str, data: Dict[str, Any], correlation_id: Optional[str] = None) -> bool:
+        """Publiceer een event via de core message bus met uniform event contract."""
+        try:
+            from bmad.core.message_bus import publish_event
+            event_data = {
+                **data,
+                "agent_name": self.agent_name,
+                "timestamp": datetime.now().isoformat(),
+            }
+            return await publish_event(event_type, event_data, self.agent_name, correlation_id)
+        except Exception as e:
+            logger.error(f"Failed to publish event {event_type}: {e}")
+            return False
+
 def main():
     """Main CLI function with comprehensive error handling."""
     parser = argparse.ArgumentParser(description="Scrummaster Agent CLI")
@@ -1600,7 +1612,7 @@ def main():
                 "timestamp": datetime.now().isoformat()
             }
             print(f"📤 Publishing event: {event_data}")
-            result = asyncio.run(agent.publish_event("sprint_planning_requested", event_data))
+            result = asyncio.run(agent.publish_agent_event("sprint_planning_requested", event_data))
             print(f"✅ Event published successfully: {result}")
             
         elif args.command == "subscribe-event":

@@ -18,6 +18,7 @@ from bmad.agents.core.agent.agent_performance_monitor import (
 from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.ai.llm_client import ask_openai
 from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.core.message_bus import EventTypes, publish_event
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from bmad.core.mcp import (
@@ -1651,7 +1652,7 @@ StrategiePartner Agent Commands:
         return await loop.run_in_executor(None, self.business_model_canvas)
     
     async def _async_publish_event(self, event_type: str, data: Dict[str, Any]):
-        """Async wrapper for publish."""
+        """Async wrapper for legacy publish to satisfy existing tests."""
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, publish, event_type, data)
     
@@ -1677,16 +1678,15 @@ StrategiePartner Agent Commands:
             allowed = self.policy_engine.evaluate_policy("alignment", event)
             logger.info(f"Policy evaluation result: {allowed}")
             
-            # Publish follow-up event
-            if self.message_bus_integration:
-                try:
-                    await self.message_bus_integration.publish_event("alignment_check_processed", {
-                        "event_data": event,
-                        "policy_result": allowed,
-                        "timestamp": datetime.now().isoformat()
-                    })
-                except Exception as e:
-                    logger.warning(f"Failed to publish alignment_check_processed event: {e}")
+            # Publish follow-up event via wrapper
+            try:
+                await self.publish_agent_event("alignment_check_processed", {
+                    "event_data": event,
+                    "policy_result": allowed,
+                    "timestamp": datetime.now().isoformat()
+                })
+            except Exception as e:
+                logger.warning(f"Failed to publish alignment_check_processed event: {e}")
             
             return {"status": "processed", "event": "alignment_check_completed", "policy_result": allowed}
         except Exception as e:
@@ -1712,16 +1712,15 @@ StrategiePartner Agent Commands:
             # Call develop_strategy with the exact strategy name as expected by tests
             result = await self.develop_strategy(strategy_name)
             
-            # Publish follow-up event
-            if self.message_bus_integration:
-                try:
-                    await self.message_bus_integration.publish_event("strategy_development_completed", {
-                        "strategy_name": strategy_name,
-                        "result": result,
-                        "timestamp": datetime.now().isoformat()
-                    })
-                except Exception as e:
-                    logger.warning(f"Failed to publish strategy_development_completed event: {e}")
+            # Publish follow-up event via wrapper
+            try:
+                await self.publish_agent_event("strategy_development_completed", {
+                    "strategy_name": strategy_name,
+                    "result": result,
+                    "timestamp": datetime.now().isoformat()
+                })
+            except Exception as e:
+                logger.warning(f"Failed to publish strategy_development_completed event: {e}")
             
             return {"status": "processed", "event": "strategy_development_requested", "result": result}
         except Exception as e:
@@ -1746,17 +1745,16 @@ StrategiePartner Agent Commands:
             idea_description = event.get("idea_description", "A new mobile app for task management")
             result = self.validate_idea(idea_description)
             
-            # Publish follow-up event
-            if self.message_bus_integration:
-                try:
-                    await self.message_bus_integration.publish_event("idea_validation_completed", {
-                        "agent": "StrategiePartnerAgent",
-                        "idea_description": idea_description,
-                        "validation_result": result,
-                        "timestamp": datetime.now().isoformat()
-                    })
-                except Exception as e:
-                    logger.warning(f"Failed to publish idea_validation_completed event: {e}")
+            # Publish follow-up event via wrapper
+            try:
+                await self.publish_agent_event("idea_validation_completed", {
+                    "agent": "StrategiePartnerAgent",
+                    "idea_description": idea_description,
+                    "validation_result": result,
+                    "timestamp": datetime.now().isoformat()
+                })
+            except Exception as e:
+                logger.warning(f"Failed to publish idea_validation_completed event: {e}")
             
             logger.info(f"Idea validation completed: {result}")
             return {"status": "processed", "event": "idea_validation_requested", "result": result}
@@ -1783,17 +1781,16 @@ StrategiePartner Agent Commands:
             refinement_data = event.get("refinement_data", {})
             result = self.refine_idea(idea_description, refinement_data)
             
-            # Publish follow-up event
-            if self.message_bus_integration:
-                try:
-                    await self.message_bus_integration.publish_event("idea_refinement_completed", {
-                        "agent": "StrategiePartnerAgent",
-                        "idea_description": idea_description,
-                        "refinement_result": result,
-                        "timestamp": datetime.now().isoformat()
-                    })
-                except Exception as e:
-                    logger.warning(f"Failed to publish idea_refinement_completed event: {e}")
+            # Publish follow-up event via wrapper
+            try:
+                await self.publish_agent_event("idea_refinement_completed", {
+                    "agent": "StrategiePartnerAgent",
+                    "idea_description": idea_description,
+                    "refinement_result": result,
+                    "timestamp": datetime.now().isoformat()
+                })
+            except Exception as e:
+                logger.warning(f"Failed to publish idea_refinement_completed event: {e}")
             
             logger.info(f"Idea refinement completed: {result}")
             return {"status": "processed", "event": "idea_refinement_requested", "result": result}
@@ -1819,17 +1816,16 @@ StrategiePartner Agent Commands:
             validated_idea = event.get("validated_idea", {})
             result = self.create_epic_from_idea(validated_idea)
             
-            # Publish follow-up event
-            if self.message_bus_integration:
-                try:
-                    await self.message_bus_integration.publish_event("epic_creation_completed", {
-                        "agent": "StrategiePartnerAgent",
-                        "validated_idea": validated_idea,
-                        "epic_result": result,
-                        "timestamp": datetime.now().isoformat()
-                    })
-                except Exception as e:
-                    logger.warning(f"Failed to publish epic_creation_completed event: {e}")
+            # Publish follow-up event via wrapper
+            try:
+                await self.publish_agent_event("epic_creation_completed", {
+                    "agent": "StrategiePartnerAgent",
+                    "validated_idea": validated_idea,
+                    "epic_result": result,
+                    "timestamp": datetime.now().isoformat()
+                })
+            except Exception as e:
+                logger.warning(f"Failed to publish epic_creation_completed event: {e}")
             
             logger.info(f"Epic creation completed: {result}")
             return {"status": "processed", "event": "epic_creation_requested", "result": result}
@@ -1870,6 +1866,14 @@ StrategiePartner Agent Commands:
         agent = cls()
         await agent.run()
         return agent
+
+    async def publish_agent_event(self, event_type: str, data: Dict[str, Any], request_id: Optional[str] = None) -> bool:
+        try:
+            payload = {"status": data.get("status", data.get("status", "completed")), **data, "agent": self.agent_name}
+            return await publish_event(event_type, payload, source_agent=self.agent_name, correlation_id=request_id)
+        except Exception as e:
+            logger.warning(f"Failed to publish event {event_type}: {e}")
+            return False
 
 def main():
     """Main CLI function with comprehensive error handling."""
