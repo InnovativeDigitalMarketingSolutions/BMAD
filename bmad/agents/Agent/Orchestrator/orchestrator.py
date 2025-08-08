@@ -267,20 +267,54 @@ class OrchestratorAgent(AgentMessageBusIntegration):
             self.mcp_enabled = False
 
     async def initialize_enhanced_mcp(self):
-        """Initialize enhanced MCP capabilities for Phase 2."""
+        """Initialize enhanced MCP capabilities."""
         try:
             self.enhanced_mcp = create_enhanced_mcp_integration(self.agent_name)
-            self.enhanced_mcp_enabled = await self.enhanced_mcp.initialize_enhanced_mcp()
-            self.enhanced_mcp_client = self.enhanced_mcp
-            
-            if self.enhanced_mcp_enabled:
-                logger.info("Enhanced MCP capabilities initialized successfully for Orchestrator")
+            if hasattr(self.enhanced_mcp, 'initialize_enhanced_mcp'):
+                self.enhanced_mcp_enabled = await self.enhanced_mcp.initialize_enhanced_mcp()
             else:
-                logger.warning("Enhanced MCP initialization failed, falling back to standard MCP")
-                
+                # Backward-compatible initialize
+                if hasattr(self.enhanced_mcp, 'initialize'):
+                    await self.enhanced_mcp.initialize()
+                self.enhanced_mcp_enabled = True
+            # Align client pointer if available
+            if self.enhanced_mcp_enabled and hasattr(self.enhanced_mcp, 'mcp_client'):
+                self.enhanced_mcp_client = self.enhanced_mcp.mcp_client
+            logger.info("Enhanced MCP initialized successfully for Orchestrator")
         except Exception as e:
             logger.warning(f"Enhanced MCP initialization failed for Orchestrator: {e}")
             self.enhanced_mcp_enabled = False
+
+    def get_enhanced_mcp_tools(self) -> list:
+        """Get list of available enhanced MCP tools for this agent."""
+        if not self.enhanced_mcp_enabled:
+            return []
+        try:
+            return [
+                "orchestration_planning",
+                "agent_communication",
+                "external_tool_discovery",
+                "external_tool_execution",
+                "workflow_optimization",
+                "performance_tuning"
+            ]
+        except Exception as e:
+            logger.warning(f"Failed to get enhanced MCP tools: {e}")
+            return []
+
+    def register_enhanced_mcp_tools(self) -> bool:
+        """Register enhanced MCP tools for this agent."""
+        if not self.enhanced_mcp_enabled:
+            return False
+        try:
+            tools = self.get_enhanced_mcp_tools()
+            for tool in tools:
+                if self.enhanced_mcp and hasattr(self.enhanced_mcp, 'register_tool'):
+                    self.enhanced_mcp.register_tool(tool)
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to register enhanced MCP tools: {e}")
+            return False
     
     async def initialize_tracing(self):
         """Initialize tracing capabilities."""
