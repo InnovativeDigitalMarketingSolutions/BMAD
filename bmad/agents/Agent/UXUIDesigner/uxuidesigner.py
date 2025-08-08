@@ -46,13 +46,15 @@ from bmad.agents.core.communication.agent_message_bus_integration import (
 )
 
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
+from bmad.core.message_bus import EventTypes, publish_event
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
 logger = logging.getLogger(__name__)
 
-class UXUIDesignerAgent:
+class UXUIDesignerAgent(AgentMessageBusIntegration):
     def __init__(self):
+        super().__init__("UXUIDesigner", self)
         # Set agent name
         self.agent_name = "UXUIDesigner"
         # Initialize core services
@@ -179,37 +181,20 @@ class UXUIDesignerAgent:
             logger.warning(f"Tracing initialization failed for UXUIDesigner: {e}")
             self.tracing_enabled = False
 
-    async def initialize_message_bus_integration(self):
-        """Initialize Message Bus Integration for the agent."""
+    async def initialize_message_bus_integration(self) -> bool:
         try:
             self.message_bus_integration = create_agent_message_bus_integration(
                 agent_name=self.agent_name,
                 agent_instance=self
             )
-            
-            # Register event handlers for UX/UI-specific events
-            await self.message_bus_integration.register_event_handler(
-                "design_requested", 
-                self.handle_design_requested
-            )
-            await self.message_bus_integration.register_event_handler(
-                "design_completed", 
-                self.handle_design_completed
-            )
-            await self.message_bus_integration.register_event_handler(
-                "figma_analysis_requested",
-                self.handle_figma_analysis_requested
-            )
-            await self.message_bus_integration.register_event_handler(
-                "design_feedback_requested",
-                self.handle_design_feedback_requested
-            )
-            
-            self.message_bus_enabled = True
-            logger.info(f"✅ Message Bus Integration geïnitialiseerd voor {self.agent_name}")
-            return True
+            if hasattr(self.message_bus_integration, "enable"):
+                self.message_bus_enabled = await self.message_bus_integration.enable()
+            else:
+                self.message_bus_enabled = True
+            return self.message_bus_enabled
         except Exception as e:
-            logger.error(f"❌ Fout bij initialiseren van Message Bus Integration voor {self.agent_name}: {e}")
+            logger.warning(f"Message bus integration init failed: {e}")
+            self.message_bus_enabled = False
             return False
 
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -1071,9 +1056,9 @@ class UXUIDesignerAgent:
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         logger.info("Starting UX/UI collaboration example...")
 
-        # Publish design request
-        publish("design_requested", {
-            "agent": "UXUIDesignerAgent",
+        # Publish design request via wrapper
+        await self.publish_agent_event(EventTypes.COMPONENT_BUILD_REQUESTED, {
+            "status": "started",
             "task": "Create Shadcn Button Component",
             "timestamp": datetime.now().isoformat()
         })
@@ -1084,10 +1069,9 @@ class UXUIDesignerAgent:
         # Create component spec
         self.create_component_spec("Button")
 
-        # Publish completion
-        publish("design_completed", {
-            "status": "success",
-            "agent": "UXUIDesignerAgent",
+        # Publish completion via wrapper
+        await self.publish_agent_event(EventTypes.COMPONENT_BUILD_COMPLETED, {
+            "status": "completed",
             "component": "Button",
             "accessibility_score": 98
         })
@@ -1128,13 +1112,14 @@ class UXUIDesignerAgent:
             # Update metrics
             self._update_design_metrics(result)
             
-            # Publish completion event
-            publish("design_processing_started", {
-                "agent": self.agent_name,
+            # Publish progress event via wrapper (sync context)
+            import asyncio as _asyncio
+            _asyncio.run(self.publish_agent_event(EventTypes.COMPONENT_BUILD_REQUESTED, {
+                "status": "in_progress",
                 "design_type": design_type,
                 "component_name": component_name,
                 "timestamp": datetime.now().isoformat()
-            })
+            }))
             
             logger.info(f"Design requested processed: {design_type} - {component_name}")
             return result
@@ -1169,9 +1154,9 @@ class UXUIDesignerAgent:
                     self.performance_metrics["total_designs_created"] / total_attempts * 100
                 )
             
-            # Publish completion event
-            publish("design_completion_reported", {
-                "agent": self.agent_name,
+            # Publish completion event via wrapper
+            await self.publish_agent_event(EventTypes.COMPONENT_BUILD_COMPLETED, {
+                "status": "completed",
                 "design_id": design_id,
                 "design_type": design_type,
                 "timestamp": datetime.now().isoformat(),
@@ -1200,9 +1185,9 @@ class UXUIDesignerAgent:
             if result.get("success", False):
                 self.performance_metrics["total_accessibility_checks"] += 1
             
-            # Publish analysis event
-            publish("figma_analysis_completed", {
-                "agent": self.agent_name,
+            # Publish analysis event via wrapper
+            await self.publish_agent_event(EventTypes.ACCESSIBILITY_AUDIT_COMPLETED, {
+                "status": "completed",
                 "figma_file_id": figma_file_id,
                 "timestamp": datetime.now().isoformat(),
                 "analysis_result": result
@@ -1553,6 +1538,14 @@ class UXUIDesignerAgent:
         check_node(file_data.get("document", {}))
 
         return issues
+
+    async def publish_agent_event(self, event_type: str, data: Dict[str, Any], request_id: Optional[str] = None) -> bool:
+        try:
+            payload = {"status": data.get("status", "completed"), **data, "agent": self.agent_name}
+            return await publish_event(event_type, payload, source_agent=self.agent_name, correlation_id=request_id)
+        except Exception as e:
+            logger.warning(f"Failed to publish event {event_type}: {e}")
+            return False
 
 def on_figma_analysis_requested(event):
     """Event handler voor Figma analysis requests."""

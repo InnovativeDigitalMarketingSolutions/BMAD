@@ -81,10 +81,15 @@ python uxuidesigner.py enhanced-performance
 - `design_feedback_requested` - Request design feedback
 
 ### Output Events
-- `design_processing_started` - Design processing started
-- `design_completion_reported` - Design completion reported
-- `figma_analysis_completed` - Figma analysis completed
-- `design_feedback_processed` - Design feedback processed
+- `component_build_requested` (`EventTypes.COMPONENT_BUILD_REQUESTED`) - via wrapper
+- `component_build_completed` (`EventTypes.COMPONENT_BUILD_COMPLETED`) - via wrapper
+- `accessibility_audit_completed` (`EventTypes.ACCESSIBILITY_AUDIT_COMPLETED`) - via wrapper
+- `design_feedback_processed` - legacy naam waar relevant
+
+### Event Contract & Wrapper
+- Publicatie via `publish_agent_event(event_type, data, request_id=None)`
+- Minimale payload: `status`, domeinspecifieke sleutel (bijv. `component`, `figma_file_id`), optioneel `request_id`
+- Geen directe `publish(...)` in agent code; CLI/demo kan kern `publish_event` gebruiken
 
 ## Collaboration
 Deze agent werkt samen met andere agents via Message Bus en gedeelde context:
