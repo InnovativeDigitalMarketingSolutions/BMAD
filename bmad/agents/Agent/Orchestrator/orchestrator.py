@@ -319,6 +319,15 @@ class OrchestratorAgent(AgentMessageBusIntegration):
     async def initialize_tracing(self):
         """Initialize tracing capabilities."""
         try:
+            if self.tracer is None:
+                config = type("Config", (), {
+                    "service_name": "OrchestratorAgent",
+                    "service_version": "1.0.0",
+                    "environment": "development",
+                    "sample_rate": 1.0,
+                    "exporters": []
+                })()
+                self.tracer = BMADTracer(config=config)
             if self.tracer and hasattr(self.tracer, 'initialize'):
                 await self.tracer.initialize()
                 self.tracing_enabled = True
@@ -1348,9 +1357,8 @@ Enhanced MCP Phase 2 Commands:
                 send_slack_message(":white_check_mark: HITL-goedkeuring ontvangen, workflow vervolgt.", channel=slack_channel, use_api=True)
             else:
                 try:
-                    # Use Message Bus Integration instead of old publish function
-                    if self.message_bus_integration:
-                        asyncio.create_task(self.message_bus_integration.publish_event(event_type, event))
+                    # Gebruik wrapper voor consistente publicatie
+                    asyncio.run(self.publish_agent_event(event_type, event))
                     logging.info(f"[Orchestrator] Event gepubliceerd: {event_type} ({desc})")
                     send_slack_message(f":information_source: Stap *{desc}* gestart.", channel=slack_channel, use_api=True)
                 except Exception as e:
@@ -1428,11 +1436,19 @@ Enhanced MCP Phase 2 Commands:
         logging.warning(f"[Orchestrator] Timeout bij wachten op HITL-beslissing (alert_id={alert_id})")
         return False
 
-    async def subscribe_to_event(self, event_type: str, callback):
-        """Passthrough voor tests: abonneer op event via core message bus."""
-        if not self.message_bus:
-            self.message_bus = get_message_bus()
-        return await self.message_bus.subscribe(event_type, callback)
+    async def subscribe_to_event(self, event_type: str, callback) -> bool:
+        """Subscribe to a specific event type via the message bus integration.
+        Falls back to core subscribe_to_event if integration is not initialized.
+        """
+        try:
+            if self.message_bus_integration:
+                return await self.message_bus_integration.register_event_handler(event_type, callback)
+            else:
+                from bmad.core.message_bus.message_bus import subscribe_to_event as core_subscribe_to_event
+                return await core_subscribe_to_event(event_type, callback)
+        except Exception as e:
+            logger.error(f"Failed to subscribe to event '{event_type}': {e}")
+            return False
 
     def monitor_agents(self):
         agents = ["ProductOwner", "Architect", "TestEngineer", "FeedbackAgent", "DevOpsInfra", "Retrospective", "MobileDeveloper"]
