@@ -77,6 +77,18 @@ else:
 # App start time for uptime calculation
 APP_START_TIME = datetime.utcnow()
 
+# Key function: prefer tenant-bound limiting when beschikbaar
+def rate_limit_key():
+    try:
+        # Tenant-bound if set by auth middleware
+        tenant_id = getattr(request, "tenant_id", None)
+        if tenant_id:
+            return f"tenant:{tenant_id}"
+    except Exception:
+        pass
+    # Fallback to client IP
+    return get_remote_address()
+
 def _get_agents_list():
     return [
         {"id": "orchestrator", "name": "Orchestrator", "status": "active", "type": "orchestrator"},
@@ -117,11 +129,16 @@ if IS_DEV:
     class _NoopLimiter:
         def exempt(self, f):
             return f
+        def limit(self, *args, **kwargs):
+            def _decorator(func):
+                return func
+            return _decorator
     limiter = _NoopLimiter()
+    app.limiter = limiter
 else:
     limiter = Limiter(
         app=app,
-        key_func=get_remote_address,
+        key_func=rate_limit_key,
         default_limits=default_limits,
         storage_uri=app.config.get("RATELIMIT_STORAGE_URI", "memory://")
     )
@@ -431,7 +448,7 @@ def orchestrator_metrics():
     return jsonify(METRICS)
 
 @app.route("/api/metrics", methods=["GET"])
-@limiter.exempt
+@limiter.limit("60 per minute")
 @require_auth
 @require_permission("view_analytics")
 @dev_unlimited
@@ -477,41 +494,22 @@ def api_metrics():
     })
 
 @app.route("/api/agents", methods=["GET"])
+@limiter.limit("120 per minute")
 @require_auth
 def list_agents():
-    agents = [
-        {"id": "orchestrator", "name": "Orchestrator", "status": "active", "type": "orchestrator"},
-        {"id": "product-owner", "name": "ProductOwner", "status": "idle", "type": "planning"},
-        {"id": "architect", "name": "Architect", "status": "idle", "type": "planning"},
-        {"id": "scrummaster", "name": "Scrummaster", "status": "idle", "type": "management"},
-        {"id": "frontend", "name": "FrontendDeveloper", "status": "idle", "type": "development"},
-        {"id": "backend", "name": "BackendDeveloper", "status": "idle", "type": "development"},
-        {"id": "fullstack", "name": "FullstackDeveloper", "status": "idle", "type": "development"},
-        {"id": "mobile", "name": "MobileDeveloper", "status": "idle", "type": "development"},
-        {"id": "data", "name": "DataEngineer", "status": "idle", "type": "development"},
-        {"id": "devops", "name": "DevOpsInfra", "status": "idle", "type": "infrastructure"},
-        {"id": "quality", "name": "QualityGuardian", "status": "idle", "type": "quality"},
-        {"id": "docs", "name": "DocumentationAgent", "status": "idle", "type": "documentation"},
-        {"id": "feedback", "name": "FeedbackAgent", "status": "idle", "type": "feedback"},
-        {"id": "accessibility", "name": "AccessibilityAgent", "status": "idle", "type": "accessibility"},
-        {"id": "release", "name": "ReleaseManager", "status": "idle", "type": "release"},
-        {"id": "retro", "name": "Retrospective", "status": "idle", "type": "retrospective"},
-        {"id": "rnd", "name": "RnD", "status": "idle", "type": "research"},
-        {"id": "ai", "name": "AiDeveloper", "status": "idle", "type": "development"},
-        {"id": "security", "name": "SecurityDeveloper", "status": "idle", "type": "security"},
-        {"id": "strategy", "name": "StrategiePartner", "status": "idle", "type": "strategy"},
-        {"id": "test", "name": "TestEngineer", "status": "idle", "type": "testing"},
-        {"id": "uxui", "name": "UXUIDesigner", "status": "idle", "type": "design"},
-        {"id": "workflow", "name": "WorkflowAutomator", "status": "idle", "type": "automation"},
-    ]
+    # Return aggregated structure
+    agents = _get_agents_list()
+    total_agents = len(agents)
+    active_agents = sum(1 for a in agents if a.get("status") == "active")
     return jsonify({
         "agents": agents,
-        "total": len(agents),
-        "active": sum(1 for a in agents if a.get("status") == "active"),
+        "total": total_agents,
+        "active": active_agents,
         "timestamp": datetime.utcnow().isoformat()
     })
 
 @app.route("/agent/<agent_name>/command", methods=["POST"])
+@limiter.limit("30 per minute")
 @require_auth
 @require_permission_enhanced("execute_agents", tenant_aware=True)
 def agent_command(agent_name):
@@ -533,6 +531,7 @@ def agent_command(agent_name):
     return jsonify({"status": "command received", "agent": agent_name, "command": command})
 
 @app.route("/agent/<agent_name>/status", methods=["GET"])
+@limiter.limit("120 per minute")
 @require_auth
 def agent_status(agent_name):
     # Stub: haal status op uit context of agent
@@ -633,6 +632,7 @@ def update_user(user_id):
 
 # Authentication Routes
 @app.route("/api/auth/login", methods=["POST"])
+@limiter.limit("10 per minute")
 def login():
     data = request.json or {}
     user = user_manager.authenticate_user(
@@ -696,6 +696,7 @@ def login():
         return jsonify({"error": "Token generation failed"}), 500
 
 @app.route("/api/auth/refresh", methods=["POST"])
+@limiter.limit("60 per minute")
 def refresh_token():
     """Refresh access token using refresh token."""
     data = request.json or {}
@@ -820,15 +821,18 @@ def generate_security_report():
 
 # Test routes
 @app.route("/test/ping", methods=["GET"])
+@limiter.exempt
 def test_ping():
-    return jsonify({"pong": True})
+    return jsonify({"status": "ok"})
 
 @app.route("/test/echo", methods=["POST"])
+@limiter.exempt
 def test_echo():
     return jsonify(request.json or {})
 
 # Frontend utility routes for live data (dev-friendly)
 @app.route("/api/health", methods=["GET"])
+@limiter.exempt
 def api_health():
     return jsonify({
         "status": "ok",
@@ -836,6 +840,7 @@ def api_health():
     })
 
 @app.route("/api/performance", methods=["GET"])
+@limiter.limit("120 per minute")
 def api_performance():
     # Minimal structure expected by frontend: { metrics: [...], alerts: [...] }
     return jsonify({
@@ -844,6 +849,7 @@ def api_performance():
     })
 
 @app.route("/api/logs", methods=["GET"])
+@limiter.limit("120 per minute")
 def api_logs():
     # Minimal structure expected by frontend: { logs: [...] }
     return jsonify({
@@ -851,6 +857,7 @@ def api_logs():
     })
 
 @app.route("/api/metrics-lite", methods=["GET"])
+@limiter.exempt
 def api_metrics_lite():
     # Same payload shape as /api/metrics but without auth/rate-limit for dev UI
     agents = _get_agents_list()
@@ -931,14 +938,17 @@ def error_handling_health():
     })
 
 @app.route("/swagger-ui/<path:filename>")
+@limiter.exempt
 def swagger_ui_static(filename):
     return send_from_directory("swagger-ui", filename)
 
 @app.route("/openapi.yaml")
+@limiter.exempt
 def openapi_spec():
     return send_from_directory("swagger-ui", "openapi.yaml")
 
 @app.route("/swagger")
+@limiter.exempt
 def swagger_redirect():
     return redirect("/swagger-ui/index.html")
 
