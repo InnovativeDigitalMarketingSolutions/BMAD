@@ -65,6 +65,14 @@ IS_DEV = os.getenv("DEV_MODE") == "true" or os.getenv("FLASK_ENV") == "developme
 # Disable rate limiting entirely in dev mode
 if IS_DEV:
     app.config["RATELIMIT_ENABLED"] = False
+else:
+    # Robust rate limit settings outside dev
+    app.config.setdefault("RATELIMIT_HEADERS_ENABLED", True)
+    app.config.setdefault("RATELIMIT_STRATEGY", os.getenv("RATELIMIT_STRATEGY", "fixed-window"))
+    # Allow overriding storage (e.g., Redis) via env
+    app.config.setdefault("RATELIMIT_STORAGE_URI", os.getenv("RATELIMIT_STORAGE_URI", os.getenv("REDIS_URL", "memory://")))
+    # Optional: default string if Limiter is constructed without default_limits
+    app.config.setdefault("RATELIMIT_DEFAULT", os.getenv("DEFAULT_RATE_LIMITS", "200 per day;50 per hour;10 per minute"))
 
 # App start time for uptime calculation
 APP_START_TIME = datetime.utcnow()
@@ -115,8 +123,10 @@ else:
         app=app,
         key_func=get_remote_address,
         default_limits=default_limits,
-        storage_uri="memory://"
+        storage_uri=app.config.get("RATELIMIT_STORAGE_URI", "memory://")
     )
+    # Attach to app for introspection in tests and elsewhere
+    app.limiter = limiter
 
 # Clear rate limiting storage on startup for development
 if IS_DEV:
@@ -143,10 +153,9 @@ def add_security_headers(response):
 @app.after_request
 def add_rate_limit_headers(response):
     if not IS_DEV:
-        # If Flask-Limiter is active, it usually injects headers itself. Ensure presence with sensible defaults.
-        response.headers.setdefault('X-RateLimit-Limit', os.getenv('RATE_LIMIT_LIMIT', '100'))
-        # Remaining is illustrative; a real implementation would reflect actual remaining from limiter state
-        response.headers.setdefault('X-RateLimit-Remaining', os.getenv('RATE_LIMIT_REMAINING', '99'))
+        # Prefer headers injected by Flask-Limiter; otherwise ensure presence with reasonable defaults
+        response.headers.setdefault('X-RateLimit-Limit', os.getenv('RATE_LIMIT_LIMIT', '200'))
+        response.headers.setdefault('X-RateLimit-Remaining', os.getenv('RATE_LIMIT_REMAINING', '199'))
         reset_ts = os.getenv('RATE_LIMIT_RESET') or str(int(time.time()) + 60)
         response.headers.setdefault('X-RateLimit-Reset', reset_ts)
     return response
@@ -180,7 +189,10 @@ def not_found(error):
 def too_many_requests(error):
     """Handle 429 Too Many Requests errors."""
     logger.warning(f"Rate limit exceeded: {error}")
-    return jsonify({"error": "Too many requests", "message": "Rate limit exceeded"}), 429
+    resp = jsonify({"error": "Too many requests", "message": "Rate limit exceeded"})
+    if not IS_DEV:
+        resp.headers.setdefault('Retry-After', '60')
+    return resp, 429
 
 # Decorator helper: disable rate limit in dev for specific routes
 def dev_unlimited(f):
