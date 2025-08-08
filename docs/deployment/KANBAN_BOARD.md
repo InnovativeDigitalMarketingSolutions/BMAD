@@ -61,6 +61,11 @@ For detailed analysis of AI integration possibilities, system objectives verific
 
 **0.1 Critical Integration Fixes** 🔄
 - [ ] **Fix Test Infrastructure** - Resolve import errors and test collection issues
+  - [ ] Sprint: Resolve ModuleNotFoundError during test collection (configure PYTHONPATH/pytest.ini, ensure test packages have __init__.py, adjust relative imports)
+  - [ ] Sprint: Isolate/exclude microservices tests in core runs or add per-service pytest config
+  - [ ] Sprint: Add deterministic test entry points (-k targeting) in CI to avoid broad collection failures
+  - [ ] Sprint: Reduce deprecation warnings (protobuf/FastAPI on_event) by pinning or updating usage
+  - [ ] Sprint: Ensure orchestrator suites run in CI using wrapper standard (publish_agent_event) mocks
 - [ ] **Enable Enhanced MCP Phase 2** - Set `enhanced_mcp_enabled = True` for all 23 agents
 - [ ] **Enable Message Bus Integration** - Set `message_bus_enabled = True` for all 23 agents
 - [ ] **Enable Tracing Integration** - Set `tracing_enabled = True` for all 23 agents
