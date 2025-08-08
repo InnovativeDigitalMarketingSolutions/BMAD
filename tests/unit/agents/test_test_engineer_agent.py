@@ -452,15 +452,17 @@ class TestTestEngineerAgent:
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_advanced_policy_engine'), \
              patch('bmad.agents.Agent.TestEngineer.testengineer.get_sprite_library'):
             
-            agent = TestEngineerAgent()
-            result = await agent.collaborate_example()
-            
-            assert isinstance(result, dict)
-            assert "status" in result
-            assert "message" in result
-            assert result["status"] in ["success", "error"]
-            assert mock_publish.call_count == 2
-            assert mock_slack.called
+            from unittest.mock import AsyncMock
+            with patch.object(TestEngineerAgent, 'publish_agent_event', new_callable=AsyncMock) as mock_pub:
+                agent = TestEngineerAgent()
+                result = await agent.collaborate_example()
+                
+                assert isinstance(result, dict)
+                assert "status" in result
+                assert "message" in result
+                assert result["status"] in ["success", "error"]
+                assert mock_pub.await_count == 2
+                assert mock_slack.called
 
     @patch('bmad.agents.Agent.TestEngineer.testengineer.publish')
     @pytest.mark.asyncio

@@ -2,6 +2,21 @@
 
 Hier houdt de TestEngineer agent zijn eigen wijzigingen, beslissingen en learnings bij.
 
+## [2025-08-08] Wrapper-harmonisatie en Event Contract alignering
+
+### Changed
+- Directe `publish(...)`-aanroepen vervangen door `await self.publish_agent_event(...)` volgens de Message Bus Event Contract standaard
+- EventTypes geharmoniseerd in `collaborate_example`: gebruikt nu `TEST_EXECUTION_REQUESTED` en `TEST_EXECUTION_COMPLETED`
+- Async test bijgewerkt om `publish_agent_event` te mocken met `AsyncMock` i.p.v. directe `publish`
+
+### Rationale
+- Uniform event contract verhoogt betrouwbaarheid en traceerbaarheid (minimale velden en consistente namen)
+- Wrappergebruik voorkomt ontbrekende metadata en maakt centrale validatie/tracing mogelijk
+
+### Impact
+- Unit tests: groen (40/40)
+- Documentatie: events worden geüpdatet in agent- en overview-documenten
+
 ## [2025-01-27] Quality-First Implementation & Test Fixes - 40/40 Tests Passing (100%)
 
 ### Added
@@ -52,8 +67,6 @@ Hier houdt de TestEngineer agent zijn eigen wijzigingen, beslissingen en learnin
   - `list-events`: Overzicht van ondersteunde events
   - `event-history`: Event history en test history
   - `performance-metrics`: Performance metrics display
-- **Enhanced Error Handling**: Graceful error handling in alle event handlers
-- **Event History Tracking**: Automatische tracking van alle events in test_history en coverage_history
 
 ### Enhanced
 - **Test Coverage**: Volledige test coverage bereikt met 38/38 tests passing (100%)

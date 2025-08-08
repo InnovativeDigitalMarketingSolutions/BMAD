@@ -20,6 +20,7 @@ from bmad.agents.core.agent.agent_performance_monitor import (
 from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.ai.llm_client import ask_openai
 from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.core.message_bus import EventTypes
 from bmad.core.message_bus import MessageBus, get_message_bus
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from bmad.core.mcp import (
@@ -885,13 +886,12 @@ def test_{component_name.lower()}_e2e():
         """Demonstrate collaboration with other agents via events and context sharing."""
         try:
             logger.info("Starting collaboration example...")
-            publish("test_generation_requested", {
-                "agent": "TestEngineerAgent",
+            await self.publish_agent_event(EventTypes.TEST_EXECUTION_REQUESTED, {
                 "function_description": "def add(a, b): return a + b",
                 "context": "Eenvoudige optelfunctie"
             })
             test_result = await self.run_tests()
-            publish("tests_completed", test_result)
+            await self.publish_agent_event(EventTypes.TEST_EXECUTION_COMPLETED, test_result)
             try:
                 send_slack_message(f"[TestEngineer] Tests afgerond: {test_result}")
             except Exception as e:
@@ -1181,6 +1181,24 @@ def test_{component_name.lower()}_e2e():
         except Exception as e:
             logger.error(f"Error in coverage report requested event handler: {e}")
             return None
+
+    async def publish_agent_event(self, event_type: str, data: Dict[str, Any]) -> bool:
+        """Publiceer een event via de core message bus met uniform event contract."""
+        try:
+            # Verrijk payload minimaal
+            if isinstance(data, dict) and "agent" not in data:
+                data = {**data, "agent": self.agent_name}
+            if isinstance(data, dict) and "status" not in data and event_type.endswith("_COMPLETED"):
+                data = {**data, "status": "completed"}
+            
+            if self.message_bus_integration:
+                return await self.message_bus_integration.publish_event(event_type, data)
+            else:
+                from bmad.core.message_bus import publish_event
+                return await publish_event(event_type, data)
+        except Exception as e:
+            logger.error(f"Failed to publish agent event: {e}")
+            return False
 
     async def run(self):
         """Main event loop for the agent met complete integration."""

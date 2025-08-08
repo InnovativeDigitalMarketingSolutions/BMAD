@@ -108,7 +108,7 @@
 - **Rol**: Quality assurance en testing
 - **Verantwoordelijkheden**: Test strategy, automation, coverage analysis, quality gates
 - **CLI Commando's**: `run-tests`, `analyze-coverage`, `quality-gate`, `help`
-- **Events**: `tests_completed`, `coverage_analyzed`, `quality_gate_passed`
+- **Events**: `test_execution_requested`, `test_execution_completed`, `test_coverage_updated`, `quality_gate_passed`
 - **Enhanced MCP Phase 2**: ✅ Volledig geïmplementeerd met advanced tracing en collaboration
 - **✅ Status**: FULLY COMPLIANT (Score: 0.981 - 98.1% Complete) - 40/40 unit tests + 20/20 integration tests passing (100% success rate)
 - **Quality-First Implementation**: 4 event handlers met echte functionaliteit, 10 performance metrics, 6 Message Bus CLI commands, comprehensive test coverage

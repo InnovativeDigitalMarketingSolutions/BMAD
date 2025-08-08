@@ -81,6 +81,11 @@ De TestEngineer Agent is verantwoordelijk voor teststrategie, testautomatisering
 
 **✅ Status: FULLY COMPLIANT (Score: 0.981 - 98.1% Complete)** - 40/40 unit tests + 20/20 integration tests passing (100% success rate)
 
+### Message Bus & Event Contract
+- Publiceren via wrapper: `await self.publish_agent_event(event_type, data)`
+- Standaard payload bevat minimaal `status` en domeinspecifieke sleutel; `request_id` indien beschikbaar
+- Events (EventTypes): `test_execution_requested`, `test_execution_completed`, `test_coverage_updated`, `quality_gate_passed`
+
 ## Core Features
 - **Test Development**: Unit, integration en e2e test generatie
 - **Test Execution**: Comprehensive test suite uitvoering
