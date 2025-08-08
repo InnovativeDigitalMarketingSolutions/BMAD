@@ -210,36 +210,37 @@ workflow_test.py
 
 **Good Mocking Example**:
 ```python
-@patch('bmad.agents.core.communication.message_bus.publish')
-def test_workflow_event_publishing(self, mock_publish):
-    """Test workflow event publishing with mocked message bus."""
-    # Test logic here
-    mock_publish("workflow_started", {"workflow_id": "test_workflow"})
-    
-    # Verify mock was called correctly
-    mock_publish.assert_called_with("workflow_started", {"workflow_id": "test_workflow"})
-    assert mock_publish.call_count == 1
+from unittest.mock import AsyncMock, patch
+import pytest
+
+@pytest.mark.asyncio
+async def test_workflow_event_publishing(self, agent):
+    """Test workflow event publishing with mocked message bus wrapper."""
+    with patch.object(agent, 'publish_agent_event', new_callable=AsyncMock) as mock_publish_event:
+        await agent.publish_agent_event(EventTypes.WORKFLOW_STARTED, {"workflow_id": "test_workflow"})
+        mock_publish_event.assert_awaited_with(EventTypes.WORKFLOW_STARTED, {"workflow_id": "test_workflow"})
 ```
 
 **Bad Mocking Example**:
 ```python
-def test_workflow_event_publishing(self):
-    """Test workflow event publishing without mocking."""
-    # This may fail if message bus is unavailable
-    publish("workflow_started", {"workflow_id": "test_workflow"})
-    assert True  # No verification
+@pytest.mark.asyncio
+async def test_workflow_event_publishing(self, agent):
+    """Avoid calling wrapper without mocking or assertions."""
+    # Dit is fragiel en raakt de echte bus
+    await agent.publish_agent_event(EventTypes.WORKFLOW_STARTED, {"workflow_id": "test_workflow"})
+    assert True  # Geen verificatie
 ```
 
 ### Mock Configuration Best Practices
 ```python
 # conftest.py
 import pytest
-from unittest.mock import patch
+from unittest.mock import patch, AsyncMock
 
 @pytest.fixture(autouse=True)
 def mock_external_services():
     """Mock external services for all tests."""
-    with patch('bmad.agents.core.communication.message_bus.publish') as mock_publish:
+    with patch('bmad.core.message_bus.publish_event', new_callable=AsyncMock) as mock_publish_event:
         with patch('integrations.supabase.client') as mock_supabase:
             with patch('integrations.openrouter.client') as mock_openrouter:
                 yield {

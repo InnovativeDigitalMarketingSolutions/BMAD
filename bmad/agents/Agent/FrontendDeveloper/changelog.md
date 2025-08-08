@@ -1,4 +1,14 @@
-# FrontendDeveloper Agent Changelog
+# FrontendDeveloper Changelog
+
+## [2025-08-08] Wrapper-harmonisatie en Event Contract
+
+### Changed
+- Directe `publish(...)` vervangen door `publish_agent_event(...)` in `collaborate_example`
+- EventTypes gebruikt: `COMPONENT_BUILD_REQUESTED`, `COMPONENT_BUILD_COMPLETED`, `ACCESSIBILITY_AUDIT_COMPLETED`
+
+### Impact
+- Unit tests: groen (63/63)
+- Documentatie: te updaten met Message Bus & Event Contract sectie
 
 ## [2025-08-06] Message Bus Integration & Quality-First Implementation Complete
 ### Added

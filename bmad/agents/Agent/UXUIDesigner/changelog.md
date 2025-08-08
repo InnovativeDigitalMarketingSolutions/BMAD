@@ -49,3 +49,16 @@ Hier houdt de UXUIDesigner agent zijn eigen wijzigingen, beslissingen en learnin
 - **CLI Extension Value**: Message Bus commands maken agent interactie mogelijk
 - **Performance Tracking**: Metrics tracking verbetert observability en debugging
 - **Error Handling**: Graceful error handling is essentieel voor production readiness 
+
+## [2025-08-08] Message Bus Wrapper Compliance
+
+### Changed
+- Directe `publish(...)`-calls vervangen door `publish_agent_event` wrapper in async paden
+- `initialize_message_bus_integration` toegevoegd en wrapper standaard toegepast
+- Events geharmoniseerd naar `EventTypes.COMPONENT_BUILD_*` en `EventTypes.ACCESSIBILITY_AUDIT_COMPLETED`
+
+### Tests
+- Alle UXUIDesigner unit tests groen (79/79)
+
+### Documentatie
+- `uxuidesigner.md` bijgewerkt met Event Contract & Wrapper en aangepaste output events 

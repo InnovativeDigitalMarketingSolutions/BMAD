@@ -48,7 +48,7 @@ from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 from bmad.core.tracing import tracing_service
 
 # Agent Message Bus Integration
-from bmad.agents.core.communication.agent_message_bus_integration import AgentMessageBusIntegration
+from bmad.agents.core.communication.agent_message_bus_integration import AgentMessageBusIntegration, create_agent_message_bus_integration
 
 
 load_dotenv()
@@ -137,6 +137,9 @@ class ProductOwnerAgent(AgentMessageBusIntegration):
     async def initialize_message_bus(self):
         """Initialize message bus integration for ProductOwner agent."""
         try:
+            # Initialize message bus integration using the base class
+            self.message_bus_integration = create_agent_message_bus_integration(self.agent_name, self)
+            
             # Subscribe to relevant event categories
             await self.subscribe_to_event_category("product_management")
             await self.subscribe_to_event_category("user_stories")
@@ -152,11 +155,176 @@ class ProductOwnerAgent(AgentMessageBusIntegration):
             await self.register_event_handler(EventTypes.FEEDBACK_RECEIVED, self._handle_feedback_received)
             await self.register_event_handler(EventTypes.TASK_DELEGATED, self._handle_task_delegated)
             
+            # Enable message bus integration
+            await self.message_bus_integration.enable()
+            
             logging.info("ProductOwner agent message bus integration initialized successfully")
             return True
         except Exception as e:
             logging.error(f"Failed to initialize message bus integration: {e}")
             return False
+    
+    async def publish_agent_event(self, event_type: str, event_data: Dict[str, Any]) -> bool:
+        """Publish an event to the message bus."""
+        try:
+            if self.message_bus_integration:
+                return await self.message_bus_integration.publish_event(event_type, event_data)
+            else:
+                # Fallback to direct message bus publishing
+                from bmad.core.message_bus import publish_event
+                success = publish_event(event_type, event_data)
+                if success:
+                    logging.info(f"Published event {event_type} from {self.agent_name}")
+                else:
+                    logging.error(f"Failed to publish event {event_type} from {self.agent_name}")
+                return success
+        except Exception as e:
+            logging.error(f"Failed to publish agent event: {e}")
+            return False
+    
+    async def subscribe_to_event_category(self, event_category: str) -> bool:
+        """Subscribe to an event category."""
+        try:
+            # This would be implemented based on the specific event category system
+            logging.info(f"Subscribed to event category {event_category} for {self.agent_name}")
+            return True
+        except Exception as e:
+            logging.error(f"Failed to subscribe to event category: {e}")
+            return False
+    
+    async def subscribe_to_event(self, event_type: str, handler) -> bool:
+        """Subscribe to a specific event type."""
+        try:
+            if self.message_bus_integration:
+                return await self.message_bus_integration.register_event_handler(event_type, handler)
+            else:
+                # Fallback to direct subscription
+                from bmad.core.message_bus import subscribe_to_event
+                success = subscribe_to_event(event_type, handler)
+                if success:
+                    logging.info(f"Subscribed to event {event_type} for {self.agent_name}")
+                else:
+                    logging.error(f"Failed to subscribe to event {event_type} for {self.agent_name}")
+                return success
+        except Exception as e:
+            logging.error(f"Failed to subscribe to event: {e}")
+            return False
+    
+    async def register_event_handler(self, event_type: str, handler) -> bool:
+        """Register an event handler."""
+        try:
+            if self.message_bus_integration:
+                return await self.message_bus_integration.register_event_handler(event_type, handler)
+            else:
+                logging.warning(f"Message bus integration not initialized for {self.agent_name}")
+                return False
+        except Exception as e:
+            logging.error(f"Failed to register event handler: {e}")
+            return False
+    
+    async def request_collaboration(self, collaboration_data: Dict[str, Any], task_description: str) -> bool:
+        """Request collaboration with another agent."""
+        try:
+            # Publish collaboration request event
+            event_data = {
+                "collaboration_data": collaboration_data,
+                "task_description": task_description,
+                "requesting_agent": self.agent_name
+            }
+            
+            success = await self.publish_agent_event(EventTypes.AGENT_COLLABORATION_REQUESTED, event_data)
+            
+            if success:
+                logging.info(f"Collaboration request sent for: {task_description}")
+                return True
+            else:
+                logging.error("Failed to send collaboration request")
+                return False
+                
+        except Exception as e:
+            logging.error(f"Error requesting collaboration: {e}")
+            return False
+    
+    async def delegate_task(self, task_data: Dict[str, Any], target_agent: str) -> bool:
+        """Delegate a task to another agent."""
+        try:
+            # Publish task delegation event
+            event_data = {
+                "task_data": task_data,
+                "target_agent": target_agent,
+                "delegating_agent": self.agent_name
+            }
+            
+            success = await self.publish_agent_event(EventTypes.TASK_DELEGATED, event_data)
+            
+            if success:
+                logging.info(f"Task delegated to {target_agent}")
+                return True
+            else:
+                logging.error("Failed to delegate task")
+                return False
+                
+        except Exception as e:
+            logging.error(f"Error delegating task: {e}")
+            return False
+    
+    async def accept_task(self, task_id: str, task_data: Dict[str, Any]) -> bool:
+        """Accept a delegated task."""
+        try:
+            # Publish task acceptance event
+            event_data = {
+                "task_id": task_id,
+                "task_data": task_data,
+                "accepting_agent": self.agent_name
+            }
+            
+            success = await self.publish_agent_event(EventTypes.TASK_ACCEPTED, event_data)
+            
+            if success:
+                logging.info(f"Task {task_id} accepted")
+                return True
+            else:
+                logging.error("Failed to accept task")
+                return False
+                
+        except Exception as e:
+            logging.error(f"Error accepting task: {e}")
+            return False
+    
+    async def complete_task(self, task_id: str, result_data: Dict[str, Any]) -> bool:
+        """Complete a delegated task."""
+        try:
+            # Publish task completion event
+            event_data = {
+                "task_id": task_id,
+                "result_data": result_data,
+                "completing_agent": self.agent_name
+            }
+            
+            success = await self.publish_agent_event(EventTypes.TASK_COMPLETED, event_data)
+            
+            if success:
+                logging.info(f"Task {task_id} completed")
+                return True
+            else:
+                logging.error("Failed to complete task")
+                return False
+                
+        except Exception as e:
+            logging.error(f"Error completing task: {e}")
+            return False
+    
+    @property
+    def message_bus(self):
+        """Get the message bus integration instance."""
+        return self.message_bus_integration
+    
+    @property
+    def subscribed_events(self):
+        """Get the list of subscribed events."""
+        if self.message_bus_integration:
+            return list(self.message_bus_integration.event_handlers.keys())
+        return []
 
     async def _handle_user_story_requested(self, event_data: Dict[str, Any]):
         """Handle user story requested event."""
@@ -1623,8 +1791,7 @@ async def create_bmad_frontend_story():
     project_manager.add_user_story(result["answer"], "high")
 
     # Publiceer event voor andere agents
-    message_bus = get_message_bus()
-    await message_bus.publish(EventTypes.USER_STORIES_CREATED, {
+    await self.publish_agent_event(EventTypes.USER_STORIES_CREATED, {
         "agent": "ProductOwner",
         "project": project_name,
         "status": "success"
@@ -1698,8 +1865,7 @@ def show_bmad_vision():
 
 async def collaborate_example():
     """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
-    message_bus = get_message_bus()
-    await message_bus.publish(EventTypes.BACKLOG_UPDATED, {"status": "success", "agent": "ProductOwner"})
+    await self.publish_agent_event(EventTypes.BACKLOG_UPDATED, {"status": "success", "agent": "ProductOwner"})
     save_context("ProductOwner", "status", {"backlog_status": "updated"})
     print("Event gepubliceerd en context opgeslagen.")
     context = get_context("ProductOwner")

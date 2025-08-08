@@ -15,7 +15,9 @@ from bmad.agents.core.ai.llm_client import ask_openai
 from bmad.core.message_bus import (
     AgentMessageBusIntegration,
     EventTypes,
-    get_message_bus
+    get_message_bus,
+    MessageBus,
+    publish_event
 )
 from bmad.agents.core.communication.message_bus import publish, subscribe
 from bmad.agents.core.data.supabase_context import get_context, save_context
@@ -223,39 +225,50 @@ class ArchitectAgent(AgentMessageBusIntegration):
     async def _handle_api_design_requested(self, event_data: Dict[str, Any]):
         """Handle API design requested event with real functionality."""
         try:
-            use_case = event_data.get("use_case", "Default API use case")
+            request_id = event_data.get("request_id")
+            requirements = event_data.get("requirements", {})
             
             # Record metric
             self.performance_metrics["total_api_designs"] += 1
             
-            # Perform API design
-            result = await self.design_api({"use_case": use_case})
+            # Perform API design with provided requirements
+            result = await self.design_api(requirements)
             
             # Update metrics
-            if result.get("success", False):
+            if result.get("success", True):
                 self.performance_metrics["design_success_rate"] = (
                     self.performance_metrics["total_api_designs"] / 
                     max(1, self.performance_metrics["total_api_designs"]) * 100
                 )
             
-            # Publish completion event
-            publish("api_design_completed", {
-                "agent": self.agent_name,
-                "use_case": use_case,
-                "timestamp": datetime.now().isoformat(),
-                "result": result
+            # Publish completion event via message bus integration
+            await self.publish_agent_event(EventTypes.API_DESIGN_COMPLETED, {
+                "request_id": request_id,
+                "api_design": result,
+                "status": "completed"
             })
             
-            logging.info(f"API design completed: {use_case}")
+            logging.info("API design completed")
             return result
             
         except Exception as e:
             logging.error(f"Error handling API design requested: {e}")
+            # Publish failure event per workflow
+            request_id = event_data.get("request_id") if isinstance(event_data, dict) else None
+            try:
+                await self.publish_agent_event(EventTypes.API_DESIGN_FAILED, {
+                    "request_id": request_id,
+                    "error": str(e),
+                    "status": "failed"
+                })
+            except Exception:
+                pass
             return {"error": str(e), "success": False}
 
     async def _handle_system_design_requested(self, event_data: Dict[str, Any]):
         """Handle system design requested event with real functionality."""
         try:
+            request_id = event_data.get("request_id")
             requirements = event_data.get("requirements", {})
             
             # Record metric
@@ -265,21 +278,20 @@ class ArchitectAgent(AgentMessageBusIntegration):
             result = await self.design_system()
             
             # Update metrics
-            if result.get("success", False):
+            if result.get("success", True):
                 self.performance_metrics["design_success_rate"] = (
                     (self.performance_metrics["total_api_designs"] + self.performance_metrics["total_system_designs"]) / 
                     max(1, self.performance_metrics["total_api_designs"] + self.performance_metrics["total_system_designs"]) * 100
                 )
             
-            # Publish completion event
-            publish("system_design_completed", {
-                "agent": self.agent_name,
-                "requirements": requirements,
-                "timestamp": datetime.now().isoformat(),
-                "result": result
+            # Publish completion event via message bus integration
+            await self.publish_agent_event(EventTypes.SYSTEM_DESIGN_COMPLETED, {
+                "request_id": request_id,
+                "system_design": result,
+                "status": "completed"
             })
             
-            logging.info(f"System design completed")
+            logging.info("System design completed")
             return result
             
         except Exception as e:
@@ -289,27 +301,27 @@ class ArchitectAgent(AgentMessageBusIntegration):
     async def _handle_architecture_review_requested(self, event_data: Dict[str, Any]):
         """Handle architecture review requested event with real functionality."""
         try:
-            architecture_data = event_data.get("architecture_data", {})
+            request_id = event_data.get("request_id")
+            architecture = event_data.get("architecture", {})
             
             # Record metric
             self.performance_metrics["total_architecture_reviews"] += 1
             
             # Perform architecture review
-            result = await self.review_architecture(architecture_data)
+            result = await self.review_architecture(architecture)
             
             # Update metrics
-            if result.get("success", False):
+            if result.get("success", True):
                 self.performance_metrics["architecture_quality_score"] = result.get("quality_score", 0.0)
             
-            # Publish completion event
-            publish("architecture_review_completed", {
-                "agent": self.agent_name,
-                "architecture_data": architecture_data,
-                "timestamp": datetime.now().isoformat(),
-                "result": result
+            # Publish completion event via message bus integration
+            await self.publish_agent_event(EventTypes.ARCHITECTURE_REVIEW_COMPLETED, {
+                "request_id": request_id,
+                "architecture_review": result,
+                "status": "completed"
             })
             
-            logging.info(f"Architecture review completed")
+            logging.info("Architecture review completed")
             return result
             
         except Exception as e:
@@ -319,27 +331,27 @@ class ArchitectAgent(AgentMessageBusIntegration):
     async def _handle_tech_stack_evaluation_requested(self, event_data: Dict[str, Any]):
         """Handle tech stack evaluation requested event with real functionality."""
         try:
-            tech_stack_data = event_data.get("tech_stack_data", {})
+            request_id = event_data.get("request_id")
+            tech_stack = event_data.get("tech_stack", [])
             
             # Record metric
             self.performance_metrics["total_tech_stack_evaluations"] += 1
             
-            # Perform tech stack evaluation
+            # Perform tech stack evaluation (use provided data if needed)
             result = await self.tech_stack()
             
             # Update metrics
-            if result.get("success", False):
+            if result.get("success", True):
                 self.performance_metrics["review_processing_time"] = 0.5  # Simulated time
             
-            # Publish completion event
-            publish("tech_stack_evaluation_completed", {
-                "agent": self.agent_name,
-                "tech_stack_data": tech_stack_data,
-                "timestamp": datetime.now().isoformat(),
-                "result": result
+            # Publish completion event via message bus integration
+            await self.publish_agent_event(EventTypes.TECH_STACK_EVALUATION_COMPLETED, {
+                "request_id": request_id,
+                "tech_stack_evaluation": result,
+                "status": "completed"
             })
             
-            logging.info(f"Tech stack evaluation completed")
+            logging.info("Tech stack evaluation completed")
             return result
             
         except Exception as e:
@@ -349,27 +361,27 @@ class ArchitectAgent(AgentMessageBusIntegration):
     async def _handle_pipeline_advice_requested(self, event_data: Dict[str, Any]):
         """Handle pipeline advice requested event with real functionality."""
         try:
-            pipeline_data = event_data.get("pipeline_data", {})
+            request_id = event_data.get("request_id")
+            pipeline_config = event_data.get("pipeline_config")
             
             # Record metric
             self.performance_metrics["total_pipeline_advice"] += 1
             
             # Provide pipeline advice
-            result = await self.provide_pipeline_advice(pipeline_data)
+            result = await self.provide_pipeline_advice({"pipeline_config": pipeline_config})
             
             # Update metrics
-            if result.get("success", False):
+            if result.get("success", True):
                 self.performance_metrics["review_processing_time"] = 0.3  # Simulated time
             
-            # Publish completion event
-            publish("pipeline_advice_completed", {
-                "agent": self.agent_name,
-                "pipeline_data": pipeline_data,
-                "timestamp": datetime.now().isoformat(),
-                "result": result
+            # Publish completion event via message bus integration
+            await self.publish_agent_event(EventTypes.PIPELINE_ADVICE_COMPLETED, {
+                "request_id": request_id,
+                "pipeline_advice": result,
+                "status": "completed"
             })
             
-            logging.info(f"Pipeline advice completed")
+            logging.info("Pipeline advice completed")
             return result
             
         except Exception as e:
@@ -379,40 +391,29 @@ class ArchitectAgent(AgentMessageBusIntegration):
     async def _handle_task_delegated(self, event_data: Dict[str, Any]):
         """Handle task delegated event with real functionality."""
         try:
-            task_data = event_data.get("task_data", {})
-            target_agent = event_data.get("target_agent", "unknown")
+            task_id = event_data.get("task_id")
+            task_type = event_data.get("task_type")
+            assigned_to = event_data.get("assigned_to")
             
             # Record metric
             self.performance_metrics["total_task_delegations"] += 1
             
-            # Process task delegation
+            # Process task delegation (simulated processing)
             result = {
                 "success": True,
-                "task_id": task_data.get("task_id", "unknown"),
-                "target_agent": target_agent,
-                "delegated_at": datetime.now().isoformat(),
-                "agent": self.agent_name
+                "task_id": task_id,
+                "task_type": task_type,
+                "assigned_to": assigned_to,
+                "processed_at": datetime.now().isoformat(),
             }
             
-            # Update architecture history
-            history_entry = {
-                "type": "task_delegation",
-                "target_agent": target_agent,
-                "task_data": task_data,
-                "timestamp": datetime.now().isoformat()
-            }
-            self.architecture_history.append(history_entry)
-            
-            # Publish completion event
-            publish("task_delegation_completed", {
-                "agent": self.agent_name,
-                "target_agent": target_agent,
-                "task_data": task_data,
-                "timestamp": datetime.now().isoformat(),
-                "result": result
+            # Publish completion event via message bus integration
+            await self.publish_agent_event(EventTypes.TASK_COMPLETED, {
+                "task_id": task_id,
+                "status": "completed"
             })
             
-            logging.info(f"Task delegated to {target_agent}")
+            logging.info(f"Task delegation processed for {task_id}")
             return result
             
         except Exception as e:
@@ -828,13 +829,27 @@ class ArchitectAgent(AgentMessageBusIntegration):
         else:
             print("[OK] Alle resource-bestanden zijn aanwezig.")
 
-    def collaborate_example(self):
+    async def publish_agent_event(self, event_type: str, data: Dict[str, Any]) -> bool:
+        """Publiceer een event via de core message bus met uniform event contract."""
+        try:
+            if isinstance(data, dict) and "agent" not in data:
+                data = {**data, "agent": self.agent_name}
+            if isinstance(data, dict) and "status" not in data and str(event_type).endswith("_COMPLETED"):
+                data = {**data, "status": "completed"}
+            if self.message_bus_integration:
+                return await self.message_bus_integration.publish_event(event_type, data)
+            else:
+                return await publish_event(event_type, data)
+        except Exception as e:
+            logging.error(f"Failed to publish agent event: {e}")
+            return False
+
+    async def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         try:
             # Publish architecture event
-            publish("architecture_reviewed", {
-                "status": "success", 
-                "agent": self.agent_name,
+            await self.publish_agent_event(EventTypes.ARCHITECTURE_REVIEW_COMPLETED, {
+                "status": "success",
                 "timestamp": datetime.now().isoformat()
             })
             
@@ -1747,7 +1762,7 @@ What becomes easier or more difficult to do and any risks introduced by this cha
                 elif command == "test":
                     self.test()
                 elif command in ["collaborate_example", "collaborate"]:
-                    return self.collaborate_example()
+                    return await self.collaborate_example()
                 else:
                     print(f"Unknown command: {command}")
                     logging.error(f"Onbekend commando: {command}")

@@ -18,6 +18,7 @@ from bmad.agents.core.agent.agent_performance_monitor import (
 )
 from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.core.message_bus import EventTypes, publish_event
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.slack.slack_notify import send_slack_message
@@ -140,6 +141,32 @@ class ReleaseManagerAgent(AgentMessageBusIntegration):
         })())
         
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
+
+    async def initialize_message_bus_integration(self) -> bool:
+        """Initialize and enable message bus integration for this agent."""
+        try:
+            self.message_bus_integration = create_agent_message_bus_integration(
+                agent_name=self.agent_name,
+                agent_instance=self
+            )
+            if hasattr(self.message_bus_integration, "enable"):
+                self.message_bus_enabled = await self.message_bus_integration.enable()
+            else:
+                self.message_bus_enabled = True
+            return self.message_bus_enabled
+        except Exception as e:
+            logger.warning(f"Message bus integration init failed: {e}")
+            self.message_bus_enabled = False
+            return False
+
+    async def publish_agent_event(self, event_type: str, data: Dict[str, Any], request_id: Optional[str] = None) -> bool:
+        """Standardized wrapper to publish events following the contract."""
+        try:
+            payload = {"status": data.get("status", "completed"), **data, "agent": self.agent_name}
+            return await publish_event(event_type, payload, source_agent=self.agent_name, correlation_id=request_id)
+        except Exception as e:
+            logger.warning(f"Failed to publish event {event_type}: {e}")
+            return False
     
     async def initialize_mcp(self):
         """Initialize MCP client voor enhanced release management capabilities."""
@@ -1132,12 +1159,13 @@ Message Bus Integration Commands:
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         logger.info("Starting release management collaboration example...")
 
-        # Publish release creation request
-        publish("release_creation_requested", {
-            "agent": "ReleaseManagerAgent",
+        # Publish release creation request (wrapper)
+        import asyncio as _asyncio
+        _asyncio.run(self.publish_agent_event(EventTypes.RELEASE_REQUESTED, {
+            "status": "started",
             "version": "1.2.0",
             "timestamp": datetime.now().isoformat()
-        })
+        }))
 
         # Create release
         self.create_release("1.2.0", "Feature release with new dashboard")
@@ -1148,13 +1176,12 @@ Message Bus Integration Commands:
         # Deploy release
         deployment_result = self.deploy_release("1.2.0")
 
-        # Publish completion
-        publish("release_deployment_completed", {
-            "status": "success",
-            "agent": "ReleaseManagerAgent",
+        # Publish completion (wrapper)
+        _asyncio.run(self.publish_agent_event(EventTypes.RELEASE_DEPLOYED, {
+            "status": "completed",
             "version": "1.2.0",
             "deployment_status": deployment_result["status"]
-        })
+        }))
 
         # Save context
         save_context("ReleaseManager", "status", {"release_status": "deployed"})

@@ -21,6 +21,7 @@ from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.ai.llm_client import ask_openai
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.core.message_bus import EventTypes
 from integrations.figma.figma_client import FigmaClient
 from integrations.slack.slack_notify import send_slack_message
 from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
@@ -1054,11 +1055,11 @@ Examples:
             logger.info("Starting collaboration example...")
 
             # Publish component build request
-            publish("component_build_requested", {
+            asyncio.run(self.publish_agent_event(EventTypes.COMPONENT_BUILD_REQUESTED, {
                 "agent": "FrontendDeveloperAgent",
                 "component_name": "Button",
                 "timestamp": datetime.now().isoformat()
-            })
+            }))
 
             # Build component
             component_result = self.build_component("Button")
@@ -1067,8 +1068,8 @@ Examples:
             accessibility_result = self.run_accessibility_check("Button")
 
             # Publish completion
-            publish("component_build_completed", component_result)
-            publish("accessibility_check_completed", accessibility_result)
+            asyncio.run(self.publish_agent_event(EventTypes.COMPONENT_BUILD_COMPLETED, component_result))
+            asyncio.run(self.publish_agent_event(EventTypes.ACCESSIBILITY_AUDIT_COMPLETED, accessibility_result))
 
             # Notify via Slack
             try:
@@ -1442,6 +1443,22 @@ Examples:
         """Class method to run the FrontendDeveloper agent met MCP integration."""
         agent = cls()
         await agent.run()
+
+    async def publish_agent_event(self, event_type: str, data: Dict[str, Any]) -> bool:
+        try:
+            payload = dict(data) if isinstance(data, dict) else {"data": data}
+            if "agent" not in payload:
+                payload["agent"] = self.agent_name
+            if "status" not in payload and str(event_type).endswith("_COMPLETED"):
+                payload["status"] = "completed"
+            if self.message_bus_integration:
+                return await self.message_bus_integration.publish_event(event_type, payload)
+            else:
+                from bmad.core.message_bus import publish_event
+                return await publish_event(event_type, payload)
+        except Exception as e:
+            logger.error(f"Failed to publish agent event: {e}")
+            return False
 
 def main():
     parser = argparse.ArgumentParser(description="FrontendDeveloper Agent CLI")

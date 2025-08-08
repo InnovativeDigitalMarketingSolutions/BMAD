@@ -343,13 +343,15 @@ class TestFullstackDeveloperAgent:
             mock_build_frontend.return_value = None
             
             # Test the method
-            await agent.collaborate_example()
-            
-            # Verify the method called the expected functions
-            mock_get_context.assert_called()
-            mock_save_context.assert_called()
-            mock_publish.assert_called()
-            mock_build_frontend.assert_called()
+            from unittest.mock import AsyncMock
+            with patch.object(agent, 'publish_agent_event', new_callable=AsyncMock) as mock_pub:
+                await agent.collaborate_example()
+                
+                # Verify the method called the expected functions
+                mock_get_context.assert_called()
+                mock_save_context.assert_called()
+                assert mock_pub.await_count >= 2
+                mock_build_frontend.assert_called()
 
     def test_handle_fullstack_development_requested(self, agent):
         """Test handle_fullstack_development_requested method."""
@@ -465,29 +467,21 @@ class TestFullstackDeveloperAgent:
         result = await agent.develop_feature("TestFeature", "")
         assert result["complexity"] == "low"
 
-    @patch('bmad.agents.Agent.FullstackDeveloper.fullstackdeveloper.publish')
-    def test_handle_tasks_assigned(self, mock_publish, agent):
+    def test_handle_tasks_assigned(self, agent):
         """Test handle_tasks_assigned method."""
-        # Mock the publish method to avoid actual event publishing
-        mock_publish.return_value = None
-        
-        event = {"task": "test task"}
-        agent.handle_tasks_assigned(event)
-        
-        # Verify the event was published
-        mock_publish.assert_called_once()
+        from unittest.mock import AsyncMock
+        with patch.object(FullstackDeveloperAgent, 'publish_agent_event', new_callable=AsyncMock) as mock_pub:
+            event = {"task": "test task"}
+            agent.handle_tasks_assigned(event)
+            assert mock_pub.await_count == 1
 
-    @patch('bmad.agents.Agent.FullstackDeveloper.fullstackdeveloper.publish')
-    def test_handle_development_started(self, mock_publish, agent):
+    def test_handle_development_started(self, agent):
         """Test handle_development_started method."""
-        # Mock the publish method to avoid actual event publishing
-        mock_publish.return_value = None
-        
-        event = {"development": "test development"}
-        agent.handle_development_started(event)
-        
-        # Verify the event was published
-        mock_publish.assert_called_once()
+        from unittest.mock import AsyncMock
+        with patch.object(FullstackDeveloperAgent, 'publish_agent_event', new_callable=AsyncMock) as mock_pub:
+            event = {"development": "test development"}
+            agent.handle_development_started(event)
+            assert mock_pub.await_count == 1
 
     @patch('bmad.agents.Agent.FullstackDeveloper.fullstackdeveloper.subscribe')
     def test_setup_event_handlers(self, mock_subscribe, agent):

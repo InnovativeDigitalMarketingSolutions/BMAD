@@ -3555,3 +3555,31 @@ self.data_paths = {
 - [ ] **Test Coverage**: 100% test coverage with real security functionality validation
 - [ ] **Documentation**: Complete documentation updates according to workflow
 - [ ] **Compliance Tracking**: Maintain audit trails for security operations
+
+## Event Contract Standard (Message Bus)
+
+Voor consistente, traceerbare en testbare event-communicatie tussen agents hanteren we het volgende standaardcontract en de wrapper uit het core framework.
+
+- Gebruik altijd `publish_agent_event(event_type, data, correlation_id=None)` via `AgentMessageBusIntegration`.
+- Voeg niet direct `publish(...)` aan vanuit `bmad.agents.core.communication.message_bus` toe in agents.
+- Minimale payload-velden:
+  - `request_id`: optioneel maar aanbevolen voor correlatie
+  - `status`: "completed" of "failed"
+  - Domeinspecifieke sleutel met het resultaat (bijv. `api_design`, `system_design`, `architecture_review`, `tech_stack_evaluation`, `pipeline_advice`)
+- Failure-paths publiceren een corresponderend `*_FAILED` event met `status: "failed"` en `error`.
+
+Voorbeeld:
+
+```python
+# In een agent die AgentMessageBusIntegration extende
+await self.publish_agent_event(EventTypes.API_DESIGN_COMPLETED, {
+  "request_id": request_id,
+  "api_design": result,
+  "status": "completed"
+})
+```
+
+Rationale:
+- Uniforme metadata-injectie (agent_name, timestamp)
+- Eenvoudiger tracing en correlatie
+- Duidelijke, voorspelbare payloads voor consumers en tests

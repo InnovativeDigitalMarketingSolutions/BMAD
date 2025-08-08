@@ -264,9 +264,10 @@ class FeedbackAgent(AgentMessageBusIntegration):
             result = await self.collect_feedback(feedback_text, source)
             
             # Publish feedback analyzed event
-            await self.message_bus_integration.publish_agent_event(
+            await self.publish_agent_event(
                 EventTypes.FEEDBACK_ANALYZED,
                 {
+                    "status": "completed",
                     "feedback_id": result.get('feedback_id'),
                     "sentiment_score": result.get('sentiment_score'),
                     "analysis_summary": result.get('summary', '')
@@ -287,9 +288,9 @@ class FeedbackAgent(AgentMessageBusIntegration):
             }
             
             # Publish quality gate result
-            await self.message_bus_integration.publish_agent_event(
+            await self.publish_agent_event(
                 EventTypes.QUALITY_GATE_PASSED,
-                quality_result
+                {"status": "completed", **quality_result}
             )
             
         except Exception as e:
@@ -1274,12 +1275,16 @@ Examples:
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         logger.info("Starting feedback collaboration example...")
 
-        # Publish feedback collection request
-        publish("feedback_collection_requested", {
-            "agent": "FeedbackAgent",
-            "source": "User Survey",
-            "timestamp": datetime.now().isoformat()
-        })
+        # Publish feedback collected event via wrapper
+        await self.publish_agent_event(
+            EventTypes.FEEDBACK_COLLECTED,
+            {
+                "status": "completed",
+                "agent": "FeedbackAgent",
+                "source": "User Survey",
+                "timestamp": datetime.now().isoformat()
+            }
+        )
 
         # Collect feedback
         await self.collect_feedback("The new dashboard is much more user-friendly", "User Survey")
@@ -1291,12 +1296,15 @@ Examples:
         self.summarize_feedback()
 
         # Publish completion
-        publish("feedback_analysis_completed", {
-            "status": "success",
-            "agent": "FeedbackAgent",
-            "feedback_count": 1,
-            "sentiment_score": sentiment_result["sentiment_results"]["sentiment_score"]
-        })
+        await self.publish_agent_event(
+            EventTypes.FEEDBACK_ANALYZED,
+            {
+                "status": "completed",
+                "agent": "FeedbackAgent",
+                "feedback_count": 1,
+                "sentiment_score": sentiment_result["sentiment_results"]["sentiment_score"]
+            }
+        )
 
         # Save context
         save_context("FeedbackAgent", "status", {"feedback_status": "analyzed"})
@@ -1314,7 +1322,7 @@ Examples:
     def publish_feedback(self, feedback_text: str, agent: str = "FeedbackAgent"):
         """Publish feedback with enhanced functionality."""
         event = {"timestamp": datetime.now().isoformat(), "feedback": feedback_text, "agent": agent}
-        publish("feedback_collected", event)
+        asyncio.run(self.publish_agent_event(EventTypes.FEEDBACK_COLLECTED, {"status": "completed", **event}))
         save_context(agent, "feedback", {"feedback": feedback_text, "timestamp": event["timestamp"]}, updated_by=agent)
         logger.info(f"[FeedbackAgent] Feedback gepubliceerd en opgeslagen: {feedback_text}")
         try:
@@ -1328,8 +1336,16 @@ Examples:
         structured_output = '{"sentiment": "positief|negatief|neutraal", "motivatie": "..."}'
         result = ask_openai(prompt, structured_output=structured_output)
         logger.info(f"[FeedbackAgent][LLM Sentiment]: {result}")
-        # Publiceer event zodat andere agents kunnen reageren
-        publish("feedback_sentiment_analyzed", {"feedback": feedback_text, "sentiment": result.get("sentiment"), "motivatie": result.get("motivatie")})
+        # Publiceer event zodat andere agents kunnen reageren (sync wrapper)
+        asyncio.run(self.publish_agent_event(
+            EventTypes.SENTIMENT_ANALYSIS_COMPLETED,
+            {
+                "status": "completed",
+                "feedback": feedback_text,
+                "sentiment": result.get("sentiment"),
+                "motivation": result.get("motivatie")
+            }
+        ))
         # Stuur Slack notificatie met feedback mogelijkheid
         try:
             send_slack_message(f"[FeedbackAgent] Sentimentanalyse: {result}", feedback_id=hashlib.sha256(feedback_text.encode()).hexdigest())
@@ -1373,15 +1389,17 @@ Examples:
         self.performance_metrics["feedback_processing_time"] += 0.1
         
         # Publish follow-up event via Message Bus Integration
-        if self.message_bus_integration:
-            try:
-                await self.message_bus_integration.publish_event("feedback_collected", {
-                    "desc": "Feedback verzameld",
+        try:
+            await self.publish_agent_event(
+                EventTypes.FEEDBACK_COLLECTED,
+                {
+                    "status": "completed",
                     "retrospective": event.get("retrospective", "unknown"),
                     "timestamp": datetime.now().isoformat()
-                })
-            except Exception as e:
-                logger.warning(f"Failed to publish feedback_collected event: {e}")
+                }
+            )
+        except Exception as e:
+            logger.warning(f"Failed to publish FEEDBACK_COLLECTED event: {e}")
         
         # Save updated history
         self._save_feedback_history()
@@ -1406,15 +1424,17 @@ Examples:
         self.performance_metrics["sentiment_analysis_accuracy"] += 0.1
         
         # Publish follow-up event via Message Bus Integration
-        if self.message_bus_integration:
-            try:
-                await self.message_bus_integration.publish_event("trends_analyzed", {
-                    "desc": "Trends geanalyseerd",
+        try:
+            await self.publish_agent_event(
+                EventTypes.FEEDBACK_TREND_DETECTED,
+                {
+                    "status": "completed",
                     "feedback_data": event.get("feedback", "unknown"),
                     "timestamp": datetime.now().isoformat()
-                })
-            except Exception as e:
-                logger.warning(f"Failed to publish trends_analyzed event: {e}")
+                }
+            )
+        except Exception as e:
+            logger.warning(f"Failed to publish FEEDBACK_TREND_DETECTED event: {e}")
         
         # Save updated history
         self._save_feedback_history()
@@ -1829,6 +1849,23 @@ Examples:
         agent = cls()
         await agent.run_async()
 
+    async def publish_agent_event(self, event_type: str, data: Dict[str, Any]) -> bool:
+        """Gestandaardiseerde wrapper voor event-publicatie (Event Contract Standard)."""
+        try:
+            payload = dict(data) if isinstance(data, dict) else {"data": data}
+            # Voeg status toe als het duidelijk een *_COMPLETED event is en status ontbreekt
+            if "status" not in payload and (str(event_type).endswith("_COMPLETED") or str(event_type).endswith("_completed")):
+                payload["status"] = "completed"
+            # Gebruik core wrapper publish_event via AgentMessageBusIntegration indien beschikbaar
+            if hasattr(self, "message_bus_integration") and self.message_bus_integration:
+                return await self.message_bus_integration.publish_event(event_type, payload)
+            else:
+                from bmad.core.message_bus import publish_event
+                return await publish_event(event_type, payload)
+        except Exception as e:
+            logger.error(f"Failed to publish event {event_type}: {e}")
+            return False
+
 import asyncio
 
 def main():
@@ -1973,7 +2010,7 @@ def main():
     elif args.command == "publish-event":
         # Example: publish feedback event
         event_data = {"feedback_type": "user_feedback", "request_id": "test-123"}
-        asyncio.run(agent.publish_event("feedback_collected", event_data))
+        asyncio.run(agent.publish_agent_event("feedback_collected", event_data))
         print(f"Published event: feedback_collected with data: {event_data}")
     elif args.command == "subscribe-event":
         # Example: subscribe to feedback events

@@ -46,9 +46,14 @@ De ReleaseManager kan automatisch events ontvangen en verwerken via de Message B
 ### Output Events (Published)
 - `release_created`: Notify release creation
 - `release_approved`: Notify release approval
-- `release_deployed`: Notify successful deployment
+- `release_deployed` (`EventTypes.RELEASE_DEPLOYED`): via `publish_agent_event` wrapper en event‑contract (`status`, `version`, …)
 - `release_rolled_back`: Notify rollback completion
 - `version_updated`: Notify version updates
+
+### Event Contract & Wrapper
+- Publicatie verloopt via `publish_agent_event(event_type, data, request_id=None)`
+- Minimale payload: `status` (completed/failed), domeinspecifiek (bijv. `version`, `deployment_status`), optioneel `request_id`
+- Geen directe `publish(...)` in agent‑code; CLI/demo paden kunnen kern `publish_event` gebruiken indien nodig
 
 ## CLI Commands
 

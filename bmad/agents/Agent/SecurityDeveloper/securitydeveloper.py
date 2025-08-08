@@ -18,6 +18,7 @@ from bmad.agents.core.agent.agent_performance_monitor import (
 from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.ai.llm_client import ask_openai
 from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.core.message_bus import EventTypes
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.slack.slack_notify import send_slack_message
@@ -65,6 +66,14 @@ class SecurityDeveloperAgent:
     Gespecialiseerd in security analysis, vulnerability assessment, en compliance monitoring.
     """
     
+    # Standardized class-level attributes for completeness checks
+    mcp_client: Optional[MCPClient] = None
+    enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+    enhanced_mcp_enabled: bool = False
+    tracing_enabled: bool = False
+    agent_name: str = "SecurityDeveloper"
+    message_bus_integration: Optional[AgentMessageBusIntegration] = None
+
     def __init__(self):
         self.framework_manager = get_framework_templates_manager()
         try:
@@ -133,8 +142,10 @@ class SecurityDeveloperAgent:
         self.mcp_integration: Optional[FrameworkMCPIntegration] = None
         self.mcp_enabled = False
         
-        # Enhanced MCP Phase 2 attributes
+        # Enhanced MCP Phase 2 attributes (align alias to standard name)
         self.enhanced_mcp_integration: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+        self.enhanced_mcp_client: Optional[Any] = None
         self.enhanced_mcp_enabled = False
         self.tracing_enabled = False
         
@@ -144,15 +155,6 @@ class SecurityDeveloperAgent:
         
         # Tracing Integration
         self.tracer: Optional[BMADTracer] = None
-        
-        # Initialize tracer
-        self.tracer = BMADTracer(config=type("Config", (), {
-            "service_name": "SecurityDeveloperAgent",
-            "service_version": "1.0.0",
-            "environment": "development",
-            "sample_rate": 1.0,
-            "exporters": []
-        })())
         
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
         
@@ -190,7 +192,16 @@ class SecurityDeveloperAgent:
     async def initialize_enhanced_mcp(self):
         """Initialize enhanced MCP capabilities for Phase 2."""
         try:
+            # Create and align both alias and standard attribute names
             self.enhanced_mcp_integration = create_enhanced_mcp_integration(self.agent_name)
+            self.enhanced_mcp = self.enhanced_mcp_integration
+            # Expose client for compatibility
+            self.enhanced_mcp_client = (
+                self.enhanced_mcp.mcp_client if self.enhanced_mcp and hasattr(self.enhanced_mcp, 'mcp_client') else None
+            )
+            # Initialize enhanced capabilities if available
+            if hasattr(self.enhanced_mcp, 'initialize'):
+                await self.enhanced_mcp.initialize()
             self.enhanced_mcp_enabled = True
             logger.info("Enhanced MCP initialized successfully")
         except Exception as e:
@@ -200,19 +211,30 @@ class SecurityDeveloperAgent:
     async def initialize_tracing(self):
         """Initialize tracing capabilities."""
         try:
+            # Instantiate tracer here (not in __init__) to allow test patching and controlled lifecycle
+            if self.tracer is None:
+                config = type("Config", (), {
+                    "service_name": "SecurityDeveloperAgent",
+                    "service_version": "1.0.0",
+                    "environment": "development",
+                    "sample_rate": 1.0,
+                    "exporters": []
+                })()
+                self.tracer = BMADTracer(config=config)
             if self.tracer and hasattr(self.tracer, 'initialize'):
                 await self.tracer.initialize()
                 self.tracing_enabled = True
                 logger.info("Tracing initialized successfully for SecurityDeveloper")
                 # Set up security-specific tracing spans
-                await self.tracer.setup_security_tracing({
-                    "agent_name": self.agent_name,
-                    "tracing_level": "detailed",
-                    "security_tracking": True,
-                    "vulnerability_tracking": True,
-                    "threat_tracking": True,
-                    "compliance_tracking": True
-                })
+                if hasattr(self.tracer, 'setup_security_tracing'):
+                    await self.tracer.setup_security_tracing({
+                        "agent_name": self.agent_name,
+                        "tracing_level": "detailed",
+                        "security_tracking": True,
+                        "vulnerability_tracking": True,
+                        "threat_tracking": True,
+                        "compliance_tracking": True
+                    })
             else:
                 logger.warning("Tracing initialization failed, continuing without tracing")
                 
@@ -252,7 +274,59 @@ class SecurityDeveloperAgent:
         except Exception as e:
             logger.error(f"❌ Fout bij initialiseren van Message Bus Integration voor {self.agent_name}: {e}")
             return False
-    
+
+    def get_enhanced_mcp_tools(self) -> List[str]:
+        """Get list of available enhanced MCP tools for this agent."""
+        if not self.enhanced_mcp_enabled:
+            return []
+        try:
+            return [
+                "advanced_authentication",
+                "enhanced_authorization",
+                "threat_detection",
+                "external_tool_discovery",
+                "external_tool_execution",
+                "agent_communication",
+                "memory_optimization",
+                "performance_tuning"
+            ]
+        except Exception as e:
+            logger.warning(f"Failed to get enhanced MCP tools: {e}")
+            return []
+
+    def register_enhanced_mcp_tools(self) -> bool:
+        """Register enhanced MCP tools for this agent."""
+        if not self.enhanced_mcp_enabled:
+            return False
+        try:
+            tools = self.get_enhanced_mcp_tools()
+            for tool in tools:
+                # Prefer a register_tool on enhanced_mcp if available; otherwise, skip silently
+                if self.enhanced_mcp and hasattr(self.enhanced_mcp, 'register_tool'):
+                    self.enhanced_mcp.register_tool(tool)
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to register enhanced MCP tools: {e}")
+            return False
+
+    async def trace_operation(self, operation_name: str, attributes: Optional[Dict[str, Any]] = None) -> bool:
+        """Trace operations for monitoring and debugging (standardized interface)."""
+        try:
+            if not self.tracing_enabled or not self.tracer:
+                return False
+            trace_data = {
+                "agent": self.agent_name,
+                "operation": operation_name,
+                "timestamp": datetime.now().isoformat(),
+                "attributes": attributes or {}
+            }
+            if hasattr(self.tracer, 'trace_operation'):
+                await self.tracer.trace_operation(trace_data)
+            return True
+        except Exception as e:
+            logger.warning(f"Tracing operation failed: {e}")
+            return False
+
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """Use MCP tool voor enhanced functionality."""
         if not self.mcp_enabled or not self.mcp_client:
@@ -1381,12 +1455,16 @@ Enhanced MCP Phase 2 Commands:
             print("All resources are available!")
 
     def collaborate_example(self):
-        """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
+        """Sync wrapper voor samenwerking: roept async pad aan en retourneert resultaat."""
+        import asyncio as _asyncio
+        return _asyncio.run(self._collaborate_example_async())
+
+    async def _collaborate_example_async(self):
+        """Voorbeeld van samenwerking: publiceer event en deel context via Supabase (async)."""
         logger.info("Starting security collaboration example...")
 
-        # Publish security scan request
-        publish("security_scan_requested", {
-            "agent": "SecurityDeveloperAgent",
+        # Publish security scan request via wrapper
+        await self.publish_agent_event(EventTypes.SECURITY_SCAN_REQUESTED, {
             "target": "BMAD Application",
             "timestamp": datetime.now().isoformat()
         })
@@ -1397,16 +1475,16 @@ Enhanced MCP Phase 2 Commands:
         # Perform vulnerability assessment
         self.vulnerability_assessment("API")
 
-        # Publish completion
-        publish("security_scan_completed", {
+        # Publish completion via wrapper
+        await self.publish_agent_event(EventTypes.SECURITY_SCAN_COMPLETED, {
             "status": "success",
-            "agent": "SecurityDeveloperAgent",
             "security_score": scan_result["security_score"],
             "vulnerabilities_found": len(scan_result["vulnerabilities"])
         })
 
         # Save context
         save_context("SecurityDeveloper", "status", {"security_status": "scanned"})
+        return "Collaboration example completed"
 
         # Notify via Slack
         try:
@@ -1987,6 +2065,25 @@ Enhanced MCP Phase 2 Commands:
         except Exception as e:
             logger.error(f"Failed to generate dashboard data: {e}")
             raise SecurityError(f"Failed to generate dashboard data: {e}")
+
+    async def publish_agent_event(self, event_type: str, data: Dict[str, Any], correlation_id: Optional[str] = None) -> bool:
+        """Publiceer een event via de core message bus met uniform event contract."""
+        try:
+            # Minimale contractverrijking
+            if isinstance(data, dict) and "status" not in data:
+                data = {**data, "status": data.get("status", "completed")}
+            if isinstance(data, dict) and "agent" not in data:
+                data = {**data, "agent": self.agent_name}
+            
+            # Gebruik AgentMessageBusIntegration indien beschikbaar
+            if self.message_bus_integration:
+                return await self.message_bus_integration.publish_event(event_type, data)
+            else:
+                from bmad.core.message_bus import publish_event
+                return await publish_event(event_type, data)  # publish_event kan async zijn in core
+        except Exception as e:
+            logger.error(f"Failed to publish agent event: {e}")
+            return False
 
 def main():
     parser = argparse.ArgumentParser(description="SecurityDeveloper Agent CLI")

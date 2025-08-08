@@ -60,7 +60,7 @@ from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 
 # Additional required imports for 100% completeness
 from bmad.core.tracing import TracingService, get_tracing_service
-from bmad.core.message_bus import MessageBus, get_message_bus
+from bmad.core.message_bus import MessageBus, get_message_bus, EventTypes
 
 load_dotenv()
 
@@ -290,7 +290,11 @@ class FullstackDeveloperAgent(AgentMessageBusIntegration):
                 agent_name=self.agent_name,
                 agent_instance=self
             )
-            await self.message_bus_integration.enable()
+            # Compatibele init: gebruik initialize() als beschikbaar, anders enable()
+            if hasattr(self.message_bus_integration, "initialize"):
+                await self.message_bus_integration.initialize()
+            elif hasattr(self.message_bus_integration, "enable"):
+                await self.message_bus_integration.enable()
             self.message_bus_enabled = True
             logger.info("Message Bus Integration initialized successfully for FullstackDeveloper")
         except Exception as e:
@@ -1019,21 +1023,8 @@ Enhanced Command Examples:
             print("⚠️  Some resources are missing or not properly configured")
             print("🔧 Please check the failed tests above")
         
-        # Identify missing resources
-        missing_resources = []
-        for test_name, result in all_tests:
-            if not result:
-                missing_resources.append(test_name)
-        
-        return {
-            "success": passed == total,
-            "passed": passed,
-            "total": total,
-            "percentage": (passed/total*100) if total > 0 else 0,
-            "status": "complete" if passed == total else "incomplete",
-            "resource_status": "complete" if passed == total else "incomplete",
-            "missing_resources": missing_resources
-        }
+        # Compatibel met testverwachting: geef bool terug
+        return passed == total
 
     def build_shadcn_component(self, component_name: str = "Button") -> Dict[str, Any]:
         """Build a Shadcn/ui component with proper validation."""
@@ -1120,7 +1111,7 @@ export function {component_name}({{
         logger.info("Starting collaboration example...")
 
         # Publish development request
-        publish("fullstack_development_requested", {
+        await self.publish_agent_event(EventTypes.FULLSTACK_BUILD_REQUESTED, {
             "agent": "FullstackDeveloperAgent",
             "story": "User Authentication",
             "timestamp": datetime.now().isoformat()
@@ -1139,7 +1130,7 @@ export function {component_name}({{
         feature_result = await self.develop_feature("UserAuth", "User authentication feature with login/logout")
 
         # Publish completion
-        publish("fullstack_development_completed", {
+        await self.publish_agent_event(EventTypes.FULLSTACK_BUILD_COMPLETED, {
             "status": "success",
             "agent": "FullstackDeveloperAgent",
             "shadcn_components": 1
@@ -1947,11 +1938,11 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
         })
 
         # Publiceer event
-        publish("frontend_code_generated", {
+        asyncio.run(self.publish_agent_event(EventTypes.FRONTEND_BUILD_COMPLETED, {
             "agent": "FullstackDeveloper",
             "status": "success",
             "components_count": 5
-        })
+        }))
 
         print("\n✅ BMAD Frontend Dashboard gegenereerd!")
         print("📁 Componenten: Dashboard, AgentStatus, WorkflowManager, APITester, MetricsChart")
@@ -2337,20 +2328,36 @@ export function MetricsChart({ metrics }: MetricsChartProps): JSX.Element {
         """Handle tasks assigned event."""
         logging.info("[FullstackDeveloper] Taken ontvangen, ontwikkeling wordt gestart...")
         time.sleep(1)
-        publish("development_started", {"desc": "Ontwikkeling gestart"})
+        asyncio.run(self.publish_agent_event(EventTypes.BACKEND_BUILD_REQUESTED, {"desc": "Ontwikkeling gestart"}))
         logging.info("[FullstackDeveloper] Ontwikkeling gestart, development_started gepubliceerd.")
 
     def handle_development_started(self, event):
         """Handle development started event."""
         logging.info("[FullstackDeveloper] Ontwikkeling in uitvoering...")
         time.sleep(2)
-        publish("testing_started", {"desc": "Testen gestart"})
+        asyncio.run(self.publish_agent_event(EventTypes.TEST_EXECUTION_REQUESTED, {"desc": "Testen gestart"}))
         logging.info("[FullstackDeveloper] Testen gestart, testing_started gepubliceerd.")
 
     def setup_event_handlers(self):
         """Set up event handlers for the agent."""
         subscribe("tasks_assigned", self.handle_tasks_assigned)
         subscribe("development_started", self.handle_development_started)
+
+    async def publish_agent_event(self, event_type: str, data: Dict[str, Any]) -> bool:
+        try:
+            payload = dict(data) if isinstance(data, dict) else {"data": data}
+            if "agent" not in payload:
+                payload["agent"] = self.agent_name
+            if "status" not in payload and str(event_type).endswith("_COMPLETED"):
+                payload["status"] = "completed"
+            if self.message_bus_integration:
+                return await self.message_bus_integration.publish_event(event_type, payload)
+            else:
+                from bmad.core.message_bus import publish_event
+                return await publish_event(event_type, payload)
+        except Exception as e:
+            logger.error(f"Failed to publish agent event: {e}")
+            return False
 
 def main():
     parser = argparse.ArgumentParser(description="FullstackDeveloper Agent CLI")

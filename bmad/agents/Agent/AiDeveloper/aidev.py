@@ -24,6 +24,7 @@ from bmad.agents.core.agent.agent_performance_monitor import (
 )
 from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.core.message_bus import EventTypes
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.slack.slack_notify import send_slack_message
@@ -1097,7 +1098,7 @@ Message Bus Integration Commands:
         logger.info("Starting AI collaboration example...")
 
         # Publish AI development request
-        publish("ai_development_requested", {
+        await self.publish_agent_event(EventTypes.AI_EXPERIMENT_STARTED, {
             "agent": "AiDeveloperAgent",
             "task": "Sentiment Analysis Model",
             "timestamp": datetime.now().isoformat()
@@ -1110,7 +1111,7 @@ Message Bus Integration Commands:
         self.evaluate()
 
         # Publish completion
-        publish("ai_development_completed", {
+        await self.publish_agent_event(EventTypes.AI_EXPERIMENT_COMPLETED, {
             "status": "success",
             "agent": "AiDeveloperAgent",
             "accuracy": 91.0
@@ -1183,7 +1184,7 @@ Message Bus Integration Commands:
                 "training_time": "2.5 hours"
             }
             
-            await publish("ai_model_training_completed", {
+            await self.publish_agent_event(EventTypes.AI_MODEL_TRAINING_COMPLETED, {
                 "request_id": event.get("request_id"),
                 "result": training_result
             })
@@ -1207,7 +1208,7 @@ Message Bus Integration Commands:
                 "f1_score": 0.90
             }
             
-            await publish("ai_evaluation_completed", {
+            await self.publish_agent_event(EventTypes.AI_EXPERIMENT_COMPLETED, {
                 "request_id": event.get("request_id"),
                 "result": evaluation_result
             })
@@ -2052,6 +2053,23 @@ Message Bus Integration Commands:
         current_rate = self.performance_metrics.get(metric_name, 0.0)
         # Simple success rate update
         self.performance_metrics[metric_name] = (current_rate + (1.0 if success else 0.0)) / 2
+
+    async def publish_agent_event(self, event_type: str, data: Dict[str, Any]) -> bool:
+        """Publiceer een event via de core message bus met uniform event contract."""
+        try:
+            payload = dict(data) if isinstance(data, dict) else {"data": data}
+            if "agent" not in payload:
+                payload["agent"] = self.agent_name if hasattr(self, "agent_name") else "AiDeveloper"
+            if "status" not in payload and str(event_type).endswith("_COMPLETED"):
+                payload["status"] = "completed"
+            if self.message_bus_integration:
+                return await self.message_bus_integration.publish_event(event_type, payload)
+            else:
+                from bmad.core.message_bus import publish_event
+                return await publish_event(event_type, payload)
+        except Exception as e:
+            logger.error(f"Failed to publish agent event: {e}")
+            return False
 
 def main():
     import asyncio

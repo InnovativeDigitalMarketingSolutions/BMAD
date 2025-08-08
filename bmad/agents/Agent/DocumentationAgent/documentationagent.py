@@ -22,6 +22,7 @@ from dotenv import load_dotenv
 from bmad.agents.core.ai.confidence_scoring import confidence_scoring
 from bmad.agents.core.ai.llm_client import ask_openai_with_confidence
 from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.core.message_bus import EventTypes, publish_event
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.monitoring.monitoring import (
     MetricType,
@@ -146,6 +147,34 @@ class DocumentationAgent(AgentMessageBusIntegration):
         
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
     
+    async def initialize_message_bus_integration(self) -> bool:
+        """Initialize and enable message bus integration for this agent."""
+        try:
+            # Create integration via base integration factory
+            self.message_bus_integration = create_agent_message_bus_integration(
+                agent_name=self.agent_name,
+                agent_instance=self
+            )
+            # Enable if available
+            if hasattr(self.message_bus_integration, "enable"):
+                self.message_bus_enabled = await self.message_bus_integration.enable()
+            else:
+                self.message_bus_enabled = True
+            return self.message_bus_enabled
+        except Exception as e:
+            logger.warning(f"Message bus integration init failed: {e}")
+            self.message_bus_enabled = False
+            return False
+
+    async def publish_agent_event(self, event_type: str, data: Dict[str, Any], request_id: Optional[str] = None) -> bool:
+        """Standardized wrapper to publish events following the contract."""
+        try:
+            payload = {"status": data.get("status", "completed"), **data, "agent": self.agent_name}
+            return await publish_event(event_type, payload, source_agent=self.agent_name, correlation_id=request_id)
+        except Exception as e:
+            logger.warning(f"Failed to publish event {event_type}: {e}")
+            return False
+
     async def initialize_mcp(self):
         """Initialize MCP client voor enhanced documentation capabilities."""
         try:
@@ -578,12 +607,13 @@ Message Bus Integration Commands:
             self.docs_history.append(f"Changelog summary for {project_name} - {datetime.now().strftime('%Y-%m-%d')}")
             self._save_docs_history()
 
-            # Publish event
-            publish("changelog_summarized", {
+            # Publish event via wrapper (keep legacy event name)
+            import asyncio as _asyncio
+            _asyncio.run(self.publish_agent_event("changelog_summarized", {
                 "project": project_name,
                 "summary": summary,
-                "agent": "DocumentationAgent"
-            })
+                "status": "completed"
+            }))
 
             return {
                 "status": "success",
@@ -958,7 +988,7 @@ Message Bus Integration Commands:
         # Document Figma UI
         self.document_figma_ui("example_figma_file_id")
 
-        # Publish completion
+        # Publish completion (legacy direct publish for tests) and via wrapper
         publish("documentation_completed", {
             "status": "success",
             "agent": "DocumentationAgent",
@@ -967,6 +997,14 @@ Message Bus Integration Commands:
             "user_guides": 1,
             "figma_docs": 1
         })
+        import asyncio as _asyncio
+        _asyncio.run(self.publish_agent_event(EventTypes.DOCUMENTATION_COMPLETED, {
+            "status": "completed",
+            "docs_created": 3,
+            "api_docs": 1,
+            "user_guides": 1,
+            "figma_docs": 1
+        }))
 
         # Save context
         save_context("DocumentationAgent", "status", {"documentation_status": "completed"})
@@ -1539,7 +1577,7 @@ def main():
     elif args.command == "publish-event":
         # Example: publish documentation event
         event_data = {"doc_type": "api_docs", "request_id": "test-123"}
-        asyncio.run(publish("documentation_requested", event_data))
+        asyncio.run(publish_event(EventTypes.DOCUMENTATION_REQUESTED, event_data))
         print(f"Published event: documentation_requested with data: {event_data}")
     elif args.command == "subscribe-event":
         # Example: subscribe to documentation events

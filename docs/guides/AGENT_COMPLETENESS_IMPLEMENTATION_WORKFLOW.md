@@ -18,6 +18,11 @@ Deze workflow definieert de gestandaardiseerde aanpak voor het implementeren van
 - **Knowledge Transfer**: Lessons learned kunnen toegepast worden op volgende agents
 - **Risk Mitigation**: Voorkomen van cascade failures
 
+## 📚 Referenties
+- [Agent Completeness Prevention Strategy](../guides/AGENT_COMPLETENESS_PREVENTION_STRATEGY.md)
+- [BMAD Test Strategy](../guides/TEST_STRATEGY.md)
+- [Message Bus Event Standards](../guides/MESSAGE_BUS_EVENT_STANDARDS.md)
+
 ## 📋 **Pre-Implementation Setup**
 
 ### 1. Environment Preparation
@@ -25,12 +30,14 @@ Deze workflow definieert de gestandaardiseerde aanpak voor het implementeren van
 - [ ] **Dependencies**: Ensure all required packages are installed
 - [ ] **Test Infrastructure**: Verify test infrastructure is working
 - [ ] **Audit Scripts**: Verify comprehensive audit scripts are functional
+- [ ] **Wrapper Audit**: Run `python scripts/check_no_direct_publish.py` en noteer agent‑hits
 
 ### 2. Agent Inventory Analysis
 - [ ] **Run Comprehensive Audit**: Execute `scripts/comprehensive_agent_audit.py`
 - [ ] **Identify Priority Agents**: Sort agents by completeness score (lowest first)
 - [ ] **Create Implementation Plan**: Plan implementation order based on dependencies
 - [ ] **Resource Assessment**: Identify missing resources per agent
+- [ ] **Direct Publish Scan**: Zoek naar directe `publish(` calls in de betreffende agent
 
 ### 3. Implementation Strategy
 - [ ] **Batch Processing**: Group agents by missing functionality type
@@ -47,113 +54,104 @@ Deze workflow definieert de gestandaardiseerde aanpak voor het implementeren van
 - [ ] **Current State Analysis**: Run agent-specific audit
 - [ ] **Missing Items Identification**: List all missing attributes and methods
 - [ ] **Implementation Plan**: Create detailed plan for this agent
+- [ ] **Quality-First**: Root cause analysis uitvoeren; geen quick fixes
 
 #### **Step 2: Core Attributes Implementation**
 - [ ] **Required Attributes Check**: Verify missing attributes from audit
 - [ ] **Attribute Implementation**: Add missing attributes to `__init__` method
-  - [ ] `mcp_client`
-  - [ ] `enhanced_mcp`
-  - [ ] `enhanced_mcp_enabled`
-  - [ ] `tracing_enabled`
-  - [ ] `agent_name`
-  - [ ] `message_bus_integration`
+  - [ ] `mcp_client`, `enhanced_mcp`, `enhanced_mcp_enabled`, `tracing_enabled`, `agent_name`, `message_bus_integration`
+- [ ] **Class-Level Attributes**: Definieer kritieke attributen op class‑niveau i.p.v. alleen in `__init__`
 - [ ] **Initialization Logic**: Implement proper initialization logic
 - [ ] **Error Handling**: Add error handling for initialization
 
 #### **Step 3: Core Methods Implementation**
 - [ ] **Required Methods Check**: Verify missing methods from audit
-- [ ] **Method Implementation**: Add missing methods
-  - [ ] `initialize_enhanced_mcp()` - if missing
-  - [ ] `get_enhanced_mcp_tools()`
-  - [ ] `register_enhanced_mcp_tools()`
-  - [ ] `trace_operation()`
-- [ ] **Standard Implementation**: Follow standard implementation patterns
-- [ ] **Integration Logic**: Integrate with existing agent functionality
+- [ ] **Method Implementation**: Add missing methods conform standaard patterns
+- [ ] **Enhanced MCP Pattern**: Volg standaard init/registratie methods
+- [ ] **Tracing**: Implementeer `trace_operation()` en integreer in kernpaden
 
-#### **Step 4: Enhanced MCP Integration**
+#### **Step 4a: Enhanced MCP Integration**
 - [ ] **MCP Client Setup**: Initialize MCP client properly
 - [ ] **Enhanced MCP Initialization**: Implement `initialize_enhanced_mcp()`
 - [ ] **Tool Registration**: Implement tool registration logic
 - [ ] **Error Handling**: Add comprehensive error handling
 
-#### **Step 5: Tracing Integration**
+#### **Step 4b: Tracing Integration**
 - [ ] **Tracing Service Setup**: Initialize tracing service
 - [ ] **Operation Tracing**: Implement `trace_operation()` method
 - [ ] **Performance Tracking**: Add performance tracking capabilities
 - [ ] **Error Tracing**: Add error tracing capabilities
 
-#### **Step 6: Message Bus Integration**
-- [ ] **Message Bus Setup**: Initialize message bus integration
-- [ ] **Event Handling**: Implement event handling capabilities
-- [ ] **Communication Setup**: Setup inter-agent communication
-- [ ] **Error Handling**: Add message bus error handling
+#### **Step 4c: Message Bus Integration (Wrapper & Contract)**
+- [ ] **Wrapper Usage**: Vervang directe `publish(...)` door `await self.publish_agent_event(...)`
+- [ ] **Payload Contract**: Payload bevat minimaal `status` + domeinspecifieke sleutel; `request_id` optioneel
+- [ ] **EventTypes**: Gebruik consistente `EventTypes.*` waarden
+- [ ] **Failure Paths**: Publiceer bij errors een corresponderend `*_FAILED` event
+- [ ] **Handlers**: Registreer relevante event handlers (`register_event_handler`)
+
+#### **Step 5: Sync Compatibility (optioneel)**
+- [ ] **Sync Wrapper**: Indien publiek API sync vereist is, bied een dunne sync wrapper die `asyncio.run(...)` gebruikt
 
 ### **Phase 2: Testing Implementation**
 
-#### **Step 7: Unit Test Implementation**
-- [ ] **Test File Creation**: Create unit test file for agent
-- [ ] **Core Method Tests**: Test all implemented methods
-- [ ] **Attribute Tests**: Test all implemented attributes
-- [ ] **Integration Tests**: Test enhanced MCP and tracing integration
-- [ ] **Error Scenario Tests**: Test error handling scenarios
+#### **Step 6: Unit Test Implementation**
+- [ ] **BMAD Test Strategy**: Volg `TEST_STRATEGY.md` (async, mocking, quality gates)
+- [ ] **Mock Wrapper**: Mock `publish_agent_event` met `AsyncMock`; verifieer payload‑contract
+- [ ] **Core Method Tests**: Test alle publieke methods/attributen
+- [ ] **Error Scenario Tests**: Test foutpaden + FAILED events
 
-#### **Step 8: Integration Test Implementation**
-- [ ] **Integration Test File**: Create integration test file
-- [ ] **End-to-End Tests**: Test complete agent workflows
-- [ ] **Inter-Agent Tests**: Test communication with other agents
-- [ ] **Performance Tests**: Test performance under load
+#### **Step 7: Integration & Component Tests**
+- [ ] **Integration Tests**: Test message bus flows; MCP en tracing integratie; retries/timeout/failure‑paths
+- [ ] **Component Tests**: Test subsystemen met meerdere agents (end‑to‑end paden binnen subsystem)
+- [ ] **Contracttests**: Valideer event‑payloads tegen pydantic schema’s
 
-#### **Step 9: Test Execution**
-- [ ] **Unit Test Execution**: Run all unit tests
-- [ ] **Integration Test Execution**: Run all integration tests
-- [ ] **Test Result Analysis**: Analyze test results
-- [ ] **Bug Fixing**: Fix any test failures
-- [ ] **Test Coverage Verification**: Verify test coverage meets standards
+#### **Step 8: AI Evaluations (indien relevant)**
+- [ ] **Prompt/Output Evaluatie**: LLM‑as‑judge en metrics; nightly uitgebreide set
 
 ### **Phase 3: Quality Assurance**
 
-#### **Step 10: Code Quality Check**
-- [ ] **Code Review**: Perform comprehensive code review
-- [ ] **Style Check**: Run code style checks (flake8, black)
-- [ ] **Type Check**: Run type checking (mypy)
-- [ ] **Security Check**: Run security analysis
-- [ ] **Performance Check**: Run performance analysis
+#### **Step 9: Code Quality & Security**
+- [ ] **Lint/Format/Type**: black, ruff/flake8, mypy
+- [ ] **Security**: safety/pip‑audit, gitleaks; SBOM (CycloneDX) waar mogelijk
 
-#### **Step 11: Documentation Update**
-- [ ] **Agent Documentation**: Update agent .md file with changelog and completeness status
-- [ ] **Code Documentation**: Update code docstrings for all new methods
-- [ ] **API Documentation**: Update API documentation with new endpoints
-- [ ] **Usage Examples**: Add usage examples for new functionality
-- [ ] **Integration Documentation**: Document integration points (Enhanced MCP, Tracing, Message Bus)
-- [ ] **Workflow Documentation**: Update workflow files with lessons learned
-- [ ] **Kanban Board**: Update Kanban board with completion status
-- [ ] **Agents Overview**: Update agents-overview.md with current status
-
-#### **Step 12: Resource Verification**
-- [ ] **YAML Configuration**: Verify YAML configuration is complete
-- [ ] **Template Resources**: Verify template resources are available
-- [ ] **Data Files**: Verify data files are available
-- [ ] **Resource Tests**: Run resource completeness tests
+#### **Step 10: Documentation, Resources & Governance**
+- [ ] **Agent .md**: Update status, capabilities, handlers, events
+- [ ] **Changelog**: Voeg gedetailleerde changelog entry toe (datum, Added/Enhanced/Technical)
+- [ ] **Agents Overview**: Update `bmad/agents/agents-overview.md`
+- [ ] **Kanban Board**: Update taakstatus
+- [ ] **Master Planning**: Update voortgang en roadmap indien van toepassing
+- [ ] **Lessons Learned**: Noteer nieuwe inzichten in `LESSONS_LEARNED_GUIDE.md`
+- [ ] **Best Practices**: Actualiseer `BEST_PRACTICES_GUIDE.md` indien patronen wijzigen
+- [ ] **Resource Verification**: YAML configs, templates, data files controleren en bijwerken; resource tests uitvoeren
 
 ### **Phase 4: Verification & Validation**
 
-#### **Step 13: Completeness Verification**
-- [ ] **Automated Verification**: Run `scripts/verify_agent_completeness.py`
-- [ ] **Manual Verification**: Perform manual completeness check
-- [ ] **Integration Verification**: Verify all integrations work
-- [ ] **Performance Verification**: Verify performance meets requirements
+#### **Step 11: Automated Verification**
+- [ ] **Wrapper Audit**: `python scripts/check_no_direct_publish.py` (moet 0 hits geven voor agent)
+- [ ] **Comprehensive Audit**: `python scripts/comprehensive_agent_audit.py` (agent score 1.0)
+- [ ] **Test Suite**: Alle relevante tests groen; coverage ≥ 70% (≥ 80% high‑risk)
 
-#### **Step 14: Quality Assurance**
-- [ ] **Code Quality**: Verify code quality standards are met
-- [ ] **Test Coverage**: Verify test coverage meets requirements
-- [ ] **Documentation Quality**: Verify documentation is complete
-- [ ] **Resource Quality**: Verify resources are complete and accurate
+#### **Step 12: Commit, Push & CI**
+- [ ] **Commit**: Korte, duidelijke commit message
+- [ ] **Push**: Trigger CI pipeline
+- [ ] **CI Gates**: Lint/type/tests/security/contract checks allemaal groen
 
-#### **Step 15: Final Validation**
-- [ ] **End-to-End Testing**: Run complete end-to-end tests
-- [ ] **Performance Testing**: Run performance tests
-- [ ] **Security Testing**: Run security tests
-- [ ] **Compliance Testing**: Verify compliance with standards
+## ✅ Acceptatiecriteria per agent
+- 100% wrapper‑compliance; 0 directe `publish(`
+- Event‑payloads voldoen aan contract (`status`, domeinsleutel, optioneel `request_id`)
+- Tests 100% groen; strategie gevolgd (`TEST_STRATEGY.md`)
+- Documentatie bijgewerkt (agent .md, overview, kanban, planning)
+- Comprehensive audit score: 1.0 (completeness)
+
+## 🔧 Automatisering & Commando’s
+- Wrapper scan: `python scripts/check_no_direct_publish.py`
+- Agent audit: `python scripts/comprehensive_agent_audit.py | cat`
+- Snelle agent tests: `pytest tests/unit/agents/test_{agent}_*.py -q`
+- Volledige tests (subset): `pytest tests/unit -q && pytest tests/integration -q`
+
+## 🔁 Periodieke Review
+- Maandelijks: wrapper‑compliance, events, tests en documentatie herbevestigen
+- Kwartaal: bijwerken strategie op basis van lessons learned en metrics
 
 ## 📊 **Progress Tracking**
 

@@ -150,19 +150,7 @@ De MCP (Multi-Agent Collaboration Protocol) modules hebben momenteel een **74% t
 - Update best practices
 
 ## 📚 **Test Strategy**
-
-### **Test Types to Implement**
-1. **Unit Tests**: Test individual functions and methods
-2. **Integration Tests**: Test module interactions
-3. **Error Tests**: Test error conditions and edge cases
-4. **Performance Tests**: Test performance-critical paths
-5. **Mock Tests**: Test with mocked dependencies
-
-### **Testing Best Practices**
-- **Comprehensive Mocking**: Mock external dependencies
-- **Edge Case Focus**: Prioritize error conditions
-- **Performance Testing**: Include performance-critical paths
-- **Documentation**: Document test scenarios and expected outcomes
+Zie `docs/guides/TEST_STRATEGY.md` voor de volledige, productie‑klare teststrategie (inclusief AI‑evaluatie, async/wrapper‑regels en quality gates).
 
 ## 🔄 **Next Steps**
 

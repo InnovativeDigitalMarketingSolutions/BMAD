@@ -1353,7 +1353,7 @@ PRIORITEIT 3: Management Agents (Week 10-11)
 **Timeline**: Week 6-7  
 **Status**: 📋 Planned - Framework ready
 
-**Integration Test Strategy**:
+**Integration Test Strategy** (zie ook `docs/guides/TEST_STRATEGY.md`):
 - **Doel**: Test echte externe service integraties
 - **Scope**: Supabase, OpenRouter, OpenTelemetry, LangGraph, OPA
 - **Execution**: Aparte test suite met echte API keys
@@ -1406,7 +1406,7 @@ pytest tests/ -v --run-integration --run-e2e
 **Timeline**: Week 8-9  
 **Status**: 📋 Planned
 
-**E2E Test Strategy**:
+**E2E Test Strategy** (zie ook `docs/guides/TEST_STRATEGY.md`):
 - **Doel**: Test volledige workflows van begin tot eind
 - **Scope**: Complete user journeys en systeem integratie
 - **Execution**: Volledige systeem setup en teardown
@@ -3997,3 +3997,58 @@ bmad/core/security/permission_service.py: 79% (good)
 **Next Review**: Monthly review  
 **Owner**: Development Team  
 **Stakeholders**: Product, Engineering, DevOps, Security
+
+## System Improvement Roadmap (2025-08)
+
+### Wave 1 (P0): Core Quality Gates & Event Foundations
+- CI/Pre-commit gates:
+  - Black/ruff (of flake8), mypy, pytest -q
+  - Wrapper-enforcement: `scripts/check_no_direct_publish.py`
+  - Event schema check (pydantic) – basis controle
+- Event schema's (pydantic) voor kern-EventTypes (Completed/Failed varianten)
+- Tracing/Correlation standaard in wrapper (correlation_id ↔ trace-id)
+- Wrapper-compliance 100% (alle agents)
+
+Acceptatiecriteria:
+- 0 directe `publish(` in agents (CI enforced)
+- Kern-EventTypes gevalideerd tegen pydantic schema's
+- Traces tonen correlation-id en event metadata
+- Alle agent unit/integration tests groen
+
+### Wave 2 (P1): Reliability, Contracttests & Config
+- Contracttests voor alle EventTypes tegen schema's
+- Property-based tests (Hypothesis) voor event payloads/flows
+- Resilience: retries met jitter, circuit breaker, bulkheads voor integraties
+- Config/secrets via pydantic Settings + .env/KeyVault schema's
+- Healthchecks (liveness/readiness) en uniforme metrics per agent
+
+Acceptatiecriteria:
+- Contracttests groen voor alle EventTypes
+- Integraties hebben gestandaardiseerde retry/circuit breaker policies
+- Healthchecks en metrics beschikbaar voor alle agents
+
+### Wave 3 (P1–P2): Transports, E2E en Security Scans
+- Pluggable message bus transports (in-memory → Redis; Kafka optioneel)
+- E2E-scenario's voor 3 kritieke cross-agent workflows
+- Security gates: gitleaks/secrets scan, safety/pip-audit, SBOM (CycloneDX), container scan (Trivy)
+- ADR's voor events, transports, tracing en resilience
+
+Acceptatiecriteria:
+- Redis transport in staging/prod, in-memory in dev
+- E2E flows groen in CI
+- Security scans onderdeel van pipeline en groen
+
+### Wave 4 (P2): AI Guardrails & Evaluatieharnas
+- Prompt library + guardrails (structured output, content filters)
+- Offline evaluatiesets, latency/cost dashboards
+- Fallback- en canary-modellen
+
+Acceptatiecriteria:
+- Centrale prompts versieerbaar, guardrails actief
+- Evaluatierapporten en dashboards beschikbaar
+- Fallback-pad aantoonbaar werkend
+
+### Governance & Documentatie
+- Eén bron van waarheid: status tabellen voor agents, wrappers, tests genereren vanuit audits
+- ADR's bij elke architectuurkeuze
+- Guides synchroniseren met audit-uitvoer

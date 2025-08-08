@@ -18,6 +18,7 @@ from bmad.agents.core.agent.agent_performance_monitor import (
 )
 from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.core.message_bus import EventTypes
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.slack.slack_notify import send_slack_message
@@ -140,6 +141,20 @@ class DataEngineerAgent(AgentMessageBusIntegration):
         
         logger.info(f"{self.agent_name} Agent geïnitialiseerd met MCP integration")
     
+    async def publish_agent_event(self, event_type: str, data: Dict[str, Any], correlation_id: Optional[str] = None) -> bool:
+        """Publiceer een event via de core message bus met uniform event contract."""
+        try:
+            from bmad.core.message_bus import publish_event
+            event_data = {
+                **data,
+                "agent_name": self.agent_name,
+                "timestamp": datetime.now().isoformat(),
+            }
+            return await publish_event(event_type, event_data, self.agent_name, correlation_id)
+        except Exception as e:
+            logger.error(f"Failed to publish event {event_type}: {e}")
+            return False
+
     async def initialize_mcp(self):
         """Initialize MCP client and integration."""
         try:
@@ -982,7 +997,7 @@ Message Bus Integration Commands:
         logger.info("Starting data engineering collaboration example...")
 
         # Publish pipeline validation event
-        publish("pipeline_validated", {
+        await self.publish_agent_event(EventTypes.QUALITY_GATE_PASSED, {
             "status": "success",
             "agent": "DataEngineerAgent",
             "timestamp": datetime.now().isoformat()
@@ -995,7 +1010,7 @@ Message Bus Integration Commands:
         pipeline_result = await self.build_pipeline("Sample ETL Pipeline")
 
         # Publish completion
-        publish("data_engineering_completed", {
+        await self.publish_agent_event(EventTypes.DATA_PIPELINE_COMPLETED, {
             "status": "success",
             "agent": "DataEngineerAgent",
             "quality_score": quality_result["overall_score"],
@@ -1373,7 +1388,7 @@ def main():
         elif args.command == "publish-event":
             # Example: publish data quality check requested event
             event_data = {"data_summary": "Sample data", "request_id": "test-123"}
-            asyncio.run(publish("data_quality_check_requested", event_data))
+            asyncio.run(agent.publish_agent_event(EventTypes.QUALITY_GATE_CHECK_REQUESTED, event_data))
             print(f"Published event: data_quality_check_requested with data: {event_data}")
         elif args.command == "subscribe-event":
             # Example: subscribe to data events
