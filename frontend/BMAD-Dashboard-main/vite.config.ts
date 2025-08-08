@@ -11,7 +11,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5001,
+    port: 5000,
     proxy: {
       '/api': {
         target: 'http://localhost:5001',
@@ -19,6 +19,10 @@ export default defineConfig({
         secure: false,
       },
     },
+  },
+  preview: {
+    port: 5000,
+    host: true,
   },
   build: {
     outDir: 'dist',
