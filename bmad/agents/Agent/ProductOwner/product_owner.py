@@ -1791,8 +1791,7 @@ async def create_bmad_frontend_story():
     project_manager.add_user_story(result["answer"], "high")
 
     # Publiceer event voor andere agents
-    message_bus = get_message_bus()
-    await message_bus.publish(EventTypes.USER_STORIES_CREATED, {
+    await self.publish_agent_event(EventTypes.USER_STORIES_CREATED, {
         "agent": "ProductOwner",
         "project": project_name,
         "status": "success"
@@ -1866,8 +1865,7 @@ def show_bmad_vision():
 
 async def collaborate_example():
     """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
-    message_bus = get_message_bus()
-    await message_bus.publish(EventTypes.BACKLOG_UPDATED, {"status": "success", "agent": "ProductOwner"})
+    await self.publish_agent_event(EventTypes.BACKLOG_UPDATED, {"status": "success", "agent": "ProductOwner"})
     save_context("ProductOwner", "status", {"backlog_status": "updated"})
     print("Event gepubliceerd en context opgeslagen.")
     context = get_context("ProductOwner")

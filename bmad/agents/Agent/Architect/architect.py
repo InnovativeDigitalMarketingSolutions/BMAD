@@ -15,7 +15,9 @@ from bmad.agents.core.ai.llm_client import ask_openai
 from bmad.core.message_bus import (
     AgentMessageBusIntegration,
     EventTypes,
-    get_message_bus
+    get_message_bus,
+    MessageBus,
+    publish_event
 )
 from bmad.agents.core.communication.message_bus import publish, subscribe
 from bmad.agents.core.data.supabase_context import get_context, save_context
@@ -827,13 +829,27 @@ class ArchitectAgent(AgentMessageBusIntegration):
         else:
             print("[OK] Alle resource-bestanden zijn aanwezig.")
 
-    def collaborate_example(self):
+    async def publish_agent_event(self, event_type: str, data: Dict[str, Any]) -> bool:
+        """Publiceer een event via de core message bus met uniform event contract."""
+        try:
+            if isinstance(data, dict) and "agent" not in data:
+                data = {**data, "agent": self.agent_name}
+            if isinstance(data, dict) and "status" not in data and str(event_type).endswith("_COMPLETED"):
+                data = {**data, "status": "completed"}
+            if self.message_bus_integration:
+                return await self.message_bus_integration.publish_event(event_type, data)
+            else:
+                return await publish_event(event_type, data)
+        except Exception as e:
+            logging.error(f"Failed to publish agent event: {e}")
+            return False
+
+    async def collaborate_example(self):
         """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
         try:
             # Publish architecture event
-            publish("architecture_reviewed", {
-                "status": "success", 
-                "agent": self.agent_name,
+            await self.publish_agent_event(EventTypes.ARCHITECTURE_REVIEW_COMPLETED, {
+                "status": "success",
                 "timestamp": datetime.now().isoformat()
             })
             
@@ -1746,7 +1762,7 @@ What becomes easier or more difficult to do and any risks introduced by this cha
                 elif command == "test":
                     self.test()
                 elif command in ["collaborate_example", "collaborate"]:
-                    return self.collaborate_example()
+                    return await self.collaborate_example()
                 else:
                     print(f"Unknown command: {command}")
                     logging.error(f"Onbekend commando: {command}")

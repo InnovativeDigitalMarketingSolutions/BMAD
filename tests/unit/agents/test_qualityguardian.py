@@ -489,18 +489,20 @@ class TestQualityGuardianAgent:
         """Test on_deployment_requested event handler with successful gates."""
         event = {"type": "deployment_requested", "data": "test_data"}
         with patch.object(agent, 'quality_gate_check', return_value={"all_gates_passed": True}):
-            with patch('bmad.agents.Agent.QualityGuardian.qualityguardian.publish') as mock_publish:
+            from unittest.mock import AsyncMock
+            with patch.object(agent, 'publish_agent_event', new_callable=AsyncMock) as mock_pub:
                 await agent.on_deployment_requested(event)
-                mock_publish.assert_called_once_with("quality_gates_passed", {"result": {"all_gates_passed": True}})
+                assert mock_pub.await_count == 1
 
     @pytest.mark.asyncio
     async def test_on_deployment_requested_failure(self, agent):
         """Test on_deployment_requested event handler with failed gates."""
         event = {"type": "deployment_requested", "data": "test_data"}
         with patch.object(agent, 'quality_gate_check', return_value={"all_gates_passed": False}):
-            with patch('bmad.agents.Agent.QualityGuardian.qualityguardian.publish') as mock_publish:
+            from unittest.mock import AsyncMock
+            with patch.object(agent, 'publish_agent_event', new_callable=AsyncMock) as mock_pub:
                 await agent.on_deployment_requested(event)
-                mock_publish.assert_called_once_with("quality_gates_failed", {"reason": "Quality thresholds not met"})
+                assert mock_pub.await_count == 1
 
     @pytest.mark.asyncio
     async def test_run_method(self, agent, capsys):

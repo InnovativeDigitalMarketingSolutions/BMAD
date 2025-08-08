@@ -378,9 +378,8 @@ class TestScrummasterAgent:
             result = agent.test_resource_completeness()
             assert result is False
 
-    @patch('bmad.agents.Agent.Scrummaster.scrummaster.publish')
     @pytest.mark.asyncio
-    async def test_collaborate_example_success(self, mock_publish, agent):
+    async def test_collaborate_example_success(self, agent):
         """Test successful collaboration example."""
         with patch.object(agent, 'plan_sprint') as mock_plan, \
              patch.object(agent, 'start_sprint') as mock_start, \
@@ -388,10 +387,11 @@ class TestScrummasterAgent:
              patch.object(agent, 'daily_standup') as mock_standup, \
              patch.object(agent, 'resolve_impediment') as mock_resolve, \
              patch.object(agent, 'end_sprint') as mock_end, \
-             patch.object(agent, 'calculate_velocity') as mock_velocity:
-            agent.collaborate_example()
+             patch.object(agent, 'calculate_velocity') as mock_velocity, \
+             patch.object(agent, 'publish_agent_event', new_callable=AsyncMock) as mock_publish_event:
+            await agent.collaborate_example()
             
-            mock_publish.assert_called()
+            mock_publish_event.assert_called()
             mock_plan.assert_called()
             mock_start.assert_called()
             mock_track.assert_called()

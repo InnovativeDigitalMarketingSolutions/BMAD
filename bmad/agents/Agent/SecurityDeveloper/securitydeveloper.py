@@ -18,6 +18,7 @@ from bmad.agents.core.agent.agent_performance_monitor import (
 from bmad.agents.core.agent.test_sprites import get_sprite_library
 from bmad.agents.core.ai.llm_client import ask_openai
 from bmad.agents.core.communication.message_bus import publish, subscribe
+from bmad.core.message_bus import EventTypes
 from bmad.agents.core.data.supabase_context import get_context, save_context
 from bmad.agents.core.policy.advanced_policy_engine import get_advanced_policy_engine
 from integrations.slack.slack_notify import send_slack_message
@@ -1381,12 +1382,16 @@ Enhanced MCP Phase 2 Commands:
             print("All resources are available!")
 
     def collaborate_example(self):
-        """Voorbeeld van samenwerking: publiceer event en deel context via Supabase."""
+        """Sync wrapper voor samenwerking: roept async pad aan en retourneert resultaat."""
+        import asyncio as _asyncio
+        return _asyncio.run(self._collaborate_example_async())
+
+    async def _collaborate_example_async(self):
+        """Voorbeeld van samenwerking: publiceer event en deel context via Supabase (async)."""
         logger.info("Starting security collaboration example...")
 
-        # Publish security scan request
-        publish("security_scan_requested", {
-            "agent": "SecurityDeveloperAgent",
+        # Publish security scan request via wrapper
+        await self.publish_agent_event(EventTypes.SECURITY_SCAN_REQUESTED, {
             "target": "BMAD Application",
             "timestamp": datetime.now().isoformat()
         })
@@ -1397,16 +1402,16 @@ Enhanced MCP Phase 2 Commands:
         # Perform vulnerability assessment
         self.vulnerability_assessment("API")
 
-        # Publish completion
-        publish("security_scan_completed", {
+        # Publish completion via wrapper
+        await self.publish_agent_event(EventTypes.SECURITY_SCAN_COMPLETED, {
             "status": "success",
-            "agent": "SecurityDeveloperAgent",
             "security_score": scan_result["security_score"],
             "vulnerabilities_found": len(scan_result["vulnerabilities"])
         })
 
         # Save context
         save_context("SecurityDeveloper", "status", {"security_status": "scanned"})
+        return "Collaboration example completed"
 
         # Notify via Slack
         try:
@@ -1987,6 +1992,25 @@ Enhanced MCP Phase 2 Commands:
         except Exception as e:
             logger.error(f"Failed to generate dashboard data: {e}")
             raise SecurityError(f"Failed to generate dashboard data: {e}")
+
+    async def publish_agent_event(self, event_type: str, data: Dict[str, Any], correlation_id: Optional[str] = None) -> bool:
+        """Publiceer een event via de core message bus met uniform event contract."""
+        try:
+            # Minimale contractverrijking
+            if isinstance(data, dict) and "status" not in data:
+                data = {**data, "status": data.get("status", "completed")}
+            if isinstance(data, dict) and "agent" not in data:
+                data = {**data, "agent": self.agent_name}
+            
+            # Gebruik AgentMessageBusIntegration indien beschikbaar
+            if self.message_bus_integration:
+                return await self.message_bus_integration.publish_event(event_type, data)
+            else:
+                from bmad.core.message_bus import publish_event
+                return await publish_event(event_type, data)  # publish_event kan async zijn in core
+        except Exception as e:
+            logger.error(f"Failed to publish agent event: {e}")
+            return False
 
 def main():
     parser = argparse.ArgumentParser(description="SecurityDeveloper Agent CLI")
