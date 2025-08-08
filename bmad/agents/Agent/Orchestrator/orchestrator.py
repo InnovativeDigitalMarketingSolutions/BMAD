@@ -48,6 +48,7 @@ from bmad.core.mcp.enhanced_mcp_integration import (
     create_enhanced_mcp_integration
 )
 from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
+from bmad.core.message_bus import EventTypes, get_message_bus
 
 load_dotenv()
 
@@ -1590,13 +1591,8 @@ def handle_hitl_decision(event):
 
 async def handle_build_triggered(event):
     logging.info("[DevOpsInfra] Build gestart...")
-    # Simuleer build (in productie: start build pipeline)
     time.sleep(2)
-    # Note: This function is outside the class, so we can't use self.publish_agent_event
-    # We'll need to get the message bus instance directly
-    from bmad.core.message_bus import get_message_bus
-    message_bus = get_message_bus()
-    await message_bus.publish(EventTypes.TESTS_REQUESTED, {"desc": "Tests uitvoeren"})
+    await publish_agent_event(EventTypes.TEST_EXECUTION_REQUESTED, {"desc": "Tests uitvoeren"})
     logging.info("[DevOpsInfra] Build afgerond, tests_requested gepubliceerd.")
 
 # Herhaal dit patroon voor andere events en agents.
@@ -1617,44 +1613,28 @@ def handle_tests_completed(event):
 async def handle_quality_gate_check_requested(event):
     """Handle quality gate check requested event."""
     logger.info(f"Quality gate check requested: {event}")
-    # Trigger QualityGuardian agent
-    from bmad.core.message_bus import get_message_bus
-    message_bus = get_message_bus()
-    await message_bus.publish(EventTypes.QUALITY_GATE_CHECK_REQUESTED, event)
+    await publish_agent_event(EventTypes.QUALITY_GATE_CHECK_REQUESTED, event)
 
 async def handle_idea_validation_requested(event):
     """Handle idea validation requested event."""
     logger.info(f"Idea validation requested: {event}")
-    # Trigger StrategiePartner agent
-    from bmad.core.message_bus import get_message_bus
-    message_bus = get_message_bus()
-    await message_bus.publish(EventTypes.IDEA_VALIDATION_REQUESTED, event)
+    await publish_agent_event(EventTypes.IDEA_VALIDATION_REQUESTED, event)
 
 async def handle_idea_refinement_requested(event):
     """Handle idea refinement requested event."""
     logger.info(f"Idea refinement requested: {event}")
-    # Trigger StrategiePartner agent
-    from bmad.core.message_bus import get_message_bus
-    message_bus = get_message_bus()
-    await message_bus.publish(EventTypes.IDEA_REFINEMENT_REQUESTED, event)
+    await publish_agent_event(EventTypes.IDEA_REFINEMENT_REQUESTED, event)
 
 async def handle_epic_creation_requested(event):
     """Handle epic creation requested event."""
     logger.info(f"Epic creation requested: {event}")
-    # Trigger StrategiePartner agent
-    from bmad.core.message_bus import get_message_bus
-    message_bus = get_message_bus()
-    await message_bus.publish(EventTypes.EPIC_CREATION_REQUESTED, event)
+    await publish_agent_event(EventTypes.EPIC_CREATION_REQUESTED, event)
 
 async def handle_workflow_execution_requested(event):
     """Handle workflow execution requested event."""
     workflow_id = event.get("workflow_id")
     logger.info(f"Workflow execution requested for workflow: {workflow_id}")
-    
-    # Trigger WorkflowAutomator agent for workflow execution
-    from bmad.core.message_bus import get_message_bus
-    message_bus = get_message_bus()
-    await message_bus.publish(EventTypes.WORKFLOW_EXECUTION_REQUESTED, {
+    await publish_agent_event(EventTypes.WORKFLOW_EXECUTION_REQUESTED, {
         "workflow_id": workflow_id,
         "timestamp": datetime.now().isoformat()
     })
@@ -1663,11 +1643,7 @@ async def handle_workflow_optimization_requested(event):
     """Handle workflow optimization requested event."""
     workflow_id = event.get("workflow_id")
     logger.info(f"Workflow optimization requested for workflow: {workflow_id}")
-    
-    # Trigger WorkflowAutomator agent for workflow optimization
-    from bmad.core.message_bus import get_message_bus
-    message_bus = get_message_bus()
-    await message_bus.publish(EventTypes.WORKFLOW_OPTIMIZATION_REQUESTED, {
+    await publish_agent_event(EventTypes.WORKFLOW_OPTIMIZATION_REQUESTED, {
         "workflow_id": workflow_id,
         "timestamp": datetime.now().isoformat()
     })
@@ -1676,11 +1652,7 @@ async def handle_workflow_monitoring_requested(event):
     """Handle workflow monitoring requested event."""
     workflow_id = event.get("workflow_id")
     logger.info(f"Workflow monitoring requested for workflow: {workflow_id}")
-    
-    # Trigger WorkflowAutomator agent for workflow monitoring
-    from bmad.core.message_bus import get_message_bus
-    message_bus = get_message_bus()
-    await message_bus.publish(EventTypes.WORKFLOW_MONITORING_REQUESTED, {
+    await publish_agent_event(EventTypes.WORKFLOW_MONITORING_REQUESTED, {
         "workflow_id": workflow_id,
         "timestamp": datetime.now().isoformat()
     })
@@ -1693,6 +1665,18 @@ async def handle_workflow_monitoring_requested(event):
 # subscribe("workflow_execution_requested", handle_workflow_execution_requested)
 # subscribe("workflow_optimization_requested", handle_workflow_optimization_requested)
 # subscribe("workflow_monitoring_requested", handle_workflow_monitoring_requested)
+
+async def publish_agent_event(event_type: str, data: Dict[str, Any]) -> bool:
+    """Module-level helper to publish events with uniform contract when no self is available."""
+    try:
+        payload = dict(data) if isinstance(data, dict) else {"data": data}
+        if "status" not in payload and str(event_type).endswith("_COMPLETED"):
+            payload["status"] = "completed"
+        message_bus = get_message_bus()
+        return await message_bus.publish_event(event_type, payload)
+    except Exception as e:
+        logger.error(f"Failed to publish event from orchestrator helper: {e}")
+        return False
 
 def main():
     parser = argparse.ArgumentParser(description="Orchestrator Agent CLI")

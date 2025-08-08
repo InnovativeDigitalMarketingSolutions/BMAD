@@ -2,6 +2,20 @@
 
 Hier houdt de Orchestrator Agent agent zijn eigen wijzigingen, beslissingen en learnings bij.
 
+## [2025-08-08] Wrapper-harmonisatie module-level handlers
+
+### Changed
+- Directe `message_bus.publish(...)` vervangen door module-level `publish_agent_event(...)` helper in out-of-class handlers
+- EventTypes gecorrigeerd naar bestaande standaarden (bijv. `TEST_EXECUTION_REQUESTED`)
+
+### Rationale
+- Uniform event contract en centrale validatie/tracing ook buiten klassecontext
+- Consistentie met agent-level wrapper standaard
+
+### Impact
+- Unit tests: groen (91/91)
+- Geen functionele regressies; publish API blijft via core `publish_event(...)`
+
 ## [2025-01-31] Workflow Compliance Implementation - FULLY COMPLIANT
 
 ### Added

@@ -18,6 +18,11 @@ De Orchestrator Agent coördineert workflows en orkestreert de samenwerking tuss
 - HITL (Human-in-the-Loop) decision management
 - Escalation handling en workflow optimization
 
+## Message Bus & Event Contract
+- Publiceren via wrapper: agent‑niveau `await self.publish_agent_event(...)`; module‑niveau via `await publish_agent_event(...)` voor out‑of‑class handlers
+- Minimale payload: `status` (bij *_COMPLETED), domeinspecifieke sleutels; `request_id` optioneel
+- Voorbeeld module‑level publish: `await publish_agent_event(EventTypes.WORKFLOW_EXECUTION_REQUESTED, {"workflow_id": id})`
+
 ## Belangrijke resources
 - [Orchestration best practices](../../resources/templates/orchestrator/best-practices.md)
 - [Workflow templates](../../resources/templates/orchestrator/workflow-template.md)
@@ -27,7 +32,7 @@ De Orchestrator Agent coördineert workflows en orkestreert de samenwerking tuss
 
 Deze agent werkt samen met andere agents via een centrale message bus en gedeelde context in Supabase.
 
-- **Events publiceren:** De agent kan events publiceren via de message_bus, bijvoorbeeld als workflows worden gestart of voltooid.
+- **Events publiceren:** De agent publiceert events via de wrapper (agent of module‑level), bv. bij start/voltooiing van workflows.
 - **Context delen:** Status en relevante data worden gedeeld via Supabase, zodat andere agents deze kunnen inzien.
 - **Performance Tracking:** 12 orchestration-specifieke metrics worden bijgehouden en gedeeld
 - **Async Event Handlers:** Real-time event processing met async/await patterns
@@ -35,9 +40,8 @@ Deze agent werkt samen met andere agents via een centrale message bus en gedeeld
 
 **Voorbeeld:**
 ```python
-self.collaborate_example()
+await publish_agent_event(EventTypes.WORKFLOW_EXECUTION_REQUESTED, {"workflow_id": workflow_id})
 ```
-Dit publiceert een event en slaat context op. Andere agents kunnen deze context ophalen of op het event reageren.
 
 ## Workflow Compliance Features
 
