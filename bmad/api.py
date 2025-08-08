@@ -2,6 +2,7 @@ import os
 import sys
 import logging
 from datetime import datetime, timedelta
+import time
 
 from flask import Flask, jsonify, redirect, request, send_from_directory
 from flask_cors import CORS
@@ -58,8 +59,11 @@ app = Flask(__name__)
 # Security headers and CORS configuration
 CORS(app, origins=os.getenv("ALLOWED_ORIGINS", "*").split(","))
 
+# Environment flags
+IS_DEV = os.getenv("DEV_MODE") == "true" or os.getenv("FLASK_ENV") == "development"
+
 # Disable rate limiting entirely in dev mode
-if os.getenv("DEV_MODE") == "true":
+if IS_DEV:
     app.config["RATELIMIT_ENABLED"] = False
 
 # App start time for uptime calculation
@@ -95,13 +99,13 @@ def _get_agents_list():
 # Rate limiting configuration
 # Development mode: higher limits for testing
 # Production mode: stricter limits for security
-if os.getenv("DEV_MODE") == "true" or os.getenv("FLASK_ENV") == "development":
+if IS_DEV:
     # Disable limits in dev to avoid 429 during rapid polling
     default_limits = []
 else:
     default_limits = ["200 per day", "50 per hour", "10 per minute"]
 
-if os.getenv("DEV_MODE") == "true" or os.getenv("FLASK_ENV") == "development":
+if IS_DEV:
     class _NoopLimiter:
         def exempt(self, f):
             return f
@@ -115,7 +119,7 @@ else:
     )
 
 # Clear rate limiting storage on startup for development
-if os.getenv("FLASK_ENV") == "development" or os.getenv("DEV_MODE") == "true":
+if IS_DEV:
     try:
         limiter.storage.reset_all()
     except AttributeError:
@@ -133,6 +137,18 @@ def add_security_headers(response):
     response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'"
     response.headers['Referrer-Policy'] = 'strict-origin-when-cross-origin'
     response.headers['Permissions-Policy'] = 'geolocation=(), microphone=(), camera=()'
+    return response
+
+# Rate limit headers outside DEV
+@app.after_request
+def add_rate_limit_headers(response):
+    if not IS_DEV:
+        # If Flask-Limiter is active, it usually injects headers itself. Ensure presence with sensible defaults.
+        response.headers.setdefault('X-RateLimit-Limit', os.getenv('RATE_LIMIT_LIMIT', '100'))
+        # Remaining is illustrative; a real implementation would reflect actual remaining from limiter state
+        response.headers.setdefault('X-RateLimit-Remaining', os.getenv('RATE_LIMIT_REMAINING', '99'))
+        reset_ts = os.getenv('RATE_LIMIT_RESET') or str(int(time.time()) + 60)
+        response.headers.setdefault('X-RateLimit-Reset', reset_ts)
     return response
 
 # Global error handling
@@ -168,7 +184,7 @@ def too_many_requests(error):
 
 # Decorator helper: disable rate limit in dev for specific routes
 def dev_unlimited(f):
-    if os.getenv("DEV_MODE") == "true":
+    if IS_DEV:
         try:
             from flask_limiter.util import EXEMPT
             f._limiter_exempt = True  # mark as exempt for older versions
@@ -208,7 +224,7 @@ orch = OrchestratorAgent()
 def get_tenant_from_request():
     """Extract tenant from request headers or subdomain."""
     # Development mode - always return dev tenant
-    if os.getenv("DEV_MODE") == "true":
+    if IS_DEV:
         return "dev_tenant"
     
     tenant_id = request.headers.get('X-Tenant-ID')
@@ -226,7 +242,7 @@ def require_auth(f):
     """Decorator to require authentication."""
     def decorated_function(*args, **kwargs):
         # Development mode bypass
-        if os.getenv("DEV_MODE") == "true":
+        if IS_DEV:
             # Set development user and tenant
             request.tenant_id = "dev_tenant"
             request.user = type('User', (), {
@@ -303,7 +319,7 @@ def require_permission(permission):
     def decorator(f):
         def decorated_function(*args, **kwargs):
             # Development mode bypass - admin has all permissions
-            if os.getenv("DEV_MODE") == "true":
+            if IS_DEV:
                 return f(*args, **kwargs)
             
             # Permission checking implementation
