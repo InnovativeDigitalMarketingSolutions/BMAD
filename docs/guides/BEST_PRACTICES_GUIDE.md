@@ -3701,3 +3701,23 @@ self.tracing_enabled = True
   - Blue/green of canary; rollback procedures; infra-as-code; backups/restore testen
 - Readiness checklist
   - Health/metrics/logging/tracing/security headers/ratelimiting/alerts gedekt; disaster recovery gedocumenteerd
+
+## LLM Configuratie per Agent (YAML/ENV/Context)
+- Resolver volgorde: expliciet `model` → `context.llm_model` → ENV `BMAD_LLM_<AGENT>_MODEL` → YAML `llm.model` → `OPENAI_MODEL`
+- YAML voorbeeld (bij agent YAML):
+```yaml
+llm:
+  provider: openai
+  model: gpt-4o-mini
+  temperature: 0.3
+```
+- ENV voorbeeld:
+```bash
+export BMAD_LLM_SCRUMMASTER_MODEL=gpt-4o-mini
+export BMAD_LLM_PRODUCTOWNER_MODEL=gpt-4o
+```
+- Context override voorbeeld:
+```python
+ask_openai(prompt, context={"agent": "Scrummaster", "llm_model": "gpt-4o-mini"})
+```
+- Implementatie: `bmad/agents/core/ai/llm_client.py::resolve_agent_model`

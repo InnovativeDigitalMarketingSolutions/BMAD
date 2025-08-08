@@ -87,7 +87,7 @@ For detailed analysis of AI integration possibilities, system objectives verific
 - [ ] **Enable Message Bus Integration** - Set `message_bus_enabled = True` for all 23 agents
 - [ ] **Enable Tracing Integration** - Set `tracing_enabled = True` for all 23 agents
 - [ ] **Fix Pytest Configuration** - Add missing pytest marks and resolve warnings
-- [ ] **Per‑Agent LLM Config** - Introduce per‑agent model/provider overrides (YAML+ENV), met fallback naar project default
+- [x] **Per‑Agent LLM Config** - Per‑agent model/provider via YAML (`llm.model`) en ENV (`BMAD_LLM_<AGENT>_MODEL`) met fallback naar project default; resolver geïmplementeerd in `llm_client.py`
 
 **Sprint Test Fixes – Executed & Planned (this sprint)**
 - [x] Normalize pytest config header to `[pytest]` (was `[tool:pytest]`) en set `testpaths = tests`
