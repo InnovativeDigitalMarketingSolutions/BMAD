@@ -11,6 +11,30 @@ For detailed analysis of AI integration possibilities, system objectives verific
 
 ### 🔄 **IN PROGRESS TASKS**
 
+#### Wave 1 (P0): Core Quality Gates & Event Foundations
+- [ ] CI/Pre-commit gates: black/ruff (of flake8), mypy, pytest -q
+- [ ] Wrapper-enforcement in CI: `scripts/check_no_direct_publish.py`
+- [ ] Event schema’s (pydantic) voor kern-EventTypes (Completed/Failed)
+- [ ] Tracing/Correlation standaard in wrapper (correlation_id ↔ trace-id)
+- [ ] Wrapper-compliance 100% (alle agents)
+
+#### Wave 2 (P1): Reliability, Contracttests & Config (Backlog)
+- [ ] Contracttests EventTypes + Hypothesis property-based tests
+- [ ] Resilience policies (retries, circuit breaker, bulkheads)
+- [ ] Config/secrets via pydantic Settings
+- [ ] Healthchecks & metrics per agent
+
+#### Wave 3 (P1–P2): Transports, E2E en Security Scans (Backlog)
+- [ ] Pluggable transports (in-memory → Redis; Kafka optioneel)
+- [ ] E2E cross-agent workflows (3 scenario’s)
+- [ ] Security scans (gitleaks, safety/pip-audit, SBOM, Trivy)
+- [ ] ADR’s events/transports/tracing/resilience
+
+#### Wave 4 (P2): AI Guardrails & Evaluatieharnas (Backlog)
+- [ ] Prompt library + guardrails
+- [ ] Offline eval sets + cost/latency dashboards
+- [ ] Fallback- en canary-modellen
+
 #### **🚨 CRITICAL SYSTEM STABILIZATION (Priority 0)** 🔄
 **Status**: Ready to start - Critical fixes required before AI integration
 **Workflow**: [System Stabilization Workflow](../guides/SYSTEM_STABILIZATION_WORKFLOW.md)
