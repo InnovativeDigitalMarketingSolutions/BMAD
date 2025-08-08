@@ -62,6 +62,15 @@ class FrontendDeveloperAgent:
     Gespecialiseerd in React/Next.js, Shadcn/ui, en moderne frontend development.
     """
     
+    # Standardized class-level attributes for completeness checks
+    mcp_client: Optional[MCPClient] = None
+    enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+    enhanced_mcp_enabled: bool = False
+    tracing_enabled: bool = False
+    agent_name: str = "FrontendDeveloper"
+    message_bus_integration: Optional[AgentMessageBusIntegration] = None
+    message_bus_enabled: bool = False
+
     def __init__(self):
         self.framework_manager = get_framework_templates_manager()
         self.frontend_development_template = self.framework_manager.get_framework_template('frontend_development')
@@ -156,19 +165,30 @@ class FrontendDeveloperAgent:
     async def initialize_tracing(self):
         """Initialize tracing capabilities."""
         try:
+            # Instantiate tracer here (not in __init__) to allow test patching and controlled lifecycle
+            if self.tracer is None:
+                config = type("Config", (), {
+                    "service_name": "FrontendDeveloperAgent",
+                    "service_version": "1.0.0",
+                    "environment": "development",
+                    "sample_rate": 1.0,
+                    "exporters": []
+                })()
+                self.tracer = BMADTracer(config=config)
             if self.tracer and hasattr(self.tracer, 'initialize'):
                 await self.tracer.initialize()
                 self.tracing_enabled = True
                 logger.info("Tracing initialized successfully for FrontendDeveloper")
                 # Set up frontend-specific tracing spans
-                await self.tracer.setup_frontend_tracing({
-                    "agent_name": self.agent_name,
-                    "tracing_level": "detailed",
-                    "performance_tracking": True,
-                    "component_tracking": True,
-                    "user_interaction_tracking": True,
-                    "error_tracking": True
-                })
+                if hasattr(self.tracer, 'setup_frontend_tracing'):
+                    await self.tracer.setup_frontend_tracing({
+                        "agent_name": self.agent_name,
+                        "tracing_level": "detailed",
+                        "performance_tracking": True,
+                        "component_tracking": True,
+                        "user_interaction_tracking": True,
+                        "error_tracking": True
+                    })
             else:
                 logger.warning("Tracing initialization failed, continuing without tracing")
                 
@@ -512,6 +532,70 @@ class FrontendDeveloperAgent:
         except Exception as e:
             logger.error(f"Failed to get tracing summary: {e}")
             return {}
+
+    def get_enhanced_mcp_tools(self) -> List[str]:
+        """Get list of available enhanced MCP tools for this agent."""
+        if not self.enhanced_mcp_enabled:
+            return []
+        try:
+            return [
+                "enhanced_component_development",
+                "enhanced_accessibility_testing",
+                "enhanced_design_system_integration",
+                "enhanced_frontend_performance",
+                "external_tool_discovery",
+                "external_tool_execution",
+                "agent_communication"
+            ]
+        except Exception as e:
+            logger.warning(f"Failed to get enhanced MCP tools: {e}")
+            return []
+
+    def register_enhanced_mcp_tools(self) -> bool:
+        """Register enhanced MCP tools for this agent."""
+        if not self.enhanced_mcp_enabled:
+            return False
+        try:
+            tools = self.get_enhanced_mcp_tools()
+            for tool in tools:
+                if self.enhanced_mcp and hasattr(self.enhanced_mcp, 'register_tool'):
+                    self.enhanced_mcp.register_tool(tool)
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to register enhanced MCP tools: {e}")
+            return False
+
+    async def trace_operation(self, operation_name: str, attributes: Optional[Dict[str, Any]] = None) -> bool:
+        """Trace operations for monitoring and debugging (standardized interface)."""
+        try:
+            if not self.tracing_enabled or not self.tracer:
+                return False
+            trace_data = {
+                "agent": self.agent_name,
+                "operation": operation_name,
+                "timestamp": datetime.now().isoformat(),
+                "attributes": attributes or {}
+            }
+            if hasattr(self.tracer, 'trace_operation'):
+                await self.tracer.trace_operation(trace_data)
+            return True
+        except Exception as e:
+            logger.warning(f"Tracing operation failed: {e}")
+            return False
+
+    async def subscribe_to_event(self, event_type: str, callback) -> bool:
+        """Subscribe to a specific event type via the message bus integration.
+        Falls back to the core message bus subscribe_to_event when integration is not initialized.
+        """
+        try:
+            if self.message_bus_integration:
+                return await self.message_bus_integration.register_event_handler(event_type, callback)
+            else:
+                from bmad.core.message_bus.message_bus import subscribe_to_event as core_subscribe_to_event
+                return await core_subscribe_to_event(event_type, callback)
+        except Exception as e:
+            logger.error(f"Failed to subscribe to event '{event_type}': {e}")
+            return False
     
     def _ensure_message_bus_initialized(self):
         """Lazy initialize MessageBus only when needed."""
@@ -1423,6 +1507,17 @@ Examples:
         
         # Initialize Message Bus Integration
         await self.initialize_message_bus_integration()
+
+        # Subscribe to relevant events (legacy subscribe API used by tests)
+        try:
+            subscribe("component_build_requested", self.handle_component_build_requested)
+            subscribe("component_build_completed", self.handle_component_build_completed)
+            subscribe("figma_design_updated", self.handle_figma_design_updated)
+            subscribe("accessibility_check_requested", self.handle_accessibility_check_requested)
+            subscribe("ui_feedback_received", self.handle_ui_feedback_received)
+        except Exception as _e:
+            # Non-fatal in run-loop; logging only
+            logger.warning(f"Subscribe setup encountered an issue: {_e}")
 
         logger.info("FrontendDeveloperAgent ready and listening for events...")
         print("🎨 Frontend Developer Agent is running...")

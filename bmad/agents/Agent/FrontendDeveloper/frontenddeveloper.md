@@ -131,3 +131,9 @@ python frontenddeveloper.py enhanced-summary
 - TypeScript
 - Testing frameworks (Jest, Cypress)
 - Design tools (Figma API)
+
+**Wrapper & Subscriptions**
+- Events publiceren via `publish_agent_event(event_type, data)` met minimaal `status` en `agent`
+- Abonneren via `subscribe_to_event(event_type, callback)` (passthrough naar Message Bus); in `run()` ook `subscribe(...)` registraties voor compatibiliteit
+- Enhanced MCP tools: `get_enhanced_mcp_tools()` en `register_enhanced_mcp_tools()` beschikbaar
+- Tracing: `initialize_tracing()` instantiëert en initialiseerde tracer correct; `trace_operation()` beschikbaar voor generieke traces
