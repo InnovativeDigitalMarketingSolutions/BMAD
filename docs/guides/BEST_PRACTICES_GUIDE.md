@@ -4,6 +4,12 @@
 
 This document outlines best practices for developing and maintaining the BMAD agent system.
 
+### 2025-08-09 Updates — Event Schema's & Contracttests
+- **Contract**: Alle events hebben minimaal `status`, `agent`, `timestamp`; `*_FAILED` events hebben ook `error`.
+- **Validatie**: Gebruik Pydantic-schema's (`BaseEventPayload`, `FailedEventPayload`) en valideer vóór publicatie in `MessageBus.publish()`/`publish_event()`.
+- **Tests**: Voeg per kern-event type contracttests toe; startpunt aanwezig in `tests/unit/core/test_event_schemas.py`.
+- **CI**: Wrapper-enforcement actief; breid uit met schema-checks en veiligheids-scans.
+
 ## Agent Implementation Completeness Verification - CRITICAL BEST PRACTICES (Januari 2025)
 
 ### **Problem**: Incomplete Agent Analysis Despite Multiple Reviews

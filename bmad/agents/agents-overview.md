@@ -1,5 +1,7 @@
 # 🧱 BMAD Agents Overview
 
+> Nota: Event‑payloads worden nu uniform gevalideerd via Pydantic‑schema’s (minimaal `status`, `agent`, `timestamp`; voor `*_FAILED` events verplicht `error`). Runtime‑validatie is actief in de message bus wrapper.
+
 ## 📋 Agent Rollen & Verantwoordelijkheden
 
 ### **Core Development Agents**

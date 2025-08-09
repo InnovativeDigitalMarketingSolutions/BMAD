@@ -17,13 +17,15 @@ For detailed analysis of AI integration possibilities, system objectives verific
 #### Wave 1 (P0): Core Quality Gates & Event Foundations
 (Referentie: Best Practices → P0: Core Quality Gates & Event Foundations)
 - [ ] CI/Pre-commit gates: black/ruff (of flake8), mypy, pytest -q
-  - [ ] Voeg wrapper-check toe aan CI (fail on direct publish)
+  - [x] Voeg wrapper-check toe aan CI (fail on direct publish)
   - [ ] Voeg schema-checks, safety/pip-audit, gitleaks, SBOM (CycloneDX) toe
-- [ ] Wrapper-enforcement in CI: `scripts/check_no_direct_publish.py`
+- [x] Wrapper-enforcement in CI: `scripts/check_no_direct_publish.py` (geïntegreerd in CI)
 - [ ] Event schema’s (pydantic) voor kern-EventTypes (Completed/Failed)
   - [ ] Definieer pydantic modellen per kern‑event (API_DESIGN_COMPLETED/FAILED, SPRINT_STARTED/COMPLETED, BACKLOG_UPDATED, QUALITY_GATE_* …)
   - [ ] Contracttests genereren per eventtype
-  - [ ] Integratie in wrapper voor runtime‑validatie
+  - [x] Integratie in wrapper voor runtime‑validatie
+  - [x] Basisschema (BaseEventPayload/FailedEventPayload) + runtime-validatie in bus
+  - [x] Starter contracttests toegevoegd (`tests/unit/core/test_event_schemas.py`)
 - [ ] Tracing/Correlation standaard in wrapper (correlation_id ↔ trace-id)
 - [ ] Wrapper-compliance 100% (alle agents)
   - [x] ProductOwner: wrapper-compliance bijgewerkt (tests groen)
