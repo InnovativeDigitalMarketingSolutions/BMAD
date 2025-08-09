@@ -1850,9 +1850,9 @@ def main():
                                "show-best-practices", "show-changelog", "export-report", "test",
                                "collaborate", "run",
                                "enhanced-collaborate", "enhanced-security", "enhanced-performance",
-                               "trace-operation", "trace-performance", "trace-error", "tracing-summary",
-                               "initialize-message-bus", "message-bus-status", "publish-event", "subscribe-event",
-                               "list-events", "event-history", "performance-metrics"])
+                               "trace-operation", "trace-performance", "trace-error", "tracing-summary", "trace-summary",
+                               "initialize-message-bus", "message-bus-status", "message-bus-health", "message-bus-metrics", "publish-event", "subscribe-event",
+                               "list-events", "event-history", "performance-metrics", "resources-check"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--pipeline-config", default="Sample CI/CD pipeline", help="Pipeline configuration for analysis")
     parser.add_argument("--incident-desc", default="Sample incident description", help="Incident description for response")
@@ -1930,39 +1930,48 @@ def main():
         }))
         print(json.dumps(result, indent=2))
     elif args.command == "tracing-summary":
-        print("Tracing Summary for DevOpsInfra:")
-        print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
-        print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
-        print(f"Agent: {agent.agent_name}")
+        print(json.dumps(agent.get_tracing_summary(), indent=2))
+    elif args.command == "trace-summary":
+        print(json.dumps(agent.get_tracing_summary(), indent=2))
     elif args.command == "initialize-message-bus":
-        asyncio.run(agent.initialize_message_bus_integration())
-        print("✅ Message Bus Integration initialized successfully")
+        asyncio.run(agent.initialize_message_bus())
     elif args.command == "message-bus-status":
-        print("🚀 DevOpsInfra Agent Message Bus Status:")
-        print(f"✅ Message Bus Integration: {'Enabled' if agent.message_bus_enabled else 'Disabled'}")
-        print(f"✅ Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
-        print(f"✅ Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
-        print(f"📊 Performance Metrics: {len(agent.performance_metrics)} metrics tracked")
-        print(f"📝 Infrastructure History: {len(agent.infrastructure_history)} entries")
-        print(f"⚡ Incident History: {len(agent.incident_history)} entries")
+        print(f"Message Bus Enabled: {getattr(agent, 'message_bus_enabled', False)}")
+    elif args.command == "message-bus-health":
+        if getattr(agent, 'message_bus_integration', None):
+            result = asyncio.run(agent.message_bus_integration.healthcheck())
+            import json as _json
+            print(_json.dumps(result, indent=2))
+        else:
+            print("Message Bus Integration not initialized")
+    elif args.command == "message-bus-metrics":
+        if getattr(agent, 'message_bus_integration', None):
+            metrics = agent.message_bus_integration.get_metrics()
+            import json as _json
+            print(_json.dumps(metrics, indent=2))
+        else:
+            print("Message Bus Integration not initialized")
     elif args.command == "publish-event":
-        if len(sys.argv) < 4:
-            print("❌ Usage: publish-event <event_type> <event_data_json>")
-            return
-        event_type = sys.argv[2]
-        try:
-            event_data = json.loads(sys.argv[3])
-            asyncio.run(agent.message_bus_integration.publish_event(event_type, event_data))
-            print(f"✅ Event '{event_type}' published successfully")
-        except json.JSONDecodeError:
-            print("❌ Invalid JSON format for event_data")
+        if not args.event_name:
+            print("Geef een event naam op met --event-name")
+            sys.exit(1)
+        payload = {}
+        if args.event_data:
+            try:
+                payload = json.loads(args.event_data)
+            except json.JSONDecodeError:
+                print("Invalid JSON for --event-data")
+                sys.exit(1)
+        print(f"Publishing event {args.event_name} ...")
+        result = asyncio.run(agent.publish_event(args.event_name, payload))
+        print(f"Event published: {result}")
     elif args.command == "subscribe-event":
-        if len(sys.argv) < 3:
-            print("❌ Usage: subscribe-event <event_type>")
-            return
-        event_type = sys.argv[2]
-        print(f"📡 Subscribing to event: {event_type}")
-        # Event handlers are already registered in initialize_message_bus_integration
+        if not args.event_name:
+            print("Geef een event naam op met --event-name")
+            sys.exit(1)
+        print(f"Subscribing to event {args.event_name} ...")
+        result = asyncio.run(agent.subscribe_to_event(args.event_name))
+        print(f"Subscribed: {result}")
     elif args.command == "list-events":
         print("🚀 DevOpsInfra Agent Supported Events:")
         print("📥 Input Events:")
@@ -1996,6 +2005,11 @@ def main():
                 print(f"  • {metric}: {value}")
     elif args.command == "run":
         asyncio.run(agent.run())
+    elif args.command == "resources-check":
+        from bmad.agents.core.utils.validate_agent_resources import validate_agent_resources as _var
+        result = _var("DevOpsInfra")
+        import json as _json
+        print(_json.dumps(result, indent=2))
 
 if __name__ == "__main__":
     main()

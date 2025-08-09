@@ -1925,8 +1925,8 @@ def main():
                                "show-deployment-history", "show-best-practices", "show-changelog", "export-api",
                                "test", "collaborate", "run", "enhanced-collaborate", "enhanced-security", 
                                "enhanced-performance", "enhanced-tools", "enhanced-summary",
-                               "trace-api", "trace-database", "trace-deployment", "trace-error", "tracing-summary",
-                               "message-bus-status", "publish-event", "subscribe-event"])
+                               "trace-api", "trace-database", "trace-deployment", "trace-error", "tracing-summary", "trace-summary",
+                               "message-bus-status", "message-bus-health", "message-bus-metrics", "publish-event", "subscribe-event", "resources-check"])
     parser.add_argument("--endpoint", default="/api/v1/users", help="API endpoint")
     parser.add_argument("--format", choices=["md", "json", "yaml", "html"], default="md", help="Export format")
     parser.add_argument("--agents", nargs="+", help="Target agents for collaboration")
@@ -1946,6 +1946,11 @@ def main():
 
         if args.command == "help":
             agent.show_help()
+        elif args.command == "resources-check":
+            from bmad.agents.core.utils.validate_agent_resources import validate_agent_resources as _var
+            result = _var("BackendDeveloper")
+            import json as _json
+            print(_json.dumps(result, indent=2))
         elif args.command == "build-api":
             result = asyncio.run(agent.build_api(args.endpoint))
             print(f"API built successfully: {result}")
@@ -2060,40 +2065,47 @@ def main():
                 print("Error: Invalid JSON in --error-data")
                 sys.exit(1)
         elif args.command == "tracing-summary":
-            tracing_summary = agent.get_tracing_summary()
             print("Tracing Summary:")
-            print(json.dumps(tracing_summary, indent=2))
+            print(json.dumps(agent.get_tracing_summary(), indent=2))
+        elif args.command == "trace-summary":
+            print(json.dumps(agent.get_tracing_summary(), indent=2))
         elif args.command == "message-bus-status":
-            print(f"Message Bus Integration Status: {agent.message_bus_enabled}")
-            if agent.message_bus_integration:
-                print(f"Message Bus Integration: Active")
-                print(f"Event Handlers: 8 registered")
-                print("Available Events: api_change_requested, api_change_completed, api_deployment_requested, api_deployment_completed, api_export_requested, database_operation_requested, backend_performance_analysis_requested, backend_security_validation_requested, backend_tracing_requested, task_delegated, agent_collaboration_requested")
+            print(f"Message Bus Enabled: {getattr(agent, 'message_bus_enabled', False)}")
+        elif args.command == "message-bus-health":
+            if getattr(agent, 'message_bus_integration', None):
+                result = asyncio.run(agent.message_bus_integration.healthcheck())
+                import json as _json
+                print(_json.dumps(result, indent=2))
             else:
-                print("Message Bus Integration: Not initialized")
+                print("Message Bus Integration not initialized")
+        elif args.command == "message-bus-metrics":
+            if getattr(agent, 'message_bus_integration', None):
+                metrics = agent.message_bus_integration.get_metrics()
+                import json as _json
+                print(_json.dumps(metrics, indent=2))
+            else:
+                print("Message Bus Integration not initialized")
         elif args.command == "publish-event":
-            if not args.event_name or not args.event_data:
-                print("Error: --event-name and --event-data are required for publish-event command")
+            if not args.event_name:
+                print("Geef een event naam op met --event-name")
                 sys.exit(1)
-            try:
-                event_data = json.loads(args.event_data)
-                if agent.message_bus_integration:
-                    result = asyncio.run(agent.message_bus_integration.publish_event(args.event_name, event_data))
-                    print(f"Event published successfully: {result}")
-                else:
-                    print("Error: Message Bus Integration not initialized")
+            payload = {}
+            if args.event_data:
+                try:
+                    payload = json.loads(args.event_data)
+                except json.JSONDecodeError:
+                    print("Invalid JSON for --event-data")
                     sys.exit(1)
-            except json.JSONDecodeError:
-                print("Error: Invalid JSON in --event-data")
-                sys.exit(1)
+            print(f"Publishing event {args.event_name} ...")
+            result = asyncio.run(agent.publish_event(args.event_name, payload))
+            print(f"Event published: {result}")
         elif args.command == "subscribe-event":
-            print("Note: Event subscription is handled automatically by the Message Bus Integration.")
-            print("The BackendDeveloper agent automatically subscribes to relevant events:")
-            print("- api_change_requested, api_change_completed")
-            print("- api_deployment_requested, api_deployment_completed")
-            print("- api_export_requested, database_operation_requested")
-            print("- backend_performance_analysis_requested, backend_security_validation_requested")
-            print("- backend_tracing_requested, task_delegated, agent_collaboration_requested")
+            if not args.event_name:
+                print("Geef een event naam op met --event-name")
+                sys.exit(1)
+            print(f"Subscribing to event {args.event_name} ...")
+            result = asyncio.run(agent.subscribe_to_event(args.event_name))
+            print(f"Subscribed: {result}")
         elif args.command == "run":
             asyncio.run(agent.run())
         else:

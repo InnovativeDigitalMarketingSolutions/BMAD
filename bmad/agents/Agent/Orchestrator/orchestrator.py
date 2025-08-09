@@ -1729,9 +1729,9 @@ def main():
                                "show-metrics", "initialize-mcp", "use-mcp-tool", "get-mcp-status", 
                                "use-orchestration-mcp-tools", "check-dependencies", "enhanced-collaborate", 
                                "enhanced-security", "enhanced-performance", "trace-operation", 
-                               "trace-performance", "trace-error", "tracing-summary",
-                               "initialize-message-bus", "message-bus-status", "publish-event", 
-                               "subscribe-event", "list-events", "event-history", "performance-metrics"])
+                               "trace-performance", "trace-error", "tracing-summary", "trace-summary",
+                               "initialize-message-bus", "message-bus-status", "message-bus-health", "message-bus-metrics", "publish-event", 
+                               "subscribe-event", "list-events", "event-history", "performance-metrics", "resources-check"])
     parser.add_argument("--format", choices=["md", "csv", "json"], default="md", help="Export format")
     parser.add_argument("--workflow", help="Workflow naam voor start-workflow of show-workflow-status")
     parser.add_argument("--orchestration-type", default="task_assignment", help="Orchestration type")
@@ -1814,17 +1814,20 @@ def main():
         print(f"📝 Workflow History: {len(agent.workflow_history)} entries")
         print(f"📊 Orchestration History: {len(agent.orchestration_history)} entries")
     elif args.command == "publish-event":
-        event_type = input("Event type: ")
-        event_data = input("Event data (JSON): ")
-        try:
-            data = json.loads(event_data) if event_data else {}
-            asyncio.run(agent.message_bus_integration.publish_event(event_type, data))
-            print(f"✅ Event '{event_type}' gepubliceerd")
-        except Exception as e:
-            print(f"❌ Fout bij publiceren: {e}")
+        if not args.workflow:
+            print("Geef een workflow op met --workflow (als event-type)")
+            sys.exit(1)
+        payload = {"timestamp": datetime.now().isoformat(), "agent": agent.agent_name}
+        print(f"Publishing event {args.workflow} ...")
+        result = asyncio.run(agent.publish_event(args.workflow, payload))
+        print(f"Event published: {result}")
     elif args.command == "subscribe-event":
-        event_type = input("Event type: ")
-        print(f"✅ Subscribed op event '{event_type}'")
+        if not args.workflow:
+            print("Geef een workflow op met --workflow (als event-type)")
+            sys.exit(1)
+        print(f"Subscribing to event {args.workflow} ...")
+        result = asyncio.run(agent.subscribe_to_event(args.workflow))
+        print(f"Subscribed: {result}")
     elif args.command == "list-events":
         print("🚀 Orchestrator Supported Events:")
         print("📥 Input Events:")
@@ -1894,6 +1897,26 @@ def main():
             print(f"Enhanced MCP: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
             print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
             print(f"Agent: {agent.agent_name}")
+    elif args.command == "trace-summary":
+        print(json.dumps(agent.get_tracing_summary(), indent=2))
+    elif args.command == "initialize-message-bus":
+        asyncio.run(agent.initialize_message_bus())
+    elif args.command == "message-bus-status":
+        print(f"Message Bus Enabled: {getattr(agent, 'message_bus_enabled', False)}")
+    elif args.command == "message-bus-health":
+        if getattr(agent, 'message_bus_integration', None):
+            result = asyncio.run(agent.message_bus_integration.healthcheck())
+            import json as _json
+            print(_json.dumps(result, indent=2))
+        else:
+            print("Message Bus Integration not initialized")
+    elif args.command == "message-bus-metrics":
+        if getattr(agent, 'message_bus_integration', None):
+            metrics = agent.message_bus_integration.get_metrics()
+            import json as _json
+            print(_json.dumps(metrics, indent=2))
+        else:
+            print("Message Bus Integration not initialized")
     else:
         print(f"Unknown command: {args.command}")
         agent.show_help()
