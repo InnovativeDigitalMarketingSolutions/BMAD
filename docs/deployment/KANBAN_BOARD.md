@@ -31,8 +31,8 @@ For detailed analysis of AI integration possibilities, system objectives verific
   - [x] Integratie in wrapper voor runtime‑validatie
   - [x] Basisschema (BaseEventPayload/FailedEventPayload) + runtime-validatie in bus
   - [x] Starter contracttests toegevoegd (`tests/unit/core/test_event_schemas.py`)
-  - [ ] Uitbreiden STRICT_COMPLETED_EVENTS whitelist (DOCUMENTATION_COMPLETED, DEPLOYMENT_COMPLETED, WORKFLOW_EXECUTION_COMPLETED, ARCHITECTURE_REVIEW_COMPLETED)
-  - [ ] Per-event contracttests (completed/failed varianten)
+  - [x] Uitbreiden STRICT_COMPLETED_EVENTS whitelist (DOCUMENTATION_COMPLETED, DEPLOYMENT_COMPLETED, WORKFLOW_EXECUTION_COMPLETED, ARCHITECTURE_REVIEW_COMPLETED)
+  - [x] Per-event contracttests (completed/failed varianten) — basis toegevoegd in `tests/unit/core/test_event_schemas.py`
 - [x] Tracing/Correlation standaard in wrapper (correlation_id ↔ trace-id)
   - [x] Auto-mapping: ontbrekende correlation_id wordt gevuld met huidige trace-id
   - [x] Payload-uitbreiding: correlation_id toegevoegd aan payload
@@ -70,6 +70,8 @@ For detailed analysis of AI integration possibilities, system objectives verific
 - [ ] Config/secrets via pydantic Settings
 - [ ] Healthchecks & metrics per agent
 - [ ] Observability standaard: structured logging (JSON), tracing span-attributen, metrics (events, latency, error-rate)
+  - [x] Message Bus: JSON logs, tracing spans, basic metrics (published/failed, per_event, subscriber stats)
+  - [x] Agents: structured logging hooks + standaard span-attributen in trace_operation + metrics emissie (basis) — toegevoegd in `AgentMessageBusIntegration` (subscribe/handle/publish) en doorgevoerd bij FullstackDeveloper
 - [ ] Security/compliance: input-validatie per tool-call, log redaction van PII/secrets
 - [ ] MCP tool registry centraliseren en type-veilig maken
 - [ ] Message bus ergonomie uniform (publish_agent_event signatuur, subscribe_to_event passthrough) – verifiëren per agent
@@ -240,7 +242,7 @@ For detailed analysis of AI integration possibilities, system objectives verific
 - [x] ✅ **FullstackDeveloper Agent Completeness** (Score: 1.00 - 100% COMPLETE)
       - [x] ✅ **FullstackDeveloper Resources** (Score: 1.0)
     - [x] ✅ **FullstackDeveloper Dependencies** (Score: 1.0)
-  - [x] ✅ **FullstackDeveloper Test Coverage** (Score: 1.0)
+  - [x] ✅ **FullstackDeveloper Test Coverage** (Score: 1.0) — async compat fixes (geen `asyncio.run` in running loop), tracing-init mock-compat, legacy `subscribe()` compat in `run()`
   - [x] ✅ **FullstackDeveloper Documentation** (Score: 1.0)
 - [x] **Orchestrator Agent Completeness** - get_enhanced_mcp_tools/register_enhanced_mcp_tools toegevoegd; tracing-init verbeterd; subscribe_to_event passthrough; wrapper-publicatie toegepast in workflow (Score: 1.00 - 100% COMPLETE)
   - [x] **Orchestrator Resources** - YAML configs, templates, data files aanwezig (Score: 1.0)

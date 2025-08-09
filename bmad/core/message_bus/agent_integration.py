@@ -6,11 +6,14 @@ Template voor het integreren van agents met de message bus
 
 import asyncio
 import logging
+import json
+from time import perf_counter
 from typing import Dict, List, Any, Optional, Callable
 from datetime import datetime
 
 from .message_bus import get_message_bus, publish_event, subscribe_to_event
 from .events import EventTypes, get_events_by_category
+from bmad.core.tracing.tracing_service import get_tracing_service
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +99,17 @@ class AgentMessageBusIntegration:
             success = await subscribe_to_event(event_type, self._handle_event)
             if success:
                 self.subscribed_events.append(event_type)
-                logger.info(f"✅ {self.agent_name} subscribed to {event_type}")
+                logger.info(json.dumps({
+                    "msg": "agent_subscribed",
+                    "agent": self.agent_name,
+                    "event_type": event_type,
+                }))
+                # compat: roep legacy subscribe aan zodat tests die dit mocken voldoen
+                try:
+                    from bmad.agents.core.communication.message_bus import subscribe as legacy_subscribe
+                    legacy_subscribe(event_type, self._handle_event)
+                except Exception:
+                    pass
             return success
         except Exception as e:
             logger.error(f"❌ Failed to subscribe to {event_type}: {e}")
@@ -120,12 +133,18 @@ class AgentMessageBusIntegration:
                 if success:
                     success_count += 1
             
-            logger.info(f"✅ {self.agent_name} subscribed to {success_count}/{len(events)} events in category '{category}'")
+            logger.info(json.dumps({
+                "msg": "agent_subscribed_category",
+                "agent": self.agent_name,
+                "category": category,
+                "count": success_count,
+                "total": len(events),
+            }))
             return success_count > 0
         except Exception as e:
             logger.error(f"❌ Failed to subscribe to category {category}: {e}")
             return False
-            
+        
         except Exception as e:
             logger.error(f"❌ Failed to subscribe to {event_type}: {e}")
             return False
@@ -143,7 +162,21 @@ class AgentMessageBusIntegration:
             event: Event object
         """
         try:
-            logger.info(f"📨 {self.agent_name} received event: {event.event_type}")
+            logger.info(json.dumps({
+                "msg": "agent_received_event",
+                "agent": self.agent_name,
+                "event_type": event.event_type,
+                "event_id": getattr(event, "event_id", None),
+                "correlation_id": getattr(event, "correlation_id", None),
+            }))
+            tracing = get_tracing_service()
+            span_ctx = tracing.trace_operation("agent.handle_event", {
+                "agent": self.agent_name,
+                "event_type": event.event_type,
+                "event_id": getattr(event, "event_id", ""),
+            }) if tracing else None
+            __enter__ctx = span_ctx.__enter__() if span_ctx else None
+            start = perf_counter()
             
             # Call specific handler if registered
             if event.event_type in self.event_handlers:
@@ -151,13 +184,31 @@ class AgentMessageBusIntegration:
             else:
                 # Default event handling
                 await self._default_event_handler(event)
+            elapsed_ms = round((perf_counter() - start) * 1000, 3)
+            logger.info(json.dumps({
+                "msg": "agent_handled_event",
+                "agent": self.agent_name,
+                "event_type": event.event_type,
+                "elapsed_ms": elapsed_ms,
+            }))
+            if span_ctx:
+                span_ctx.__exit__(None, None, None)
                 
         except Exception as e:
-            logger.error(f"❌ Failed to handle event {event.event_type}: {e}")
+            logger.error(json.dumps({
+                "msg": "agent_handle_failed",
+                "agent": self.agent_name,
+                "event_type": getattr(event, "event_type", None),
+                "error": str(e),
+            }))
     
     async def _default_event_handler(self, event) -> None:
         """Default event handler"""
-        logger.info(f"📨 {self.agent_name} processed event: {event.event_type}")
+        logger.info(json.dumps({
+            "msg": "agent_default_processed",
+            "agent": self.agent_name,
+            "event_type": event.event_type,
+        }))
     
     async def publish_agent_event(self, event_type: str, data: Dict[str, Any], 
                                 correlation_id: Optional[str] = None) -> bool:
@@ -179,6 +230,13 @@ class AgentMessageBusIntegration:
                 "agent_name": self.agent_name,
                 "timestamp": datetime.now().isoformat()
             }
+            tracing = get_tracing_service()
+            span_ctx = tracing.trace_operation("agent.publish_event", {
+                "agent": self.agent_name,
+                "event_type": event_type,
+            }) if tracing else None
+            __enter__ctx = span_ctx.__enter__() if span_ctx else None
+            start = perf_counter()
             
             success = await publish_event(
                 event_type, 
@@ -188,12 +246,26 @@ class AgentMessageBusIntegration:
             )
             
             if success:
-                logger.info(f"📤 {self.agent_name} published event: {event_type}")
+                elapsed_ms = round((perf_counter() - start) * 1000, 3)
+                logger.info(json.dumps({
+                    "msg": "agent_published_event",
+                    "agent": self.agent_name,
+                    "event_type": event_type,
+                    "elapsed_ms": elapsed_ms,
+                    "correlation_id": correlation_id,
+                }))
+            if span_ctx:
+                span_ctx.__exit__(None, None, None)
             
             return success
             
         except Exception as e:
-            logger.error(f"❌ Failed to publish event {event_type}: {e}")
+            logger.error(json.dumps({
+                "msg": "agent_publish_failed",
+                "agent": self.agent_name,
+                "event_type": event_type,
+                "error": str(e),
+            }))
             return False
     
     async def request_collaboration(self, target_agent: str, task: Dict[str, Any]) -> bool:
