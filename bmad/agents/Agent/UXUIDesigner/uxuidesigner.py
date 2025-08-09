@@ -1228,12 +1228,15 @@ class UXUIDesignerAgent(AgentMessageBusIntegration):
             self.performance_metrics["feedback_processing_time"] = 0.5  # Simulated time
             
             # Publish feedback event
-            publish("design_feedback_processed", {
+            from bmad.core.message_bus.events import EventTypes
+            import asyncio as _asyncio
+            _asyncio.run(self.publish_agent_event(EventTypes.FEEDBACK_ANALYZED, {
                 "agent": self.agent_name,
                 "feedback_text": feedback_text,
                 "timestamp": datetime.now().isoformat(),
-                "processing_result": result
-            })
+                "processing_result": result,
+                "status": "completed",
+            }))
             
             logger.info(f"Design feedback processed: {feedback_text[:50]}...")
             return result
