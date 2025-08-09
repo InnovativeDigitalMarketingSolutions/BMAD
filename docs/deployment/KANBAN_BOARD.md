@@ -18,7 +18,12 @@ For detailed analysis of AI integration possibilities, system objectives verific
 (Referentie: Best Practices → P0: Core Quality Gates & Event Foundations)
 - [ ] CI/Pre-commit gates: black/ruff (of flake8), mypy, pytest -q
   - [x] Voeg wrapper-check toe aan CI (fail on direct publish)
-  - [ ] Voeg schema-checks, safety/pip-audit, gitleaks, SBOM (CycloneDX) toe
+  - [x] Voeg schema-checks, safety/pip-audit, gitleaks, SBOM (CycloneDX) toe
+    - [x] safety check
+    - [x] pip-audit
+    - [x] CycloneDX SBOM (`sbom-cyclonedx.json`)
+    - [x] gitleaks secrets-scan
+    - [x] Event schema import-check (quick import validation)
 - [x] Wrapper-enforcement in CI: `scripts/check_no_direct_publish.py` (geïntegreerd in CI)
 - [ ] Event schema’s (pydantic) voor kern-EventTypes (Completed/Failed)
   - [ ] Definieer pydantic modellen per kern‑event (API_DESIGN_COMPLETED/FAILED, SPRINT_STARTED/COMPLETED, BACKLOG_UPDATED, QUALITY_GATE_* …)
@@ -26,7 +31,10 @@ For detailed analysis of AI integration possibilities, system objectives verific
   - [x] Integratie in wrapper voor runtime‑validatie
   - [x] Basisschema (BaseEventPayload/FailedEventPayload) + runtime-validatie in bus
   - [x] Starter contracttests toegevoegd (`tests/unit/core/test_event_schemas.py`)
-- [ ] Tracing/Correlation standaard in wrapper (correlation_id ↔ trace-id)
+- [x] Tracing/Correlation standaard in wrapper (correlation_id ↔ trace-id)
+  - [x] Auto-mapping: ontbrekende correlation_id wordt gevuld met huidige trace-id
+  - [x] Payload-uitbreiding: correlation_id toegevoegd aan payload
+  - [x] Unit tests toegevoegd voor mapping (`tests/unit/core/test_message_bus_correlation.py`)
 - [ ] Wrapper-compliance 100% (alle agents)
   - [x] ProductOwner: wrapper-compliance bijgewerkt (tests groen)
   - [x] SecurityDeveloper: wrapper-compliance bijgewerkt (tests groen)
@@ -36,13 +44,13 @@ For detailed analysis of AI integration possibilities, system objectives verific
   - [x] QualityGuardian: wrapper-compliance bijgewerkt (tests groen)
   - [x] MobileDeveloper: wrapper-compliance bijgewerkt (tests groen)
   - [ ] FeedbackAgent: idem
-  - [ ] Retrospective: idem
+  - [x] Retrospective: wrapper-compliance bijgewerkt (tests groen)
   - [x] DocumentationAgent: wrapper-compliance bijgewerkt (tests groen)
   - [x] UXUIDesigner: wrapper-compliance bijgewerkt (tests groen)
   - [x] RnD: wrapper-compliance bijgewerkt (tests groen)
-  - [ ] ReleaseManager: idem
+  - [x] ReleaseManager: wrapper-compliance bijgewerkt (tests groen)
   - [x] Architect: wrapper-compliance bijgewerkt (tests groen)
-  - [ ] Orchestrator: idem
+  - [x] Orchestrator: wrapper-compliance bijgewerkt (tests groen)
 
 ##### P0 Fixes (API & Tests) — Toegevoegd
 - [x] Fix tests die `flask` global mocketen (veroorzaakte `ModuleNotFoundError: 'flask' is not a package`)
