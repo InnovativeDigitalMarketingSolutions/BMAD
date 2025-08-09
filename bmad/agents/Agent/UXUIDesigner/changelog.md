@@ -62,3 +62,19 @@ Hier houdt de UXUIDesigner agent zijn eigen wijzigingen, beslissingen en learnin
 
 ### Documentatie
 - `uxuidesigner.md` bijgewerkt met Event Contract & Wrapper en aangepaste output events 
+
+## [2025-08-09] Completeness Update — Wrapper, Enhanced MCP & Tracing
+
+### Added
+- Class-level attributes toegevoegd voor audit-detectie (`agent_name`, `mcp_client`, `enhanced_mcp`, `enhanced_mcp_enabled`, `tracing_enabled`, `message_bus_integration`, `message_bus_enabled`, `tracer`)
+- Methods geïmplementeerd: `get_enhanced_mcp_tools`, `register_enhanced_mcp_tools`, `trace_operation`, `subscribe_to_event`, `publish_agent_event`
+
+### Changed
+- Eventpublicaties gestandaardiseerd via `publish_agent_event` wrapper (payload bevat minimaal `status` en `agent`)
+- Documentatie bijgewerkt met Enhanced MCP tools, subscriptions, tracing en LLM configuratie
+
+### Tests
+- 79/79 unit tests groen (100%)
+
+### LLM
+- `uxuidesigner.yaml` bevat `llm:` blok met `provider: openai`, `model: gpt-5-reasoning`, `temperature: 0.6` 
