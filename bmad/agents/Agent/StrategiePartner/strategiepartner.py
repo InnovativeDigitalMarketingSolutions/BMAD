@@ -54,12 +54,18 @@ class StrategyValidationError(StrategyError):
     pass
 
 class StrategiePartnerAgent(AgentMessageBusIntegration):
+    # Standardized class-level attributes for completeness
+    mcp_client: Optional[MCPClient] = None
+    enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+    enhanced_mcp_enabled: bool = False
+    tracing_enabled: bool = False
+    agent_name: str = "StrategiePartner"
+    message_bus_integration: Optional[AgentMessageBusIntegration] = None
+    message_bus_enabled: bool = False
+    tracer: Optional[BMADTracer] = None
     def __init__(self):
         # Initialize parent class
         super().__init__("StrategiePartner", self)
-        
-        # Set agent name
-        self.agent_name = "StrategiePartner"
         
         # Initialize core services
         self.monitor = get_performance_monitor()
@@ -67,13 +73,9 @@ class StrategiePartnerAgent(AgentMessageBusIntegration):
         self.sprite_library = get_sprite_library()
         
         # MCP Integration
-        self.mcp_client: Optional[MCPClient] = None
-        self.mcp_integration: Optional[FrameworkMCPIntegration] = None
         self.mcp_enabled = False
         
         # Enhanced MCP Phase 2 attributes
-        self.enhanced_mcp: Optional[EnhancedMCPIntegration] = None
-        self.enhanced_mcp_enabled = False
         self.enhanced_mcp_client = None
         
         # Tracing Integration
@@ -1873,6 +1875,80 @@ StrategiePartner Agent Commands:
             return await publish_event(event_type, payload, source_agent=self.agent_name, correlation_id=request_id)
         except Exception as e:
             logger.warning(f"Failed to publish event {event_type}: {e}")
+            return False
+
+    def get_enhanced_mcp_tools(self) -> List[str]:
+        """Beschikbare Enhanced MCP tools voor StrategiePartner."""
+        if not getattr(self, 'enhanced_mcp_enabled', False):
+            return []
+        return [
+            "strategy.develop",
+            "strategy.analyze_market",
+            "strategy.competitive_analysis",
+            "strategy.assess_risks",
+            "strategy.stakeholder_analysis",
+            "strategy.create_roadmap",
+            "strategy.calculate_roi",
+            "strategy.business_model_canvas",
+            "strategy.validate_idea",
+            "strategy.refine_idea",
+            "strategy.create_epic_from_idea",
+        ]
+
+    def register_enhanced_mcp_tools(self) -> bool:
+        """Registreer Enhanced MCP tools indien beschikbaar."""
+        if not getattr(self, 'enhanced_mcp_enabled', False) or not getattr(self, 'enhanced_mcp', None):
+            return False
+        try:
+            for tool in self.get_enhanced_mcp_tools():
+                if hasattr(self.enhanced_mcp, 'register_tool'):
+                    self.enhanced_mcp.register_tool(tool)
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to register enhanced MCP tools: {e}")
+            return False
+
+    async def trace_operation(self, operation_name: str, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Generieke tracing haak voor strategische operaties."""
+        try:
+            if getattr(self, 'tracing_enabled', False) and getattr(self, 'tracer', None):
+                span_name = f"strategy.{operation_name}"
+                if hasattr(self.tracer, 'start_span'):
+                    span = self.tracer.start_span(span_name)
+                    try:
+                        if hasattr(span, 'set_attribute'):
+                            span.set_attribute("agent", self.agent_name)
+                            for k, v in (data or {}).items():
+                                try:
+                                    span.set_attribute(f"data.{k}", v)
+                                except Exception:
+                                    pass
+                    finally:
+                        if hasattr(span, 'end'):
+                            span.end()
+            return {"operation": operation_name, "agent": self.agent_name, **(data or {})}
+        except Exception as e:
+            logger.warning(f"trace_operation failed: {e}")
+            return {"operation": operation_name, "agent": self.agent_name, "trace": "failed"}
+
+    async def subscribe_to_event(self, event_type: str, callback) -> bool:
+        """Subscribe via integratie met core/legacy fallback."""
+        try:
+            integration = getattr(self, 'message_bus_integration', None)
+            if integration and hasattr(integration, 'register_event_handler'):
+                return await integration.register_event_handler(event_type, callback)
+            try:
+                from bmad.core.message_bus.message_bus import subscribe_to_event as core_subscribe_to_event
+                return await core_subscribe_to_event(event_type, callback)
+            except Exception:
+                try:
+                    from bmad.agents.core.communication.message_bus import subscribe as legacy_subscribe
+                    legacy_subscribe(event_type, callback)
+                    return True
+                except Exception:
+                    return False
+        except Exception as e:
+            logger.warning(f"subscribe_to_event failed: {e}")
             return False
 
 def main():

@@ -117,3 +117,22 @@ python3 strategiepartner.py performance-metrics
 - **Scrummaster**: Ontvangt epics voor sprint planning
 - **QualityGuardian**: Valideert kwaliteit van gegenereerde artifacts
 - **Orchestrator**: Coördineert idea-to-sprint workflow
+
+## Event Contract & Wrapper
+- Publicatie via `publish_agent_event(event_type, data, request_id=None)`
+- Minimale payload: `status` (completed/failed) + domeinspecifiek (bijv. `strategy_name`, `roi_percentage`), optioneel `request_id`
+- Geen directe `publish(...)` in agent‑code; CLI/demo paden kunnen kern `publish_event` gebruiken
+
+## Enhanced MCP Tools & Subscriptions
+- Enhanced MCP Tools: `strategy.develop`, `strategy.analyze_market`, `strategy.competitive_analysis`, `strategy.assess_risks`, `strategy.stakeholder_analysis`, `strategy.create_roadmap`, `strategy.calculate_roi`, `strategy.business_model_canvas`, `strategy.validate_idea`, `strategy.refine_idea`, `strategy.create_epic_from_idea`
+- Tool-registratie: `register_enhanced_mcp_tools()` registreert bovenstaande tools wanneer Enhanced MCP geactiveerd is
+- Subscriptions: `subscribe_to_event(event_type, callback)` biedt een passthrough naar de message bus (integratie/core/legacy fallback)
+
+## Tracing
+- `initialize_tracing()` activeert tracing en strategy-specifieke spans
+- `trace_operation(name, data)` voegt tracepunten toe per strategische operatie
+
+## LLM Configuratie
+- YAML (`strategiepartner.yaml`): `llm.model: gpt-5-reasoning`, `provider: openai`, `temperature: 0.5`
+- ENV override: `BMAD_LLM_STRATEGIEPARTNER_MODEL`
+- Resolver: per-agent modelresolutie via `bmad.agents.core.ai.llm_client.resolve_agent_model`
