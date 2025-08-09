@@ -49,6 +49,8 @@ from bmad.core.tracing import tracing_service
 
 # Agent Message Bus Integration
 from bmad.agents.core.communication.agent_message_bus_integration import AgentMessageBusIntegration, create_agent_message_bus_integration
+from bmad.core.message_bus.agent_integration import AgentMessageBusIntegration
+from bmad.agents.core.utils.validate_agent_resources import validate_agent_resources
 
 
 load_dotenv()
@@ -70,7 +72,7 @@ class ProductOwnerAgent(AgentMessageBusIntegration):
     
     def __init__(self):
         """Initialize ProductOwner agent met MCP integration."""
-        super().__init__("ProductOwner", self)
+        super().__init__("ProductOwner")
         self.framework_manager = get_framework_templates_manager()
         try:
             self.product_owner_template = self.framework_manager.get_framework_template('product_owner')
@@ -138,7 +140,8 @@ class ProductOwnerAgent(AgentMessageBusIntegration):
         """Initialize message bus integration for ProductOwner agent."""
         try:
             # Initialize message bus integration using the base class
-            self.message_bus_integration = create_agent_message_bus_integration(self.agent_name, self)
+            from bmad.core.message_bus.agent_integration import create_agent_integration as _create_integration
+            self.message_bus_integration = await _create_integration(self.agent_name)
             
             # Subscribe to relevant event categories
             await self.subscribe_to_event_category("product_management")
@@ -314,14 +317,12 @@ class ProductOwnerAgent(AgentMessageBusIntegration):
             logging.error(f"Error completing task: {e}")
             return False
     
-    @property
-    def message_bus(self):
-        """Get the message bus integration instance."""
+    def get_message_bus_integration(self):
+        """Return the message bus integration instance (compat)."""
         return self.message_bus_integration
     
-    @property
-    def subscribed_events(self):
-        """Get the list of subscribed events."""
+    def get_subscribed_events(self):
+        """Return subscribed events (compat helper)."""
         if self.message_bus_integration:
             return list(self.message_bus_integration.event_handlers.keys())
         return []
@@ -1496,8 +1497,8 @@ def main():
                                "initialize-mcp", "use-mcp-tool", "get-mcp-status", "use-product-mcp-tools", 
                                "check-dependencies", "enhanced-collaborate", "enhanced-security", 
                                "enhanced-performance", "trace-operation", "trace-performance", 
-                               "trace-error", "tracing-summary", "message-bus-status", "publish-event", 
-                               "subscribe-event", "list-events", "event-history", "performance-metrics"])
+                               "trace-error", "tracing-summary", "trace-summary", "message-bus-status", "publish-event", 
+                               "subscribe-event", "list-events", "event-history", "performance-metrics", "resources-check"])
     parser.add_argument("--input", "-i", help="Input voor het commando")
     args = parser.parse_args()
 
@@ -1587,6 +1588,8 @@ def main():
             print(f"Tracing Status: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
             print(f"Enhanced MCP Status: {'Enabled' if agent.enhanced_mcp_enabled else 'Disabled'}")
             print(f"MCP Status: {'Enabled' if agent.mcp_enabled else 'Disabled'}")
+        elif args.command == "trace-summary":
+            print(json.dumps(agent.get_tracing_summary(), indent=2))
         
         # Message Bus Commands
         elif args.command == "message-bus-status":
@@ -1651,6 +1654,9 @@ def main():
             print(f"  Backlog Items Prioritized: {agent.performance_metrics.get('backlog_items_prioritized', 0)}")
             print(f"  Product Visions Generated: {agent.performance_metrics.get('product_visions_generated', 0)}")
             print(f"  Market Analyses Completed: {agent.performance_metrics.get('market_analyses_completed', 0)}")
+        elif args.command == "resources-check":
+            result = validate_agent_resources("ProductOwner")
+            print(json.dumps(result, indent=2))
         else:
             print("Unknown command. Use 'help' to see available commands.")
             

@@ -45,6 +45,7 @@ from integrations.opentelemetry.opentelemetry_tracing import BMADTracer
 from bmad.core.tracing import tracing_service
 from integrations.slack.slack_notify import send_slack_message
 from bmad.agents.core.utils.framework_templates import get_framework_templates_manager
+from bmad.agents.core.utils.validate_agent_resources import validate_agent_resources
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="[%(levelname)s] %(message)s")
@@ -1271,9 +1272,9 @@ def main():
                                "show-best-practices", "show-changelog", "export-report",
                                "test", "collaborate", "run",
                                "enhanced-collaborate", "enhanced-security", "enhanced-performance",
-                               "trace-operation", "trace-performance", "trace-error", "tracing-summary",
+                               "trace-operation", "trace-performance", "trace-error", "tracing-summary", "trace-summary", "resources-check",
                                # Message Bus CLI Extension commands
-                               "message-bus-status", "publish-event", "subscribe-event",
+                               "message-bus-status", "message-bus-health", "message-bus-metrics", "publish-event", "subscribe-event",
                                "list-events", "event-history", "performance-metrics"])
     parser.add_argument("--format", choices=["md", "json"], default="md", help="Export format")
     parser.add_argument("--event-type", help="Event type for publish/subscribe")
@@ -1285,6 +1286,10 @@ def main():
     
     if args.command == "help":
         agent.show_help()
+    elif args.command == "resources-check":
+        result = validate_agent_resources("TestEngineer")
+        import json as _json
+        print(_json.dumps(result, indent=2))
     elif args.command == "run-tests":
         asyncio.run(agent.run_tests())
     elif args.command == "show-coverage":
@@ -1343,6 +1348,8 @@ def main():
     elif args.command == "tracing-summary":
         communication_summary = agent.enhanced_mcp.get_communication_summary()
         print(json.dumps(communication_summary, indent=2))
+    elif args.command == "trace-summary":
+        print(json.dumps(agent.get_tracing_summary(), indent=2))
     # Message Bus CLI Extension commands
     elif args.command == "message-bus-status":
         print("🎯 TestEngineer Agent Message Bus Status:")
@@ -1352,6 +1359,14 @@ def main():
         print(f"📊 Performance Metrics: {len(agent.performance_metrics)} metrics tracked")
         print(f"📝 Test History: {len(agent.test_history)} entries")
         print(f"📈 Coverage History: {len(agent.coverage_history)} entries")
+    elif args.command == "message-bus-health":
+        result = asyncio.run(agent.message_bus_integration.healthcheck())
+        import json as _json
+        print(_json.dumps(result, indent=2))
+    elif args.command == "message-bus-metrics":
+        metrics = agent.message_bus_integration.get_metrics()
+        import json as _json
+        print(_json.dumps(metrics, indent=2))
     elif args.command == "publish-event":
         if not args.event_type:
             print("❌ Error: --event-type is required for publish-event")

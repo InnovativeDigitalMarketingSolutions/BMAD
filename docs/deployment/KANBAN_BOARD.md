@@ -75,7 +75,12 @@ For detailed analysis of AI integration possibilities, system objectives verific
 - [x] Security/compliance: input-validatie per tool-call, log redaction van PII/secrets
 - [ ] MCP tool registry centraliseren en type-veilig maken
 - [ ] Message bus ergonomie uniform (publish_agent_event signatuur, subscribe_to_event passthrough) – verifiëren per agent
-- [ ] CLI uitbreidingen per agent: message-bus-status, publish-event, trace-summary, resources-check
+- [x] CLI uitbreidingen per agent (basis + health/metrics):
+  - ✅ FullstackDeveloper: message-bus-status, publish-event, subscribe-event, test-message-bus, performance/health, trace-summary, resources-check
+  - ✅ ProductOwner: message-bus-status, publish-event, subscribe-event, list-events, event-history, performance-metrics, message-bus-health, message-bus-metrics, trace-summary, resources-check
+  - ✅ TestEngineer: message-bus-status, publish-event, subscribe-event, list-events, event-history, performance-metrics, message-bus-health, message-bus-metrics, trace-summary, resources-check
+  - ✅ Architect: message-bus-status, publish-event, subscribe-event, list-events, event-history, performance-metrics, message-bus-health, message-bus-metrics, trace-summary, resources-check
+  - 🔄 Rollout overige agents: FrontendDeveloper, BackendDeveloper, DevOpsInfra, Orchestrator, etc. (zelfde set commando's)
 - [ ] Performance/async: concurrency waar zinvol, caching van dure read-only calls
 
 #### Wave 3 (P1–P2): Transports, E2E en Security Scans (Backlog)
