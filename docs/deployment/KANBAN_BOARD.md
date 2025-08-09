@@ -31,6 +31,8 @@ For detailed analysis of AI integration possibilities, system objectives verific
   - [x] Integratie in wrapper voor runtime‑validatie
   - [x] Basisschema (BaseEventPayload/FailedEventPayload) + runtime-validatie in bus
   - [x] Starter contracttests toegevoegd (`tests/unit/core/test_event_schemas.py`)
+  - [ ] Uitbreiden STRICT_COMPLETED_EVENTS whitelist (DOCUMENTATION_COMPLETED, DEPLOYMENT_COMPLETED, WORKFLOW_EXECUTION_COMPLETED, ARCHITECTURE_REVIEW_COMPLETED)
+  - [ ] Per-event contracttests (completed/failed varianten)
 - [x] Tracing/Correlation standaard in wrapper (correlation_id ↔ trace-id)
   - [x] Auto-mapping: ontbrekende correlation_id wordt gevuld met huidige trace-id
   - [x] Payload-uitbreiding: correlation_id toegevoegd aan payload
@@ -67,6 +69,12 @@ For detailed analysis of AI integration possibilities, system objectives verific
 - [ ] Resilience policies (retries, circuit breaker, bulkheads)
 - [ ] Config/secrets via pydantic Settings
 - [ ] Healthchecks & metrics per agent
+- [ ] Observability standaard: structured logging (JSON), tracing span-attributen, metrics (events, latency, error-rate)
+- [ ] Security/compliance: input-validatie per tool-call, log redaction van PII/secrets
+- [ ] MCP tool registry centraliseren en type-veilig maken
+- [ ] Message bus ergonomie uniform (publish_agent_event signatuur, subscribe_to_event passthrough) – verifiëren per agent
+- [ ] CLI uitbreidingen per agent: message-bus-status, publish-event, trace-summary, resources-check
+- [ ] Performance/async: concurrency waar zinvol, caching van dure read-only calls
 
 #### Wave 3 (P1–P2): Transports, E2E en Security Scans (Backlog)
 (Referentie: Best Practices → Wave 3: Transports, E2E & Security Scans)
@@ -252,6 +260,7 @@ For detailed analysis of AI integration possibilities, system objectives verific
 
 **Documentation & Resources Tasks:**
 - [ ] **Agent Documentation Completeness** - Improve documentation coverage (currently 31-97% across agents)
+  - [ ] Per agent: capabilities, events, tracing, MCP tools, config (ENV/YAML), payload-voorbeelden; changelog aanvullen
   - [ ] **Low Documentation Agents** - Improve TestEngineer (31.2%), FullstackDeveloper (31.2%), FrontendDeveloper (40.0%), UXUIDesigner (64.7%), Architect (70.0%), Orchestrator (67.6%), AiDeveloper (54.2%)
   - [ ] **High Documentation Agents** - Maintain QualityGuardian (97.6%), StrategiePartner (97.9%), MobileDeveloper (96.4%), FeedbackAgent (96.8%), Retrospective (95.8%), RnD (95.0%), ReleaseManager (95.7%), Scrummaster (96.7%), DevOpsInfra (95.2%), BackendDeveloper (96.3%), WorkflowAutomator (96.4%), DocumentationAgent (95.0%), AccessibilityAgent (96.2%), ProductOwner (91.7%), DataEngineer (94.1%), SecurityDeveloper (79.1%)
 - [ ] **Agent Resource Completeness** - Add missing YAML configs, markdown docs, templates, data files
