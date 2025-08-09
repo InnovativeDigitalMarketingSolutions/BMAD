@@ -87,6 +87,7 @@ For detailed analysis of AI integration possibilities, system objectives verific
 - [ ] **Enable Message Bus Integration** - Set `message_bus_enabled = True` for all 23 agents
 - [ ] **Enable Tracing Integration** - Set `tracing_enabled = True` for all 23 agents
 - [ ] **Fix Pytest Configuration** - Add missing pytest marks and resolve warnings
+- [x] **Per‑Agent LLM Config** - Per‑agent model/provider via YAML (`llm.model`) en ENV (`BMAD_LLM_<AGENT>_MODEL`) met fallback naar project default; resolver geïmplementeerd in `llm_client.py`
 
 **Sprint Test Fixes – Executed & Planned (this sprint)**
 - [x] Normalize pytest config header to `[pytest]` (was `[tool:pytest]`) en set `testpaths = tests`
@@ -183,11 +184,11 @@ For detailed analysis of AI integration possibilities, system objectives verific
   - [ ] **DevOpsInfraAgent Dependencies** - Add missing imports (Score: 0.6 → Target: 1.0)
   - [ ] **DevOpsInfraAgent Test Coverage** - Add missing tests (Score: 0.0 → Target: 1.0)
   - [ ] **DevOpsInfraAgent Documentation** - Add missing docstrings (Score: 0.952 → Target: 1.0)
-- [ ] **ScrummasterAgent Completeness** - Add missing `get_enhanced_mcp_tools`, `register_enhanced_mcp_tools`, `trace_operation` methods (Score: 0.56 → Target: 1.0)
-  - [ ] **ScrummasterAgent Resources** - Add missing YAML configs, templates, data files (Score: 0.75 → Target: 1.0)
-  - [ ] **ScrummasterAgent Dependencies** - Add missing imports (Score: 0.6 → Target: 1.0)
-  - [ ] **ScrummasterAgent Test Coverage** - Add missing tests (Score: 0.0 → Target: 1.0)
-  - [ ] **ScrummasterAgent Documentation** - Add missing docstrings (Score: 0.967 → Target: 1.0)
+- [x] **ScrummasterAgent Completeness** - Class-level attrs + get_enhanced_mcp_tools/register_enhanced_mcp_tools/trace_operation/subscribe_to_event aanwezig; wrapper‑compliant (Score: 1.00 - 100% COMPLETE)
+  - [x] **ScrummasterAgent Resources** - Resources aanwezig (Score: 1.0)
+  - [x] **ScrummasterAgent Dependencies** - Vereiste imports aanwezig (Score: 1.0)
+  - [x] **ScrummasterAgent Test Coverage** - 65 tests groen (Score: 1.0)
+  - [x] **ScrummasterAgent Documentation** - Wrapper & Subscriptions, MCP tools, Tracing toegevoegd (Score: 1.0)
 - [ ] **StrategiePartnerAgent Completeness** - Add missing `get_enhanced_mcp_tools`, `register_enhanced_mcp_tools`, `trace_operation` methods (Score: 0.57 → Target: 1.0)
   - [ ] **StrategiePartnerAgent Resources** - Add missing YAML configs, templates, data files (Score: 0.75 → Target: 1.0)
   - [ ] **StrategiePartnerAgent Dependencies** - Add missing imports (Score: 0.6 → Target: 1.0)

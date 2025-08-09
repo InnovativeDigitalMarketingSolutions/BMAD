@@ -1,3 +1,8 @@
+llm:
+  provider: openai
+  model: gpt-5-reasoning
+  temperature: 0.4
+
 name: MobileDeveloper
 version: "1.0.0"
 description: "Specialized agent for mobile application development across multiple platforms"
