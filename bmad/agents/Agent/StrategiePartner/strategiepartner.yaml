@@ -1,3 +1,8 @@
+llm:
+  provider: openai
+  model: gpt-5-reasoning
+  temperature: 0.5
+
 agent:
   name: StrategiePartner
   id: strategiepartner
