@@ -1863,6 +1863,7 @@ async def on_pipeline_advice_requested(event):
 def main():
     """Main function for Architect agent CLI."""
     import argparse
+    from bmad.agents.core.utils.validate_agent_resources import validate_agent_resources
     
     parser = argparse.ArgumentParser(description="Architect Agent CLI")
     parser.add_argument("command", nargs="?", default="help",
@@ -1880,8 +1881,8 @@ def main():
                                # Enhanced MCP and Message Bus Commands
                                "initialize-mcp", "use-mcp-tool", "get-mcp-status", "use-architecture-mcp-tools",
                                "check-dependencies", "enhanced-collaborate", "enhanced-security", "enhanced-performance",
-                               "trace-operation", "trace-performance", "trace-error", "tracing-summary",
-                               "message-bus-status", "publish-event", "subscribe-event", "list-events",
+                               "trace-operation", "trace-performance", "trace-error", "tracing-summary", "trace-summary", "resources-check",
+                               "message-bus-status", "message-bus-health", "message-bus-metrics", "publish-event", "subscribe-event", "list-events",
                                "event-history", "performance-metrics"])
     parser.add_argument("--event-type", help="Event type for publish-event")
     parser.add_argument("--event-data", help="JSON data for publish-event")
@@ -1891,6 +1892,9 @@ def main():
     
     if args.command == "help":
         agent.show_help()
+    elif args.command == "resources-check":
+        result = validate_agent_resources("Architect")
+        print(json.dumps(result, indent=2))
     elif args.command == "design-frontend":
         asyncio.run(agent.design_frontend())
     elif args.command == "design-system":
@@ -2030,6 +2034,8 @@ def main():
             print(f"Tracing: {'Enabled' if agent.tracing_enabled else 'Disabled'}")
             print(f"Message Bus: {'Enabled' if agent.message_bus_enabled else 'Disabled'}")
             print(f"Agent: {agent.agent_name}")
+    elif args.command == "trace-summary":
+        print(json.dumps(agent.get_tracing_summary(), indent=2))
     # Message Bus Commands
     elif args.command == "message-bus-status":
         print("🏗️ Architect Agent Message Bus Status:")
@@ -2039,6 +2045,14 @@ def main():
         print(f"📊 Performance Metrics: {len(agent.performance_metrics)} metrics tracked")
         print(f"📝 Architecture History: {len(agent.architecture_history)} entries")
         print(f"🎯 Design Patterns: {len(agent.design_patterns)} patterns")
+    elif args.command == "message-bus-health":
+        result = asyncio.run(agent.message_bus_integration.healthcheck())
+        import json as _json
+        print(_json.dumps(result, indent=2))
+    elif args.command == "message-bus-metrics":
+        metrics = agent.message_bus_integration.get_metrics()
+        import json as _json
+        print(_json.dumps(metrics, indent=2))
     elif args.command == "publish-event":
         if not args.event_type:
             print("Geef event type op met --event-type")

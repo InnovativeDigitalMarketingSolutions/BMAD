@@ -1779,7 +1779,8 @@ def main():
             except json.JSONDecodeError:
                 print("Invalid JSON in event data")
                 sys.exit(1)
-        publish(args.event_type, event_data)
+        from bmad.core.message_bus.message_bus import publish_event
+        asyncio.run(publish_event(args.event_type, event_data or {}, source_agent="UXUIDesignerAgent"))
         print(f"Event '{args.event_type}' gepubliceerd met data: {event_data}")
     elif args.command == "subscribe-event":
         if not args.event_type:
