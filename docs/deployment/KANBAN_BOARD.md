@@ -25,7 +25,7 @@ For detailed analysis of AI integration possibilities, system objectives verific
     - [x] gitleaks secrets-scan
     - [x] Event schema import-check (quick import validation)
 - [x] Wrapper-enforcement in CI: `scripts/check_no_direct_publish.py` (geïntegreerd in CI)
-- [ ] Event schema’s (pydantic) voor kern-EventTypes (Completed/Failed)
+- [ ] Event schema's (pydantic) voor kern-EventTypes (Completed/Failed)
   - [ ] Definieer pydantic modellen per kern‑event (API_DESIGN_COMPLETED/FAILED, SPRINT_STARTED/COMPLETED, BACKLOG_UPDATED, QUALITY_GATE_* …)
   - [ ] Contracttests genereren per eventtype
   - [x] Integratie in wrapper voor runtime‑validatie
@@ -66,9 +66,9 @@ For detailed analysis of AI integration possibilities, system objectives verific
 #### Wave 2 (P1): Reliability, Contracttests & Config (Backlog)
 (Referentie: Best Practices → Wave 2: Reliability, Contracttests & Config)
 - [ ] Contracttests EventTypes + Hypothesis property-based tests
-- [ ] Resilience policies (retries, circuit breaker, bulkheads)
+- [x] Resilience policies (message bus): circuit breaker voor Redis publicatie + lichte retry bij subscriber callbacks
 - [ ] Config/secrets via pydantic Settings
-- [ ] Healthchecks & metrics per agent
+- [x] Healthchecks & metrics per agent (basis): `AgentMessageBusIntegration.healthcheck()` en `get_metrics()` helpers
 - [ ] Observability standaard: structured logging (JSON), tracing span-attributen, metrics (events, latency, error-rate)
   - [x] Message Bus: JSON logs, tracing spans, basic metrics (published/failed, per_event, subscriber stats)
   - [x] Agents: structured logging hooks + standaard span-attributen in trace_operation + metrics emissie (basis) — toegevoegd in `AgentMessageBusIntegration` (subscribe/handle/publish) en doorgevoerd bij FullstackDeveloper
@@ -81,9 +81,9 @@ For detailed analysis of AI integration possibilities, system objectives verific
 #### Wave 3 (P1–P2): Transports, E2E en Security Scans (Backlog)
 (Referentie: Best Practices → Wave 3: Transports, E2E & Security Scans)
 - [ ] Pluggable transports (in-memory → Redis; Kafka optioneel)
-- [ ] E2E cross-agent workflows (3 scenario’s)
+- [ ] E2E cross-agent workflows (3 scenario's)
 - [ ] Security scans (gitleaks, safety/pip-audit, SBOM, Trivy)
-- [ ] ADR’s events/transports/tracing/resilience
+- [ ] ADR's events/transports/tracing/resilience
 
 #### Wave 4 (P2): AI Guardrails & Evaluatieharnas (Backlog)
 (Referentie: Best Practices → Wave 4: AI Guardrails & Evaluatie)

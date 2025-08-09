@@ -29,6 +29,7 @@ class AgentMessageBusIntegration:
         self.subscribed_events: List[str] = []
         self.event_handlers: Dict[str, Callable] = {}
         self.correlation_ids: Dict[str, str] = {}
+        self.health_state: Dict[str, Any] = {"status": "unknown", "last_check": None}
         
         logger.info(f"✅ Message bus integration initialized for {agent_name}")
     
@@ -452,6 +453,34 @@ class AgentMessageBusIntegration:
             
         except Exception as e:
             logger.error(f"❌ Failed to cleanup message bus integration: {e}")
+
+    async def healthcheck(self) -> Dict[str, Any]:
+        """Lightweight healthcheck for agent-message bus integration."""
+        try:
+            # simple ping: get metrics snapshot
+            metrics = self.message_bus.get_metrics_snapshot()
+            self.health_state = {
+                "status": "healthy",
+                "last_check": datetime.now().isoformat(),
+                "metrics": {
+                    "total_published": metrics.get("total_published", 0),
+                    "total_failed": metrics.get("total_failed", 0),
+                }
+            }
+        except Exception as e:
+            self.health_state = {
+                "status": "degraded",
+                "last_check": datetime.now().isoformat(),
+                "error": str(e)
+            }
+        return self.health_state
+
+    def get_metrics(self) -> Dict[str, Any]:
+        """Return current message bus metrics snapshot."""
+        try:
+            return self.message_bus.get_metrics_snapshot()
+        except Exception:
+            return {}
 
 # Convenience functions for agents
 async def create_agent_integration(agent_name: str, 
