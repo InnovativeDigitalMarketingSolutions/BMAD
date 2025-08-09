@@ -55,6 +55,20 @@ De ReleaseManager kan automatisch events ontvangen en verwerken via de Message B
 - Minimale payload: `status` (completed/failed), domeinspecifiek (bijv. `version`, `deployment_status`), optioneel `request_id`
 - Geen directe `publish(...)` in agent‑code; CLI/demo paden kunnen kern `publish_event` gebruiken indien nodig
 
+## Enhanced MCP Tools & Subscriptions
+- Enhanced MCP Tools: `release.plan_release`, `release.approve_release`, `release.deploy_release`, `release.rollback_release`, `release.version_update`
+- Tool-registratie: `register_enhanced_mcp_tools()` registreert bovenstaande tools wanneer Enhanced MCP geactiveerd is
+- Subscriptions: `subscribe_to_event(event_type, callback)` biedt een passthrough naar de message bus (integratie/core/legacy fallback)
+
+## Tracing
+- `initialize_tracing()` activeert tracing en release-specifieke spans
+- `trace_operation(name, data)` voegt tracepunten toe per release-operatie
+
+## LLM Configuratie
+- YAML (`releasemanager.yaml`): `llm.model: gpt-4o`, `provider: openai`, `temperature: 0.3`
+- ENV override: `BMAD_LLM_RELEASEMANAGER_MODEL`
+- Resolver: per-agent modelresolutie via `bmad.agents.core.ai.llm_client.resolve_agent_model`
+
 ## CLI Commands
 
 ### Core Release Management
