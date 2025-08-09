@@ -15,6 +15,7 @@ from time import perf_counter
 from dataclasses import dataclass, asdict
 from .schemas import validate_event_payload
 from bmad.core.tracing.tracing_service import get_tracing_service
+from bmad.core.resilience.circuit_breaker import get_redis_circuit_breaker, CircuitBreakerOpenError
 
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,7 @@ class MessageBus:
             "per_event_type": {},
             "subscriber_calls": 0,
             "subscriber_failures": 0,
+            "redis_publish_fail_fast": 0,
         }
         
         # Initialize Redis if available
@@ -241,21 +243,30 @@ class MessageBus:
             event_data = asdict(event)
             event_data['timestamp'] = event.timestamp.isoformat()
             
-            # Publish to Redis channel
-            self.redis_client.publish(
-                f"bmad:events:{event.event_type}",
-                json.dumps(event_data)
-            )
-            
-            # Store in Redis for persistence
-            self.redis_client.lpush(
-                f"bmad:events:history:{event.event_type}",
-                json.dumps(event_data)
-            )
-            
-            # Keep only last 1000 events per type
-            self.redis_client.ltrim(f"bmad:events:history:{event.event_type}", 0, 999)
-            
+            cb = get_redis_circuit_breaker()
+            def _do_redis_ops():
+                # Publish to Redis channel
+                self.redis_client.publish(
+                    f"bmad:events:{event.event_type}",
+                    json.dumps(event_data)
+                )
+                # Store in Redis for persistence
+                self.redis_client.lpush(
+                    f"bmad:events:history:{event.event_type}",
+                    json.dumps(event_data)
+                )
+                # Keep only last 1000 events per type
+                self.redis_client.ltrim(f"bmad:events:history:{event.event_type}", 0, 999)
+                return True
+            cb.call(_do_redis_ops)
+        except CircuitBreakerOpenError as e:
+            # Fail fast but continue local processing
+            self.metrics["redis_publish_fail_fast"] += 1
+            logger.warning(json.dumps({
+                "msg": "redis_circuit_open",
+                "event_type": event.event_type,
+                "error": str(e)
+            }))
         except Exception as e:
             logger.error(json.dumps({"msg": "redis_publish_failed", "event_type": event.event_type, "error": str(e)}))
     
@@ -264,38 +275,46 @@ class MessageBus:
         try:
             if event.event_type in self.subscribers:
                 for callback in self.subscribers[event.event_type]:
-                    try:
-                        cb_name = getattr(callback, "__name__", str(callback))
-                        tracing = get_tracing_service()
-                        span_ctx = tracing.trace_operation("message_bus.callback", {
-                            "event_type": event.event_type,
-                            "callback": cb_name,
-                        }) if tracing else None
-                        __enter__ctx = span_ctx.__enter__() if span_ctx else None
-                        start_cb = perf_counter()
-                        # Call callback asynchronously if it's async
-                        if asyncio.iscoroutinefunction(callback):
-                            await callback(event)
-                        else:
-                            callback(event)
-                        self.metrics["subscriber_calls"] += 1
-                        elapsed_ms = round((perf_counter() - start_cb) * 1000, 3)
-                        logger.debug(json.dumps({
-                            "msg": "subscriber_called",
-                            "event_type": event.event_type,
-                            "callback": cb_name,
-                            "elapsed_ms": elapsed_ms,
-                        }))
-                        if span_ctx:
-                            span_ctx.__exit__(None, None, None)
-                    except Exception as e:
-                        self.metrics["subscriber_failures"] += 1
-                        logger.error(json.dumps({
-                            "msg": "subscriber_failed",
-                            "event_type": event.event_type,
-                            "error": str(e),
-                        }))
-                        
+                    attempts = 0
+                    while attempts < 2:
+                        try:
+                            cb_name = getattr(callback, "__name__", str(callback))
+                            tracing = get_tracing_service()
+                            span_ctx = tracing.trace_operation("message_bus.callback", {
+                                "event_type": event.event_type,
+                                "callback": cb_name,
+                            }) if tracing else None
+                            __enter__ctx = span_ctx.__enter__() if span_ctx else None
+                            start_cb = perf_counter()
+                            # Call callback asynchronously if it's async
+                            if asyncio.iscoroutinefunction(callback):
+                                await callback(event)
+                            else:
+                                callback(event)
+                            self.metrics["subscriber_calls"] += 1
+                            elapsed_ms = round((perf_counter() - start_cb) * 1000, 3)
+                            logger.debug(json.dumps({
+                                "msg": "subscriber_called",
+                                "event_type": event.event_type,
+                                "callback": cb_name,
+                                "elapsed_ms": elapsed_ms,
+                            }))
+                            if span_ctx:
+                                span_ctx.__exit__(None, None, None)
+                            break
+                        except Exception as e:
+                            attempts += 1
+                            self.metrics["subscriber_failures"] += 1
+                            logger.error(json.dumps({
+                                "msg": "subscriber_failed",
+                                "event_type": event.event_type,
+                                "error": str(e),
+                                "attempt": attempts,
+                            }))
+                            if attempts >= 2:
+                                break
+                            # small backoff before retry
+                            await asyncio.sleep(0.05)
         except Exception as e:
             logger.error(json.dumps({"msg": "notify_subscribers_failed", "error": str(e)}))
     
@@ -324,7 +343,7 @@ class MessageBus:
             if self.event_file.exists():
                 with open(self.event_file, 'r') as f:
                     data = json.load(f)
-                    
+                
                 for event_data in data.get('events', []):
                     event = Event(
                         event_type=event_data['event_type'],
@@ -375,7 +394,7 @@ class MessageBus:
                         
                     except Exception as e:
                         logger.error(f"❌ Failed to process Redis message: {e}")
-                        
+            
         except Exception as e:
             logger.error(f"❌ Redis listener failed: {e}")
 
@@ -386,7 +405,6 @@ class MessageBus:
         except Exception:
             return dict(self.metrics)
 
-# Global message bus instance
 _message_bus: Optional[MessageBus] = None
 
 def get_message_bus() -> MessageBus:
