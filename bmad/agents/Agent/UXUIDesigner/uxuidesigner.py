@@ -1228,12 +1228,15 @@ class UXUIDesignerAgent(AgentMessageBusIntegration):
             self.performance_metrics["feedback_processing_time"] = 0.5  # Simulated time
             
             # Publish feedback event
-            publish("design_feedback_processed", {
+            from bmad.core.message_bus.events import EventTypes
+            import asyncio as _asyncio
+            _asyncio.run(self.publish_agent_event(EventTypes.FEEDBACK_ANALYZED, {
                 "agent": self.agent_name,
                 "feedback_text": feedback_text,
                 "timestamp": datetime.now().isoformat(),
-                "processing_result": result
-            })
+                "processing_result": result,
+                "status": "completed",
+            }))
             
             logger.info(f"Design feedback processed: {feedback_text[:50]}...")
             return result
@@ -1624,11 +1627,16 @@ def on_figma_analysis_requested(event):
     file_id = event.get("file_id", "")
     if file_id:
         result = agent.analyze_figma_design(file_id)
-        publish("figma_analysis_completed", {
+        from bmad.core.message_bus.message_bus import publish_event
+        from bmad.core.message_bus.events import EventTypes
+        import asyncio as _asyncio
+        _asyncio.run(publish_event(EventTypes.SENTIMENT_ANALYSIS_COMPLETED, {
             "file_id": file_id,
             "result": result,
-            "agent": "UXUIDesignerAgent"
-        })
+            "agent": "UXUIDesignerAgent",
+            "status": "completed",
+            "timestamp": datetime.now().isoformat(),
+        }, source_agent="UXUIDesignerAgent"))
 
 def on_design_feedback_requested(event):
     """Event handler voor design feedback requests."""
@@ -1636,11 +1644,16 @@ def on_design_feedback_requested(event):
     feedback = event.get("feedback", "")
     if feedback:
         result = agent.design_feedback(feedback)
-        publish("design_feedback_completed", {
+        from bmad.core.message_bus.message_bus import publish_event
+        from bmad.core.message_bus.events import EventTypes
+        import asyncio as _asyncio
+        _asyncio.run(publish_event(EventTypes.FEEDBACK_ANALYZED, {
             "feedback": feedback,
             "result": result,
-            "agent": "UXUIDesignerAgent"
-        })
+            "agent": "UXUIDesignerAgent",
+            "status": "completed",
+            "timestamp": datetime.now().isoformat(),
+        }, source_agent="UXUIDesignerAgent"))
 
 def on_document_component(event):
     """Event handler voor component documentation requests."""
@@ -1648,11 +1661,16 @@ def on_document_component(event):
     component = event.get("component", "")
     if component:
         result = agent.document_component(component)
-        publish("component_documented", {
+        from bmad.core.message_bus.message_bus import publish_event
+        from bmad.core.message_bus.events import EventTypes
+        import asyncio as _asyncio
+        _asyncio.run(publish_event(EventTypes.DOCUMENTATION_COMPLETED, {
             "component": component,
             "result": result,
-            "agent": "UXUIDesignerAgent"
-        })
+            "agent": "UXUIDesignerAgent",
+            "status": "completed",
+            "timestamp": datetime.now().isoformat(),
+        }, source_agent="UXUIDesignerAgent"))
 
 def main():
     parser = argparse.ArgumentParser(description="UXUIDesigner Agent CLI")
