@@ -1333,10 +1333,12 @@ Message Bus Integration Commands:
         logger.info("Starting DevOps infrastructure collaboration example...")
 
         # Publish infrastructure deployment request
-        publish("infrastructure_deployment_requested", {
+        from bmad.core.message_bus.events import EventTypes
+        await self.publish_agent_event(EventTypes.DEPLOYMENT_REQUESTED, {
             "agent": "DevOpsInfraAgent",
             "infrastructure_type": "kubernetes",
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "status": "processing",
         })
 
         # Deploy infrastructure
@@ -1346,9 +1348,10 @@ Message Bus Integration Commands:
         advice_result = self.pipeline_advice("Sample CI/CD pipeline configuration")
 
         # Publish completion
-        publish("infrastructure_deployment_completed", {
-            "status": "success",
+        await self.publish_agent_event(EventTypes.DEPLOYMENT_COMPLETED, {
+            "status": "completed",
             "agent": "DevOpsInfraAgent",
+            "timestamp": datetime.now().isoformat(),
             "deployment_status": deployment_result["status"],
             "pipeline_score": advice_result["overall_score"]
         })

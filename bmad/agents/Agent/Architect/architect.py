@@ -849,10 +849,11 @@ class ArchitectAgent(AgentMessageBusIntegration):
             if integration:
                 return await integration.publish_event(event_type, data)
             else:
-                # Fallback naar core publish_event en legacy publish() voor testcompatibiliteit
+                # Fallback naar core publish_event
                 success = await publish_event(event_type, data)
+                # compat: test hook voor legacy publish mocking
                 try:
-                    publish(event_type, data)
+                    publish(event_type, data)  # type: ignore[name-defined]
                 except Exception:
                     pass
                 return success

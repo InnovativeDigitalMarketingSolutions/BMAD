@@ -742,13 +742,15 @@ class WorkflowAutomatorAgent(AgentMessageBusIntegration):
             self._save_workflow_history()
             
             # Publish event
-            publish(
-                "workflow_execution_completed",
+            from bmad.core.message_bus.events import EventTypes
+            await self.publish_agent_event(
+                EventTypes.WORKFLOW_EXECUTION_COMPLETED,
                 {
                     "workflow_id": workflow_id,
                     "status": workflow.status.value,
                     "execution_time": execution_time,
-                    "steps_count": len(workflow.steps)
+                    "steps_count": len(workflow.steps),
+                    "timestamp": datetime.now().isoformat(),
                 }
             )
             
