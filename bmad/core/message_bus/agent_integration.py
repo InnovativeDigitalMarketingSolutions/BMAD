@@ -14,8 +14,10 @@ from datetime import datetime
 from .message_bus import get_message_bus, publish_event, subscribe_to_event
 from .events import EventTypes, get_events_by_category
 from bmad.core.tracing.tracing_service import get_tracing_service
+from bmad.core.security.log_redaction import setup_security_logging
 
 logger = logging.getLogger(__name__)
+setup_security_logging(logger)
 
 class AgentMessageBusIntegration:
     """

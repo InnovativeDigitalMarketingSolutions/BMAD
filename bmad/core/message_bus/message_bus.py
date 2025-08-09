@@ -16,8 +16,11 @@ from dataclasses import dataclass, asdict
 from .schemas import validate_event_payload
 from bmad.core.tracing.tracing_service import get_tracing_service
 from bmad.core.resilience.circuit_breaker import get_redis_circuit_breaker, CircuitBreakerOpenError
+from bmad.core.security.log_redaction import setup_security_logging
+from bmad.core.security.input_validation import sanitize_payload
 
 logger = logging.getLogger(__name__)
+setup_security_logging(logger)
 
 @dataclass
 class Event:
@@ -105,6 +108,9 @@ class MessageBus:
                 data = {**data, 'correlation_id': correlation_id}
 
             # Validate payload against schema
+            # Sanitize payload before validation/logging
+            if isinstance(data, dict):
+                data = sanitize_payload(data)
             validate_event_payload(event_type, data)
             # Create event
             event = Event(

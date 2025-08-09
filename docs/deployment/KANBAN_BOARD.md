@@ -72,7 +72,7 @@ For detailed analysis of AI integration possibilities, system objectives verific
 - [ ] Observability standaard: structured logging (JSON), tracing span-attributen, metrics (events, latency, error-rate)
   - [x] Message Bus: JSON logs, tracing spans, basic metrics (published/failed, per_event, subscriber stats)
   - [x] Agents: structured logging hooks + standaard span-attributen in trace_operation + metrics emissie (basis) — toegevoegd in `AgentMessageBusIntegration` (subscribe/handle/publish) en doorgevoerd bij FullstackDeveloper
-- [ ] Security/compliance: input-validatie per tool-call, log redaction van PII/secrets
+- [x] Security/compliance: input-validatie per tool-call, log redaction van PII/secrets
 - [ ] MCP tool registry centraliseren en type-veilig maken
 - [ ] Message bus ergonomie uniform (publish_agent_event signatuur, subscribe_to_event passthrough) – verifiëren per agent
 - [ ] CLI uitbreidingen per agent: message-bus-status, publish-event, trace-summary, resources-check
