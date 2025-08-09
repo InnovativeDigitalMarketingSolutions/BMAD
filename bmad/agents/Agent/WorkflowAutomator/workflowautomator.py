@@ -112,6 +112,15 @@ class Workflow:
 
 
 class WorkflowAutomatorAgent(AgentMessageBusIntegration):
+    # Standardized class-level attributes for completeness
+    mcp_client: Optional[MCPClient] = None
+    enhanced_mcp: Optional[EnhancedMCPIntegration] = None
+    enhanced_mcp_enabled: bool = False
+    tracing_enabled: bool = False
+    agent_name: str = "WorkflowAutomator"
+    message_bus_integration: Optional[AgentMessageBusIntegration] = None
+    message_bus_enabled: bool = False
+    tracer: Optional[BMADTracer] = None
     """Workflow Automation Agent for orchestrating agent workflows."""
     
     def __init__(self):
@@ -1521,6 +1530,94 @@ class WorkflowAutomatorAgent(AgentMessageBusIntegration):
             "workflow_created": workflow_result.get("status") == "created",
             "message": "WorkflowAutomator collaboration example completed"
         }
+
+    def get_enhanced_mcp_tools(self) -> List[str]:
+        """Beschikbare Enhanced MCP tools voor WorkflowAutomator."""
+        if not getattr(self, 'enhanced_mcp_enabled', False):
+            return []
+        return [
+            "workflow.create",
+            "workflow.execute",
+            "workflow.optimize",
+            "workflow.monitor",
+            "workflow.schedule",
+            "workflow.pause",
+            "workflow.resume",
+            "workflow.cancel",
+            "workflow.analyze",
+            "workflow.parallel_execute",
+            "workflow.conditional_execute",
+        ]
+
+    def register_enhanced_mcp_tools(self) -> bool:
+        """Registreer Enhanced MCP tools indien beschikbaar."""
+        if not getattr(self, 'enhanced_mcp_enabled', False) or not getattr(self, 'enhanced_mcp', None):
+            return False
+        try:
+            for tool in self.get_enhanced_mcp_tools():
+                if hasattr(self.enhanced_mcp, 'register_tool'):
+                    self.enhanced_mcp.register_tool(tool)
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to register enhanced MCP tools: {e}")
+            return False
+
+    async def trace_operation(self, operation_name: str, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Generieke tracing haak voor workflow operaties."""
+        try:
+            if getattr(self, 'tracing_enabled', False) and getattr(self, 'tracer', None):
+                span_name = f"workflow.{operation_name}"
+                if hasattr(self.tracer, 'start_span'):
+                    span = self.tracer.start_span(span_name)
+                    try:
+                        if hasattr(span, 'set_attribute'):
+                            span.set_attribute("agent", self.agent_name)
+                            for k, v in (data or {}).items():
+                                try:
+                                    span.set_attribute(f"data.{k}", v)
+                                except Exception:
+                                    pass
+                    finally:
+                        if hasattr(span, 'end'):
+                            span.end()
+            return {"operation": operation_name, "agent": self.agent_name, **(data or {})}
+        except Exception as e:
+            logger.warning(f"trace_operation failed: {e}")
+            return {"operation": operation_name, "agent": self.agent_name, "trace": "failed"}
+
+    async def publish_agent_event(self, event_type: str, data: Dict[str, Any], correlation_id: Optional[str] = None) -> bool:
+        """Gestandaardiseerde wrapper naar core publish_event met uniform payload."""
+        try:
+            from bmad.core.message_bus import publish_event
+            payload = {**data}
+            if "agent" not in payload:
+                payload["agent"] = self.agent_name
+            if "status" not in payload:
+                payload["status"] = "completed"
+            return await publish_event(event_type, payload, source_agent=self.agent_name, correlation_id=correlation_id)
+        except Exception as e:
+            logger.warning(f"Failed to publish event {event_type}: {e}")
+            return False
+
+    async def subscribe_to_event(self, event_type: str, callback) -> bool:
+        """Subscribe via integratie met core/legacy fallback."""
+        try:
+            integration = getattr(self, 'message_bus_integration', None)
+            if integration and hasattr(integration, 'register_event_handler'):
+                return await integration.register_event_handler(event_type, callback)
+            try:
+                from bmad.core.message_bus.message_bus import subscribe_to_event as core_subscribe_to_event
+                return await core_subscribe_to_event(event_type, callback)
+            except Exception:
+                try:
+                    from bmad.agents.core.communication.message_bus import subscribe as legacy_subscribe
+                    legacy_subscribe(event_type, callback)
+                    return True
+                except Exception:
+                    return False
+        except Exception as e:
+            logger.warning(f"subscribe_to_event failed: {e}")
+            return False
 
 
 def main():

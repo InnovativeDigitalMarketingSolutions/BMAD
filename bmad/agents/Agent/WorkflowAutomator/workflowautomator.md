@@ -111,6 +111,25 @@ python -m bmad.agents.Agent.WorkflowAutomator.workflowautomator show-automation-
 - **workflow_optimization_completed**: Workflow optimization completed
 - **workflow_performance_alert**: Performance alert triggered
 
+### Event Contract & Wrapper
+- Publicatie via `publish_agent_event(event_type, data, request_id=None)`
+- Minimale payload: `status` (completed/failed) + domeinspecifiek (bijv. `workflow_id`, `execution_time`), optioneel `request_id`
+- Geen directe `publish(...)` in agent-code; legacy/demo paden mogen kern `publish_event` gebruiken
+
+## Enhanced MCP Tools & Subscriptions
+- Enhanced MCP Tools: `workflow.create`, `workflow.execute`, `workflow.optimize`, `workflow.monitor`, `workflow.schedule`, `workflow.pause`, `workflow.resume`, `workflow.cancel`, `workflow.analyze`, `workflow.parallel_execute`, `workflow.conditional_execute`
+- Tool-registratie: `register_enhanced_mcp_tools()` registreert bovenstaande tools wanneer Enhanced MCP geactiveerd is
+- Subscriptions: `subscribe_to_event(event_type, callback)` biedt een passthrough naar de message bus (integratie/core/legacy fallback)
+
+## Tracing
+- `initialize_tracing()` activeert tracing en workflow-specifieke spans
+- `trace_operation(name, data)` voegt tracepunten toe per workflow-operatie
+
+## LLM Configuratie
+- YAML (`workflowautomator.yaml`): `llm.model: gpt-5-reasoning`, `provider: openai`, `temperature: 0.4`
+- ENV override: `BMAD_LLM_WORKFLOWAUTOMATOR_MODEL`
+- Resolver: per-agent modelresolutie via `bmad.agents.core.ai.llm_client.resolve_agent_model`
+
 ## 🏗️ Workflow Integration
 
 ### Orchestrator Integration
