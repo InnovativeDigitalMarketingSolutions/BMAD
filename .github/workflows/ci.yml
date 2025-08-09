@@ -27,6 +27,10 @@ jobs:
         run: |
           source .venv/bin/activate
           pip install flake8==7.1.1 black==24.8.0
+      - name: Install security tools (safety, pip-audit, cyclonedx)
+        run: |
+          source .venv/bin/activate
+          pip install safety==3.2.7 pip-audit==2.7.3 cyclonedx-bom==3.17.5
       - name: Lint with flake8 (agents only)
         run: |
           source .venv/bin/activate
@@ -35,10 +39,30 @@ jobs:
         run: |
           source .venv/bin/activate
           black --check bmad/agents/Agent
+      - name: Event schema quick-check (import validation)
+        run: |
+          source .venv/bin/activate
+          python -c "from bmad.core.message_bus.schemas import validate_event_payload; print('Event schema module import OK')"
       - name: Validate agent resources
         run: |
           source .venv/bin/activate
           python -m bmad.agents.core.utils.validate_agent_resources
+      - name: Security scan (safety)
+        run: |
+          source .venv/bin/activate
+          safety check --full-report || true
+      - name: Dependency audit (pip-audit)
+        run: |
+          source .venv/bin/activate
+          pip-audit -r dev-requirements.txt || true
+      - name: Generate SBOM (CycloneDX)
+        run: |
+          source .venv/bin/activate
+          cyclonedx-bom -o sbom-cyclonedx.json -j
+      - name: Gitleaks (secrets scan)
+        uses: zricethezav/gitleaks-action@v2
+        with:
+          args: "detect --no-git --source=. --redact --verbose"
       - name: Run unit tests with coverage
         run: |
           source .venv/bin/activate
