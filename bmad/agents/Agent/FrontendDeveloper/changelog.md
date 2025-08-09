@@ -73,6 +73,19 @@
 - Enhanced error handling en fallback mechanisms
 - Improved logging voor enhanced MCP operations en tracing
 
+## [2025-08-08] Completeness en Message Bus subscriptions
+
+### Added
+- Class-level attributen voor MCP, Enhanced MCP, tracing, message bus en agent_name
+- Methods: `get_enhanced_mcp_tools`, `register_enhanced_mcp_tools`, `trace_operation`, `subscribe_to_event`
+- `run()` registreert nu relevante subscriptions via `subscribe(...)`
+
+### Tracing
+- `initialize_tracing()` instantiëert nu de tracer en voert `initialize()` en optioneel `setup_frontend_tracing()` uit
+
+### Tests
+- Unit tests FrontendDeveloper groen (88 tests)
+
 ## [2024-12-01] Initial Release
 ### Added
 - Basic FrontendDeveloper agent functionality

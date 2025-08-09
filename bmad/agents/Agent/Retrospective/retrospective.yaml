@@ -1,3 +1,8 @@
+llm:
+  provider: openai
+  model: gpt-5-reasoning
+  temperature: 0.4
+
 agent:
   name: Retrospective
   id: retrospective

@@ -62,3 +62,22 @@ Deze agent werkt samen met andere agents via een centrale message bus en gedeeld
 self.collaborate_example()
 ```
 Dit publiceert een event en slaat context op. Andere agents kunnen deze context ophalen of op het event reageren.
+
+## Event Contract & Wrapper
+- Publicatie via `publish_agent_event(event_type, data, request_id=None)`
+- Minimale payload: `status` (completed/failed) + domeinspecifiek (bijv. `pipeline_name`, `pipeline_id`, `data_summary`), optioneel `request_id`
+- Geen directe `publish(...)` in agent‑code; legacy/demo paden kunnen kern `publish_event` gebruiken
+
+## Enhanced MCP Tools & Subscriptions
+- Enhanced MCP Tools: `data.quality_check`, `data.explain_pipeline`, `data.build_pipeline`, `data.monitor_pipeline`, `data.optimize_pipeline`
+- Tool-registratie: `register_enhanced_mcp_tools()` registreert bovenstaande tools wanneer Enhanced MCP geactiveerd is
+- Subscriptions: `subscribe_to_event(event_type, callback)` biedt een passthrough naar de message bus (integratie/core/legacy fallback)
+
+## Tracing
+- `initialize_tracing()` activeert tracing en data-specifieke spans
+- `trace_operation(name, data)` voegt tracepunten toe per data engineering operatie
+
+## LLM Configuratie
+- YAML (`dataengineer.yaml`): `llm.model: gpt-4o` (of ENV override), `provider: openai`, `temperature: 0.3`
+- ENV override: `BMAD_LLM_DATAENGINEER_MODEL`
+- Resolver: per-agent modelresolutie via `bmad.agents.core.ai.llm_client.resolve_agent_model`

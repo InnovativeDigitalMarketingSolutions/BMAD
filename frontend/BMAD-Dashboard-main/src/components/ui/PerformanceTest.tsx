@@ -50,7 +50,7 @@ export const PerformanceTest: React.FC<PerformanceTestProps> = ({
         const start = performance.now()
         
         try {
-          const response = await fetch('http://localhost:5001/api/health', {
+          const response = await fetch('/api/health', {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' }
           })

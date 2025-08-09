@@ -62,3 +62,17 @@ Hier houdt de SecurityDeveloper agent zijn eigen wijzigingen, beslissingen en le
 
 ### Tests
 - Bestaande unit test voor `collaborate_example` groen zonder aanpassing van assertions 
+
+## [2025-08-08] Subscribe-to-event passthrough en documentatie updates
+
+### Added
+- Async `subscribe_to_event(event_type, callback)` passthrough toegevoegd
+  - Gebruikt `message_bus_integration.register_event_handler` indien beschikbaar
+  - Valt terug op core `subscribe_to_event` bij ontbrekende integratie
+
+### Documentation
+- Agent documentatie bijgewerkt met wrapper-contract en subscribe-to-event vermelding
+- Agents-overview geüpdatet (event-namen geharmoniseerd, wrapper-compliance en subscribe passthrough vermeld)
+
+### Tests
+- Unit suite groen: 95/95 tests passing 

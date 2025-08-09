@@ -1,6 +1,11 @@
 {
   "events": [
     {
-      "event_type": "market_analyzed",
+      "event_type": "alignment_check_processed",
       "data": {
-        "status": 
+        "status": "completed",
+        "event_data": {
+          "strategy": "Test Strategy",
+          "status": "aligned"
+        },
+        "policy_result": 

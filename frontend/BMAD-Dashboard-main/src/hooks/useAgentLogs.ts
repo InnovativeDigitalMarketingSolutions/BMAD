@@ -16,7 +16,7 @@ export const useAgentLogs = () => {
   useEffect(() => {
     const fetchLogs = async () => {
       try {
-        const response = await fetch('http://localhost:5001/api-proxy/logs')
+        const response = await fetch('/api/logs')
         if (response.ok) {
           const data = await response.json()
           if (Array.isArray(data.logs)) {

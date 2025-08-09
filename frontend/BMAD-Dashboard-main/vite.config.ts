@@ -11,14 +11,18 @@ export default defineConfig({
     },
   },
   server: {
-    port: 5001,
+    port: 5000,
     proxy: {
       '/api': {
-        target: 'http://localhost:5001',
+        target: 'http://localhost:5003',
         changeOrigin: true,
         secure: false,
       },
     },
+  },
+  preview: {
+    port: 5000,
+    host: true,
   },
   build: {
     outDir: 'dist',

@@ -2085,6 +2085,20 @@ Enhanced MCP Phase 2 Commands:
             logger.error(f"Failed to publish agent event: {e}")
             return False
 
+    async def subscribe_to_event(self, event_type: str, callback) -> bool:
+        """Subscribe to a specific event type via the message bus integration.
+        Falls back to the core message bus subscribe_to_event when integration is not initialized.
+        """
+        try:
+            if self.message_bus_integration:
+                return await self.message_bus_integration.register_event_handler(event_type, callback)
+            else:
+                from bmad.core.message_bus.message_bus import subscribe_to_event as core_subscribe_to_event
+                return await core_subscribe_to_event(event_type, callback)
+        except Exception as e:
+            logger.error(f"Failed to subscribe to event '{event_type}': {e}")
+            return False
+
 def main():
     parser = argparse.ArgumentParser(description="SecurityDeveloper Agent CLI")
     parser.add_argument("command", nargs="?", default="help",

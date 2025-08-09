@@ -5,10 +5,17 @@ import os
 import time
 from copy import deepcopy
 from typing import Any, Dict, Optional
+from pathlib import Path
 
 import requests
 
 from bmad.agents.core.data.redis_cache import cache_llm_response
+
+# Optionele YAML support voor per-agent configuratie
+try:
+    import yaml  # type: ignore
+except Exception:  # pragma: no cover
+    yaml = None
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1-nano")
@@ -134,6 +141,62 @@ def calculate_confidence(output: str, context: Dict[str, Any]) -> float:
     confidence += agent_success_rate * 0.15
     return min(confidence, 1.0)
 
+# --- Per-agent model resolver ---
+def _to_snake_case(name: str) -> str:
+    result = []
+    for idx, ch in enumerate(name):
+        if ch.isupper() and idx > 0:
+            result.append("_")
+        result.append(ch.lower())
+    return "".join(result)
+
+def _load_agent_yaml(agent_name: str) -> Dict[str, Any]:
+    if not yaml:
+        return {}
+    try:
+        # Probeer meerdere bestandsnamen
+        agent_dir = Path(__file__).resolve().parents[5] / "bmad" / "agents" / "Agent" / agent_name
+        candidates = [
+            agent_dir / f"{agent_name.lower()}.yaml",
+            agent_dir / f"{_to_snake_case(agent_name)}.yaml",
+        ]
+        for path in candidates:
+            if path.exists():
+                with open(path, "r", encoding="utf-8") as f:
+                    return yaml.safe_load(f) or {}
+    except Exception as e:
+        logging.debug(f"[LLM] Kon agent YAML niet laden voor {agent_name}: {e}")
+    return {}
+
+def resolve_agent_model(context: Optional[Dict[str, Any]], explicit_model: Optional[str]) -> str:
+    """Bepaal het model op volgorde: expliciet → context → ENV per-agent → YAML → project default."""
+    if explicit_model:
+        return explicit_model
+    ctx = context or {}
+    # Context override
+    if isinstance(ctx.get("llm_model"), str) and ctx.get("llm_model"):
+        return ctx["llm_model"]  # type: ignore[index]
+    agent_name = ctx.get("agent") or os.getenv("BMAD_ACTIVE_AGENT")
+    if isinstance(agent_name, str) and agent_name:
+        # ENV per-agent
+        env_key = f"BMAD_LLM_{agent_name.upper()}_MODEL"
+        env_model = os.getenv(env_key)
+        if env_model:
+            return env_model
+        # YAML per-agent
+        cfg = _load_agent_yaml(agent_name)
+        if cfg:
+            # Ondersteun zowel llm.model als llm_model
+            try:
+                from_llm_block = cfg.get("llm", {}) if isinstance(cfg.get("llm"), dict) else {}
+                yaml_model = from_llm_block.get("model") or cfg.get("llm_model")
+                if isinstance(yaml_model, str) and yaml_model:
+                    return yaml_model
+            except Exception:
+                pass
+    # Project default
+    return OPENAI_MODEL
+
 @cache_llm_response
 def ask_openai_with_confidence(
     prompt: str, 
@@ -172,8 +235,8 @@ def ask_openai_with_confidence(
     # Deep copy context to avoid mutations
     context = deepcopy(context) if context else {}
     
-    # Use environment model if not specified
-    model = model or OPENAI_MODEL
+    # Resolve model per-agent (explicit → context → ENV → YAML → OPENAI_MODEL)
+    model = resolve_agent_model(context, model)
     
     print(f"DEBUG: Using model: {model}")
     

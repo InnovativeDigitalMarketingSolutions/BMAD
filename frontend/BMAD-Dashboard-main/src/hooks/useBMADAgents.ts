@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { BMADAgent } from '@/types/bmad'
 import { stabilityTest } from '@/utils/stabilityTest'
 
-const API_BASE = 'http://localhost:5001/api-proxy'
+const API_BASE = '/api'
 
 interface AgentResponse {
   agents: BMADAgent[]

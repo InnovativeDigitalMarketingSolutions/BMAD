@@ -13,11 +13,12 @@ from datetime import datetime, timezone
 # Add the project root to Python path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
 
-# Mock Flask modules to avoid import issues
-sys.modules['flask'] = MagicMock()
-sys.modules['flask_cors'] = MagicMock()
-sys.modules['flask_limiter'] = MagicMock()
-sys.modules['flask_limiter.util'] = MagicMock()
+# Optional mocking toggle to avoid import issues in constrained CI
+if os.getenv('MOCK_FLASK_FOR_TESTS') == 'true':
+    sys.modules['flask'] = MagicMock()
+    sys.modules['flask_cors'] = MagicMock()
+    sys.modules['flask_limiter'] = MagicMock()
+    sys.modules['flask_limiter.util'] = MagicMock()
 
 from bmad.api import app
 

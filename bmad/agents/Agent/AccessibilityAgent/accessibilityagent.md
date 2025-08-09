@@ -159,12 +159,12 @@ python -m bmad.agents.Agent.AccessibilityAgent.accessibilityagent export-audit -
 
 ### Message Bus Event Handling
 ```python
-# Subscribe to accessibility events
-await agent.message_bus_integration.subscribe_event("accessibility_audit_requested")
+# Subscribe to accessibility events (passthrough)
+await agent.subscribe_to_event("accessibility_audit_requested", handler)
 
-# Publish accessibility events
-await agent.message_bus_integration.publish_event("accessibility_audit_completed", {
-    "status": "success",
+# Publish accessibility events via wrapper
+await agent.publish_agent_event("accessibility_audit_completed", {
+    "status": "completed",
     "overall_score": 95,
     "timestamp": datetime.now().isoformat()
 })
@@ -179,13 +179,16 @@ result = await agent.use_enhanced_mcp_tools({
     "enhanced_features": True
 })
 
-# Trace operations
-trace_result = await agent.trace_accessibility_operation({
-    "operation": "audit",
+# Trace operations via trace_operation
+trace_result = await agent.trace_operation("audit", {
     "target": "/mock/page",
     "timestamp": datetime.now().isoformat()
 })
 ```
+
+## Event Contract & Wrapper
+- Publicatie via `publish_agent_event(event_type, data, request_id=None)`
+- Minimale payload: `status` + domeinspecifiek (bijv. `overall_score`, `target`), optioneel `request_id`
 
 ## Quality Assurance
 

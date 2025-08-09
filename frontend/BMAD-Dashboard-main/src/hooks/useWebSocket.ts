@@ -80,8 +80,8 @@ export const useWebSocket = (options: UseWebSocketOptions = {}): UseWebSocketRet
         const controller = new AbortController()
         const timeoutId = setTimeout(() => controller.abort(), 5000)
         
-        console.log('Polling API endpoint: http://localhost:5001/api-proxy/agents')
-        const response = await fetch('http://localhost:5001/api-proxy/agents', {
+        console.log('Polling API endpoint: /api/agents')
+        const response = await fetch('/api/agents', {
           signal: controller.signal,
           headers: {
             'Content-Type': 'application/json'

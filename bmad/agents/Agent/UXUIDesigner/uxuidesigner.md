@@ -91,6 +91,23 @@ python uxuidesigner.py enhanced-performance
 - Minimale payload: `status`, domeinspecifieke sleutel (bijv. `component`, `figma_file_id`), optioneel `request_id`
 - Geen directe `publish(...)` in agent code; CLI/demo kan kern `publish_event` gebruiken
 
+## Enhanced MCP Tools & Subscriptions
+- Enhanced MCP Tools: `uxui.design_analysis`, `uxui.accessibility_check`, `uxui.component_spec_generation`, `uxui.figma_analysis`, `uxui.design_feedback`
+- Tool-registratie: `register_enhanced_mcp_tools()` registreert bovenstaande tools wanneer Enhanced MCP geactiveerd is
+- Subscriptions: `subscribe_to_event(event_type, callback)` biedt een passthrough naar de message bus (integratie/core/legacy fallback)
+
+## Tracing
+- `initialize_tracing()` activeert tracing en UX/UI-specifieke spans
+- `trace_operation(name, data)` voegt tracepunten toe per UX/UI operatie
+
+## LLM Configuratie
+- YAML (`uxuidesigner.yaml`):
+  - `llm.provider: openai`
+  - `llm.model: gpt-5-reasoning`
+  - `llm.temperature: 0.6`
+- ENV override: `BMAD_LLM_UXUIDESIGNER_MODEL` (heeft voorrang op YAML)
+- Resolver: per-agent modelresolutie via `bmad.agents.core.ai.llm_client.resolve_agent_model`
+
 ## Collaboration
 Deze agent werkt samen met andere agents via Message Bus en gedeelde context:
 - **FrontendDeveloper**: Component development coordination

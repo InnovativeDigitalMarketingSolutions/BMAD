@@ -29,7 +29,7 @@ export const useAgentPerformance = () => {
   useEffect(() => {
     const fetchPerformanceData = async () => {
       try {
-        const response = await fetch('http://localhost:5001/api-proxy/performance')
+        const response = await fetch('/api/performance')
         if (response.ok) {
           const data = await response.json()
           if (Array.isArray(data.metrics)) {

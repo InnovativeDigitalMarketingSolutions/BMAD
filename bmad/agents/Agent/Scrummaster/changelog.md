@@ -40,5 +40,17 @@ Hier houdt de Scrummaster agent zijn eigen wijzigingen, beslissingen en learning
 - **Resource Validation**: Complete resource completeness validation
 - **CLI Integration**: Seamless integration with existing CLI commands
 
+## [2025-08-09] Completeness 1.0 — Wrapper, Enhanced MCP, Tracing, Subscriptions
+
+### Added
+- Class-level attributen toegevoegd voor audit/completeness
+- Methods: `get_enhanced_mcp_tools`, `register_enhanced_mcp_tools`, `trace_operation`, `subscribe_to_event`
+
+### Changed
+- Wrapper-compliance bevestigd: publicatie via `publish_agent_event(...)`
+
+### Tests
+- Unit suite groen: 65/65
+
 ## [YYYY-MM-DD] Wijziging/Feature
 - ... 

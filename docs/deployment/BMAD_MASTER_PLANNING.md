@@ -14,6 +14,7 @@ For detailed analysis of AI integration possibilities, system objectives verific
 - [Infrastructure & Deployment Workflow](../guides/INFRASTRUCTURE_DEPLOYMENT_WORKFLOW.md) - Priority 2-3 infrastructure
 - [Security & Monitoring Implementation Workflow](../guides/SECURITY_MONITORING_WORKFLOW.md) - Priority 0.4, 2.1, 3.7 security/monitoring
 - [Agent Enhancement Workflow](../guides/AGENT_ENHANCEMENT_WORKFLOW.md) - Agent-specific enhancements  
+- Best practices per taakcluster: zie `docs/guides/BEST_PRACTICES_GUIDE.md` (sectie "Sprint 2025-08-09 — Best Practices per taakcluster").
 
 ## 🎯 Executive Summary
 
@@ -74,6 +75,7 @@ Dit document consolideert alle planning documenten tot één master roadmap voor
 ### 🆕 **New Backlog Items (January 2025)**
 
 #### **System Stabilization & Test Infrastructure (Priority 0)**
+(Referentie: Best Practices → P0: Critical Integration Fixes)
 
 **🔧 Test Infrastructure Stabilization (COMPLETED)** ✅
 - **Status**: 5/5 tasks complete (100% complete) 🎉
@@ -97,6 +99,7 @@ Dit document consolideert alle planning documenten tot één master roadmap voor
   - ✅ Global service instance management
 
 #### **Agent Completeness Prevention Strategy (Priority 0)**
+(Referentie: Best Practices → Agent Completeness Implementation)
 **Status**: ✅ **IMPLEMENTED** - Comprehensive prevention strategy implemented
 **Workflow**: [Agent Completeness Prevention Strategy](../guides/AGENT_COMPLETENESS_PREVENTION_STRATEGY.md)
 **Scope**: Prevent future agent completeness issues through standardized verification
@@ -168,6 +171,7 @@ Dit document consolideert alle planning documenten tot één master roadmap voor
 - **Success Criteria**: All test infrastructure issues resolved ✅
 
 **🔧 Hardening Sprint - Remaining Tasks (Priority 2)**
+(Referentie: Best Practices → Wave 2/3/Observability & Security)
 - **Status**: IN PROGRESS - Next phase of hardening sprint
 - **Scope**: Continue quality improvements and system hardening
 - **Completed Tasks**:
@@ -233,6 +237,7 @@ Dit document consolideert alle planning documenten tot één master roadmap voor
 - **Success Criteria**: Alle documentatie is up-to-date met enhanced MCP Phase 2 features
 
 **🧪 System Integration Testing (NEW HIGH PRIORITY)**
+(Referentie: Best Practices → Integration & Performance Testing)
 - **Status**: TO DO - System integration testing van enhanced MCP Phase 2
 - **Scope**: Testen van inter-agent communicatie en enhanced MCP functionaliteit
 - **Timeline**: Week 12-13
@@ -245,6 +250,7 @@ Dit document consolideert alle planning documenten tot één master roadmap voor
 - **Success Criteria**: Alle integration tests passing, enhanced MCP functionaliteit geverifieerd
 
 **📊 Performance Benchmarking (NEW HIGH PRIORITY)**
+(Referentie: Best Practices → Integration & Performance Testing)
 - **Status**: TO DO - Performance benchmarking van enhanced MCP Phase 2
 - **Scope**: Meten van enhanced MCP performance en optimalisatie
 - **Timeline**: Week 12-13
@@ -269,6 +275,7 @@ Dit document consolideert alle planning documenten tot één master roadmap voor
 - **Success Criteria**: Enhanced MCP Phase 2 ready voor productie deployment
 
 **🔧 FrameworkTemplatesManager Implementation (HIGH PRIORITY)**
+(Referentie: Best Practices → Documentatie & Quality Gates)
 - **Status**: TO DO - FrameworkTemplatesManager implementatie en fix
 - **Scope**: Implementeer en fix FrameworkTemplatesManager voor agent resource management
 - **Timeline**: Week 12-13
@@ -312,6 +319,7 @@ Dit document consolideert alle planning documenten tot één master roadmap voor
 - **Success Criteria**: Alle documentatie is up-to-date en compleet
 
 **🧪 Integration Testing Framework (NEW HIGH PRIORITY)**
+(Referentie: Best Practices → Integration & Performance Testing)
 - **Status**: TO DO - Echte externe service testing
 - **Scope**: Setup integration test environment en implement test categories
 - **Timeline**: Week 6-7
@@ -325,6 +333,7 @@ Dit document consolideert alle planning documenten tot één master roadmap voor
 - **Success Criteria**: Complete integration testing framework
 
 **🔧 Agent Commands Analysis & Improvement (NEW HIGH PRIORITY)**
+(Referentie: Best Practices → Documentatie & Quality Gates)
 - **Status**: TO DO - Analyse en verbetering van agent commands
 - **Scope**: Audit en verbeter alle agent commands
 - **Timeline**: Week 13-14
@@ -337,6 +346,7 @@ Dit document consolideert alle planning documenten tot één master roadmap voor
 - **Success Criteria**: Alle agent commands zijn geoptimaliseerd en consistent
 
 **🔍 Agent Functionality Analysis (NEW HIGH PRIORITY)**
+(Referentie: Best Practices → Documentatie & Quality Gates)
 - **Status**: TO DO - Analyse van agent functionaliteit en overlap
 - **Scope**: Analyseer welke functionaliteit door welke agents wordt opgepakt
 - **Findings**: 
@@ -770,6 +780,7 @@ Dit document consolideert alle planning documenten tot één master roadmap voor
 ## 🚀 Master Implementation Roadmap
 
 ### **Phase 1: Production Foundation (Weeks 1-6)** ✅ **COMPLETE**
+(Referentie: Best Practices → Microservices Infrastructure & Security)
 
 #### 1.1 Third-Party Integrations (Critical)
 **Timeline**: Weeks 1-3  
@@ -1476,6 +1487,7 @@ pytest tests/ -v --run-integration --run-e2e
 - [ ] Data retention
 
 ### **Phase 2: Performance & Optimization (Weeks 7-10)**
+(Referentie: Best Practices → Performance & DB)
 
 #### 2.1 Performance Optimization
 **Timeline**: Weeks 7-8  
@@ -1577,6 +1589,7 @@ pytest tests/ -v --run-integration --run-e2e
 - [ ] Conversation quality monitoring
 
 ### **Phase 3: Machine Learning Integration (Weeks 13-16)**
+(Referentie: Best Practices → AI Guardrails & Evaluatie)
 
 #### 3.1 Agent Performance Prediction & Optimization
 **Timeline**: Weeks 13-14  
@@ -2955,7 +2968,7 @@ bmad/core/security/permission_service.py: 79% (good)
 1. **Security Hardening**: Security audit, vulnerability scanning, security headers
 2. **Quality Hardening**: Test coverage improvement, code quality audit, refactoring
 3. **Coverage Improvement**: Systematic coverage analysis and improvement
-4. **Warnings Management**: Systematic warning reduction and categorization
+4. **Warnings Management**: Systematische warning reduction and categorization
 5. **Code Preservation**: Quality review and minimal change principles
 6. **Infrastructure Hardening**: Monitoring, backup, scalability, performance
 
