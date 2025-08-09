@@ -1212,11 +1212,14 @@ Retrospective Agent Commands:
         logger.info("Starting retrospective collaboration example...")
 
         # Publish retrospective request
-        publish("retrospective_requested", {
+        import asyncio
+        from bmad.core.message_bus.events import EventTypes
+        asyncio.run(self.publish_agent_event(EventTypes.RETROSPECTIVE_REQUESTED, {
             "agent": "RetrospectiveAgent",
             "sprint_name": "Sprint 15",
-            "timestamp": datetime.now().isoformat()
-        })
+            "timestamp": datetime.now().isoformat(),
+            "status": "processing",
+        }))
 
         # Conduct retrospective
         retro_result = self.conduct_retrospective("Sprint 15", 8)
@@ -1228,12 +1231,13 @@ Retrospective Agent Commands:
         action_plan_result = self.create_action_plan(retro_result)
 
         # Publish completion
-        publish("retrospective_completed", {
-            "status": "success",
+        asyncio.run(self.publish_agent_event(EventTypes.RETROSPECTIVE_COMPLETED, {
+            "status": "completed",
             "agent": "RetrospectiveAgent",
             "sprint_name": "Sprint 15",
+            "timestamp": datetime.now().isoformat(),
             "action_items_count": len(action_plan_result["action_plan"]["high_priority_actions"]) + len(action_plan_result["action_plan"]["medium_priority_actions"])
-        })
+        }))
 
         # Save context
         save_context("Retrospective", "status", {"retrospective_status": "completed"})
@@ -1250,8 +1254,10 @@ Retrospective Agent Commands:
 
     def publish_improvement(self, action: str, agent: str = "Retrospective"):
         """Publish improvement action with enhanced functionality."""
-        event = {"timestamp": datetime.now().isoformat(), "improvement": action, "agent": agent}
-        publish("improvement_action", event)
+        import asyncio
+        from bmad.core.message_bus.events import EventTypes
+        event = {"timestamp": datetime.now().isoformat(), "improvement": action, "agent": agent, "status": "completed"}
+        asyncio.run(self.publish_agent_event(EventTypes.IMPROVEMENT_ACTION_IDENTIFIED, event))
         save_context(agent, "improvement", {"improvement": action, "timestamp": event["timestamp"]}, updated_by=agent)
         logger.info(f"[Retrospective] Verbeteractie gepubliceerd en opgeslagen: {action}")
         try:

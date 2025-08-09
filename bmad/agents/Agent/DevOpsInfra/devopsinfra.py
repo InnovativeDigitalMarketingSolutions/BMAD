@@ -1333,10 +1333,12 @@ Message Bus Integration Commands:
         logger.info("Starting DevOps infrastructure collaboration example...")
 
         # Publish infrastructure deployment request
-        publish("infrastructure_deployment_requested", {
+        from bmad.core.message_bus.events import EventTypes
+        await self.publish_agent_event(EventTypes.DEPLOYMENT_REQUESTED, {
             "agent": "DevOpsInfraAgent",
             "infrastructure_type": "kubernetes",
-            "timestamp": datetime.now().isoformat()
+            "timestamp": datetime.now().isoformat(),
+            "status": "processing",
         })
 
         # Deploy infrastructure
@@ -1346,9 +1348,10 @@ Message Bus Integration Commands:
         advice_result = self.pipeline_advice("Sample CI/CD pipeline configuration")
 
         # Publish completion
-        publish("infrastructure_deployment_completed", {
-            "status": "success",
+        await self.publish_agent_event(EventTypes.DEPLOYMENT_COMPLETED, {
+            "status": "completed",
             "agent": "DevOpsInfraAgent",
+            "timestamp": datetime.now().isoformat(),
             "deployment_status": deployment_result["status"],
             "pipeline_score": advice_result["overall_score"]
         })
@@ -1755,6 +1758,89 @@ Message Bus Integration Commands:
         agent = cls()
         await agent.initialize_mcp()
         print("DevOpsInfra agent started with MCP integration")
+
+    def get_enhanced_mcp_tools(self) -> List[str]:
+        """Beschikbare Enhanced MCP tools voor DevOpsInfra."""
+        if not getattr(self, 'enhanced_mcp_enabled', False):
+            return []
+        return [
+            "devops.pipeline_advice",
+            "devops.incident_response",
+            "devops.deploy_infrastructure",
+            "devops.monitor_infrastructure",
+            "devops.security_validation",
+            "devops.performance_optimization",
+        ]
+
+    def register_enhanced_mcp_tools(self) -> bool:
+        """Registreer Enhanced MCP tools indien beschikbaar."""
+        if not getattr(self, 'enhanced_mcp_enabled', False) or not getattr(self, 'enhanced_mcp', None):
+            return False
+        try:
+            for tool in self.get_enhanced_mcp_tools():
+                if hasattr(self.enhanced_mcp, 'register_tool'):
+                    self.enhanced_mcp.register_tool(tool)
+            return True
+        except Exception as e:
+            logger.warning(f"Failed to register enhanced MCP tools: {e}")
+            return False
+
+    async def trace_operation(self, operation_name: str, data: Dict[str, Any]) -> Dict[str, Any]:
+        """Generieke tracing haak voor DevOps operaties."""
+        try:
+            if getattr(self, 'tracing_enabled', False) and getattr(self, 'tracer', None):
+                span_name = f"devops.{operation_name}"
+                if hasattr(self.tracer, 'start_span'):
+                    span = self.tracer.start_span(span_name)
+                    try:
+                        if hasattr(span, 'set_attribute'):
+                            span.set_attribute("agent", self.agent_name)
+                            for k, v in (data or {}).items():
+                                try:
+                                    span.set_attribute(f"data.{k}", v)
+                                except Exception:
+                                    pass
+                    finally:
+                        if hasattr(span, 'end'):
+                            span.end()
+            return {"operation": operation_name, "agent": self.agent_name, **(data or {})}
+        except Exception as e:
+            logger.warning(f"trace_operation failed: {e}")
+            return {"operation": operation_name, "agent": self.agent_name, "trace": "failed"}
+
+    async def publish_agent_event(self, event_type: str, data: Dict[str, Any], correlation_id: Optional[str] = None) -> bool:
+        """Gestandaardiseerde wrapper naar core publish_event met uniform payload."""
+        try:
+            from bmad.core.message_bus import publish_event
+            payload = {**data}
+            if "agent" not in payload:
+                payload["agent"] = self.agent_name
+            if "status" not in payload:
+                payload["status"] = "completed"
+            return await publish_event(event_type, payload, source_agent=self.agent_name, correlation_id=correlation_id)
+        except Exception as e:
+            logger.warning(f"Failed to publish event {event_type}: {e}")
+            return False
+
+    async def subscribe_to_event(self, event_type: str, callback) -> bool:
+        """Subscribe via integratie met core/legacy fallback."""
+        try:
+            integration = getattr(self, 'message_bus_integration', None)
+            if integration and hasattr(integration, 'register_event_handler'):
+                return await integration.register_event_handler(event_type, callback)
+            try:
+                from bmad.core.message_bus.message_bus import subscribe_to_event as core_subscribe_to_event
+                return await core_subscribe_to_event(event_type, callback)
+            except Exception:
+                try:
+                    from bmad.agents.core.communication.message_bus import subscribe as legacy_subscribe
+                    legacy_subscribe(event_type, callback)
+                    return True
+                except Exception:
+                    return False
+        except Exception as e:
+            logger.warning(f"subscribe_to_event failed: {e}")
+            return False
 
 def main():
     parser = argparse.ArgumentParser(description="DevOps Infrastructure Agent CLI")

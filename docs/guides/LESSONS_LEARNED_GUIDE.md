@@ -4,6 +4,12 @@
 
 This document captures key lessons learned from implementing and maintaining the BMAD agent system.
 
+### 2025-08-09 Updates — Event Schema Validatie & Contracttests
+- **Waarom**: Consistent event‑payload contract afdwingen (minimaal `status`, `agent`, `timestamp`; en bij `*_FAILED`: verplicht `error`).
+- **Implementatie**: Pydantic‑basisschema's (`BaseEventPayload`, `FailedEventPayload`) + runtime‑validatie in `MessageBus.publish()` en `publish_event()`.
+- **Tests**: Starter contracttests toegevoegd (`tests/unit/core/test_event_schemas.py`).
+- **Effect**: Snellere regressiedetectie, uniforme events, minder runtime‑incidenten.
+
 ## Agent Implementation Completeness Analysis - CRITICAL LESSON (Januari 2025)
 
 ### Root Cause Analysis: Why Agents Have Missing Methods Despite Multiple Analyses

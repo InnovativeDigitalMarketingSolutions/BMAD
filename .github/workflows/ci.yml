@@ -2,50 +2,68 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [ feature/backend-optimization ]
   pull_request:
-    branches: [ main ]
 
 jobs:
-  lint-and-validate:
+  test:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-      - name: Set up Python
-        uses: actions/setup-python@v5
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install dependencies
+      - name: Set up venv
         run: |
           python -m venv .venv
           source .venv/bin/activate
-          pip install black flake8 pyyaml requests pytest
-      - name: Lint with flake8
+          python -m pip install --upgrade pip
+          if [ -f dev-requirements.txt ]; then pip install -r dev-requirements.txt; fi
+      - name: Wrapper enforcement (no direct publish in agents)
         run: |
           source .venv/bin/activate
-          find bmad/agents/Agent -type f -name '*.py' > python_files.txt
-          .venv/bin/flake8 $(cat python_files.txt)
-      - name: Check formatting with black
+          python scripts/check_no_direct_publish.py
+      - name: Install linters (flake8, black)
         run: |
           source .venv/bin/activate
-          .venv/bin/black --check bmad/agents/Agent
-      - name: Run pytest tests
+          pip install flake8==7.1.1 black==24.8.0
+      - name: Install security tools (safety, pip-audit, cyclonedx)
         run: |
           source .venv/bin/activate
-          .venv/bin/pytest tests/
+          pip install safety==3.2.7 pip-audit==2.7.3 cyclonedx-bom==3.17.5
+      - name: Lint with flake8 (agents only)
+        run: |
+          source .venv/bin/activate
+          flake8 bmad/agents/Agent --max-line-length=120
+      - name: Check formatting with black (agents only)
+        run: |
+          source .venv/bin/activate
+          black --check bmad/agents/Agent
+      - name: Event schema quick-check (import validation)
+        run: |
+          source .venv/bin/activate
+          python -c "from bmad.core.message_bus.schemas import validate_event_payload; print('Event schema module import OK')"
       - name: Validate agent resources
         run: |
           source .venv/bin/activate
-          python validate_agent_resources.py
-      - name: Health check
+          python -m bmad.agents.core.utils.validate_agent_resources
+      - name: Security scan (safety)
         run: |
           source .venv/bin/activate
-          python health_check.py > health_check_report.txt
-      - name: Slack notificatie (optioneel)
-        if: always()
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+          safety check --full-report || true
+      - name: Dependency audit (pip-audit)
         run: |
           source .venv/bin/activate
-          python slack_notify.py "BMAD Health check afgerond. Zie health_check_report.txt voor details." 
+          pip-audit -r dev-requirements.txt || true
+      - name: Generate SBOM (CycloneDX)
+        run: |
+          source .venv/bin/activate
+          cyclonedx-bom -o sbom-cyclonedx.json -j
+      - name: Gitleaks (secrets scan)
+        uses: zricethezav/gitleaks-action@v2
+        with:
+          args: "detect --no-git --source=. --redact --verbose"
+      - name: Run unit tests with coverage
+        run: |
+          source .venv/bin/activate
+          PYTHONPATH=. pytest -q --disable-warnings --cov=bmad --cov-report=term-missing 

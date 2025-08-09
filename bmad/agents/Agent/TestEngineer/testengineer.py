@@ -63,6 +63,8 @@ class TestEngineerAgent:
     tracing_enabled = False
     agent_name = "TestEngineerAgent"
     message_bus_integration = None
+    message_bus_enabled = False
+    tracer: Optional[BMADTracer] = None
     
     def __init__(self):
         """Initialize TestEngineerAgent with MCP integration, tracing, and message bus capabilities."""
@@ -240,22 +242,22 @@ class TestEngineerAgent:
                 agent_instance=self
             )
             
-            # Register event handlers for test-specific events
+            # Register event handlers for data-specific events
             await self.message_bus_integration.register_event_handler(
-                "tests_requested", 
-                self.handle_tests_requested
+                "data_quality_check_requested", 
+                self.handle_data_quality_check_requested
             )
             await self.message_bus_integration.register_event_handler(
-                "test_generation_requested", 
-                self.handle_test_generation_requested
+                "explain_pipeline_requested", 
+                self.handle_explain_pipeline
             )
             await self.message_bus_integration.register_event_handler(
-                "test_completed",
-                self.handle_test_completed
+                "data_pipeline_build_requested",
+                self.handle_pipeline_build_requested
             )
             await self.message_bus_integration.register_event_handler(
-                "coverage_report_requested",
-                self.handle_coverage_report_requested
+                "data_monitoring_requested",
+                self.handle_monitoring_requested
             )
             
             self.message_bus_enabled = True
@@ -263,6 +265,26 @@ class TestEngineerAgent:
             return True
         except Exception as e:
             logger.error(f"❌ Fout bij initialiseren van Message Bus Integration voor {self.agent_name}: {e}")
+            return False
+
+    async def subscribe_to_event(self, event_type: str, callback) -> bool:
+        """Subscribe naar event via integratie; valt terug op core/legacy subscribe."""
+        try:
+            integration = getattr(self, 'message_bus_integration', None)
+            if integration and hasattr(integration, 'register_event_handler'):
+                return await integration.register_event_handler(event_type, callback)
+            try:
+                from bmad.core.message_bus.message_bus import subscribe_to_event as core_subscribe_to_event
+                return await core_subscribe_to_event(event_type, callback)
+            except Exception:
+                try:
+                    from bmad.agents.core.communication.message_bus import subscribe as legacy_subscribe
+                    legacy_subscribe(event_type, callback)
+                    return True
+                except Exception:
+                    return False
+        except Exception as e:
+            logger.warning(f"subscribe_to_event failed: {e}")
             return False
 
     async def use_mcp_tool(self, tool_name: str, parameters: Dict[str, Any]) -> Optional[Dict[str, Any]]:

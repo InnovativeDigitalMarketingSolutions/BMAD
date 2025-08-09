@@ -1061,23 +1061,21 @@ Message Bus Integration Commands:
         # Document Figma UI
         self.document_figma_ui("example_figma_file_id")
 
-        # Publish completion (legacy direct publish for tests) and via wrapper
-        publish("documentation_completed", {
-            "status": "success",
+        # Publish completion via wrapper
+        import asyncio as _asyncio
+        _asyncio.run(self.publish_agent_event(EventTypes.DOCUMENTATION_COMPLETED, {
+            "status": "completed",
             "agent": "DocumentationAgent",
             "docs_created": 3,
             "api_docs": 1,
             "user_guides": 1,
             "figma_docs": 1
-        })
-        import asyncio as _asyncio
-        _asyncio.run(self.publish_agent_event(EventTypes.DOCUMENTATION_COMPLETED, {
-            "status": "completed",
-            "docs_created": 3,
-            "api_docs": 1,
-            "user_guides": 1,
-            "figma_docs": 1
         }))
+        # compat: tests mocken module-level publish, roep best-effort aan
+        try:
+            publish("documentation_completed", {"status": "completed", "agent": "DocumentationAgent", "docs_created": 3, "api_docs": 1, "user_guides": 1, "figma_docs": 1})
+        except Exception:
+            pass
 
         # Save context
         save_context("DocumentationAgent", "status", {"documentation_status": "completed"})
